@@ -1,4 +1,13 @@
-### Simple example L2 switch for the tolfino, with instructions on how to compile, start simulator, and test ###
+### Simple L2 booster for tofino ###
+
+#### Overview ####
+
+P4 program and control script for layer 2 boosting on the tofino. Currently wired with 40 Gbit/s links.
+
+Topology:
+
+![GitHub Logo](/images/booster.png)
+
 
 #### Prerequisites ####
 - build and install the barefoot sde:
