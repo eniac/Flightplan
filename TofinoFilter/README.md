@@ -6,7 +6,7 @@ P4 program and control script for layer 2 boosting on the tofino. Currently wire
 
 Topology:
 
-![GitHub Logo](images/booster.png)
+![GitHub Logo](TofinoFilter/images/booster.png)
 
 
 #### Prerequisites ####
