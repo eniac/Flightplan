@@ -152,23 +152,45 @@ application's priorities.
 \maketitle
 
 \section{Introduction}
+
 \section{Mishaps in datacenter networks}
+Gather from the literature:
 Congestion,
-Corruption,
-Node failure, etc.
+Corruption (link/interface failure,
+Node (host/switch) failure, etc.
 Scheduler error?
+
 \section{Mitigating network mishaps}
-On the hosts,
-In the network.
+Deciding where to locate the booster:
+in software on the host,
+in hardware on the host,
+or at the ToR.
+(Presumably anywhere else would make limited sense.)
 
 Control process to determine when to activate boosters, and possibly what parameters to use.
+
 \section{Use-cases}
+
 \subsection{Forward Error Correction}
 Need to specify topology early on.
+
 \subsection{TBD}
+
 \section{Implementation}
 Some bits done in P4, and other bits that can co-/entirely run on FPGA or a host's CPU.
+
 \section{Evaluation}
+Ultimately we'd like to show application-level service quality, but
+network-level performance might be a pragmatic surrogate.
+
+Traffic generator to saturate a 10+G link.
+
+Emulating packet loss and packet corruption -- can both these be done using a P4 program?
+
+Showing the traffic makes it through $2 < H < 5$ hops in the presence of
+network mishaps, and that application-level performance is sustained.
+(As a control experiment, showing that non-boosted traffic leads to application degradation.)
+
 \section{Related work}
 Data centers:
 Eden.
