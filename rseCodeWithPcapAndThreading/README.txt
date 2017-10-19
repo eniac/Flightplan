@@ -51,6 +51,8 @@ For example:
 
 $ ./rsetest -k 3 -h 4 -c 3 -e 0 -e 2 -e 3 -e 5
 
+NOTE: Currently the device to capture is hardcoded, but this will be modified to be provided as an argument.
+
 Sending FEC Block n=7 c=4 c-xtra=1. Parities from cbi-08
 fbi-00 cbi-00: data d-00 (len=3):   --    8d    d3    f5  Known
 fbi-01 cbi-01: data d-01 (len=3):   --    58    87    7f  Known
