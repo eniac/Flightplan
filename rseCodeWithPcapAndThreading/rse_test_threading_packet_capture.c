@@ -127,7 +127,7 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_c
 void* capturePackets(void* arg);
 
 /*  Debug function to print the payload of the packet.  */
-void printPayload(int payload_length, const char* payload);
+// void printPayload(int payload_length, const char* payload);
 
 /* A structure to represent a queue*/
 struct Queue
@@ -274,7 +274,7 @@ void my_packet_handler(
 
     /* Print payload in ASCII */
     /*  Uncomment for debugging   */
-    printPayload(size_payload, payload);
+    // printPayload(size_payload, payload);
 
     return;
 }
@@ -373,6 +373,7 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o) {
 
     fb.block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
 
+    printf("The length is : %d\n", fb.block_C);
     /* Leave H Parity packets empty */
     for (i = 0; i < h; i++) {
         if (i >= FEC_MAX_H) {
