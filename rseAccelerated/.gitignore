@@ -1,0 +1,7 @@
+.vivado_hls_log_all.xml
+solution*/.autopilot
+solution*/csim
+*.tcl
+*.log
+solution*/syn
+
