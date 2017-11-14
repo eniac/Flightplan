@@ -24,15 +24,15 @@
 /* Define Size of FEC BLOCK (K and H) and Packet (C) and erasure channel   */
 /***************************************************************************/
 
-#define     Default_H   2     /* FEC Parity packets: h <= FEC_MAX_H */
+#define     Default_H   3     /* FEC Parity packets: h <= FEC_MAX_H */
 #define     Default_K   3     /* Data packets: k < FEC_MAX_N - FEC_MAX_H */
-#define     Default_C   3     /* App data symbols per packet: c <= FEC_MAX_COLS */
+#define     Default_C   2     /* App data symbols per packet: c <= FEC_MAX_COLS */
 
 /* An array defines packets that are lost (erased) using the FEC block index
    (from 0 to FEC_MAX_N-1). The last element in the array must be FEC_MAX_N,
    marking the end of erasure list. For example, to erasure the second (index = 1)
    and fifth (index = 4) packets, the list would be: {1,4, FEC_MAX_N} */
-int Default_erase_list[FEC_MAX_N] = {0, 2, FEC_MAX_N};
+int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
 
 /***************************************************************************/
 /* Options                                                                 */
@@ -126,8 +126,8 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_c
 /* function to initiate a packet capture */
 void* capturePackets(void* arg);
 
-/*  Debug function to print the payload of the packet.  */
-// void printPayload(int payload_length, const char* payload);
+/* A debug function to print payload */
+void printPayload(int payload_length, u_char* payload);
 
 /* A structure to represent a queue*/
 struct Queue
@@ -163,10 +163,10 @@ int isEmpty(struct Queue* queue) {
 
 /*Function to add the captured packet info to the queue.*/
 void enqueue(struct Queue* queue, packetInfo_t* item)
-{   
+{
     /*lock the critical section*/
-    pthread_mutex_lock(&var);  
-    
+    pthread_mutex_lock(&var);
+
     if (isFull(queue))
         return;
     queue->rear = (queue->rear + 1) % queue->capacity;
@@ -180,7 +180,7 @@ void enqueue(struct Queue* queue, packetInfo_t* item)
 /*Function to remove the captured packet from the queue.*/
 packetInfo_t* dequeue(struct Queue* queue) {
     /* lock the critical section*/
-    pthread_mutex_lock(&var);  
+    pthread_mutex_lock(&var);
 
     if (isEmpty(queue))
         return NULL;
@@ -188,7 +188,7 @@ packetInfo_t* dequeue(struct Queue* queue) {
     queue->front = (queue->front + 1) % queue->capacity;
     queue->size = queue->size - 1;
     /*unlock the critical section*/
-    pthread_mutex_unlock(&var);  
+    pthread_mutex_unlock(&var);
     return item;
 }
 
@@ -206,9 +206,9 @@ packetInfo_t* rear(struct Queue* queue) {
     return queue->array[queue->rear];
 }
 /*   global count to keep track of the captured packets. This is used to avoid PCAP capturing continuosly.  */
-int capturedCount = 0; 
+int capturedCount = 0;
 /*  device on which packet capture should happen*/
-char * deviceToCapture = "docker0";
+char * deviceToCapture;
 
 void my_packet_handler(
     u_char *args,
@@ -219,7 +219,7 @@ void my_packet_handler(
     const struct sniff_ethernet *ethernet;  /* The ethernet header [1] */
     const struct sniff_ip *ip;              /* The IP header */
     const struct sniff_tcp *tcp;            /* The TCP header */
-    const char *payload;                    /* Packet payload */
+    u_char *payload;                    /* Packet payload */
 
     int size_ip;
     int size_tcp;
@@ -261,7 +261,7 @@ void my_packet_handler(
 
         /*Synchronized producer block.*/
         sem_wait(&empty);
-        
+
         /* Increment the count of captured packets */
         capturedCount++;
 
@@ -280,9 +280,9 @@ void my_packet_handler(
 }
 
 /* A debug function to print payload */
-void printPayload(int payload_length, const const char* payload) {
+void printPayload(int payload_length, u_char* payload) {
     if (payload_length > 0) {
-        const char *temp_pointer = payload;
+        u_char *temp_pointer = payload;
         int byte_count = 0;
         while (byte_count++ < payload_length) {
             printf("%c", *temp_pointer);
@@ -317,7 +317,7 @@ void* capturePackets(void* arg) {
     printf("Ths is the end of capture\n");
 
     int ret = pcap_setdirection(handle, PCAP_D_IN);
-    if (ret == -1){
+    if (ret == -1) {
         printf("Packet capture failed! \n");
         pthread_exit(NULL);
     }
@@ -332,7 +332,7 @@ void* capturePackets(void* arg) {
  * Create Random Data and Blank Parity packets and link to the FEC block (fb)
  */
 void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o) {
-
+    fprintf(stderr, "At the top of fec_blk_get\n");
     fec_sym i, y, z;
     int maxPacketLength = 0;
     // fb.block_C = c + FEC_EXTRA_COLS;    /* One extra for length symbol */
@@ -358,10 +358,12 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o) {
             fb.pdata[i] = (fec_sym *) populatePacket->payloadStart;
             fb.cbi[i] = i;
             fb.plen[i] = populatePacket->payloadLength;
+            // printf("The length of the payload is : %d\n", populatePacket->payloadLength);
             /*  Keep track of maximum packet length to set the block_C field of FEC structure    */
             if (populatePacket->payloadLength > maxPacketLength) {
                 maxPacketLength = populatePacket->payloadLength;
             }
+            // printf("The max packet length inside the loop is : %d\n", maxPacketLength);
             fb.pstat[i] = FEC_FLAG_KNOWN;
         } else {
             printf("Error: We don't have any more packets");
@@ -371,10 +373,14 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o) {
 
     }
 
-    fb.block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
+    // printf("The length after the loop is : %d\n", maxPacketLength);
 
-    printf("The length is : %d\n", fb.block_C);
+    fb.block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
+    fprintf(stderr, "This is the value of fb.block_C = %d\n", fb.block_C);
+
+
     /* Leave H Parity packets empty */
+
     for (i = 0; i < h; i++) {
         if (i >= FEC_MAX_H) {
             fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
@@ -386,21 +392,21 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o) {
         fb.cbi[y] = z;
         fb.plen[y] = fb.block_C;
         fb.pstat[y] = FEC_FLAG_WANTED;
+//        printf ("y=%d z=%d cbi=%d \n", y, z, fb.cbi[y]);
     }
-
-    /*  TODO: Need to understand why we need this If condition. Commenting for now.   */
-
-    /* shorten last packet (if not already one symobol) */
-    // if ((c > 1) && (FEC_EXTRA_COLS > 0)) {
-    //     fb.plen[k - 1] -= 1;
-    //     p[k - 1][0] -= 1;
-    // }
+    /* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
+    if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
+        fb.plen[k - 1] -= 1;
+        p[k - 1][0] -= 1;
+    }
 }
 
 void results_print(int number_of_tests, unsigned long data_bits_in_fb) {
-    unsigned  long     time_taken;
+    unsigned  long     time_taken = 0;
 
+#ifdef FEC_SPEED_TEST
     time_taken = fec_get_time_delta(0);
+#endif
     fprintf(stderr, "%d time(s) in %lu μs: ~%lu μs per block ≈ %lu Mbps\n", number_of_tests, time_taken, time_taken / number_of_tests, data_bits_in_fb * number_of_tests / time_taken);
 }
 
@@ -423,7 +429,9 @@ unsigned long calculate_data_bits_in_fb(void) {
 void fec_multi_test(int number_of_tests, unsigned  long data_bits_in_fb) {
     int rc, i;
 
+#ifdef FEC_SPEED_TEST
     fec_get_time_delta(0);                          /* start timer */
+#endif
     for (i = 0; i < number_of_tests; i++) {
         if ((rc = rse_code(0)) != 0 )  exit(rc);
         results_print(1, data_bits_in_fb);
@@ -431,7 +439,6 @@ void fec_multi_test(int number_of_tests, unsigned  long data_bits_in_fb) {
 //    results_print(number_of_tests, data_bits_in_fb);
 //    fec_block_print();
 }
-
 /*
  * Single Encode and decode (send H parity packets after K data packets)
  */
@@ -441,17 +448,18 @@ void fec_simple_test(int *e) {
     /* Encoder */
     if ((rc = rse_code(1)) != 0 )  exit(rc);
     fprintf(stderr, "\nSending ");
-    fec_block_print();
+    D0(fec_block_print());
+
 
     /* Erasure Channel */
     fec_block_delete(e);
     fprintf(stderr, "\nReceived ");
-    fec_block_print();
+    D0(fec_block_print());
 
     /* Decoder */
     if ((rc = rse_code(1)) != 0 )  exit(rc);
     fprintf(stderr, "\nRecovered ");
-    fec_block_print();
+    D0(fec_block_print());
 }
 
 /*
@@ -476,6 +484,20 @@ void usage(int argc, char **argv) {
     exit (1);
 }
 
+int check_stack_size(int size) {
+    fec_sym i;
+    int systemRet, size_in_KB, mylimit_in_KB = 7000;
+
+    size_in_KB = size * sizeof(i) / 1000;
+    if (size_in_KB > mylimit_in_KB) {
+        fprintf(stderr, "\nrsetest.c allocated %d KB fon stack for packet store. My limit = %d KB ulimit = ", size_in_KB, mylimit_in_KB);
+        systemRet = system("ulimit -s");
+        exit (1);
+    }
+    else {
+        return 0;
+    }
+}
 /*
  * Get User input
  */
@@ -487,6 +509,7 @@ int main(int argc, char **argv) {
     int e_list[FEC_MAX_N];
     unsigned  long     data_bits_in_fb;
 
+    check_stack_size (FEC_MAX_COLS * FEC_MAX_N);
     e_list[0] = list_done;         /* empty list of erasure fb packet indices */
     h = Default_H;
     k = Default_K;
@@ -494,7 +517,8 @@ int main(int argc, char **argv) {
     o = Default_O;
     r = Default_R;
     s = Default_S;
-    while ((opt =  getopt(argc, argv, "c:e:k:h:o:r:s:")) != EOF)
+    deviceToCapture = "eno1";
+    while ((opt =  getopt(argc, argv, "c:e:k:h:o:r:s:i:")) != EOF)
     {
         switch (opt)
         {
@@ -519,6 +543,9 @@ int main(int argc, char **argv) {
         case 's':  //Seed
             s = atoi(optarg);;
             break;
+        case 'i':
+            deviceToCapture = optarg;
+            break;
         default:
             printf("\nNot yet defined opt = %d\n", opt);
             abort();
@@ -534,7 +561,6 @@ int main(int argc, char **argv) {
     e_list[i] = list_done;      /* put list_done marker at end of input */
 
     if ((rc = rse_init()) != 0 ) exit(rc);   /* initialize fec codewords */
-
     /* Create the full semaphore and initialize to 0 */
     sem_init(&full, 0, 0);
 
@@ -546,12 +572,12 @@ int main(int argc, char **argv) {
         printf("\ncan't create thread :[%s]", strerror(err));
     else
         printf("\n Thread created successfully\n");
+
     captureQueue = createQueue(CAPTURE_QUEUE_SIZE);
     int z = 0;
     while ( z < 100) {
         fec_blk_get(p, k, h, c, s, o);
-        /*  Uncomment this when you want to test fec_multi_test */
-        // r = 4;
+
         switch (r) {
         case 0:
             printf("\nNot yet defined Number of runs = %d\n", r);

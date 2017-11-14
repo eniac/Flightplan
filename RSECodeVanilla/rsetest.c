@@ -11,15 +11,15 @@
 /* Define Size of FEC BLOCK (K and H) and Packet (C) and erasure channel   */
 /***************************************************************************/
 
-#define		Default_H   2     /* FEC Parity packets: h <= FEC_MAX_H */
+#define		Default_H   3     /* FEC Parity packets: h <= FEC_MAX_H */
 #define		Default_K   3     /* Data packets: k < FEC_MAX_N - FEC_MAX_H */
-#define		Default_C   3     /* App data symbols per packet: c <= FEC_MAX_COLS */
+#define		Default_C   2     /* App data symbols per packet: c <= FEC_MAX_COLS */
 
 /* An array defines packets that are lost (erased) using the FEC block index
    (from 0 to FEC_MAX_N-1). The last element in the array must be FEC_MAX_N,
    marking the end of erasure list. For example, to erasure the second (index = 1)
    and fifth (index = 4) packets, the list would be: {1,4, FEC_MAX_N} */
-int Default_erase_list[FEC_MAX_N] = {0, 2, FEC_MAX_N};
+int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
 
 /***************************************************************************/
 /* Options                                                                 */
@@ -40,14 +40,14 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o) {
     fec_sym	i, y, z;
     int		j;
     
-    fb.block_C = c + FEC_EXTRA_COLS;    /* One extra for length symbol */
+    fb.block_C = c + FEC_EXTRA_COLS;    /* Add extra for length symbol */
     fb.block_N = k + h;
     srand(seed);                /* seed for series of pseudo-random numbers */
 
     /* Put C random symbols into each of the K data packets */
     for (i=0; i<k; i++) {
         if (i >= FEC_MAX_K) {
-            fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
+            fprintf(stderr, "Number of data packets (%d) in FEC block > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
             exit (33);
         }
         fb.pdata[i] = p[i];
@@ -75,17 +75,19 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o) {
         fb.pstat[y] = FEC_FLAG_WANTED;
 //        printf ("y=%d z=%d cbi=%d \n", y, z, fb.cbi[y]);
     }
-    /* shorten last packet (if not already one symobol) */
-    if ((c > 1) && (FEC_EXTRA_COLS > 0)) {
+    /* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
+    if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
         fb.plen[k-1] -= 1;
         p[k-1][0] -= 1;
     }
 }
 
 void results_print(int number_of_tests, unsigned long data_bits_in_fb) {
-    unsigned  long     time_taken;
+    unsigned  long     time_taken=0;
 
+#ifdef FEC_SPEED_TEST
     time_taken=fec_get_time_delta(0);
+#endif
     fprintf(stderr, "%d time(s) in %lu μs: ~%lu μs per block ≈ %lu Mbps\n", number_of_tests, time_taken, time_taken/number_of_tests, data_bits_in_fb * number_of_tests / time_taken);
 }
 
@@ -108,7 +110,9 @@ unsigned long calculate_data_bits_in_fb(void) {
 void fec_multi_test(int number_of_tests, unsigned  long data_bits_in_fb) {
     int rc, i;
 
+#ifdef FEC_SPEED_TEST
     fec_get_time_delta(0);                          /* start timer */
+#endif
     for (i=0; i<number_of_tests; i++) {
         if ((rc=rse_code(0)) != 0 )  exit(rc);
         results_print(1, data_bits_in_fb);
@@ -125,17 +129,18 @@ void fec_simple_test(int *e) {
     /* Encoder */
     if ((rc=rse_code(1)) != 0 )  exit(rc);
     fprintf(stderr, "\nSending ");
-    fec_block_print();
+    D0(fec_block_print());
+
     
     /* Erasure Channel */
     fec_block_delete(e);
     fprintf(stderr, "\nReceived ");
-    fec_block_print();
-    
+    D0(fec_block_print());
+
     /* Decoder */
     if ((rc=rse_code(1)) != 0 )  exit(rc);
     fprintf(stderr, "\nRecovered ");
-    fec_block_print();
+    D0(fec_block_print());
 }
 
 /*
@@ -160,6 +165,20 @@ void usage(int argc, char **argv) {
     exit (1);
 }
 
+int check_stack_size(int size) {
+    fec_sym i;
+    int systemRet, size_in_KB, mylimit_in_KB=7000;
+    
+    size_in_KB = size * sizeof(i) / 1000;
+    if (size_in_KB > mylimit_in_KB) {
+        fprintf(stderr, "\nrsetest.c allocated %d KB fon stack for packet store. My limit = %d KB ulimit = ", size_in_KB, mylimit_in_KB);
+        systemRet = system("ulimit -s");
+        exit (1);
+    }
+    else {
+        return 0;
+    }
+}
 /*
  * Get User input
  */
@@ -171,6 +190,7 @@ int main(int argc, char **argv) {
     int e_list[FEC_MAX_N];
     unsigned  long     data_bits_in_fb;
     
+    check_stack_size (FEC_MAX_COLS*FEC_MAX_N);
     e_list[0] = list_done;         /* empty list of erasure fb packet indices */
     h = Default_H;
     k = Default_K;
@@ -216,7 +236,7 @@ int main(int argc, char **argv) {
         }
     }
     e_list[i] = list_done;      /* put list_done marker at end of input */
-    
+
     if ((rc = rse_init()) != 0 ) exit(rc);   /* initialize fec codewords */
     fec_blk_get(p, k, h, c, s, o);
 

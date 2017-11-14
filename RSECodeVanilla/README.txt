@@ -26,6 +26,15 @@ rse.c   	Implements the modified Reed-Solomon Erasure Code.
 rsetest.c	Creates random data packets, FEC block & erasure channel emulation.
 
 --------------------------------------------------------------------------------
+Versions	
+--------------------------------------------------------------------------------
+
+version 2017.10.31:  Supports packet lengths > 255 bytes (defined by FEC_MAX_COLS).
+version 2017.10.19:  Fixed bugs. g++ compile option. Debug prints all optional.
+version 2017.09.28:  Adds many new rsetest options, including a speed test.
+version 2017.09.10:  First rewrite using Modified Reed-Solomon Code.
+
+--------------------------------------------------------------------------------
 Running	
 --------------------------------------------------------------------------------
 On a unix console (with gcc compiler) type:
@@ -34,9 +43,8 @@ $ make clean
 $ make
 $ ./rsetest
 
-Without specify configuration, rsetest uses defaults for FEC block parameters.
-However, command line options allow their dynamic definition. See options by 
-typing: 
+By default rsetest uses defaults for FEC block parameters. Command line options 
+allow dynamic definition of configuration. See options by typing: 
 
 $ ./rsetest help
      [-k Number of Data packets in the FEC block]
@@ -50,37 +58,66 @@ $ ./rsetest help
 For example:
 
 $ ./rsetest -k 3 -h 4 -c 3 -e 0 -e 2 -e 3 -e 5
+(with FEC_MAX_COLS = 255)
 
-NOTE: Currently the device to capture is hardcoded, but this will be modified to be provided as an argument.
-
-Sending FEC Block n=7 c=4 c-xtra=1. Parities from cbi-08
+Sending FEC Block n=7 c=3+1 (parities start at cbi-ef)
 fbi-00 cbi-00: data d-00 (len=3):   --    8d    d3    f5  Known
 fbi-01 cbi-01: data d-01 (len=3):   --    58    87    7f  Known
 fbi-02 cbi-02: data d-02 (len=2):   --    --    fc    87  Known
-fbi-03 cbi-0b: pari p-00 (len=4):   4a    2b    29    83  Known
-fbi-04 cbi-0a: pari p-01 (len=4):   ec    57    11    1e  Known
-fbi-05 cbi-09: pari p-02 (len=4):   8b    f4    a6    50  Known
-fbi-06 cbi-08: pari p-03 (len=4):   2f    5d    36    c0  Known
+fbi-03 cbi-fe: pari p-00 (len=4):   bf    cc    60     1  Known
+fbi-04 cbi-fd: pari p-01 (len=4):   59    9e    6e    11  Known
+fbi-05 cbi-fc: pari p-02 (len=4):   b0    d6    c2    30  Known
+fbi-06 cbi-fb: pari p-03 (len=4):   e1    56    53    60  Known
 
-Receiving FEC Block into Coder: pseudo random data, except first symbol is length
-FEC Block n=7 c=4 c-xtra=1. Parities from cbi-08
+
+Received FEC Block n=7 c=3+1 (parities start at cbi-ef)
 fbi-00 cbi-00: data d-00 (len=0):   ??    ??    ??    ??  Wanted
 fbi-01 cbi-01: data d-01 (len=3):   --    58    87    7f  Known
 fbi-02 cbi-02: data d-02 (len=0):   ??    ??    ??    ??  Wanted
-fbi-03 cbi-0b: pari p-00 (len=0):   ??    ??    ??    ??  Ignore
-fbi-04 cbi-0a: pari p-01 (len=4):   ec    57    11    1e  Known
-fbi-05 cbi-09: pari p-02 (len=0):   ??    ??    ??    ??  Ignore
-fbi-06 cbi-08: pari p-03 (len=4):   2f    5d    36    c0  Known
+fbi-03 cbi-fe: pari p-00 (len=0):   ??    ??    ??    ??  Ignore
+fbi-04 cbi-fd: pari p-01 (len=4):   59    9e    6e    11  Known
+fbi-05 cbi-fc: pari p-02 (len=0):   ??    ??    ??    ??  Ignore
+fbi-06 cbi-fb: pari p-03 (len=4):   e1    56    53    60  Known
 
-Recovered FEC Block n=7 c=4 c-xtra=1. Parities from cbi-08
+
+Recovered FEC Block n=7 c=3+1 (parities start at cbi-ef)
 fbi-00 cbi-00: data d-00 (len=3):   --    8d    d3    f5  Known
 fbi-01 cbi-01: data d-01 (len=3):   --    58    87    7f  Known
 fbi-02 cbi-02: data d-02 (len=2):   --    --    fc    87  Known
-fbi-03 cbi-0b: pari p-00 (len=0):   ??    ??    ??    ??  Ignore
-fbi-04 cbi-0a: pari p-01 (len=4):   ec    57    11    1e  Known
-fbi-05 cbi-09: pari p-02 (len=0):   ??    ??    ??    ??  Ignore
-fbi-06 cbi-08: pari p-03 (len=4):   2f    5d    36    c0  Known
+fbi-03 cbi-fe: pari p-00 (len=0):   ??    ??    ??    ??  Ignore
+fbi-04 cbi-fd: pari p-01 (len=4):   59    9e    6e    11  Known
+fbi-05 cbi-fc: pari p-02 (len=0):   ??    ??    ??    ??  Ignore
+fbi-06 cbi-fb: pari p-03 (len=4):   e1    56    53    60  Known
 
+
+$ ./rsetest -c 1500
+(with FEC_MAX_COLS = 10000)
+
+Sending FEC Block n=6 c=1500+2 (parities start at cbi-ef)
+fbi-00 cbi-00: data d-00 (len=1500):   --    --    44    77    f3    99    b9    e7  ... (8 of 1502)Known
+fbi-01 cbi-01: data d-01 (len=1500):   --    --    ba    3d    8a    39    2b    98  ... (8 of 1502)Known
+fbi-02 cbi-02: data d-02 (len=1499):   --    --    --    6b    6e    aa    18    16  ... (8 of 1502)Known
+fbi-03 cbi-fe: pari p-00 (len=1502):   f6    26    27    3a    e5    ae    a8    fc  ... (8 of 1502)Known
+fbi-04 cbi-fd: pari p-01 (len=1502):   78    d7    a7    cc    cb    24     7    7a  ... (8 of 1502)Known
+fbi-05 cbi-fc: pari p-02 (len=1502):   47    e2    72    32    32    37    15    a3  ... (8 of 1502)Known
+
+
+Received FEC Block n=6 c=1500+2 (parities start at cbi-ef)
+fbi-00 cbi-00: data d-00 (len=0):      ??    ??    ??    ??    ??    ??    ??    ??  ... (8 of 1502)Wanted
+fbi-01 cbi-01: data d-01 (len=1500):   --    --    ba    3d    8a    39    2b    98  ... (8 of 1502)Known
+fbi-02 cbi-02: data d-02 (len=0):      ??    ??    ??    ??    ??    ??    ??    ??  ... (8 of 1502)Wanted
+fbi-03 cbi-fe: pari p-00 (len=1502):   f6    26    27    3a    e5    ae    a8    fc  ... (8 of 1502)Known
+fbi-04 cbi-fd: pari p-01 (len=0):      ??    ??    ??    ??    ??    ??    ??    ??  ... (8 of 1502)Ignore
+fbi-05 cbi-fc: pari p-02 (len=1502):   47    e2    72    32    32    37    15    a3  ... (8 of 1502)Known
+
+
+Recovered FEC Block n=6 c=1500+2 (parities start at cbi-ef)
+fbi-00 cbi-00: data d-00 (len=1500):   --    --    44    77    f3    99    b9    e7  ... (8 of 1502)Known
+fbi-01 cbi-01: data d-01 (len=1500):   --    --    ba    3d    8a    39    2b    98  ... (8 of 1502)Known
+fbi-02 cbi-02: data d-02 (len=1499):   --    --    --    6b    6e    aa    18    16  ... (8 of 1502)Known
+fbi-03 cbi-fe: pari p-00 (len=1502):   f6    26    27    3a    e5    ae    a8    fc  ... (8 of 1502)Known
+fbi-04 cbi-fd: pari p-01 (len=0):      ??    ??    ??    ??    ??    ??    ??    ??  ... (8 of 1502)Ignore
+fbi-05 cbi-fc: pari p-02 (len=1502):   47    e2    72    32    32    37    15    a3  ... (8 of 1502)Known
 
 --------------------------------------------------------------------------------
 RSE.C User-callable functions

@@ -404,16 +404,24 @@ int codewords_generate(void) {
  */
 int codewords_check_bounds(void) {
     fec_sym i;
+    long long int     j;
     
     if (FEC_MAX_N > FEC_N) {
         D0(fprintf (stderr, "\n FEC_MAX_N (%d) > FEC_N (%d)\n", FEC_MAX_N, FEC_N));
         return (FEC_ERR_INVALID_PARAMS);
     }
-    if (FEC_EXTRA_COLS > 1) {
-        D0(fprintf (stderr, "\n FEC_EXTRA_COLS (%d) > 1\n", FEC_EXTRA_COLS));
-        D0(fprintf (stderr, "Allowed, but not implemented: modify rse.c near FEC_EXTRA_COLS\n"));
+    if (FEC_EXTRA_COLS >= FEC_MAX_COLS) {
+        D0(fprintf (stderr, "\n FEC_EXTRA_COLS (%d) >= FEC_MAX_COLS (%d)\n", FEC_EXTRA_COLS, FEC_MAX_COLS));
         return (FEC_ERR_INVALID_PARAMS);
     }
+    if (FEC_EXTRA_COLS > 0) {
+        j = (long long int) 2 << (FEC_M * FEC_EXTRA_COLS - 1);
+        if (FEC_MAX_COLS >= j) {
+            D0(fprintf (stderr, "\n FEC_EXTRA_COLS (%d) can only store packets of length %llu, not FEC_MAX_COLS (%d)\n", FEC_EXTRA_COLS, j-1, FEC_MAX_COLS));
+            return (FEC_ERR_INVALID_PARAMS);
+        }
+    }
+    
     if (FEC_MAX_COLS < 1) {
         D0(fprintf (stderr, "\n FEC_MAX_COLS (%d) < 1\n", FEC_MAX_COLS));
         return (FEC_ERR_INVALID_PARAMS);
@@ -527,6 +535,10 @@ void fec_block_print() {
                 default:                fprintf(stderr, "^^^^^^^^^^");
                                         break;
             }
+            // if (j < fb.block_C-MAX_PRINT_COLUMNS + 1)  {
+            //     fprintf(stderr, "... (%d of %d)",MAX_PRINT_COLUMNS, fb.block_C);
+            //     break;
+            // }
         }
         fec_block_print_packet_extras(i);
     }
@@ -701,6 +713,7 @@ void matrix_multiply(fec_sym COUNT_KNOW, fec_sym *INDEX_KNOW, fec_sym COUNT_PARI
     
     fec_sym i, j, data, q, cq, row;
     fec_sym *ptr;
+    int     which_symbol_of_integer_length, shift;
 
         for (i=0; i<COUNT_KNOW; i++) {
             q = INDEX_KNOW[i];                          /* fb Columns which we KNOW */
@@ -709,16 +722,23 @@ void matrix_multiply(fec_sym COUNT_KNOW, fec_sym *INDEX_KNOW, fec_sym COUNT_PARI
             ptr = fb.pdata[q]+c;                        /* point to data (with no shift) */
             D2(fprintf(stderr, "c%d fbi-%d data=", c, q));
 
-            /* A) For Variable length packets fill end with zeros */
+            /* A) For packets smaller than largest packet, fill end with zeros */
             if ( fb.plen[q] > c ) {
                 data = *((fec_sym *)ptr);               /* Packet Data symbol value */
             }
             else {
                 data = 0;                               /* if packet has < c symbols */
             }
-            /* B) leave room to code length */
-            if ((c == fb.block_C - 1) && (cq < FEC_MAX_K) && (FEC_EXTRA_COLS > 0)) {
-                data = fb.plen[INDEX_KNOW[i]];            /* Use lenght as data */
+            
+            /* B) Last FEC_EXTRA_COLS (fb.block_C-1, fb.block_C-2,...) holds packet length */
+            if ((c >= fb.block_C - FEC_EXTRA_COLS) && (cq < FEC_MAX_K)) {
+                /* length of packet (an integer) is split into fec_sym sized pieces */
+                which_symbol_of_integer_length = fb.block_C-c-1;
+                shift=8*sizeof(i)*which_symbol_of_integer_length;
+                data = (fec_sym) (fb.plen[INDEX_KNOW[i]] >> shift);   /* Use length as data */
+#ifdef FEC_DBG_CODE_LENGTH
+                fprintf(stderr, "Encode Length into Last FEC_EXTRA_COLS: index=%d (c=%d len=%d shift=%d) d-%02x = %d\n", which_symbol_of_integer_length, c, fb.plen[INDEX_KNOW[i]], shift, INDEX_KNOW[i], data);
+#endif
             }
             D2(fprintf(stderr, "%04x  ", data));
 
@@ -736,21 +756,38 @@ void matrix_multiply(fec_sym COUNT_KNOW, fec_sym *INDEX_KNOW, fec_sym COUNT_PARI
 }
 
 /*
- * Write results (fcm.d[j][0]) into fec block for symbol c - and change status to KNOWN
+ * Write results (fcm.d[j][0]) into fec block for symbol c -
+ * and change status to KNOWN (if mode_flag is not 0)
  */
 void write_accumulated_sum_into_wanted_packets(fec_sym *INDEX_WANT, fec_sym want, int c, int mode_flag) {
     
     fec_sym j, q;
-    
+    int     which_symbol_of_integer_length, shift, data;
+
     D2(fprintf(stderr, "Write symbols of accumulated sum into %d wanted packets (c=%d)\n\n", want, c));
     for (j=0; j<want; j++) {
         q = INDEX_WANT[j];
+        
+        /* a) Write data fir packet q into FEC block */
         fb.pdata[q][c] = fcm.d[j][0];
-        if ( (c==fb.block_C - 1) && (mode_flag != 0) ){
-            fb.pstat[q] = FEC_FLAG_KNOWN;           /* If last packet symbol: a) Add flag */
-            if (fb.cbi[q] < FEC_MAX_K) {            /* b) Put length value into FEC block */
-                if (FEC_EXTRA_COLS > 0) fb.plen[q]=fcm.d[j][0];
-                else                    fb.plen[q]=fb.block_C;
+        
+        /* b) Write flag and length if last column */
+        if (c==fb.block_C - 1) {
+            if (mode_flag != 0)      fb.pstat[q] = FEC_FLAG_KNOWN;
+            if (FEC_EXTRA_COLS == 0) fb.plen[q]  = fb.block_C;
+        }
+        
+        /* c) Recalculate length value of each packet using its last FEC_EXTRA_COLS */
+        if (fb.cbi[q] < FEC_MAX_K) {
+            if (c == 0)  fb.plen[q]=0;          /* Initialize length calculation */
+            if (c >= fb.block_C - FEC_EXTRA_COLS) {
+                which_symbol_of_integer_length = fb.block_C-c-1;
+                shift=8*sizeof(j)*which_symbol_of_integer_length;
+                data = (int) fcm.d[j][0] << shift;
+                fb.plen[q]+=data;
+#ifdef FEC_DBG_CODE_LENGTH
+                fprintf(stderr, "Recover Length from Last FEC_EXTRA_COLS: index=%d (c=%d len=%d shift=%d) d-%02x = %d\n", which_symbol_of_integer_length, c, fb.plen[q], shift, q, data);
+#endif
             }
         }
     }
