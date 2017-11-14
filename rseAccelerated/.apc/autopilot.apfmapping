@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="rseAccelerated.c" path="/scratch/safe/giesen/Decomp/Repository/P4Boosters/rseAccelerated/rseAccelerated.c"/>
+    <originFiles name="rse.h" path="/scratch/safe/giesen/Decomp/Repository/P4Boosters/rseAccelerated/rse.h"/>
+  </source>
+  <testbench>
+    <originFiles name="rsetest.c" path="/scratch/safe/giesen/Decomp/Repository/P4Boosters/rseAccelerated/rsetest.c"/>
+    <originFiles name="rseAcceleratedTest.h" path="/scratch/safe/giesen/Decomp/Repository/P4Boosters/rseAccelerated/rseAcceleratedTest.h"/>
+    <originFiles name="rseAcceleratedTest.c" path="/scratch/safe/giesen/Decomp/Repository/P4Boosters/rseAccelerated/rseAcceleratedTest.c"/>
+    <originFiles name="rse.c" path="/scratch/safe/giesen/Decomp/Repository/P4Boosters/rseAccelerated/rse.c"/>
+  </testbench>
+</autopilotfilemapping:AutoPilotFileMapping>

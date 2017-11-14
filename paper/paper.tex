@@ -154,11 +154,13 @@ application's priorities.
 \section{Introduction}
 
 \section{Mishaps in datacenter networks}
-Gather from the literature:
-Congestion,
-Corruption (link/interface failure,
-Node (host/switch) failure, etc.
-Scheduler error?
+In no particular order:
+1) Congestion,
+2) Corruption (link/interface failure),
+3) Node (host/switch) failure.
+
+Have low locality of traffic (wrt racks) to avoid correlated failures (i.e., data and compute is spread out) wrt power and hardware~\cite{jupiter}.
+
 
 \section{Mitigating network mishaps}
 Deciding where to locate the booster:
@@ -174,7 +176,37 @@ Control process to determine when to activate boosters, and possibly what parame
 \section{Use-cases}
 
 \subsection{Forward Error Correction}
-Need to specify topology early on.
+
+According to Zhuo et al~\cite{} corruption affects fewer links (2-4\% -- wrt congested links or total links?), but the effects are heavier, and the failure is stable over time, when compared with congestion.
+
+They only look at switch-switch links: we do not have any data whether server
+links are less likely to fail. Failures have low locality (not zero, because
+of interconnection at switches). One of the surprising results of their
+research is that failures can occur at any point of the hierarchy with the
+same likelihood -- this despite the disparity in link lengths. Server links
+are max 10 feet long, whereas cables from ToR to aggregation can be 10x
+longer.
+
+\paragraph{Placement} (on a limb) Target ToR since:
+\begin{itemize}
+  \item If the switch-ToR link fails, the whole rack (~30x links) are
+    affected, whereas if a host-ToR link fails then that's a single link.
+  \item Similarly, addressing between FEC-protected hosts is reduced by a
+    factor of ~30, since we can make use of hierarchical addressing. This
+    affects the number of problematic links we can mitigate against.
+  \item Having host-level boosters would be very expensive, to purchase, power, and connect the boosters to each host. Rather than improve things for individual hosts at high expense, we seek improve things for racks at moderate expense.
+\end{itemize}
+
+
+Technical issues:
+\begin{enumerate}
+  \item Placement (Need to specify network topology early on.)
+  \item How the system should react to packet reordering, and retransmissions.
+  \item Can FEC (and other boosters) be done independently from load-balancing?
+  \item Interaction of FEC with error correction in PHY.
+  \item How many failed links does the system tolerate with given resources?
+  \item To what extent is corruption reduced to congestion by this work?
+\end{enumerate}
 
 \subsection{TBD}
 
@@ -185,7 +217,7 @@ Some bits done in P4, and other bits that can co-/entirely run on FPGA or a host
 Ultimately we'd like to show application-level service quality, but
 network-level performance might be a pragmatic surrogate.
 
-Traffic generator to saturate a 10+G link.
+Generate traffic to saturate a 40G link.
 
 Emulating packet loss and packet corruption -- can both these be done using a P4 program?
 
@@ -200,6 +232,7 @@ CorrOpt.
 CONGA.
 
 Boosting elsewhere: JMS' work from the 90's.
+
 \section{Conclusion}
 
 \bibliographystyle{ACM-Reference-Format}
