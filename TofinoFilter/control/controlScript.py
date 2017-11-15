@@ -4,6 +4,7 @@ Simple controller that:
 2. adds rules.
 3. deletes rules/ports.
 """
+progName = "boostFilter"
 
 import importlib
 import os
@@ -24,9 +25,8 @@ from ptf.thriftutils import * # hex_to_i16
 from pltfm_pm_rpc.ttypes import * # pltfm_pm_port_speed_t
 
 
-from boostFilter.p4_pd_rpc.ttypes import * # for this specific app.
-
-
+exec("from %s.p4_pd_rpc.ttypes import *"%progName)
+exec("from %s.p4_pd_rpc.%s import *"%(progName, progName))
 from controlManagerBase import *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
