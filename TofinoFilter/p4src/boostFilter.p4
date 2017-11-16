@@ -38,6 +38,10 @@ parser parse_ethernet {
   return ingress;
 }
 
+parser_exception p4_pe_checksum {
+  return ingress;
+}
+
 // Header for to booster. 
 header_type boost_header_t {
   fields {
@@ -156,7 +160,16 @@ action updateBatchId(){
 }
 
 
+table invalidFCS_table {
+    reads   { ig_intr_md.ingress_port : exact; }
+    actions { set_egr; nop; }
+    size : 288;
+}
+
 control boostingIngress {
+  if (ig_intr_md_from_parser_aux.ingress_parser_err == 0x1000){
+    apply(invalidFCS_table);
+  }
   // If packet is in a boosted circuit, forward without modification.
   if (ethernet.etherType == IN_BOOSTCIRCUIT){
     // todo: check if this is the termination of a boosting circuit.
