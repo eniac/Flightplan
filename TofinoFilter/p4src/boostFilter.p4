@@ -184,7 +184,7 @@ control boostPipeline {
   apply(boostPreprocTable);
 }
 table boostPreprocTable {
-  actions {setBoostHeader_BOOST_TOFPGA; }
+  actions {setBoostHeader_BOOST_TOFPGA; set}
   size : 288;
 }
 action setBoostHeader_BOOST_TOFPGA() {

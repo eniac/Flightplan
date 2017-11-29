@@ -230,6 +230,8 @@ class ControlManagerBase(object):
 
         # close client connection.
         print ("closing connection to asic.")
+        self.mc.mc_destroy_session(self.mc_sess_hdl)
+        self.conn_mgr.complete_operations(self.sess_hdl)
         self.conn_mgr.client_cleanup(self.sess_hdl)        
         if self.transport_pltfm:
             self.transport_pltfm.close()

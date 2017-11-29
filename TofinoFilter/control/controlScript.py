@@ -31,31 +31,40 @@ from controlManagerBase import *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
-fwd_ports = ["1/0", "2/0"]
+fwd_ports = ["1/0"]
 boost_ports = ["3/0"]
 
 def main():
     # init.    
     mgr = BoostControlManager(["boostFilter"])
     mgr.start()
+
+
+
     # ports up.
     fwd_ports_dev = mgr.ports_up(fwd_ports, "100G", "RS")
     boost_ports_dev = mgr.ports_up(boost_ports, "100G", "RS")
 
-    # wipe tables.
-    mgr.cleanup_table("forwardTable")
-    mgr.cleanup_table("boostTable")
+    # # wipe tables.
+    # add rules that map ports to vswitch 1.
+    mgr.add_vswitch_rules(1, fwd_ports_dev, boost_ports_dev[0])
 
-    # add rules.
-    mgr.add_boost_rules(fwd_ports_dev, boost_ports_dev)
 
-    # dump tables.
-    mgr.dump_table("forwardTable")
-    mgr.dump_table("boostTable")
+    # wait for signal from user.
+    raw_input("Press any key to tear down ...")
 
-    # cleanup tables.
-    mgr.cleanup_table("forwardTable")
-    mgr.cleanup_table("boostTable")
+    mgr.cleanup_table("setSwitchIdTable")
+
+    # # add rules.
+    # mgr.add_boost_rules(fwd_ports_dev, boost_ports_dev)
+
+    # # dump tables.
+    # mgr.dump_table("forwardTable")
+    # mgr.dump_table("boostTable")
+
+    # # cleanup tables.
+    # mgr.cleanup_table("forwardTable")
+    # mgr.cleanup_table("boostTable")
 
     # close connection.
     mgr.end()
@@ -64,6 +73,17 @@ class BoostControlManager(ControlManagerBase):
     def __init__(self, p4_names, p4_prefixes=[]):
         ControlManagerBase.__init__(self, p4_names, p4_prefixes)
     # custom methods. 
+    def add_vswitch_rules(self, switchId, fwdPortIds, boostPortId):
+        """
+        Add rules to initialize a virtual switch that owns a slice of the ports.
+        """
+        for fwdPortId in fwdPortIds:
+            matchspec = boostFilter_setSwitchIdTable_match_spec_t(ig_intr_md_ingress_port=fwdPortId)
+            actnspec = boostFilter_setSwitchId_action_spec_t(switchId, boostPortId)
+            result = self.client.setSwitchIdTable_table_add_with_setSwitchId(self.sess_hdl,self.dev_tgt,matchspec,actnspec)
+            self.conn_mgr.complete_operations(self.sess_hdl)
+
+
     def add_boost_rules(self, fwd_ports_dev, boost_ports_dev):
         """
         Add rules for simple booster. 
