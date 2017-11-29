@@ -1,24 +1,15 @@
 /*
-Copyright 2013-present Barefoot Networks, Inc. 
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 */
 
 #include <tofino/intrinsic_metadata.p4>
 #include <tofino/constants.p4>
 
-#define IN_BOOSTCIRCUIT 0x2121
-#define ENTER_BOOSTCIRCUIT 0x4242
+#define BOOST_INFLIGHT 0x2121
+#define BOOST_FROMFPGA 0x4242
+
+#define BOOST_TOFPGA 0x8484
+#define UNBOOST_TOFPGA 0xA5A5
 
 header_type ethernet_t {
   fields {
@@ -38,160 +29,180 @@ parser parse_ethernet {
   return ingress;
 }
 
-parser_exception p4_pe_checksum {
-  return ingress;
-}
+// Header for source booster with FEC. Not used yet.
+// header_type boost_header_t {
+//   fields {
+//     groupId : 8; // to booster.
+//     packetId : 8; // to booster.
+//     // outPort : 8; // from booster. Can booster select output port?
+//   }
+// }
 
-// Header for to booster. 
-header_type boost_header_t {
+header_type slice_md_t {
   fields {
-    groupId : 8; // to booster.
-    packetId : 8; // to booster.
-    // outPort : 8; // from booster. Can booster select output port?
+    switchId : 8; // Id of the virtual switch.
+    boostPort : 9; // Local booster. 
   }
 }
 
-header_type boost_scratch_t {
+
+header_type boost_md_t {
   fields {
-    boostFlowFlag : 1; // Route this flow through booster?
-    boostCircuitFlag : 1; // Route this circuit through booster?
-    boostCircuitId : 8; // ID of this boosting circuit.
+    boostFlag : 1; // Boosting enabled?
   }
 }
 
-header boost_header_t boost_header;
-metadata boost_scratch_t boost_md;
+// header boost_header_t boost_header;
+metadata slice_md_t slice_md;
+metadata boost_md_t boost_md;
 
-// Common actions. 
-// Set egress port for an ingress port. 
-action set_egr(egress_spec) {
-    modify_field(ig_intr_md_for_tm.ucast_egress_port, egress_spec);
-}
-action nop() {}
-
-
-// Main ingress that handles optional boosting. 
 control ingress {
+  // Select switch based on port. 
+  // Only used in forwarding pipeline. 
+  setSwitchIdPipeline();
+  // Only boosting switches for now.
   boostingIngress();
 }
 
+// Ingress for a switch with booster attached. 
+control boostingIngress {
+  monitoringPipeline();
 
+  // Make forwarding decision so booster logic can use it. 
+  forwardingPipeline();
 
-// --------- Forwarding pipeline. ------------
-control forwardPipeline {
-  apply(forwardTable);
+  // If packet is directly from booster, forward and do post-processing.
+  // FORWARD --> POSTPROC.
+  if (ethernet.etherType == BOOST_FROMFPGA){
+    postProcessingPipeline();
+  }
+  else {
+    // if packet was boosted at some prior point in the path, this is the sink. 
+    // FORWARD -> UNBOOST.
+    if (ethernet.etherType == BOOST_INFLIGHT){
+      unboostPipeline();
+    }
+    // If it's unboosted, make forwarding decision then attempt to boost. 
+    // FORWARD -> ADMISSION --> BOOST.
+    else {
+      admissionControlPipeline();
+      if (boost_md.boostFlag == 1){
+        boostPipeline();
+      }
+    }
+  }
 }
-table forwardTable {
+
+// -------------------------- Monitoring logic -----------------
+control setSwitchIdPipeline {
+  apply(setSwitchIdTable);
+}
+table setSwitchIdTable {
     reads   { ig_intr_md.ingress_port : exact; }
-    actions { set_egr; nop; }
-    size : 288;
+    actions {setSwitchId; }
 }
-
-// --------- Boost policy pipeline. ------------
-
-// check if boosting applies to packet. 
-control checkBoostPolicy {
-  // check fine grained policy.
-  apply(boostPolicyTable);
-
-  // check if circuit is enabled. 
-  apply(boostCircuitTable);
+action setSwitchId(switchId, boostPort) {
+  modify_field(slice_md.switchId, switchId);
+  modify_field(slice_md.boostPort, boostPort);
 }
+// -------------------------------------------------------------
 
-// fine grained policy table to select the flows to boost.
-table boostPolicyTable {
-  reads { 
-    ethernet.srcAddr : exact; 
-    ethernet.dstAddr : exact;
-  }
-  actions {
-    nop; setBoostFlowFlag;
+// -------------------------- Monitoring logic -----------------
+control monitoringPipeline {
+  if (ig_intr_md_from_parser_aux.ingress_parser_err == 0x1000){
+    apply(invalidFCS_table);
   }
 }
-
-action setBoostFlowFlag(){
-  modify_field(boost_md.boostFlowFlag, 1);
-}
-
-// coarse grained system table to turn on or off boosting circuits.
-table boostCircuitTable {
-  reads { 
-    ethernet.dstAddr : exact;
-  }
-  actions {
-    setBoostCircuitFlag;
-  }
-}
-// Todo: this should look in a register. 
-// Circuits should be highly dynamic? 
-action setBoostCircuitFlag() {
-  modify_field(boost_md.boostCircuitFlag, 1);
-}
-
-// --------- Boost preprocessing pipeline. ------------
-
-control doBoosting {
-    // get packet ct. 
-    apply (getPacketId);
-    // get batch number.
-    apply (getBatchId);
-    // tag packet, add header.
-    // set egress port to booster. 
-}
-
-table getPacketId {
-  actions {
-    updatePacketId;
-  }
-}
-
-action updatePacketId(){
-  nop();
-}
-
-table getBatchId { 
-  actions {
-    updateBatchId;
-  }
-}
-
-action updateBatchId(){
-  nop();
-}
-
 
 table invalidFCS_table {
     reads   { ig_intr_md.ingress_port : exact; }
     actions { set_egr; nop; }
     size : 288;
 }
+// -------------------------------------------------------------
 
-control boostingIngress {
-  if (ig_intr_md_from_parser_aux.ingress_parser_err == 0x1000){
-    apply(invalidFCS_table);
-  }
-  // If packet is in a boosted circuit, forward without modification.
-  if (ethernet.etherType == IN_BOOSTCIRCUIT){
-    // todo: check if this is the termination of a boosting circuit.
-    forwardPipeline();
-  }
-  // If packet is entering a boosted circuit, forward without modification. 
-  else {
-    if (ethernet.etherType == ENTER_BOOSTCIRCUIT){
-      // todo: let booster select output port? 
-      forwardPipeline();
+// -------------------------- Forwarding logic -----------------
+control forwardingPipeline {
+  apply(forwardingTable);
+
+}
+// Modified for slicing. Add rules for each switch ID. 
+table forwardingTable {
+    reads   { 
+      slice_md.switchId : exact; 
+      ig_intr_md.ingress_port : exact; 
     }
-    // If packet is not in, or entering, a boosted circuit, check if it should be boosted. 
-    else {
-      // Check the policy for boosting to determine if the flow should get boosted.
-      checkBoostPolicy();
-      // If the flow should get boosted, and the destination is on a boosted circuit, do the boosting.
-      if (boost_md.boostFlowFlag == 1){
-        if (boost_md.boostCircuitFlag == 1){
-          doBoosting();
-      // Otherwise, if the policy check fails (either flow or circuit), do not boost. Just forward.
-        } else { forwardPipeline();}
-      } else { forwardPipeline();}
-    }
+    actions { set_egr; nop; }
+    size : 288;
+}
+// Set egress port for an ingress port. 
+action set_egr(egress_spec) {
+    modify_field(ig_intr_md_for_tm.ucast_egress_port, egress_spec);
+}
+action nop() {}
+
+// -------------------------------------------------------------
+
+
+// ------------------ boosting post-proc logic -----------------
+control postProcessingPipeline {
+  apply(postProcTable);
+}
+table postProcTable {
+  actions {setBoostHeader_BOOST_INFLIGHT; }
+  size : 288;
+}
+action setBoostHeader_BOOST_INFLIGHT() {
+  modify_field(ethernet.etherType, BOOST_INFLIGHT);
+}
+
+// -------------------------------------------------------------
+
+// ------------------ admission control logic -----------------
+control admissionControlPipeline {
+  // apply(boostPolicyTable); // Check if this class of traffic is allowed. 
+  apply(boostEndpointTable); // Check if boosting to this endpoint is enabled. 
+}
+// coarse grained system table to turn on or off boosting circuits.
+table boostEndpointTable {
+  reads { 
+    ethernet.dstAddr : exact;
+  }
+  actions {
+    setBoostFlag;
   }
 }
+// Todo: this should look in a register. 
+// Circuits should be highly dynamic? 
+action setBoostFlag() {
+  modify_field(boost_md.boostFlag, 1);
+}
+// -------------------------------------------------------------
+
+// ------------------ boosting pre-proc logic -----------------
+control boostPipeline {
+  apply(boostPreprocTable);
+}
+table boostPreprocTable {
+  actions {setBoostHeader_BOOST_TOFPGA; }
+  size : 288;
+}
+action setBoostHeader_BOOST_TOFPGA() {
+  modify_field(ethernet.etherType, BOOST_TOFPGA);
+  modify_field(ig_intr_md_for_tm.ucast_egress_port, slice_md.boostPort);
+}
+// -------------------------------------------------------------
+
+
+// ------------------ unboosting pre-proc logic ---------------
+control unboostPipeline {
+  apply(unboostPreprocTable);
+}
+table unboostPreprocTable {
+  actions {setBoostHeader_UNBOOST_TOFPGA; }
+  size : 288;
+}
+action setBoostHeader_UNBOOST_TOFPGA() {
+  modify_field(ethernet.etherType, UNBOOST_TOFPGA);
+}
+// -------------------------------------------------------------

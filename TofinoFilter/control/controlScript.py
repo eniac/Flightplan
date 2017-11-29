@@ -68,6 +68,22 @@ class BoostControlManager(ControlManagerBase):
         """
         Add rules for simple booster. 
         """
+        # switch mapping rules. 
+        # 1: ports 27 (vin1), 1 (link), and 3 (booster)
+        # 2: ports 28 (vin2), 2 (link), and 4 (booster)
+
+        # forwarding rules: 
+        # switch 1: 
+        # port 27 --> port 1
+        # switch 2: 
+        # port 2 --> port 28
+
+        # admission rules: 
+        # default (once enabled)
+
+        # all other rules: default
+
+
         # add rule from 1 to 2.
         matchspec = boostFilter_forwardTable_match_spec_t(ethernet_dstAddr=macAddr_to_string("24:8a:07:5b:15:34"))
         actnspec = boostFilter_set_egr_action_spec_t(fwd_ports_dev[1])
