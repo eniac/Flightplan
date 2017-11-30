@@ -118,7 +118,7 @@ control monitoringPipeline {
 
 table invalidFCS_table {
     reads   { ig_intr_md.ingress_port : exact; }
-    actions { set_egr; nop; }
+    actions { nop; }
     size : 288;
 }
 // -------------------------------------------------------------
@@ -131,23 +131,30 @@ control forwardingPipeline {
 // Modified for slicing. Add rules for each switch ID. 
 table forwardingTable {
     reads   { 
-      slice_md.switchId : exact; 
+      slice_md.switchId : exact;
       ethernet.dstAddr : exact;
       // ig_intr_md.ingress_port : exact; 
     }
-    actions { set_egr; nop; l2_miss;}
+    actions { unicast; nop; broadcast;}
     size : 288;
 }
 // Set egress port based on dmac
-action set_egr(egress_spec) {
+action unicast(egress_spec) {
     modify_field(ig_intr_md_for_tm.ucast_egress_port, egress_spec);
 }
+
+// flood to group based on ingress port number. 
+action broadcast() {
+    modify_field(ig_intr_md_for_tm.mcast_grp_a, ig_intr_md.ingress_port);  
+}
+
 action nop() {}
 
-// miss --> flood to the multicast group associated with this vswitch. 
-action l2_miss(){
-    modify_field(ig_intr_md_for_tm.mcast_grp_a, slice_md.mcastId);  
-}
+// Need 1 multicast group per input port for flooding --> this must be done _after_ post processing?
+// // miss --> flood to the multicast group associated with this vswitch. 
+// action l2_miss(){
+//     modify_field(ig_intr_md_for_tm.mcast_grp_a, slice_md.mcastId);  
+// }
 
 
 // -------------------------------------------------------------
