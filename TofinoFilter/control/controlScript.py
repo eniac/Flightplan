@@ -87,7 +87,7 @@ def main():
 
     s1 = StaticVswitch(1)
     s1.addStation("ec:0d:9a:6d:e0:b8", 191)
-    s1.addStation("ec:0d:9a:7e:91:82", 183)
+    # s1.addStation("ec:0d:9a:7e:91:82", 183)
     s1.addAggLink(aggregate_ports_dev_1[0])
     s1.addBoostLink(boost_ports_dev_1[0])
 
@@ -96,12 +96,12 @@ def main():
     # install rules for port --> switch mapping.
     mgr.addVswitchRules(s1.sid)
 
-    # s2 = StaticVswitch(2)
-    # s2.addStation("ec:0d:9a:7e:91:82", 183)
-    # s2.addAggLink(aggregate_ports_dev_2[0])
-    # s2.addBoostLink(boost_ports_dev_2[0])
-    # mgr.addVswitch(s2)
-    # mgr.addVswitchRules(s2.sid)
+    s2 = StaticVswitch(2)
+    s2.addStation("ec:0d:9a:7e:91:82", 183)
+    s2.addAggLink(aggregate_ports_dev_2[0])
+    s2.addBoostLink(boost_ports_dev_2[0])
+    mgr.addVswitch(s2)
+    mgr.addVswitchRules(s2.sid)
 
     # install unicast rules. 
     print "installing unicast rules."
