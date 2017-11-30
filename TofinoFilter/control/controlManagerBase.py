@@ -355,14 +355,52 @@ class ControlManagerBase(object):
         self.mirror.mirror_session_create(self.sess_hdl, self.dev_tgt, info)
         self.conn_mgr.complete_operations(self.sess_hdl)
 
-    def add_mc_group(self, mc_ports):
-        brid = 1
-        self.mc.mc_mgrp_create(self.mc_sess_hdl, self.dev_tgt.dev_id, hex_to_i16(brid))
-        l1_hdl = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, hex_to_i16((~brid)&0xFFFF), port_map, lag_map)
-        for port in mc_ports:
-            print ("adding port %s to mirror %s"%(port, sid))
-            info = mirror_session(MirrorType_e.PD_MIRROR_TYPE_NORM, Direction_e.PD_DIR_EGRESS, sid, port, True)
-            self.mirror.mirror_session_create(self.sess_hdl, self.dev_tgt, info)
+    def add_mc_group(self, mc_id, mc_ports):
+        """
+        create a multicast flood group for a set of ports.
+        """
+        lag_map = set_port_or_lag_bitmap(256, [])
+        # program flood mcidx
+        flood_ports = []
+        g_num_pipes = 2
+        g_chan_per_port = 1
+        print mc_ports
+        flood_ports = [int(p) for p in mc_ports]
+        # for pipe in range(0, g_num_pipes):
+        #     flood_ports += range((pipe << 7), ((pipe << 7)+64), 4/g_chan_per_port)
+        print flood_ports
+        port_map = set_port_or_lag_bitmap(288, flood_ports)
+        mc_grp_hdl = self.mc.mc_mgrp_create(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_id)
+        mc_node_hdl = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, 0, port_map, lag_map)
+        self.mc.mc_associate_node(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_grp_hdl, mc_node_hdl, 0, 0)
+
+        # self.mc.mc_mgrp_destroy(self.mc_sess_hdl, self.dev_tgt.dev_id, hex_to_i32(mc_grp_hdl))
+        return
+
+        # brid = mc_id
+        # self.mc.mc_mgrp_create(self.mc_sess_hdl, self.dev_tgt.dev_id, hex_to_i16(brid))
+        # l1_hdl = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, hex_to_i16((~brid)&0xFFFF), port_map, lag_map)
+        # for port in mc_ports:
+        #     print ("adding port %s to mirror %s"%(port, sid))
+        #     info = mirror_session(MirrorType_e.PD_MIRROR_TYPE_NORM, Direction_e.PD_DIR_EGRESS, sid, port, True)
+        #     self.mirror.mirror_session_create(self.sess_hdl, self.dev_tgt, info)
+
+
+def port_to_pipe(port):
+    return port >> 7
+def port_to_pipe_local_id(port):
+    return port & 0x7F
+def port_to_bit_idx(port):
+    pipe = port_to_pipe(port)
+    index = port_to_pipe_local_id(port)
+    return 72 * pipe + index
+
+def set_port_or_lag_bitmap(bit_map_size, indicies):
+    bit_map = [0] * ((bit_map_size+7)/8)
+    for i in indicies:
+        index = port_to_bit_idx(i)
+        bit_map[index/8] = (bit_map[index/8] | (1 << (index%8))) & 0xFF
+    return bytes_to_string(bit_map)
 
 def mirror_session(mir_type, mir_dir, sid, egr_port=0, egr_port_v=False,
                    egr_port_queue=0, packet_color=0, mcast_grp_a=0,

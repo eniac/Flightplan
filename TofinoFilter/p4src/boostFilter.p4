@@ -42,6 +42,7 @@ header_type slice_md_t {
   fields {
     switchId : 8; // Id of the virtual switch.
     boostPort : 9; // Local booster. 
+    mcastId : 16;
   }
 }
 
@@ -66,34 +67,34 @@ control ingress {
 
 // Ingress for a switch with booster attached. 
 control boostingIngress {
-  monitoringPipeline();
+  // monitoringPipeline();
 
   // Make forwarding decision so booster logic can use it. 
   forwardingPipeline();
 
-  // If packet is directly from booster, forward and do post-processing.
-  // FORWARD --> POSTPROC.
-  if (ethernet.etherType == BOOST_FROMFPGA){
-    postProcessingPipeline();
-  }
-  else {
-    // if packet was boosted at some prior point in the path, this is the sink. 
-    // FORWARD -> UNBOOST.
-    if (ethernet.etherType == BOOST_INFLIGHT){
-      unboostPipeline();
-    }
-    // If it's unboosted, make forwarding decision then attempt to boost. 
-    // FORWARD -> ADMISSION --> BOOST.
-    else {
-      admissionControlPipeline();
-      if (boost_md.boostFlag == 1){
-        boostPipeline();
-      }
-    }
-  }
+  // // If packet is directly from booster, forward and do post-processing.
+  // // FORWARD --> POSTPROC.
+  // if (ethernet.etherType == BOOST_FROMFPGA){
+  //   postProcessingPipeline();
+  // }
+  // else {
+  //   // if packet was boosted at some prior point in the path, this is the sink. 
+  //   // FORWARD -> UNBOOST.
+  //   if (ethernet.etherType == BOOST_INFLIGHT){
+  //     unboostPipeline();
+  //   }
+  //   // If it's unboosted, make forwarding decision then attempt to boost. 
+  //   // FORWARD -> ADMISSION --> BOOST.
+  //   else {
+  //     admissionControlPipeline();
+  //     if (boost_md.boostFlag == 1){
+  //       boostPipeline();
+  //     }
+  //   }
+  // }
 }
 
-// -------------------------- Monitoring logic -----------------
+// -------------------------- switch id logic -----------------
 control setSwitchIdPipeline {
   apply(setSwitchIdTable);
 }
@@ -103,6 +104,7 @@ table setSwitchIdTable {
 }
 action setSwitchId(switchId, boostPort) {
   modify_field(slice_md.switchId, switchId);
+  modify_field(slice_md.mcastId, switchId);
   modify_field(slice_md.boostPort, boostPort);
 }
 // -------------------------------------------------------------
@@ -130,16 +132,23 @@ control forwardingPipeline {
 table forwardingTable {
     reads   { 
       slice_md.switchId : exact; 
-      ig_intr_md.ingress_port : exact; 
+      ethernet.dstAddr : exact;
+      // ig_intr_md.ingress_port : exact; 
     }
-    actions { set_egr; nop; }
+    actions { set_egr; nop; l2_miss;}
     size : 288;
 }
-// Set egress port for an ingress port. 
+// Set egress port based on dmac
 action set_egr(egress_spec) {
     modify_field(ig_intr_md_for_tm.ucast_egress_port, egress_spec);
 }
 action nop() {}
+
+// miss --> flood to the multicast group associated with this vswitch. 
+action l2_miss(){
+    modify_field(ig_intr_md_for_tm.mcast_grp_a, slice_md.mcastId);  
+}
+
 
 // -------------------------------------------------------------
 
@@ -184,7 +193,7 @@ control boostPipeline {
   apply(boostPreprocTable);
 }
 table boostPreprocTable {
-  actions {setBoostHeader_BOOST_TOFPGA; set}
+  actions {setBoostHeader_BOOST_TOFPGA;}
   size : 288;
 }
 action setBoostHeader_BOOST_TOFPGA() {
