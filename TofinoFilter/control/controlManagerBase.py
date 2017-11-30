@@ -278,15 +278,15 @@ class ControlManagerBase(object):
                 else:
                     print '        ',
                     print key, ':', val
-
+            
             if hasattr(entry, 'action_desc'):
                 print '\t    Action:', entry.action_desc.name
                 print '\t    Data:',
-                for key, val in entry.action_desc.data.__dict__.items():
-                    print '        ',
-                    print key, ':', val
-            elif hasattr(entry, 'members'):
-                print '\t    Members:', entry.members
+            #     for key, val in entry.action_desc.data.__dict__.items():
+            #         print '        ',
+            #         print key, ':', val
+            # elif hasattr(entry, 'members'):
+            #     print '\t    Members:', entry.members
             i += 1    
 
     # helper. deletes all the entries in a table.

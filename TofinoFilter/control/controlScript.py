@@ -31,6 +31,7 @@ from controlManagerBase import *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
+# L1 configuration. 
 host_ports_1 = ["25/0", "25/1", "25/2", "25/3"]
 aggregate_ports_1 = ["3/0"]
 boost_ports_1 = ["5/0"]
@@ -40,6 +41,32 @@ aggregate_ports_2 = ["4/0"]
 boost_ports_2 = ["6/0"]
 
 
+class StaticVswitch(object):
+    def __init__(self, sid):
+        self.sid = sid
+        self.lMacMap = {}
+        self.aggPort = None
+        self.boostPort = None
+
+    def addStation(self, mac, port):
+        """
+        add a L2 host. Pass this a mac address and a dev_port.
+        """
+        self.lMacMap[mac] = port
+    def addAggLink(self, port):
+        """
+        add an uplink / aggregation link. 
+        """
+        self.aggPort = port
+    def addBoostLink(self, port):
+        """
+        add a port to a booster.
+        """
+        self.boostPort = port
+    def export(self):
+        return (self.lMacMap, self.aggPort, self.boostPort)
+
+
 # --preload-pcap --loop=10 --topspeed -i
 
 def main():
@@ -47,67 +74,57 @@ def main():
     mgr = BoostControlManager(["boostFilter"])
     mgr.start()
 
-    # switch mapping. 
-    # 1: ports 27 (vin1), 1 (link), and 3 (booster)
-    # 2: ports 28 (vin2), 2 (link), and 4 (booster)
 
     # ports up.
-    host_macs_1 = ["ec:0d:9a:6d:e0:b8"]
     host_ports_dev_1 = mgr.ports_up(host_ports_1, "25G", "NONE")
     aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "100G", "RS")
     boost_ports_dev_1 = mgr.ports_up(boost_ports_1, "100G", "RS")
 
-    host_macs_2 = ["ec:0d:9a:7e:91:82"]
     host_ports_dev_2 = mgr.ports_up(host_ports_2, "25G", "NONE")
     aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "100G", "RS")
     boost_ports_dev_2 = mgr.ports_up(boost_ports_2, "100G", "RS")
 
-    # # wipe tables.
-    # add rules that map ports to vswitch 1.
-    # mgr.add_vswitch_rules(1, host_ports_dev_1, boost_ports_dev_1[0])
-    # mgr.add_vswitch_rules(2, host_ports_dev_2, boost_ports_dev_2[0])
 
-    # add multicast groups for each vswitch.
-    mgr.add_mc_group(1, host_ports_dev_1 + aggregate_ports_dev_1)
-    mgr.add_mc_group(2, host_ports_dev_2 + aggregate_ports_dev_2)
+    s1 = StaticVswitch(1)
+    s1.addStation("ec:0d:9a:6d:e0:b8", 191)
+    s1.addStation("ec:0d:9a:7e:91:82", 183)
+    s1.addAggLink(aggregate_ports_dev_1[0])
+    s1.addBoostLink(boost_ports_dev_1[0])
+
+    # add switches. 
+    mgr.addVswitch(s1)
+    # install rules for port --> switch mapping.
+    mgr.addVswitchRules(s1.sid)
+
+    # s2 = StaticVswitch(2)
+    # s2.addStation("ec:0d:9a:7e:91:82", 183)
+    # s2.addAggLink(aggregate_ports_dev_2[0])
+    # s2.addBoostLink(boost_ports_dev_2[0])
+    # mgr.addVswitch(s2)
+    # mgr.addVswitchRules(s2.sid)
+
+    # install unicast rules. 
+    print "installing unicast rules."
+    mgr.addUnicastRules()
+
+    # install broadcast rules. 
+    print "installing broadcast rules."
+    mgr.addMcGroups()
+    mgr.addBroadcastRules()
+
+    # mgr.dump_table("setSwitchIdTable")
+    mgr.dump_table("forwardingTable")
 
     # add rules to enable boosting (all switches)
     # mgr.add_admission_rules()
-
-    # add forwarding rules.
-
-    # remote host --> agg port 
-
-    # local host --> local port
-
-    # miss --> flood
-    mgr.add_miss_rule()
-
-    # mgr.add_local_local_rules(1, host_macs_1, host_ports_dev_1)
-    # mgr.add_agg_local_rules(1, host_macs_2, aggregate_ports_dev_1[0])
-
-    # mgr.add_local_local_rules(2, host_macs_2, host_ports_dev_2)
-    # mgr.add_agg_local_rules(2, host_macs_1, aggregate_ports_dev_2[0])
-
 
 
     # wait for signal from user.
     raw_input("Press any key to tear down ...")
 
+    # cleanup tables.
     mgr.cleanup_table("setSwitchIdTable")
-    # mgr.cleanup_table("boostEndpointTable")
-    # mgr.cleanup_table("boostPreprocTable")
-
-    # # add rules.
-    # mgr.add_boost_rules(fwd_ports_dev, boost_ports_dev)
-
-    # # dump tables.
-    # mgr.dump_table("forwardTable")
-    # mgr.dump_table("boostTable")
-
-    # # cleanup tables.
-    # mgr.cleanup_table("forwardTable")
-    # mgr.cleanup_table("boostTable")
+    mgr.cleanup_table("forwardingTable")
 
     # close connection.
     mgr.end()
@@ -115,16 +132,109 @@ def main():
 class BoostControlManager(ControlManagerBase):
     def __init__(self, p4_names, p4_prefixes=[]):
         ControlManagerBase.__init__(self, p4_names, p4_prefixes)
+        # internal mapping structures. 
+        self.sidToMac = {}
+        self.sidToLocal = {}
+        self.sidToAgg = {}
+        self.sidToBoost = {}
+        self.localToSid = {}
+
+        self.mc_group_hdls = []
+
     # custom methods. 
-    def add_vswitch_rules(self, switchId, fwdPortIds, boostPortId):
+    def addVswitch(self, vSwitch):
+        """
+        Add a switch object to the topology. 
+        """
+        # update maps.
+        self.sidToMac[vSwitch.sid] = vSwitch.lMacMap
+        self.sidToAgg[vSwitch.sid] = vSwitch.aggPort        
+        self.sidToBoost[vSwitch.sid] = vSwitch.boostPort        
+        # rebuild convenience maps. 
+        self.sidToLocal = {k: v.values() for k, v in self.sidToMac.items()}
+        self.localToSid = {}        
+        for sid, localList in self.sidToLocal.items():
+            for local in localList:
+                self.localToSid[local] = sid
+
+    def addVswitchRules(self, sid):
         """
         Add rules to initialize a virtual switch that owns a slice of the ports.
         """
-        for fwdPortId in fwdPortIds:
-            matchspec = boostFilter_setSwitchIdTable_match_spec_t(ig_intr_md_ingress_port=fwdPortId)
-            actnspec = boostFilter_setSwitchId_action_spec_t(switchId, boostPortId)
+        print self.sidToLocal[sid]
+        print [self.sidToAgg[sid]]
+        for portId in self.sidToLocal[sid] + [self.sidToAgg[sid]]:
+            matchspec = boostFilter_setSwitchIdTable_match_spec_t(ig_intr_md_ingress_port=portId)
+            actnspec = boostFilter_setSwitchId_action_spec_t(sid, self.sidToBoost[sid])
             result = self.client.setSwitchIdTable_table_add_with_setSwitchId(self.sess_hdl,self.dev_tgt,matchspec,actnspec)
             self.conn_mgr.complete_operations(self.sess_hdl)
+
+    def addMcGroups(self):
+        """
+        create a multicast flood group for each port.
+        """
+        lag_map = set_port_or_lag_bitmap(256, [])
+
+        # flood to every other port in your group besides the booster. 
+        for port, sid in self.localToSid.items():
+            mc_id = port
+            flood_ports = self.sidToLocal[sid] + [self.sidToAgg[sid]]
+            flood_ports = list(set(flood_ports) - set([port]))
+            print ("sid: %s port: %s flood_ports: %s"%(sid, port, flood_ports))
+            port_map = set_port_or_lag_bitmap(288, flood_ports)
+            mc_grp_hdl = self.mc.mc_mgrp_create(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_id)
+            mc_node_hdl = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, 0, port_map, lag_map)
+            self.mc.mc_associate_node(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_grp_hdl, mc_node_hdl, 0, 0)
+            self.mc_group_hdls.append(mc_grp_hdl)
+
+        # also flood from agg.
+        for sid, agg in self.sidToAgg.items():
+            mc_id = agg
+            flood_ports = self.sidToLocal[sid]
+            port_map = set_port_or_lag_bitmap(288, flood_ports)
+            mc_grp_hdl = self.mc.mc_mgrp_create(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_id)
+            mc_node_hdl = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, 0, port_map, lag_map)
+            self.mc.mc_associate_node(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_grp_hdl, mc_node_hdl, 0, 0)
+            self.mc_group_hdls.append(mc_grp_hdl)
+        return
+
+    def addUnicastRule(self, sid, dmac, outport_dev):
+        """ 
+        add a single forwarding rule. 
+        """
+        matchspec = boostFilter_forwardingTable_match_spec_t(slice_md_switchId = sid, ethernet_dstAddr=macAddr_to_string(dmac))
+        actnspec = boostFilter_unicast_action_spec_t(outport_dev)
+        result = self.client.forwardingTable_table_add_with_unicast(self.sess_hdl,self.dev_tgt,matchspec,actnspec)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+    def addBroadcastRule(self, sid):
+        """ 
+        add a single broadcast rule. 
+        """
+        matchspec = boostFilter_forwardingTable_match_spec_t(slice_md_switchId = sid, ethernet_dstAddr=macAddr_to_string("ff:ff:ff:ff:ff:ff"))
+        result = self.client.forwardingTable_table_add_with_broadcast(self.sess_hdl,self.dev_tgt,matchspec)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+
+    def addUnicastRules(self):
+        """
+        Add the unicast rules. 
+        """
+        for lSid, lMacMap in self.sidToMac.items():
+            lAgg = self.sidToAgg[lSid]
+            for lMac, lPort in lMacMap.items():
+                self.addUnicastRule(lSid, lMac, lPort)
+            for rSid, rMacMap in self.sidToMac.items():
+                for rMac, rPort in rMacMap.items():
+                    if rSid != lSid: 
+                        self.addUnicastRule(lSid, rMac, lAgg)
+
+    def addBroadcastRules(self):
+        """
+        Add the broadcast rules. 
+        """ 
+        for lSid in self.sidToMac.keys():
+            self.addBroadcastRule(lSid)
+
+
     def add_admission_rules(self):
         """
         Add admission control rules. 
@@ -139,90 +249,6 @@ class BoostControlManager(ControlManagerBase):
         """
         self.client.boostPreprocTable_set_default_action_setBoostHeader_BOOST_TOFPGA(self.sess_hdl, self.dev_tgt)
         self.conn_mgr.complete_operations(self.sess_hdl)
-    def add_miss_rule(self):
-        """
-        Add rule for forwarding table miss. 
-        """
-        self.client.forwardingTable_set_default_action_l2_miss(self.sess_hdl, self.dev_tgt)
-        self.conn_mgr.complete_operations(self.sess_hdl)
-
-
-    # def add_forward_rules(self, switchId, host_ports_dev, agg_port_dev):
-    #     for hostPortId in host_ports_dev:
-    #         # matchspec = boostFilter_forwardTable_match_spec_t(ethernet_dstAddr=macAddr_to_string("24:8a:07:5b:15:35"))
-    #         matchspec = boostFilter_forwardingTable_match_spec_t(slice_md_switchId = switchId, ig_intr_md_ingress_port=hostPortId)
-    #         actnspec = boostFilter_setSwitchId_action_spec_t(switchId, boostPortId)
-    #         result = self.client.setSwitchIdTable_table_add_with_setSwitchId(self.sess_hdl,self.dev_tgt,matchspec,actnspec)
-    #         self.conn_mgr.complete_operations(self.sess_hdl)
-
-
-        # all ports -> aggregate port. 
-
-        # add switch 1, boost port --> link port.
-        # add switch 2, boost port --> out port. 
-        # matchspec = boostFilter_forwardTable_match_spec_t(ethernet_dstAddr=macAddr_to_string("24:8a:07:5b:15:34"))
-        # actnspec = boostFilter_set_egr_action_spec_t(fwd_ports_dev[1])
-        # result = self.client.forwardTable_table_add_with_set_egr(self.sess_hdl,self.dev_tgt,matchspec,actnspec)
-        # self.conn_mgr.complete_operations(self.sess_hdl)
-
-
-        # self.client.boostPreprocTable_set_default_action_setBoostHeader_BOOST_TOFPGA(self.sess_hdl, self.dev_tgt)
-        # self.conn_mgr.complete_operations(self.sess_hdl)
-
-        # # forwarding rules: 
-        # # switch 1: 
-        # # port 27 --> port 1
-        # # switch 2: 
-        # # port 2 --> port 28
-
-        # # admission rules: 
-        # # default (once enabled)
-
-        # # all other rules: default
-
-
-        # # add rule from 1 to 2.
-        # matchspec = boostFilter_forwardTable_match_spec_t(ethernet_dstAddr=macAddr_to_string("24:8a:07:5b:15:34"))
-        # actnspec = boostFilter_set_egr_action_spec_t(fwd_ports_dev[1])
-        # result = self.client.forwardTable_table_add_with_set_egr(self.sess_hdl,self.dev_tgt,matchspec,actnspec)
-        # self.conn_mgr.complete_operations(self.sess_hdl)
-
-        # # add rule from 2 to 1.
-        # matchspec = boostFilter_forwardTable_match_spec_t(ethernet_dstAddr=macAddr_to_string("24:8a:07:5b:15:35"))
-        # actnspec = boostFilter_set_egr_action_spec_t(fwd_ports_dev[0])
-        # result = self.client.forwardTable_table_add_with_set_egr(self.sess_hdl, self.dev_tgt, matchspec, actnspec)
-        # self.conn_mgr.complete_operations(self.sess_hdl)
-
-        # # add rules from any port to booster.
-        # matchspec = boostFilter_boostTable_match_spec_t(fwd_ports_dev[0])
-        # actnspec = boostFilter_set_egr_action_spec_t(boost_ports_dev[0])
-        # result = self.client.boostTable_table_add_with_set_egr(self.sess_hdl, self.dev_tgt, matchspec, actnspec)
-        # self.conn_mgr.complete_operations(self.sess_hdl)
-
-        # matchspec = boostFilter_boostTable_match_spec_t(fwd_ports_dev[1])
-        # actnspec = boostFilter_set_egr_action_spec_t(boost_ports_dev[0])
-        # result = self.client.boostTable_table_add_with_set_egr(self.sess_hdl, self.dev_tgt, matchspec, actnspec)
-        # self.conn_mgr.complete_operations(self.sess_hdl)
-
-        
-    # def add_rules(self, loop_ports_out_dev):
-    #     # example of default rules -- not for booster.
-    #     self.cleanup_table("setLoopOutPort")
-    #     # add counter1 : incrementCounter1
-    #     self.client.counter1_set_default_action_incrementCounter1(self.sess_hdl, self.dev_tgt)
-
-    #     # add computeMod : modCounter1
-    #     self.client.computeMod_set_default_action_modCounter1(self.sess_hdl, self.dev_tgt)
-    #     # add setLoopOutPort : countheader.counter1ModValue --> setEgress(egress_spec)
-    #     i = 0
-    #     for dev_port in loop_ports_out_dev:
-    #         matchspec = globalCounter_setLoopOutPort_match_spec_t(countheader_counter1ModValue=i)
-    #         actnspec = globalCounter_setEgress_action_spec_t(dev_port)
-    #         result = self.client.setLoopOutPort_table_add_with_setEgress(self.sess_hdl, self.dev_tgt, matchspec, actnspec)
-    #         i+=1
-    #     self.conn_mgr.complete_operations(self.sess_hdl)
-    #     self.dump_table("setLoopOutPort")
-    #     return
 
 
 if __name__ == '__main__':
