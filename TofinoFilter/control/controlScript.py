@@ -6,6 +6,8 @@ Simple controller that:
 """
 progName = "boostFilter"
 
+import select
+import sys
 import importlib
 import os
 import logging
@@ -77,11 +79,13 @@ def main():
 
     # ports up.
     host_ports_dev_1 = mgr.ports_up(host_ports_1, "25G", "NONE")
-    aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "100G", "RS")
+    # aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "100G", "RS")
+    aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "10G", "NONE")
     boost_ports_dev_1 = mgr.ports_up(boost_ports_1, "100G", "RS")
 
     host_ports_dev_2 = mgr.ports_up(host_ports_2, "25G", "NONE")
-    aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "100G", "RS")
+    # aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "100G", "RS")
+    aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "10G", "NONE")
     boost_ports_dev_2 = mgr.ports_up(boost_ports_2, "100G", "RS")
 
 
@@ -115,21 +119,48 @@ def main():
     # mgr.dump_table("setSwitchIdTable")
     mgr.dump_table("forwardingTable")
 
+    # add boosting rules. 
+    mgr.addAdmissionRules()
+    mgr.addBoostRules()
+    mgr.addBoostPostProcessingRules()
+    mgr.addUnboostRules()
+    mgr.addUnboostPostProcessingRules()
+
+
     # add rules to enable boosting (all switches)
     # mgr.add_admission_rules()
 
+    # mgr.poll_counter_loop()
 
     # wait for signal from user.
     raw_input("Press any key to tear down ...")
 
     # cleanup tables.
-    mgr.cleanup_table("setSwitchIdTable")
-    mgr.cleanup_table("forwardingTable")
+    # mgr.cleanup_table("setSwitchIdTable")
+    # mgr.cleanup_table("forwardingTable")
+    # mgr.cleanup_table("admissionControlTable")
 
     # close connection.
     mgr.end()
 
 class BoostControlManager(ControlManagerBase):
+    def poll_counter_loop(self):
+        """
+        Poll a counter and print the value. 
+        """
+        flags = boostFilter_register_flags_t(read_hw_sync=True)
+        while (1):        
+            counts = []
+            for i in range(10):
+                res = self.client.register_read_counterReg(self.sess_hdl, self.dev_tgt, i, flags)
+                self.conn_mgr.complete_operations(self.sess_hdl)
+                counts.append(res)
+            print "counts: %s"%(zip(range(10), counts))
+            i, o, e = select.select( [sys.stdin], [], [], 1 )
+            if (i):
+                break
+
+
     def __init__(self, p4_names, p4_prefixes=[]):
         ControlManagerBase.__init__(self, p4_names, p4_prefixes)
         # internal mapping structures. 
@@ -163,7 +194,8 @@ class BoostControlManager(ControlManagerBase):
         """
         print self.sidToLocal[sid]
         print [self.sidToAgg[sid]]
-        for portId in self.sidToLocal[sid] + [self.sidToAgg[sid]]:
+        # booster belongs to the switch too.
+        for portId in self.sidToLocal[sid] + [self.sidToAgg[sid]] + [self.sidToBoost[sid]]:
             matchspec = boostFilter_setSwitchIdTable_match_spec_t(ig_intr_md_ingress_port=portId)
             actnspec = boostFilter_setSwitchId_action_spec_t(sid, self.sidToBoost[sid])
             result = self.client.setSwitchIdTable_table_add_with_setSwitchId(self.sess_hdl,self.dev_tgt,matchspec,actnspec)
@@ -234,22 +266,54 @@ class BoostControlManager(ControlManagerBase):
         for lSid in self.sidToMac.keys():
             self.addBroadcastRule(lSid)
 
+    def addAdmissionRules(self):
 
-    def add_admission_rules(self):
-        """
-        Add admission control rules. 
-        """
-        # boostEndpointTable
-        self.client.boostEndpointTable_set_default_action_setBoostFlag(self.sess_hdl, self.dev_tgt)
+        # default: no boost. 
+        self.client.admissionControlTable_set_default_action_nop(self.sess_hdl, self.dev_tgt)
         self.conn_mgr.complete_operations(self.sess_hdl)
 
-    def add_boost_rules(self, fwd_ports_dev):
+        # traffic from host 1: boost.
+        matchspec = boostFilter_admissionControlTable_match_spec_t(ethernet_srcAddr=macAddr_to_string("ec:0d:9a:6d:e0:b8"), ethernet_dstAddr=macAddr_to_string("ec:0d:9a:7e:91:82"))
+        result = self.client.admissionControlTable_table_add_with_setBoostFlag(self.sess_hdl,self.dev_tgt,matchspec)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+
+    def addBoostRules(self):
         """
-        Add rules for boosting preprocessing. 
+        boost: send to FPGA. 
         """
+        # add boost header.
+        self.client.addBoostHeaderTable_set_default_action_addBoostHeader(self.sess_hdl, self.dev_tgt)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+        # set boost header / ethertype.
         self.client.boostPreprocTable_set_default_action_setBoostHeader_BOOST_TOFPGA(self.sess_hdl, self.dev_tgt)
         self.conn_mgr.complete_operations(self.sess_hdl)
 
+    def addBoostPostProcessingRules(self):
+        """
+        post processing: set header to boosting inflight.
+        """
+        self.client.boostPostProcTable_set_default_action_setBoostHeader_BOOST_INFLIGHT(self.sess_hdl, self.dev_tgt)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+
+    def addUnboostRules(self):
+        """
+        unboost: send to FPGA. 
+        """
+        self.client.unboostPreprocTable_set_default_action_setBoostHeader_UNBOOST_TOFPGA(self.sess_hdl, self.dev_tgt)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+
+    def addUnboostPostProcessingRules(self):
+        """
+        unboost: send to FPGA. 
+        """
+        # fix etherType
+        self.client.unboostPostProcTable_set_default_action_correctEthHdr(self.sess_hdl, self.dev_tgt)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+
+        # remove the boost header.
+        self.client.removeBoostHeaderTable_set_default_action_removeBoostHeader(self.sess_hdl, self.dev_tgt)
+        self.conn_mgr.complete_operations(self.sess_hdl)
+        
 
 if __name__ == '__main__':
 	main()

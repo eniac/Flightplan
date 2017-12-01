@@ -4,12 +4,15 @@
 
 #include <tofino/intrinsic_metadata.p4>
 #include <tofino/constants.p4>
+#include <tofino/stateful_alu_blackbox.p4>
 
-#define BOOST_INFLIGHT 0x2121
-#define BOOST_FROMFPGA 0x4242
+#define BOOST_INFLIGHT 0x1
+#define BOOST_FROMFPGA 0x2
+#define BOOST_TOFPGA 0x3
+#define UNBOOST_FROMFPGA 0x4
+#define UNBOOST_TOFPGA 0x5
 
-#define BOOST_TOFPGA 0x8484
-#define UNBOOST_TOFPGA 0xA5A5
+#define BOOST_ETYPE 0x4242
 
 header_type ethernet_t {
   fields {
@@ -26,6 +29,14 @@ parser start {
 
 parser parse_ethernet {
   extract(ethernet);
+  return select(latest.etherType) {
+    BOOST_ETYPE: parse_boost;
+    default: ingress;
+  }
+}
+
+parser parse_boost {
+  extract(boost_header);
   return ingress;
 }
 
@@ -46,6 +57,13 @@ header_type slice_md_t {
   }
 }
 
+header_type boost_header_t {
+  fields {
+    boostStatus : 8;
+    originalEtherType : 16;
+  }
+}
+header boost_header_t boost_header;
 
 header_type boost_md_t {
   fields {
@@ -72,27 +90,42 @@ control boostingIngress {
   // Make forwarding decision so booster logic can use it. 
   forwardingPipeline();
 
-  // // If packet is directly from booster, forward and do post-processing.
-  // // FORWARD --> POSTPROC.
-  // if (ethernet.etherType == BOOST_FROMFPGA){
-  //   postProcessingPipeline();
-  // }
-  // else {
-  //   // if packet was boosted at some prior point in the path, this is the sink. 
-  //   // FORWARD -> UNBOOST.
-  //   if (ethernet.etherType == BOOST_INFLIGHT){
-  //     unboostPipeline();
-  //   }
-  //   // If it's unboosted, make forwarding decision then attempt to boost. 
-  //   // FORWARD -> ADMISSION --> BOOST.
-  //   else {
-  //     admissionControlPipeline();
-  //     if (boost_md.boostFlag == 1){
-  //       boostPipeline();
-  //     }
-  //   }
-  // }
+  // if this is a boosted packet. 
+  if (valid(boost_header)){
+    // if the packet has just been boosted, do post-processing.
+    if (boost_header.boostStatus == BOOST_FROMFPGA){
+      boostPostProcPipeline();
+    }
+    // if it's just been unboosted, also do post-processing.
+    else {
+      if (boost_header.boostStatus == UNBOOST_FROMFPGA){
+        unboostPostProcPipeline();
+      }
+      else {
+        // if not just boosted and not just unboosted, check unboost policy
+        // (todo, just unboost for now)
+        unboostPipeline();
+      }
+    }
+  }
+  // if its not a boosted packet, attempt to boost. 
+  else {
+    admissionControlPipeline();
+    // add boost header. 
+    if (boost_md.boostFlag == 1){
+      boostPipeline();
+    }
+  }
 }
+
+
+  // // Debug. Count packets arriving at switch ID 2.
+  // if (slice_md.switchId == 2){
+  //   apply(countPacketTable);
+  // }
+
+
+
 
 // -------------------------- switch id logic -----------------
 control setSwitchIdPipeline {
@@ -119,7 +152,7 @@ control monitoringPipeline {
 table invalidFCS_table {
     reads   { ig_intr_md.ingress_port : exact; }
     actions { nop; }
-    size : 288;
+    size : 32;
 }
 // -------------------------------------------------------------
 
@@ -136,7 +169,7 @@ table forwardingTable {
       // ig_intr_md.ingress_port : exact; 
     }
     actions { unicast; nop; broadcast;}
-    size : 288;
+    size : 32;
 }
 // Set egress port based on dmac
 action unicast(egress_spec) {
@@ -160,32 +193,20 @@ action nop() {}
 // -------------------------------------------------------------
 
 
-// ------------------ boosting post-proc logic -----------------
-control postProcessingPipeline {
-  apply(postProcTable);
-}
-table postProcTable {
-  actions {setBoostHeader_BOOST_INFLIGHT; }
-  size : 288;
-}
-action setBoostHeader_BOOST_INFLIGHT() {
-  modify_field(ethernet.etherType, BOOST_INFLIGHT);
-}
-
-// -------------------------------------------------------------
 
 // ------------------ admission control logic -----------------
 control admissionControlPipeline {
   // apply(boostPolicyTable); // Check if this class of traffic is allowed. 
-  apply(boostEndpointTable); // Check if boosting to this endpoint is enabled. 
+  apply(admissionControlTable); // Check if boosting to this endpoint is enabled. 
 }
 // coarse grained system table to turn on or off boosting circuits.
-table boostEndpointTable {
+table admissionControlTable {
   reads { 
+    ethernet.srcAddr : exact;
     ethernet.dstAddr : exact;
   }
   actions {
-    setBoostFlag;
+    setBoostFlag; nop;
   }
 }
 // Todo: this should look in a register. 
@@ -197,17 +218,46 @@ action setBoostFlag() {
 
 // ------------------ boosting pre-proc logic -----------------
 control boostPipeline {
+  // Add boost header.
+  apply(addBoostHeaderTable);
+  // Set boost header. 
   apply(boostPreprocTable);
 }
+table addBoostHeaderTable {
+  actions {addBoostHeader;}
+  size : 1;
+}
+action addBoostHeader() {
+  add_header(boost_header);
+}
+
 table boostPreprocTable {
   actions {setBoostHeader_BOOST_TOFPGA;}
-  size : 288;
+  size : 32;
 }
 action setBoostHeader_BOOST_TOFPGA() {
-  modify_field(ethernet.etherType, BOOST_TOFPGA);
+  modify_field(boost_header.originalEtherType, ethernet.etherType);
+  modify_field(ethernet.etherType, BOOST_ETYPE);
+  modify_field(boost_header.boostStatus, BOOST_FROMFPGA);
   modify_field(ig_intr_md_for_tm.ucast_egress_port, slice_md.boostPort);
 }
 // -------------------------------------------------------------
+
+// ------------------ boosting post-proc logic -----------------
+control boostPostProcPipeline {
+  apply(boostPostProcTable);
+}
+table boostPostProcTable {
+  actions {setBoostHeader_BOOST_INFLIGHT; }
+  size : 32;
+}
+action setBoostHeader_BOOST_INFLIGHT() {
+  modify_field(boost_header.boostStatus, BOOST_INFLIGHT);
+}
+
+// -------------------------------------------------------------
+
+
 
 
 // ------------------ unboosting pre-proc logic ---------------
@@ -216,9 +266,53 @@ control unboostPipeline {
 }
 table unboostPreprocTable {
   actions {setBoostHeader_UNBOOST_TOFPGA; }
-  size : 288;
+  size : 32;
 }
 action setBoostHeader_UNBOOST_TOFPGA() {
-  modify_field(ethernet.etherType, UNBOOST_TOFPGA);
+  modify_field(boost_header.boostStatus, UNBOOST_FROMFPGA);
+  modify_field(ig_intr_md_for_tm.ucast_egress_port, slice_md.boostPort);
+}
+// -------------------------------------------------------------
+
+// ------------------ unboosting post-proc logic ---------------
+control unboostPostProcPipeline {
+  // correct ethernet header.
+  apply(unboostPostProcTable);
+  // remove boosting header.
+  apply(removeBoostHeaderTable);
+}
+table unboostPostProcTable {
+  actions {correctEthHdr; }
+  size : 32;
+}
+action correctEthHdr(){
+  modify_field(ethernet.etherType, boost_header.originalEtherType);
+}
+table removeBoostHeaderTable {
+  actions {removeBoostHeader; }
+  size : 32;
+}
+action removeBoostHeader(){
+  remove_header(boost_header);
+}
+
+
+// -------------------------------------------------------------
+
+// debugging ---------------------------------------------------
+register counterReg {
+    width : 32;
+    instance_count : 256;
+}
+blackbox stateful_alu inc_counter{
+    reg : counterReg;
+    update_lo_1_value : register_lo + 1;
+}
+action countPacket(){
+    inc_counter.execute_stateful_alu(slice_md.switchId);
+}
+table countPacketTable {
+  actions {countPacket;}
+  size : 1;
 }
 // -------------------------------------------------------------
