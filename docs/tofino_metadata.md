@@ -1,7 +1,11 @@
-#### Parser metadata ####
+#### Tofino Metadata ####
+The Tofino provides access to a lot of different hardware specific metadata that a P4 program can access. This document describes some types of metadata and their P4 interfaces. 
+
+**Parser Metadata**
+
 Parser metadata includes timestamp and error indicator. One important error type is FCS errors -- these are corrupt packets that will be dropped.
 
-**P4 Accessible Metadata:**
+*P4 Interface:*
 
 ```
 /* Produced by Ingress Parser-Auxiliary */ 
