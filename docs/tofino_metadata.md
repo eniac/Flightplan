@@ -1,7 +1,7 @@
 #### Parser metadata ####
 Parser metadata includes timestamp and error indicator. One important error type is FCS errors -- these are corrupt packets that will be dropped.
 
-** P4 Accessible Metadata: **
+**P4 Accessible Metadata:**
 
 ```
 /* Produced by Ingress Parser-Auxiliary */ 
