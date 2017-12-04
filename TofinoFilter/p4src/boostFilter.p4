@@ -12,7 +12,10 @@
 #define UNBOOST_FROMFPGA 0x4
 #define UNBOOST_TOFPGA 0x5
 
-#define BOOST_ETYPE 0x4242
+#define STOP_BOOSTING 0x4242
+
+#define BOOST_ETYPE 0x4444
+
 
 header_type ethernet_t {
   fields {
@@ -40,14 +43,6 @@ parser parse_boost {
   return ingress;
 }
 
-// Header for source booster with FEC. Not used yet.
-// header_type boost_header_t {
-//   fields {
-//     groupId : 8; // to booster.
-//     packetId : 8; // to booster.
-//     // outPort : 8; // from booster. Can booster select output port?
-//   }
-// }
 
 header_type slice_md_t {
   fields {
@@ -60,6 +55,11 @@ header_type slice_md_t {
 header_type boost_header_t {
   fields {
     boostStatus : 8;
+    fecPacketGid : 8;
+    fecPacketId : 8;
+    // fecChunkId : 8;
+    originalEtherDst : 48;
+    originalEtherSrc : 48;
     originalEtherType : 16;
   }
 }
@@ -67,6 +67,8 @@ header boost_header_t boost_header;
 
 header_type boost_md_t {
   fields {
+    monitoringActive : 1;
+    boostStopped : 1;
     boostFlag : 1; // Boosting enabled?
   }
 }
@@ -79,52 +81,56 @@ control ingress {
   // Select switch based on port. 
   // Only used in forwarding pipeline. 
   setSwitchIdPipeline();
-  // Only boosting switches for now.
-  boostingIngress();
+
+  if (ethernet.etherType == STOP_BOOSTING){
+    apply(stopBoostingTable);
+  }
+  else{
+    apply(checkBoostingTable);
+    // Only boosting switches for now.
+    boostingIngress();
+  }
 }
 
 // Ingress for a switch with booster attached. 
 control boostingIngress {
-  // monitoringPipeline();
+  if (boost_md.monitoringActive == 1){
+    monitoringPipeline();
+  }
 
   // Make forwarding decision so booster logic can use it. 
   forwardingPipeline();
 
-  // if this is a boosted packet. 
-  if (valid(boost_header)){
-    // if the packet has just been boosted, do post-processing.
-    if (boost_header.boostStatus == BOOST_FROMFPGA){
-      boostPostProcPipeline();
-    }
-    // if it's just been unboosted, also do post-processing.
-    else {
-      if (boost_header.boostStatus == UNBOOST_FROMFPGA){
-        unboostPostProcPipeline();
+  // if boosting is not stopped.
+  if (boost_md.boostStopped == 0) {
+    // if this is a boosted packet. 
+    if (valid(boost_header)){
+      // if the packet has just been boosted, do post-processing.
+      if (boost_header.boostStatus == BOOST_FROMFPGA){
+        boostPostProcPipeline();
       }
+      // if it's just been unboosted, also do post-processing.
       else {
-        // if not just boosted and not just unboosted, check unboost policy
-        // (todo, just unboost for now)
-        unboostPipeline();
+        if (boost_header.boostStatus == UNBOOST_FROMFPGA){
+          unboostPostProcPipeline();
+        }
+        else {
+          // if not just boosted and not just unboosted, check unboost policy
+          // (todo, just unboost for now)
+          unboostPipeline();
+        }
       }
     }
-  }
-  // if its not a boosted packet, attempt to boost. 
-  else {
-    admissionControlPipeline();
-    // add boost header. 
-    if (boost_md.boostFlag == 1){
-      boostPipeline();
+    // if its not a boosted packet, attempt to boost. 
+    else {
+      admissionControlPipeline();
+      // add boost header. 
+      if (boost_md.boostFlag == 1){
+        boostPipeline();
+      }
     }
   }
 }
-
-
-  // // Debug. Count packets arriving at switch ID 2.
-  // if (slice_md.switchId == 2){
-  //   apply(countPacketTable);
-  // }
-
-
 
 
 // -------------------------- switch id logic -----------------
@@ -139,20 +145,6 @@ action setSwitchId(switchId, boostPort) {
   modify_field(slice_md.switchId, switchId);
   modify_field(slice_md.mcastId, switchId);
   modify_field(slice_md.boostPort, boostPort);
-}
-// -------------------------------------------------------------
-
-// -------------------------- Monitoring logic -----------------
-control monitoringPipeline {
-  if (ig_intr_md_from_parser_aux.ingress_parser_err == 0x1000){
-    apply(invalidFCS_table);
-  }
-}
-
-table invalidFCS_table {
-    reads   { ig_intr_md.ingress_port : exact; }
-    actions { nop; }
-    size : 32;
 }
 // -------------------------------------------------------------
 
@@ -182,19 +174,91 @@ action broadcast() {
 }
 
 action nop() {}
-
-// Need 1 multicast group per input port for flooding --> this must be done _after_ post processing?
-// // miss --> flood to the multicast group associated with this vswitch. 
-// action l2_miss(){
-//     modify_field(ig_intr_md_for_tm.mcast_grp_a, slice_md.mcastId);  
-// }
-
-
 // -------------------------------------------------------------
 
 
 
-// ------------------ admission control logic -----------------
+// ----------------- Boosting monitoring logic -----------------
+control monitoringPipeline {
+  if (ig_intr_md_from_parser_aux.ingress_parser_err == 0x1000){
+    apply(invalidFCSCountTable);
+  }
+}
+
+table invalidFCSCountTable {
+    actions {countPortErrors; }
+    size : 32;
+}
+action countPortErrors(){
+  fcsErrorReg_alu.execute_stateful_alu(ig_intr_md.ingress_port);
+}
+
+action estimateFlowErrors(){
+  // count min sketch over IP 5-tuples.
+}
+
+register fcsErrorReg {
+    width : 32;
+    instance_count : 4096;
+}
+blackbox stateful_alu fcsErrorReg_alu{
+    reg : fcsErrorReg;
+    condition_lo : ig_intr_md_from_parser_aux.ingress_parser_err == 0x1000;
+    update_lo_1_predicate: condition_lo;
+    update_lo_1_value: register_lo + 1;
+}
+// -------------------------------------------------------------
+
+
+
+// -------------------------- Boosting Actuation logic ---------
+
+table startBoostingTable {
+  actions { startBoosting; }
+}
+action startBoosting(){
+  enableBoost_alu.execute_stateful_alu(0);
+  modify_field(boost_md.boostStopped, 0);
+}
+
+
+table stopBoostingTable {
+  actions { stopBoosting; }
+}
+action stopBoosting(){
+  disableBoost_alu.execute_stateful_alu(0);
+  modify_field(boost_md.boostStopped, 1);
+}
+
+table checkBoostingTable {
+  actions { checkBoosting; }
+}
+action checkBoosting(){
+  checkBoost_alu.execute_stateful_alu(0);
+}
+
+register boostStatus_reg {
+    width : 8;
+    instance_count : 1;
+}
+blackbox stateful_alu enableBoost_alu{
+    reg : boostStatus_reg;
+    update_lo_1_value : 0;
+}
+blackbox stateful_alu disableBoost_alu{
+    reg : boostStatus_reg;
+    update_lo_1_value : 1;
+}
+blackbox stateful_alu checkBoost_alu {
+    reg : boostStatus_reg;  
+    output_value: register_lo;
+    output_dst: boost_md.boostStopped;
+}
+// -------------------------------------------------------------
+
+
+
+// ------------------ boosting admission control logic -----------------
 control admissionControlPipeline {
   // apply(boostPolicyTable); // Check if this class of traffic is allowed. 
   apply(admissionControlTable); // Check if boosting to this endpoint is enabled. 
@@ -216,12 +280,21 @@ action setBoostFlag() {
 }
 // -------------------------------------------------------------
 
+
 // ------------------ boosting pre-proc logic -----------------
 control boostPipeline {
   // Add boost header.
   apply(addBoostHeaderTable);
   // Set boost header. 
   apply(boostPreprocTable);
+  // counting. 
+  apply(incPidTable);
+  if (boost_header.fecPacketId == 0){
+    apply(incGidTable);
+  }
+  else{
+    apply(loadGidTable);
+  }
 }
 table addBoostHeaderTable {
   actions {addBoostHeader;}
@@ -231,16 +304,88 @@ action addBoostHeader() {
   add_header(boost_header);
 }
 
-table boostPreprocTable {
-  actions {setBoostHeader_BOOST_TOFPGA;}
-  size : 32;
-}
 action setBoostHeader_BOOST_TOFPGA() {
+  modify_field(boost_header.originalEtherDst, ethernet.dstAddr);
+  modify_field(boost_header.originalEtherSrc, ethernet.srcAddr);
   modify_field(boost_header.originalEtherType, ethernet.etherType);
   modify_field(ethernet.etherType, BOOST_ETYPE);
   modify_field(boost_header.boostStatus, BOOST_FROMFPGA);
   modify_field(ig_intr_md_for_tm.ucast_egress_port, slice_md.boostPort);
 }
+
+action incPid(){
+    fecPacketId_alu.execute_stateful_alu(0);
+}
+
+action incGid(){
+    gidReg_alu.execute_stateful_alu(0);
+    modify_field(ig_intr_md_for_tm.mcast_grp_a, slice_md.boostPort);      
+}
+
+action loadGid(){
+  gitReg_loadAlu.execute_stateful_alu(0);
+}
+
+
+
+table boostPreprocTable {
+  actions {setBoostHeader_BOOST_TOFPGA;}
+  size : 32;
+}
+
+
+register gidReg {
+    width : 8;
+    instance_count : 1;
+}
+blackbox stateful_alu gidReg_alu{
+    reg : gidReg;
+    update_lo_1_value : register_lo + 1;
+    output_value: register_lo;
+    output_dst: boost_header.fecPacketGid;
+}
+
+
+table incGidTable {
+  actions {incGid;}
+  size : 1;
+}
+
+blackbox stateful_alu gitReg_loadAlu{
+    reg : gidReg;
+    output_value: register_lo;
+    output_dst: boost_header.fecPacketGid;
+}
+
+table loadGidTable {
+  actions {loadGid;}
+  size : 1;
+}
+
+
+
+register fecPacketId {
+    width : 8;
+    instance_count : 1;
+}
+blackbox stateful_alu fecPacketId_alu{
+    reg : fecPacketId;
+    condition_lo : register_lo > 3;
+    update_lo_1_predicate: condition_lo;
+    update_lo_1_value: 0; 
+    update_lo_2_predicate: not condition_lo;
+    update_lo_2_value: register_lo + 1;
+
+    output_value: register_lo;
+    output_dst: boost_header.fecPacketId;
+}
+
+table incPidTable {
+  actions {incPid;}
+  size : 1;
+}
+
+
 // -------------------------------------------------------------
 
 // ------------------ boosting post-proc logic -----------------
@@ -281,19 +426,22 @@ control unboostPostProcPipeline {
   // remove boosting header.
   apply(removeBoostHeaderTable);
 }
+
+action correctEthHdr(){
+  modify_field(ethernet.etherType, boost_header.originalEtherType);
+}
+
+action removeBoostHeader(){
+  remove_header(boost_header);
+}
+
 table unboostPostProcTable {
   actions {correctEthHdr; }
   size : 32;
 }
-action correctEthHdr(){
-  modify_field(ethernet.etherType, boost_header.originalEtherType);
-}
 table removeBoostHeaderTable {
   actions {removeBoostHeader; }
   size : 32;
-}
-action removeBoostHeader(){
-  remove_header(boost_header);
 }
 
 

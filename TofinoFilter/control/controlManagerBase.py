@@ -14,6 +14,9 @@ import json
 from binascii import hexlify
 import ptf
 from ptf import config
+import select
+import sys
+
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport

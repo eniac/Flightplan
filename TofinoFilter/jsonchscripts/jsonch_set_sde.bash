@@ -1,6 +1,6 @@
 export PROGPATH=`pwd`
 export PROGNAME=boostFilter
-cd ~/bf-sde-*
+cd ~/bf_sdk/bf-sde-*
 export SDE=`pwd`
 export SDE_INSTALL=$SDE/install
 export PATH=$SDE_INSTALL/bin:$PATH

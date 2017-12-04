@@ -24,7 +24,7 @@ from thrift.protocol import TMultiplexedProtocol
 
 from res_pd_rpc.ttypes import * # DevTarget_t
 from ptf.thriftutils import * # hex_to_i16
-from pltfm_pm_rpc.ttypes import * # pltfm_pm_port_speed_t
+# from pltfm_pm_rpc.ttypes import * # pltfm_pm_port_speed_t
 
 
 exec("from %s.p4_pd_rpc.ttypes import *"%progName)
@@ -34,6 +34,7 @@ from controlManagerBase import *
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 # L1 configuration. 
+
 host_ports_1 = ["25/0", "25/1", "25/2", "25/3"]
 aggregate_ports_1 = ["3/0"]
 boost_ports_1 = ["5/0"]
@@ -77,35 +78,41 @@ def main():
     mgr.start()
 
 
-    # ports up.
-    host_ports_dev_1 = mgr.ports_up(host_ports_1, "25G", "NONE")
-    # aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "100G", "RS")
-    aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "10G", "NONE")
-    boost_ports_dev_1 = mgr.ports_up(boost_ports_1, "100G", "RS")
+    # # ports up.
+    # host_ports_dev_1 = mgr.ports_up(host_ports_1, "25G", "NONE")
+    # # aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "100G", "RS")
+    # aggregate_ports_dev_1 = mgr.ports_up(aggregate_ports_1, "10G", "NONE")
+    # boost_ports_dev_1 = mgr.ports_up(boost_ports_1, "100G", "RS")
 
-    host_ports_dev_2 = mgr.ports_up(host_ports_2, "25G", "NONE")
-    # aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "100G", "RS")
-    aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "10G", "NONE")
-    boost_ports_dev_2 = mgr.ports_up(boost_ports_2, "100G", "RS")
+    # host_ports_dev_2 = mgr.ports_up(host_ports_2, "25G", "NONE")
+    # # aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "100G", "RS")
+    # aggregate_ports_dev_2 = mgr.ports_up(aggregate_ports_2, "10G", "NONE")
+    # boost_ports_dev_2 = mgr.ports_up(boost_ports_2, "100G", "RS")
 
 
     s1 = StaticVswitch(1)
-    s1.addStation("ec:0d:9a:6d:e0:b8", 191)
+    s1.addStation("11:11:11:11:11:11", 1)
     # s1.addStation("ec:0d:9a:7e:91:82", 183)
-    s1.addAggLink(aggregate_ports_dev_1[0])
-    s1.addBoostLink(boost_ports_dev_1[0])
+    s1.addStation("22:22:22:22:22:22", 2)
+    s1.addBoostLink("33:33:33:33:33:33", 3)
+
+    # s1.addStation("ec:0d:9a:6d:e0:b8", 191)
+    # # s1.addStation("ec:0d:9a:7e:91:82", 183)
+    # s1.addAggLink(aggregate_ports_dev_1[0])
+    # s1.addBoostLink(boost_ports_dev_1[0])
 
     # add switches. 
     mgr.addVswitch(s1)
     # install rules for port --> switch mapping.
     mgr.addVswitchRules(s1.sid)
 
-    s2 = StaticVswitch(2)
-    s2.addStation("ec:0d:9a:7e:91:82", 183)
-    s2.addAggLink(aggregate_ports_dev_2[0])
-    s2.addBoostLink(boost_ports_dev_2[0])
-    mgr.addVswitch(s2)
-    mgr.addVswitchRules(s2.sid)
+
+    # s2 = StaticVswitch(2)
+    # s2.addStation("ec:0d:9a:7e:91:82", 183)
+    # s2.addAggLink(aggregate_ports_dev_2[0])
+    # s2.addBoostLink(boost_ports_dev_2[0])
+    # mgr.addVswitch(s2)
+    # mgr.addVswitchRules(s2.sid)
 
     # install unicast rules. 
     print "installing unicast rules."
@@ -228,7 +235,29 @@ class BoostControlManager(ControlManagerBase):
             mc_node_hdl = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, 0, port_map, lag_map)
             self.mc.mc_associate_node(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_grp_hdl, mc_node_hdl, 0, 0)
             self.mc_group_hdls.append(mc_grp_hdl)
-        return
+
+        # add a special multicast group to clone packets to the booster. 
+        for port in self.sidToBoost.values():
+            print ("creating group to double-clone packet to %s"%port)
+            mc_id = port
+            flood_ports = [mc_id]
+            port_map = set_port_or_lag_bitmap(288, flood_ports)
+            mc_grp_hdl = self.mc.mc_mgrp_create(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_id)
+            mc_node_hdl = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, 0, port_map, lag_map)
+            self.mc.mc_associate_node(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_grp_hdl, mc_node_hdl, 0, 0)
+
+            mc_node_hdl2 = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, 0, port_map, lag_map)
+            self.mc.mc_associate_node(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_grp_hdl, mc_node_hdl2, 0, 0)
+
+            mc_node_hdl3 = self.mc.mc_node_create(self.mc_sess_hdl, self.dev_tgt.dev_id, 0, port_map, lag_map)
+            self.mc.mc_associate_node(self.mc_sess_hdl, self.dev_tgt.dev_id, mc_grp_hdl, mc_node_hdl3, 0, 0)
+
+            self.mc_group_hdls.append(mc_grp_hdl)
+
+
+
+
+
 
     def addUnicastRule(self, sid, dmac, outport_dev):
         """ 
@@ -273,7 +302,8 @@ class BoostControlManager(ControlManagerBase):
         self.conn_mgr.complete_operations(self.sess_hdl)
 
         # traffic from host 1: boost.
-        matchspec = boostFilter_admissionControlTable_match_spec_t(ethernet_srcAddr=macAddr_to_string("ec:0d:9a:6d:e0:b8"), ethernet_dstAddr=macAddr_to_string("ec:0d:9a:7e:91:82"))
+        matchspec = boostFilter_admissionControlTable_match_spec_t(ethernet_srcAddr=macAddr_to_string("11:11:11:11:11:11"), ethernet_dstAddr=macAddr_to_string("22:22:22:22:22:22"))
+        # matchspec = boostFilter_admissionControlTable_match_spec_t(ethernet_srcAddr=macAddr_to_string("ec:0d:9a:6d:e0:b8"), ethernet_dstAddr=macAddr_to_string("ec:0d:9a:7e:91:82"))
         result = self.client.admissionControlTable_table_add_with_setBoostFlag(self.sess_hdl,self.dev_tgt,matchspec)
         self.conn_mgr.complete_operations(self.sess_hdl)
 
@@ -287,6 +317,10 @@ class BoostControlManager(ControlManagerBase):
         # set boost header / ethertype.
         self.client.boostPreprocTable_set_default_action_setBoostHeader_BOOST_TOFPGA(self.sess_hdl, self.dev_tgt)
         self.conn_mgr.complete_operations(self.sess_hdl)
+
+        # self.client.incPidTable_set_default_action_incPid(self.sess_hdl, self.dev_tgt)
+        # self.conn_mgr.complete_operations(self.sess_hdl)
+
 
     def addBoostPostProcessingRules(self):
         """
@@ -316,4 +350,4 @@ class BoostControlManager(ControlManagerBase):
         
 
 if __name__ == '__main__':
-	main()
+    main()
