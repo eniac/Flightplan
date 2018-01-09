@@ -1,7 +1,7 @@
 All: Test
 
 Test: Test.sdnet
-	sdnet Test.sdnet -busType axi -busWidth 64 -workDir Test
+	sdnet Test.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Test
 	@cp change_addr_0_t.v Test/XilinxSwitch/change_addr_0_t.HDL
 	@cp change_addr_0_t.hpp Test/XilinxSwitch/change_addr_0_t.TB
 	@cp Packet.user Test/XilinxSwitch

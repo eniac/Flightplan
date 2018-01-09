@@ -64,6 +64,10 @@ struct headers_t {
     udp_h               udp;
 }
 
+struct empty_t {
+  bit<1>                unused;
+}
+
 @Xilinx_MaxPacketRegion(1518 * 8)
 parser Parser(packet_in pkt, out headers_t hdr) {
 
@@ -108,7 +112,7 @@ parser Parser(packet_in pkt, out headers_t hdr) {
 @Xilinx_MaxLatency(1)
 extern void change_addr(inout bit<48> addr);
 
-control Modifier(inout headers_t hdr, inout switch_metadata_t unused) {
+control Modifier(inout headers_t hdr, inout empty_t unused) {
     action modifyPacket() {
         change_addr(hdr.ethernet.src);
     }
