@@ -34,7 +34,7 @@
 `timescale 1 ps / 1 ps
 
 module change_addr_0_t (
-	clk_lookup,
+	clk_line,
 	rst,
 	tuple_in_change_addr_input_VALID,
 	tuple_in_change_addr_input_DATA,
@@ -42,7 +42,7 @@ module change_addr_0_t (
 	tuple_out_change_addr_output_DATA
 );
 
-input clk_lookup /* unused */ ;
+input clk_line /* unused */ ;
 (* polarity = "high" *) input rst /* unused */ ;
 input tuple_in_change_addr_input_VALID /* unused */ ;
 input [48:0] tuple_in_change_addr_input_DATA /* unused */ ;
