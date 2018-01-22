@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Webtalk v2017.1_sdx (64-bit)
+# SW Build 1915620 on Thu Jun 22 17:54:59 MDT 2017
+# 
+# Start of session at: Fri Jan 12 21:22:35 2018
+# Process ID: 13152
+# Current directory: /home/gyzuh/University/DComp/Repository/P4Boosters/ExtFuncTestPlatform/webtalk
+# Command line: wbtcv -mode batch -source sdk_webtalk.tcl
+# Log file: /home/gyzuh/University/DComp/Repository/P4Boosters/ExtFuncTestPlatform/webtalk/webtalk.log
+# Journal file: /home/gyzuh/University/DComp/Repository/P4Boosters/ExtFuncTestPlatform/webtalk/webtalk.jou
+#-----------------------------------------------------------
+source sdk_webtalk.tcl

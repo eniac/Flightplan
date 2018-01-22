@@ -1,9 +1,0 @@
-15:56:45 INFO  : Registering command handlers for SDK TCF services
-15:56:51 INFO  : Launching XSCT server: xsct -n -interactive /home/gyzuh/University/DComp/Repository/P4Boosters/RSEPlatform/temp_xsdb_launch_script.tcl
-15:56:52 INFO  : XSCT server has started successfully.
-15:56:52 INFO  : Validating SDSoC License...
-15:56:52 INFO  : Successfully done setting XSCT server connection channel  
-15:56:52 INFO  : Successfully done setting SDK workspace  
-15:56:53 INFO  : License available for SDSoC
-15:56:53 INFO  : Validating SDAccel License...
-15:56:56 INFO  : License for SDAccel is unavailable
