@@ -21,9 +21,6 @@ drop_or_not_0_t don (
   .tuple_out_drop_or_not_output_VALID(don_out_valid),
   .tuple_out_drop_or_not_output_DATA(don_out_data));
 
-
-genvar idx;
-
 initial begin
   $dumpfile("don_test.vcd");
   $dumpvars(0,don_test);
