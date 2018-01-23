@@ -30,7 +30,7 @@ always @(posedge clk_lookup) begin
   end
 end
 
-assign tuple_out_drop_or_not_output_VALID = tuple_in_drop_or_not_input_VALID;
+assign tuple_out_drop_or_not_output_VALID = 0 || tuple_in_drop_or_not_input_VALID;
 assign tuple_out_drop_or_not_output_DATA = (count == 0);
 
 endmodule
