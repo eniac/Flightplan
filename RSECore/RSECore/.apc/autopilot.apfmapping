@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="rse.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/RSECore/rse.h"/>
+    <originFiles name="Encoder.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/RSECore/Encoder.c"/>
+    <originFiles name="RSECore.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/RSECore/RSECore.c"/>
+  </source>
+  <testbench/>
+</autopilotfilemapping:AutoPilotFileMapping>

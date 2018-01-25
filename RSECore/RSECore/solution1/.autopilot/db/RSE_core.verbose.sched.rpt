@@ -1,0 +1,849 @@
+
+
+================================================================
+== Vivado HLS Report for 'RSE_core'
+================================================================
+* Date:           Thu Jan 25 10:43:58 2018
+
+* Version:        2017.1 (Build 1846317 on Thu Jun 22 18:17:09 MDT 2017)
+* Project:        RSECore
+* Solution:       solution1
+* Product family: zynquplus
+* Target device:  xczu9eg-ffvb1156-1-i-es1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |  10.00|      5.07|        1.25|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +-----+-----+-----+-----+---------+
+    |  Latency  |  Interval | Pipeline|
+    | min | max | min | max |   Type  |
+    +-----+-----+-----+-----+---------+
+    |    1|   50|    2|   51|   none  |
+    +-----+-----+-----+-----+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        +----------+-----+-----+----------+-----------+-----------+------+----------+
+        |          |  Latency  | Iteration|  Initiation Interval  | Trip |          |
+        | Loop Name| min | max |  Latency |  achieved |   target  | Count| Pipelined|
+        +----------+-----+-----+----------+-----------+-----------+------+----------+
+        |- Loop 1  |   48|   48|         4|          1|          1|    46|    yes   |
+        +----------+-----+-----+----------+-----------+-----------+------+----------+
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 1
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 4
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 7
+* Pipeline: 1
+  Pipeline-0: II = 1, D = 4, States = { 2 3 4 5 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+	6  / (operation_read == 4) | (operation_read != 1 & operation_read != 2)
+	2  / (operation_read == 2)
+	7  / (operation_read == 1 & tmp_10 == 0) | (operation_read == 1 & tmp_10 == 1) | (operation_read == 1 & tmp_10 == 2) | (operation_read == 1 & tmp_10 == 3) | (operation_read == 1 & tmp_10 == 4) | (operation_read == 1 & tmp_10 == 5) | (operation_read == 1 & tmp_10 == 6) | (operation_read == 1 & tmp_10 == 7)
+2 --> 
+	6  / (!tmp_3)
+	3  / (tmp_3)
+3 --> 
+	4  / true
+4 --> 
+	5  / true
+5 --> 
+	2  / true
+6 --> 
+7 --> 
+	6  / true
+* FSM state operations: 
+
+ <State 1>: 1.61ns
+ST_1: StgValue_8 (20)  [1/1] 0.00ns
+:0  call void (...)* @_ssdm_op_SpecClockDomain([8 x i8]* @default, [1 x i8]* @empty) nounwind
+
+ST_1: StgValue_9 (21)  [1/1] 0.00ns
+:1  call void (...)* @_ssdm_op_SpecBitsMap(i8 %operation) nounwind, !map !80
+
+ST_1: StgValue_10 (22)  [1/1] 0.00ns
+:2  call void (...)* @_ssdm_op_SpecBitsMap(i32 %index) nounwind, !map !86
+
+ST_1: StgValue_11 (23)  [1/1] 0.00ns
+:3  call void (...)* @_ssdm_op_SpecBitsMap(i1 %is_parity) nounwind, !map !90
+
+ST_1: StgValue_12 (24)  [1/1] 0.00ns
+:4  call void (...)* @_ssdm_op_SpecBitsMap(i368 %data) nounwind, !map !94
+
+ST_1: StgValue_13 (25)  [1/1] 0.00ns
+:5  call void (...)* @_ssdm_op_SpecBitsMap(i368* %parity) nounwind, !map !98
+
+ST_1: StgValue_14 (26)  [1/1] 0.00ns
+:6  call void (...)* @_ssdm_op_SpecTopModule([9 x i8]* @RSE_core_str) nounwind
+
+ST_1: data_read (27)  [1/1] 0.00ns
+:7  %data_read = call i368 @_ssdm_op_Read.ap_auto.i368(i368 %data) nounwind
+
+ST_1: index_read (28)  [1/1] 0.00ns
+:8  %index_read = call i32 @_ssdm_op_Read.ap_auto.i32(i32 %index) nounwind
+
+ST_1: operation_read (29)  [1/1] 0.00ns
+:9  %operation_read = call i8 @_ssdm_op_Read.ap_auto.i8(i8 %operation) nounwind
+
+ST_1: StgValue_18 (30)  [1/1] 0.88ns  loc: RSECore.c:31
+:10  switch i8 %operation_read, label %.loopexit [
+    i8 1, label %1
+    i8 2, label %.preheader.preheader
+    i8 4, label %4
+  ]
+
+ST_1: tmp_11 (32)  [1/1] 0.00ns
+:0  %tmp_11 = trunc i32 %index_read to i2
+
+ST_1: tmp (33)  [1/1] 1.61ns
+:1  %tmp = call fastcc i368 @aesl_mux_load_4i368P(i2 %tmp_11) nounwind
+
+ST_1: StgValue_21 (34)  [1/1] 0.00ns  loc: RSECore.c:53
+:2  call void @_ssdm_op_Write.ap_auto.i368P(i368* %parity, i368 %tmp) nounwind
+
+ST_1: StgValue_22 (35)  [1/1] 0.00ns  loc: RSECore.c:54
+:3  br label %.loopexit
+
+ST_1: data_buffer_0_load (37)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:0  %data_buffer_0_load = load i368* @data_buffer_0, align 16
+
+ST_1: data_buffer_1_load (38)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:1  %data_buffer_1_load = load i368* @data_buffer_1, align 16
+
+ST_1: data_buffer_2_load (39)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:2  %data_buffer_2_load = load i368* @data_buffer_2, align 16
+
+ST_1: data_buffer_3_load (40)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:3  %data_buffer_3_load = load i368* @data_buffer_3, align 16
+
+ST_1: data_buffer_4_load (41)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:4  %data_buffer_4_load = load i368* @data_buffer_4, align 16
+
+ST_1: data_buffer_5_load (42)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:5  %data_buffer_5_load = load i368* @data_buffer_5, align 16
+
+ST_1: data_buffer_6_load (43)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:6  %data_buffer_6_load = load i368* @data_buffer_6, align 16
+
+ST_1: data_buffer_7_load (44)  [1/1] 0.00ns  loc: RSECore.c:43
+.preheader.preheader:7  %data_buffer_7_load = load i368* @data_buffer_7, align 16
+
+ST_1: StgValue_31 (45)  [1/1] 0.76ns  loc: RSECore.c:38
+.preheader.preheader:8  br label %.preheader
+
+ST_1: tmp_10 (163)  [1/1] 0.00ns
+:0  %tmp_10 = trunc i32 %index_read to i3
+
+ST_1: StgValue_33 (164)  [1/1] 0.88ns  loc: RSECore.c:34
+:1  switch i3 %tmp_10, label %branch7 [
+    i3 0, label %branch0
+    i3 1, label %branch1
+    i3 2, label %branch2
+    i3 3, label %branch3
+    i3 -4, label %branch4
+    i3 -3, label %branch5
+    i3 -2, label %branch6
+  ]
+
+ST_1: StgValue_34 (166)  [1/1] 0.00ns  loc: RSECore.c:34
+branch6:0  store i368 %data_read, i368* @data_buffer_6, align 16
+
+ST_1: StgValue_35 (167)  [1/1] 0.00ns  loc: RSECore.c:34
+branch6:1  br label %2
+
+ST_1: StgValue_36 (169)  [1/1] 0.00ns  loc: RSECore.c:34
+branch5:0  store i368 %data_read, i368* @data_buffer_5, align 16
+
+ST_1: StgValue_37 (170)  [1/1] 0.00ns  loc: RSECore.c:34
+branch5:1  br label %2
+
+ST_1: StgValue_38 (172)  [1/1] 0.00ns  loc: RSECore.c:34
+branch4:0  store i368 %data_read, i368* @data_buffer_4, align 16
+
+ST_1: StgValue_39 (173)  [1/1] 0.00ns  loc: RSECore.c:34
+branch4:1  br label %2
+
+ST_1: StgValue_40 (175)  [1/1] 0.00ns  loc: RSECore.c:34
+branch3:0  store i368 %data_read, i368* @data_buffer_3, align 16
+
+ST_1: StgValue_41 (176)  [1/1] 0.00ns  loc: RSECore.c:34
+branch3:1  br label %2
+
+ST_1: StgValue_42 (178)  [1/1] 0.00ns  loc: RSECore.c:34
+branch2:0  store i368 %data_read, i368* @data_buffer_2, align 16
+
+ST_1: StgValue_43 (179)  [1/1] 0.00ns  loc: RSECore.c:34
+branch2:1  br label %2
+
+ST_1: StgValue_44 (181)  [1/1] 0.00ns  loc: RSECore.c:34
+branch1:0  store i368 %data_read, i368* @data_buffer_1, align 16
+
+ST_1: StgValue_45 (182)  [1/1] 0.00ns  loc: RSECore.c:34
+branch1:1  br label %2
+
+ST_1: StgValue_46 (184)  [1/1] 0.00ns  loc: RSECore.c:34
+branch0:0  store i368 %data_read, i368* @data_buffer_0, align 16
+
+ST_1: StgValue_47 (185)  [1/1] 0.00ns  loc: RSECore.c:34
+branch0:1  br label %2
+
+ST_1: StgValue_48 (187)  [1/1] 0.00ns  loc: RSECore.c:34
+branch7:0  store i368 %data_read, i368* @data_buffer_7, align 16
+
+ST_1: StgValue_49 (188)  [1/1] 0.00ns  loc: RSECore.c:34
+branch7:1  br label %2
+
+
+ <State 2>: 1.91ns
+ST_2: i (47)  [1/1] 0.00ns
+.preheader:0  %i = phi i9 [ %i_1, %3 ], [ 0, %.preheader.preheader ]
+
+ST_2: tmp_3 (48)  [1/1] 0.86ns  loc: RSECore.c:38
+.preheader:1  %tmp_3 = icmp ult i9 %i, -144
+
+ST_2: StgValue_52 (49)  [1/1] 0.00ns  loc: RSECore.c:38
+.preheader:2  br i1 %tmp_3, label %3, label %.loopexit.loopexit
+
+ST_2: tmp_4 (54)  [1/1] 0.00ns  loc: RSECore.c:43
+:3  %tmp_4 = zext i9 %i to i368
+
+ST_2: tmp_8 (55)  [1/1] 1.91ns  loc: RSECore.c:43
+:4  %tmp_8 = lshr i368 %data_buffer_0_load, %tmp_4
+
+ST_2: input_0 (56)  [1/1] 0.00ns  loc: RSECore.c:43
+:5  %input_0 = trunc i368 %tmp_8 to i8
+
+ST_2: tmp_8_1 (57)  [1/1] 1.91ns  loc: RSECore.c:43
+:6  %tmp_8_1 = lshr i368 %data_buffer_1_load, %tmp_4
+
+ST_2: input_1 (58)  [1/1] 0.00ns  loc: RSECore.c:43
+:7  %input_1 = trunc i368 %tmp_8_1 to i8
+
+ST_2: tmp_8_2 (59)  [1/1] 1.91ns  loc: RSECore.c:43
+:8  %tmp_8_2 = lshr i368 %data_buffer_2_load, %tmp_4
+
+ST_2: input_2 (60)  [1/1] 0.00ns  loc: RSECore.c:43
+:9  %input_2 = trunc i368 %tmp_8_2 to i8
+
+ST_2: tmp_8_3 (61)  [1/1] 1.91ns  loc: RSECore.c:43
+:10  %tmp_8_3 = lshr i368 %data_buffer_3_load, %tmp_4
+
+ST_2: input_3 (62)  [1/1] 0.00ns  loc: RSECore.c:43
+:11  %input_3 = trunc i368 %tmp_8_3 to i8
+
+ST_2: tmp_8_4 (63)  [1/1] 1.91ns  loc: RSECore.c:43
+:12  %tmp_8_4 = lshr i368 %data_buffer_4_load, %tmp_4
+
+ST_2: input_4 (64)  [1/1] 0.00ns  loc: RSECore.c:43
+:13  %input_4 = trunc i368 %tmp_8_4 to i8
+
+ST_2: tmp_8_5 (65)  [1/1] 1.91ns  loc: RSECore.c:43
+:14  %tmp_8_5 = lshr i368 %data_buffer_5_load, %tmp_4
+
+ST_2: input_5 (66)  [1/1] 0.00ns  loc: RSECore.c:43
+:15  %input_5 = trunc i368 %tmp_8_5 to i8
+
+ST_2: tmp_8_6 (67)  [1/1] 1.91ns  loc: RSECore.c:43
+:16  %tmp_8_6 = lshr i368 %data_buffer_6_load, %tmp_4
+
+ST_2: input_6 (68)  [1/1] 0.00ns  loc: RSECore.c:43
+:17  %input_6 = trunc i368 %tmp_8_6 to i8
+
+ST_2: tmp_8_7 (69)  [1/1] 1.91ns  loc: RSECore.c:43
+:18  %tmp_8_7 = lshr i368 %data_buffer_7_load, %tmp_4
+
+ST_2: input_7 (70)  [1/1] 0.00ns  loc: RSECore.c:43
+:19  %input_7 = trunc i368 %tmp_8_7 to i8
+
+ST_2: i_1 (158)  [1/1] 0.92ns  loc: RSECore.c:38
+:107  %i_1 = add i9 8, %i
+
+
+ <State 3>: 0.86ns
+ST_3: Y_assign_s (71)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:20  %Y_assign_s = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext 76) nounwind
+
+ST_3: Y_assign (72)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:21  %Y_assign = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext 103) nounwind
+
+ST_3: Y_assign_1 (73)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:22  %Y_assign_1 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext -107) nounwind
+
+ST_3: Y_assign_2 (74)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:23  %Y_assign_2 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext 51) nounwind
+
+ST_3: Y_assign_3 (75)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:24  %Y_assign_3 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext -8) nounwind
+
+ST_3: Y_assign_4 (76)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:25  %Y_assign_4 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext -86) nounwind
+
+ST_3: Y_assign_5 (77)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:26  %Y_assign_5 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext 97) nounwind
+
+ST_3: Y_assign_6 (78)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:27  %Y_assign_6 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 54) nounwind
+
+ST_3: Y_assign_7 (86)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:35  %Y_assign_7 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext -60) nounwind
+
+ST_3: Y_assign_8 (87)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:36  %Y_assign_8 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext -94) nounwind
+
+ST_3: Y_assign_9 (88)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:37  %Y_assign_9 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext 35) nounwind
+
+ST_3: Y_assign_10 (89)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:38  %Y_assign_10 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext -28) nounwind
+
+ST_3: Y_assign_11 (90)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:39  %Y_assign_11 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext -21) nounwind
+
+ST_3: Y_assign_12 (91)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:40  %Y_assign_12 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext 41) nounwind
+
+ST_3: Y_assign_13 (92)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:41  %Y_assign_13 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext 35) nounwind
+
+ST_3: Y_assign_14 (93)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:42  %Y_assign_14 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 47) nounwind
+
+ST_3: Y_assign_15 (101)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:50  %Y_assign_15 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext -42) nounwind
+
+ST_3: Y_assign_16 (102)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:51  %Y_assign_16 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext 46) nounwind
+
+ST_3: Y_assign_17 (103)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:52  %Y_assign_17 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext 79) nounwind
+
+ST_3: Y_assign_18 (104)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:53  %Y_assign_18 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext 120) nounwind
+
+ST_3: Y_assign_19 (105)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:54  %Y_assign_19 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext 78) nounwind
+
+ST_3: Y_assign_20 (106)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:55  %Y_assign_20 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext 110) nounwind
+
+ST_3: Y_assign_21 (107)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:56  %Y_assign_21 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext -106) nounwind
+
+ST_3: Y_assign_22 (108)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:57  %Y_assign_22 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 125) nounwind
+
+ST_3: Y_assign_23 (116)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:65  %Y_assign_23 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext 95) nounwind
+
+ST_3: Y_assign_24 (117)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:66  %Y_assign_24 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext -22) nounwind
+
+ST_3: Y_assign_25 (118)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:67  %Y_assign_25 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext -8) nounwind
+
+ST_3: Y_assign_26 (119)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:68  %Y_assign_26 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext -82) nounwind
+
+ST_3: Y_assign_27 (120)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:69  %Y_assign_27 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext 92) nounwind
+
+ST_3: Y_assign_28 (121)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:70  %Y_assign_28 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext -20) nounwind
+
+ST_3: Y_assign_29 (122)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:71  %Y_assign_29 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext -43) nounwind
+
+ST_3: Y_assign_30 (123)  [3/3] 0.86ns  loc: Encoder.c:169->RSECore.c:45
+:72  %Y_assign_30 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 101) nounwind
+
+
+ <State 4>: 5.07ns
+ST_4: Y_assign_s (71)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:20  %Y_assign_s = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext 76) nounwind
+
+ST_4: Y_assign (72)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:21  %Y_assign = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext 103) nounwind
+
+ST_4: Y_assign_1 (73)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:22  %Y_assign_1 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext -107) nounwind
+
+ST_4: Y_assign_2 (74)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:23  %Y_assign_2 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext 51) nounwind
+
+ST_4: Y_assign_3 (75)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:24  %Y_assign_3 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext -8) nounwind
+
+ST_4: Y_assign_4 (76)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:25  %Y_assign_4 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext -86) nounwind
+
+ST_4: Y_assign_5 (77)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:26  %Y_assign_5 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext 97) nounwind
+
+ST_4: Y_assign_6 (78)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:27  %Y_assign_6 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 54) nounwind
+
+ST_4: Y_assign_7 (86)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:35  %Y_assign_7 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext -60) nounwind
+
+ST_4: Y_assign_8 (87)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:36  %Y_assign_8 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext -94) nounwind
+
+ST_4: Y_assign_9 (88)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:37  %Y_assign_9 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext 35) nounwind
+
+ST_4: Y_assign_10 (89)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:38  %Y_assign_10 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext -28) nounwind
+
+ST_4: Y_assign_11 (90)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:39  %Y_assign_11 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext -21) nounwind
+
+ST_4: Y_assign_12 (91)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:40  %Y_assign_12 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext 41) nounwind
+
+ST_4: Y_assign_13 (92)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:41  %Y_assign_13 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext 35) nounwind
+
+ST_4: Y_assign_14 (93)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:42  %Y_assign_14 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 47) nounwind
+
+ST_4: Y_assign_15 (101)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:50  %Y_assign_15 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext -42) nounwind
+
+ST_4: Y_assign_16 (102)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:51  %Y_assign_16 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext 46) nounwind
+
+ST_4: Y_assign_17 (103)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:52  %Y_assign_17 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext 79) nounwind
+
+ST_4: Y_assign_18 (104)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:53  %Y_assign_18 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext 120) nounwind
+
+ST_4: Y_assign_19 (105)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:54  %Y_assign_19 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext 78) nounwind
+
+ST_4: Y_assign_20 (106)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:55  %Y_assign_20 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext 110) nounwind
+
+ST_4: Y_assign_21 (107)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:56  %Y_assign_21 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext -106) nounwind
+
+ST_4: Y_assign_22 (108)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:57  %Y_assign_22 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 125) nounwind
+
+ST_4: Y_assign_23 (116)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:65  %Y_assign_23 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext 95) nounwind
+
+ST_4: Y_assign_24 (117)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:66  %Y_assign_24 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext -22) nounwind
+
+ST_4: Y_assign_25 (118)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:67  %Y_assign_25 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext -8) nounwind
+
+ST_4: Y_assign_26 (119)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:68  %Y_assign_26 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext -82) nounwind
+
+ST_4: Y_assign_27 (120)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:69  %Y_assign_27 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext 92) nounwind
+
+ST_4: Y_assign_28 (121)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:70  %Y_assign_28 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext -20) nounwind
+
+ST_4: Y_assign_29 (122)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:71  %Y_assign_29 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext -43) nounwind
+
+ST_4: Y_assign_30 (123)  [2/3] 5.07ns  loc: Encoder.c:169->RSECore.c:45
+:72  %Y_assign_30 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 101) nounwind
+
+
+ <State 5>: 4.11ns
+ST_5: empty (51)  [1/1] 0.00ns
+:0  %empty = call i32 (...)* @_ssdm_op_SpecLoopTripCount(i64 46, i64 46, i64 46) nounwind
+
+ST_5: tmp_1 (52)  [1/1] 0.00ns  loc: RSECore.c:39
+:1  %tmp_1 = call i32 (...)* @_ssdm_op_SpecRegionBegin([12 x i8]* @p_str2) nounwind
+
+ST_5: StgValue_137 (53)  [1/1] 0.00ns  loc: RSECore.c:40
+:2  call void (...)* @_ssdm_op_SpecPipeline(i32 -1, i32 1, i32 1, i32 0, [1 x i8]* @p_str1) nounwind
+
+ST_5: Y_assign_s (71)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:20  %Y_assign_s = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext 76) nounwind
+
+ST_5: Y_assign (72)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:21  %Y_assign = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext 103) nounwind
+
+ST_5: Y_assign_1 (73)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:22  %Y_assign_1 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext -107) nounwind
+
+ST_5: Y_assign_2 (74)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:23  %Y_assign_2 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext 51) nounwind
+
+ST_5: Y_assign_3 (75)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:24  %Y_assign_3 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext -8) nounwind
+
+ST_5: Y_assign_4 (76)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:25  %Y_assign_4 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext -86) nounwind
+
+ST_5: Y_assign_5 (77)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:26  %Y_assign_5 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext 97) nounwind
+
+ST_5: Y_assign_6 (78)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:27  %Y_assign_6 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 54) nounwind
+
+ST_5: tmp2 (79)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp1)
+:28  %tmp2 = xor i8 %Y_assign, %Y_assign_s
+
+ST_5: tmp3 (80)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp1)
+:29  %tmp3 = xor i8 %Y_assign_1, %Y_assign_2
+
+ST_5: tmp1 (81)  [1/1] 0.45ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (out node of the LUT)
+:30  %tmp1 = xor i8 %tmp3, %tmp2
+
+ST_5: tmp5 (82)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_7)
+:31  %tmp5 = xor i8 %Y_assign_3, %Y_assign_4
+
+ST_5: tmp6 (83)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_7)
+:32  %tmp6 = xor i8 %Y_assign_5, %Y_assign_6
+
+ST_5: tmp4 (84)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_7)
+:33  %tmp4 = xor i8 %tmp6, %tmp5
+
+ST_5: output_0 (85)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_7)
+:34  %output_0 = xor i8 %tmp4, %tmp1
+
+ST_5: Y_assign_7 (86)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:35  %Y_assign_7 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext -60) nounwind
+
+ST_5: Y_assign_8 (87)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:36  %Y_assign_8 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext -94) nounwind
+
+ST_5: Y_assign_9 (88)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:37  %Y_assign_9 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext 35) nounwind
+
+ST_5: Y_assign_10 (89)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:38  %Y_assign_10 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext -28) nounwind
+
+ST_5: Y_assign_11 (90)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:39  %Y_assign_11 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext -21) nounwind
+
+ST_5: Y_assign_12 (91)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:40  %Y_assign_12 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext 41) nounwind
+
+ST_5: Y_assign_13 (92)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:41  %Y_assign_13 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext 35) nounwind
+
+ST_5: Y_assign_14 (93)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:42  %Y_assign_14 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 47) nounwind
+
+ST_5: tmp8 (94)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp7)
+:43  %tmp8 = xor i8 %Y_assign_8, %Y_assign_7
+
+ST_5: tmp9 (95)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp7)
+:44  %tmp9 = xor i8 %Y_assign_9, %Y_assign_10
+
+ST_5: tmp7 (96)  [1/1] 0.45ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (out node of the LUT)
+:45  %tmp7 = xor i8 %tmp9, %tmp8
+
+ST_5: tmp11 (97)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_1)
+:46  %tmp11 = xor i8 %Y_assign_11, %Y_assign_12
+
+ST_5: tmp12 (98)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_1)
+:47  %tmp12 = xor i8 %Y_assign_13, %Y_assign_14
+
+ST_5: tmp10 (99)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_1)
+:48  %tmp10 = xor i8 %tmp12, %tmp11
+
+ST_5: output_1 (100)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_1)
+:49  %output_1 = xor i8 %tmp10, %tmp7
+
+ST_5: Y_assign_15 (101)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:50  %Y_assign_15 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext -42) nounwind
+
+ST_5: Y_assign_16 (102)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:51  %Y_assign_16 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext 46) nounwind
+
+ST_5: Y_assign_17 (103)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:52  %Y_assign_17 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext 79) nounwind
+
+ST_5: Y_assign_18 (104)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:53  %Y_assign_18 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext 120) nounwind
+
+ST_5: Y_assign_19 (105)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:54  %Y_assign_19 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext 78) nounwind
+
+ST_5: Y_assign_20 (106)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:55  %Y_assign_20 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext 110) nounwind
+
+ST_5: Y_assign_21 (107)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:56  %Y_assign_21 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext -106) nounwind
+
+ST_5: Y_assign_22 (108)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:57  %Y_assign_22 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 125) nounwind
+
+ST_5: tmp14 (109)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp13)
+:58  %tmp14 = xor i8 %Y_assign_16, %Y_assign_15
+
+ST_5: tmp15 (110)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp13)
+:59  %tmp15 = xor i8 %Y_assign_17, %Y_assign_18
+
+ST_5: tmp13 (111)  [1/1] 0.45ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (out node of the LUT)
+:60  %tmp13 = xor i8 %tmp15, %tmp14
+
+ST_5: tmp17 (112)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_2)
+:61  %tmp17 = xor i8 %Y_assign_19, %Y_assign_20
+
+ST_5: tmp18 (113)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_2)
+:62  %tmp18 = xor i8 %Y_assign_21, %Y_assign_22
+
+ST_5: tmp16 (114)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_2)
+:63  %tmp16 = xor i8 %tmp18, %tmp17
+
+ST_5: output_2 (115)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_2)
+:64  %output_2 = xor i8 %tmp16, %tmp13
+
+ST_5: Y_assign_23 (116)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:65  %Y_assign_23 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_0, i8 zeroext 95) nounwind
+
+ST_5: Y_assign_24 (117)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:66  %Y_assign_24 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_1, i8 zeroext -22) nounwind
+
+ST_5: Y_assign_25 (118)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:67  %Y_assign_25 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_2, i8 zeroext -8) nounwind
+
+ST_5: Y_assign_26 (119)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:68  %Y_assign_26 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_3, i8 zeroext -82) nounwind
+
+ST_5: Y_assign_27 (120)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:69  %Y_assign_27 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_4, i8 zeroext 92) nounwind
+
+ST_5: Y_assign_28 (121)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:70  %Y_assign_28 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_5, i8 zeroext -20) nounwind
+
+ST_5: Y_assign_29 (122)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:71  %Y_assign_29 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_6, i8 zeroext -43) nounwind
+
+ST_5: Y_assign_30 (123)  [1/3] 1.90ns  loc: Encoder.c:169->RSECore.c:45
+:72  %Y_assign_30 = call fastcc zeroext i8 @GF_multiply(i8 zeroext %input_7, i8 zeroext 101) nounwind
+
+ST_5: tmp20 (124)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp19)
+:73  %tmp20 = xor i8 %Y_assign_24, %Y_assign_23
+
+ST_5: tmp21 (125)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp19)
+:74  %tmp21 = xor i8 %Y_assign_25, %Y_assign_26
+
+ST_5: tmp19 (126)  [1/1] 0.45ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (out node of the LUT)
+:75  %tmp19 = xor i8 %tmp21, %tmp20
+
+ST_5: tmp23 (127)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_3)
+:76  %tmp23 = xor i8 %Y_assign_27, %Y_assign_28
+
+ST_5: tmp24 (128)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_3)
+:77  %tmp24 = xor i8 %Y_assign_29, %Y_assign_30
+
+ST_5: tmp22 (129)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_3)
+:78  %tmp22 = xor i8 %tmp24, %tmp23
+
+ST_5: output_3 (130)  [1/1] 0.00ns  loc: Encoder.c:18->Encoder.c:169->RSECore.c:45 (grouped into LUT with out node tmp_12_3)
+:79  %output_3 = xor i8 %tmp22, %tmp19
+
+ST_5: tmp_5 (131)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_6)
+:80  %tmp_5 = shl i368 255, %tmp_4
+
+ST_5: tmp_6 (132)  [1/1] 0.99ns  loc: RSECore.c:47 (out node of the LUT)
+:81  %tmp_6 = xor i368 %tmp_5, -1
+
+ST_5: parity_buffer_0_load (133)  [1/1] 0.00ns  loc: RSECore.c:47
+:82  %parity_buffer_0_load = load i368* @parity_buffer_0, align 16
+
+ST_5: tmp_s (134)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_9)
+:83  %tmp_s = and i368 %parity_buffer_0_load, %tmp_6
+
+ST_5: tmp_2 (135)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_7)
+:84  %tmp_2 = zext i8 %output_0 to i368
+
+ST_5: tmp_7 (136)  [1/1] 0.99ns  loc: RSECore.c:47 (out node of the LUT)
+:85  %tmp_7 = shl i368 %tmp_2, %tmp_4
+
+ST_5: tmp_9 (137)  [1/1] 0.77ns  loc: RSECore.c:47 (out node of the LUT)
+:86  %tmp_9 = or i368 %tmp_7, %tmp_s
+
+ST_5: StgValue_205 (138)  [1/1] 0.00ns  loc: RSECore.c:47
+:87  store i368 %tmp_9, i368* @parity_buffer_0, align 16
+
+ST_5: parity_buffer_1_load (139)  [1/1] 0.00ns  loc: RSECore.c:47
+:88  %parity_buffer_1_load = load i368* @parity_buffer_1, align 16
+
+ST_5: tmp_10_1 (140)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_13_1)
+:89  %tmp_10_1 = and i368 %parity_buffer_1_load, %tmp_6
+
+ST_5: tmp_11_1 (141)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_12_1)
+:90  %tmp_11_1 = zext i8 %output_1 to i368
+
+ST_5: tmp_12_1 (142)  [1/1] 0.99ns  loc: RSECore.c:47 (out node of the LUT)
+:91  %tmp_12_1 = shl i368 %tmp_11_1, %tmp_4
+
+ST_5: tmp_13_1 (143)  [1/1] 0.77ns  loc: RSECore.c:47 (out node of the LUT)
+:92  %tmp_13_1 = or i368 %tmp_12_1, %tmp_10_1
+
+ST_5: StgValue_211 (144)  [1/1] 0.00ns  loc: RSECore.c:47
+:93  store i368 %tmp_13_1, i368* @parity_buffer_1, align 16
+
+ST_5: parity_buffer_2_load (145)  [1/1] 0.00ns  loc: RSECore.c:47
+:94  %parity_buffer_2_load = load i368* @parity_buffer_2, align 16
+
+ST_5: tmp_10_2 (146)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_13_2)
+:95  %tmp_10_2 = and i368 %parity_buffer_2_load, %tmp_6
+
+ST_5: tmp_11_2 (147)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_12_2)
+:96  %tmp_11_2 = zext i8 %output_2 to i368
+
+ST_5: tmp_12_2 (148)  [1/1] 0.99ns  loc: RSECore.c:47 (out node of the LUT)
+:97  %tmp_12_2 = shl i368 %tmp_11_2, %tmp_4
+
+ST_5: tmp_13_2 (149)  [1/1] 0.77ns  loc: RSECore.c:47 (out node of the LUT)
+:98  %tmp_13_2 = or i368 %tmp_12_2, %tmp_10_2
+
+ST_5: StgValue_217 (150)  [1/1] 0.00ns  loc: RSECore.c:47
+:99  store i368 %tmp_13_2, i368* @parity_buffer_2, align 16
+
+ST_5: parity_buffer_3_load (151)  [1/1] 0.00ns  loc: RSECore.c:47
+:100  %parity_buffer_3_load = load i368* @parity_buffer_3, align 16
+
+ST_5: tmp_10_3 (152)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_13_3)
+:101  %tmp_10_3 = and i368 %parity_buffer_3_load, %tmp_6
+
+ST_5: tmp_11_3 (153)  [1/1] 0.00ns  loc: RSECore.c:47 (grouped into LUT with out node tmp_12_3)
+:102  %tmp_11_3 = zext i8 %output_3 to i368
+
+ST_5: tmp_12_3 (154)  [1/1] 0.99ns  loc: RSECore.c:47 (out node of the LUT)
+:103  %tmp_12_3 = shl i368 %tmp_11_3, %tmp_4
+
+ST_5: tmp_13_3 (155)  [1/1] 0.77ns  loc: RSECore.c:47 (out node of the LUT)
+:104  %tmp_13_3 = or i368 %tmp_12_3, %tmp_10_3
+
+ST_5: StgValue_223 (156)  [1/1] 0.00ns  loc: RSECore.c:47
+:105  store i368 %tmp_13_3, i368* @parity_buffer_3, align 16
+
+ST_5: empty_5 (157)  [1/1] 0.00ns  loc: RSECore.c:49
+:106  %empty_5 = call i32 (...)* @_ssdm_op_SpecRegionEnd([12 x i8]* @p_str2, i32 %tmp_1) nounwind
+
+ST_5: StgValue_225 (159)  [1/1] 0.00ns  loc: RSECore.c:38
+:108  br label %.preheader
+
+
+ <State 6>: 0.00ns
+ST_6: StgValue_226 (161)  [1/1] 0.00ns
+.loopexit.loopexit:0  br label %.loopexit
+
+ST_6: StgValue_227 (192)  [1/1] 0.00ns  loc: RSECore.c:55
+.loopexit:0  ret void
+
+
+ <State 7>: 0.00ns
+ST_7: StgValue_228 (190)  [1/1] 0.00ns  loc: RSECore.c:35
+:0  br label %.loopexit
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 10ns, clock uncertainty: 1.25ns.
+
+ <State 1>: 1.61ns
+The critical path consists of the following:
+	wire read on port 'index' [28]  (0 ns)
+	'call' operation ('tmp') to 'aesl_mux_load_4i368P' [33]  (1.61 ns)
+
+ <State 2>: 1.91ns
+The critical path consists of the following:
+	'phi' operation ('i') with incoming values : ('i', RSECore.c:38) [47]  (0 ns)
+	'lshr' operation ('tmp_8', RSECore.c:43) [55]  (1.91 ns)
+
+ <State 3>: 0.856ns
+The critical path consists of the following:
+	'call' operation ('Y', Encoder.c:169->RSECore.c:45) to 'GF_multiply' [71]  (0.856 ns)
+
+ <State 4>: 5.07ns
+The critical path consists of the following:
+	'call' operation ('Y', Encoder.c:169->RSECore.c:45) to 'GF_multiply' [71]  (5.07 ns)
+
+ <State 5>: 4.11ns
+The critical path consists of the following:
+	'call' operation ('Y', Encoder.c:169->RSECore.c:45) to 'GF_multiply' [71]  (1.9 ns)
+	'xor' operation ('tmp2', Encoder.c:18->Encoder.c:169->RSECore.c:45) [79]  (0 ns)
+	'xor' operation ('tmp1', Encoder.c:18->Encoder.c:169->RSECore.c:45) [81]  (0.445 ns)
+	'xor' operation ('Parity[0]', Encoder.c:18->Encoder.c:169->RSECore.c:45) [85]  (0 ns)
+	'shl' operation ('tmp_7', RSECore.c:47) [136]  (0.995 ns)
+	'or' operation ('tmp_9', RSECore.c:47) [137]  (0.767 ns)
+
+ <State 6>: 0ns
+The critical path consists of the following:
+
+ <State 7>: 0ns
+The critical path consists of the following:
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+	State 7
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

@@ -1,0 +1,320 @@
+<stg><name>aesl_mux_load_4i368P</name>
+
+
+<trans_list>
+</trans_list>
+
+
+
+<state_list>
+
+<state id="1" st_id="1">
+
+<operation id="2" st_id="1" stage="1" lat="1">
+<core>NULL</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="0">
+<or_exp><and_exp></and_exp></or_exp>
+</condition>
+
+<Node id="6" bw="0" op_0_bw="0" op_1_bw="0" op_2_bw="0">
+<![CDATA[
+entry_ifconv:0  call void (...)* @_ssdm_op_SpecClockDomain([8 x i8]* @default, [1 x i8]* @empty)
+
+]]></Node>
+<StgValue><ssdm name=""/></StgValue>
+</operation>
+
+<operation id="3" st_id="1" stage="1" lat="1">
+<core>NULL</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="0">
+<or_exp><and_exp></and_exp></or_exp>
+</condition>
+
+<Node id="7" bw="2" op_0_bw="2" op_1_bw="2">
+<![CDATA[
+entry_ifconv:1  %tmp = call i2 @_ssdm_op_Read.ap_auto.i2(i2 %empty)
+
+]]></Node>
+<StgValue><ssdm name="tmp"/></StgValue>
+</operation>
+
+<operation id="4" st_id="1" stage="1" lat="1">
+<core>NULL</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="17">
+<or_exp><and_exp><literal name="sel_tmp" val="0"/>
+<literal name="or_cond" val="0"/>
+</and_exp></or_exp>
+</condition>
+
+<Node id="8" bw="368" op_0_bw="368">
+<![CDATA[
+entry_ifconv:2  %parity_buffer_3_load = load i368* @parity_buffer_3, align 16
+
+]]></Node>
+<StgValue><ssdm name="parity_buffer_3_load"/></StgValue>
+</operation>
+
+<operation id="5" st_id="1" stage="1" lat="1">
+<core>NULL</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="16">
+<or_exp><and_exp><literal name="sel_tmp" val="1"/>
+<literal name="or_cond" val="0"/>
+</and_exp></or_exp>
+</condition>
+
+<Node id="9" bw="368" op_0_bw="368">
+<![CDATA[
+entry_ifconv:3  %parity_buffer_0_load = load i368* @parity_buffer_0, align 16
+
+]]></Node>
+<StgValue><ssdm name="parity_buffer_0_load"/></StgValue>
+</operation>
+
+<operation id="6" st_id="1" stage="1" lat="1">
+<core>NULL</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="13">
+<or_exp><and_exp><literal name="sel_tmp4" val="0"/>
+<literal name="or_cond" val="1"/>
+</and_exp></or_exp>
+</condition>
+
+<Node id="10" bw="368" op_0_bw="368">
+<![CDATA[
+entry_ifconv:4  %parity_buffer_1_load = load i368* @parity_buffer_1, align 16
+
+]]></Node>
+<StgValue><ssdm name="parity_buffer_1_load"/></StgValue>
+</operation>
+
+<operation id="7" st_id="1" stage="1" lat="1">
+<core>NULL</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="12">
+<or_exp><and_exp><literal name="sel_tmp4" val="1"/>
+<literal name="or_cond" val="1"/>
+</and_exp></or_exp>
+</condition>
+
+<Node id="11" bw="368" op_0_bw="368">
+<![CDATA[
+entry_ifconv:5  %parity_buffer_2_load = load i368* @parity_buffer_2, align 16
+
+]]></Node>
+<StgValue><ssdm name="parity_buffer_2_load"/></StgValue>
+</operation>
+
+<operation id="8" st_id="1" stage="1" lat="1">
+<core>Cmp</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="15">
+<or_exp><and_exp><literal name="or_cond" val="0"/>
+</and_exp></or_exp>
+</condition>
+
+<Node id="12" bw="1" op_0_bw="2" op_1_bw="2">
+<![CDATA[
+entry_ifconv:6  %sel_tmp = icmp eq i2 %tmp, 0
+
+]]></Node>
+<StgValue><ssdm name="sel_tmp"/></StgValue>
+</operation>
+
+<operation id="9" st_id="1" stage="1" lat="1">
+<core>Cmp</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="0">
+<or_exp><and_exp></and_exp></or_exp>
+</condition>
+
+<Node id="13" bw="1" op_0_bw="2" op_1_bw="2">
+<![CDATA[
+entry_ifconv:7  %sel_tmp2 = icmp eq i2 %tmp, 1
+
+]]></Node>
+<StgValue><ssdm name="sel_tmp2"/></StgValue>
+</operation>
+
+<operation id="10" st_id="1" stage="1" lat="1">
+<core>Cmp</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="0">
+<or_exp><and_exp></and_exp></or_exp>
+</condition>
+
+<Node id="14" bw="1" op_0_bw="2" op_1_bw="2">
+<![CDATA[
+entry_ifconv:8  %sel_tmp4 = icmp eq i2 %tmp, -2
+
+]]></Node>
+<StgValue><ssdm name="sel_tmp4"/></StgValue>
+</operation>
+
+<operation id="11" st_id="1" stage="1" lat="1">
+<core>Sel</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="11">
+<or_exp><and_exp><literal name="or_cond" val="1"/>
+</and_exp></or_exp>
+</condition>
+
+<Node id="15" bw="368" op_0_bw="1" op_1_bw="368" op_2_bw="368">
+<![CDATA[
+entry_ifconv:9  %newSel = select i1 %sel_tmp4, i368 %parity_buffer_2_load, i368 %parity_buffer_1_load
+
+]]></Node>
+<StgValue><ssdm name="newSel"/></StgValue>
+</operation>
+
+<operation id="12" st_id="1" stage="1" lat="1">
+<core>LogicGate</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="0">
+<or_exp><and_exp></and_exp></or_exp>
+</condition>
+
+<Node id="16" bw="1" op_0_bw="1" op_1_bw="1">
+<![CDATA[
+entry_ifconv:10  %or_cond = or i1 %sel_tmp4, %sel_tmp2
+
+]]></Node>
+<StgValue><ssdm name="or_cond"/></StgValue>
+</operation>
+
+<operation id="13" st_id="1" stage="1" lat="1">
+<core>Sel</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="14">
+<or_exp><and_exp><literal name="or_cond" val="0"/>
+</and_exp></or_exp>
+</condition>
+
+<Node id="17" bw="368" op_0_bw="1" op_1_bw="368" op_2_bw="368">
+<![CDATA[
+entry_ifconv:11  %newSel1 = select i1 %sel_tmp, i368 %parity_buffer_0_load, i368 %parity_buffer_3_load
+
+]]></Node>
+<StgValue><ssdm name="newSel1"/></StgValue>
+</operation>
+
+<operation id="14" st_id="1" stage="1" lat="1">
+<core>Sel</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="0">
+<or_exp><and_exp></and_exp></or_exp>
+</condition>
+
+<Node id="18" bw="368" op_0_bw="1" op_1_bw="368" op_2_bw="368">
+<![CDATA[
+entry_ifconv:12  %newSel3 = select i1 %or_cond, i368 %newSel, i368 %newSel1
+
+]]></Node>
+<StgValue><ssdm name="newSel3"/></StgValue>
+</operation>
+
+<operation id="15" st_id="1" stage="1" lat="1">
+<core>NULL</core>
+<MemPortIdVec></MemPortIdVec>
+<condition id="0">
+<or_exp><and_exp></and_exp></or_exp>
+</condition>
+
+<Node id="19" bw="0" op_0_bw="368">
+<![CDATA[
+entry_ifconv:13  ret i368 %newSel3
+
+]]></Node>
+<StgValue><ssdm name=""/></StgValue>
+</operation>
+</state>
+</state_list>
+
+
+<ports>
+<port id="16" name="empty" dir="0" iftype="0">
+<core>NULL</core><StgValue><ssdm name="empty"/></StgValue>
+</port>
+<port id="17" name="parity_buffer_3" dir="0" iftype="0">
+<core>NULL</core><StgValue><ssdm name="parity_buffer_3"/></StgValue>
+</port>
+<port id="18" name="parity_buffer_0" dir="0" iftype="0">
+<core>NULL</core><StgValue><ssdm name="parity_buffer_0"/></StgValue>
+</port>
+<port id="19" name="parity_buffer_1" dir="0" iftype="0">
+<core>NULL</core><StgValue><ssdm name="parity_buffer_1"/></StgValue>
+</port>
+<port id="20" name="parity_buffer_2" dir="0" iftype="0">
+<core>NULL</core><StgValue><ssdm name="parity_buffer_2"/></StgValue>
+</port>
+</ports>
+
+
+<dataflows>
+<dataflow id="22" from="_ssdm_op_SpecClockDomain" to="StgValue_2" fromId="21" toId="2">
+</dataflow>
+<dataflow id="24" from="default" to="StgValue_2" fromId="23" toId="2">
+</dataflow>
+<dataflow id="26" from="empty" to="StgValue_2" fromId="25" toId="2">
+</dataflow>
+<dataflow id="28" from="_ssdm_op_Read.ap_auto.i2" to="tmp" fromId="27" toId="3">
+</dataflow>
+<dataflow id="29" from="empty" to="tmp" fromId="16" toId="3">
+</dataflow>
+<dataflow id="30" from="parity_buffer_3" to="parity_buffer_3_load" fromId="17" toId="4">
+</dataflow>
+<dataflow id="31" from="parity_buffer_0" to="parity_buffer_0_load" fromId="18" toId="5">
+</dataflow>
+<dataflow id="32" from="parity_buffer_1" to="parity_buffer_1_load" fromId="19" toId="6">
+</dataflow>
+<dataflow id="33" from="parity_buffer_2" to="parity_buffer_2_load" fromId="20" toId="7">
+</dataflow>
+<dataflow id="34" from="tmp" to="sel_tmp" fromId="3" toId="8">
+</dataflow>
+<dataflow id="36" from="StgValue_35" to="sel_tmp" fromId="35" toId="8">
+</dataflow>
+<dataflow id="37" from="tmp" to="sel_tmp2" fromId="3" toId="9">
+</dataflow>
+<dataflow id="39" from="StgValue_38" to="sel_tmp2" fromId="38" toId="9">
+</dataflow>
+<dataflow id="40" from="tmp" to="sel_tmp4" fromId="3" toId="10">
+</dataflow>
+<dataflow id="42" from="StgValue_41" to="sel_tmp4" fromId="41" toId="10">
+</dataflow>
+<dataflow id="43" from="sel_tmp4" to="newSel" fromId="10" toId="11">
+</dataflow>
+<dataflow id="44" from="parity_buffer_2_load" to="newSel" fromId="7" toId="11">
+</dataflow>
+<dataflow id="45" from="parity_buffer_1_load" to="newSel" fromId="6" toId="11">
+</dataflow>
+<dataflow id="46" from="sel_tmp4" to="or_cond" fromId="10" toId="12">
+</dataflow>
+<dataflow id="47" from="sel_tmp2" to="or_cond" fromId="9" toId="12">
+</dataflow>
+<dataflow id="48" from="sel_tmp" to="newSel1" fromId="8" toId="13">
+</dataflow>
+<dataflow id="49" from="parity_buffer_0_load" to="newSel1" fromId="5" toId="13">
+</dataflow>
+<dataflow id="50" from="parity_buffer_3_load" to="newSel1" fromId="4" toId="13">
+</dataflow>
+<dataflow id="51" from="or_cond" to="newSel3" fromId="12" toId="14">
+</dataflow>
+<dataflow id="52" from="newSel" to="newSel3" fromId="11" toId="14">
+</dataflow>
+<dataflow id="53" from="newSel1" to="newSel3" fromId="13" toId="14">
+</dataflow>
+<dataflow id="54" from="newSel3" to="StgValue_15" fromId="14" toId="15">
+</dataflow>
+<dataflow id="55" from="sel_tmp" to="StgValue_1" fromId="8" toId="1">
+</dataflow>
+<dataflow id="56" from="or_cond" to="StgValue_1" fromId="12" toId="1">
+</dataflow>
+<dataflow id="57" from="sel_tmp4" to="StgValue_1" fromId="10" toId="1">
+</dataflow>
+</dataflows>
+
+
+</stg>

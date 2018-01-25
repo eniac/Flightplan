@@ -1,0 +1,148 @@
+
+
+================================================================
+== Vivado HLS Report for 'aesl_mux_load_4i368P'
+================================================================
+* Date:           Thu Jan 25 10:43:58 2018
+
+* Version:        2017.1 (Build 1846317 on Thu Jun 22 18:17:09 MDT 2017)
+* Project:        RSECore
+* Solution:       solution1
+* Product family: zynquplus
+* Target device:  xczu9eg-ffvb1156-1-i-es1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |  10.00|      1.61|        1.25|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +-----+-----+-----+-----+---------+
+    |  Latency  |  Interval | Pipeline|
+    | min | max | min | max |   Type  |
+    +-----+-----+-----+-----+---------+
+    |    0|    0|    0|    0|   none  |
+    +-----+-----+-----+-----+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 0
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 0
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 1
+* Pipeline: 0
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+* FSM state operations: 
+
+ <State 1>: 1.61ns
+ST_1: StgValue_2 (6)  [1/1] 0.00ns
+entry_ifconv:0  call void (...)* @_ssdm_op_SpecClockDomain([8 x i8]* @default, [1 x i8]* @empty)
+
+ST_1: tmp (7)  [1/1] 0.00ns
+entry_ifconv:1  %tmp = call i2 @_ssdm_op_Read.ap_auto.i2(i2 %empty)
+
+ST_1: parity_buffer_3_load (8)  [1/1] 0.00ns
+entry_ifconv:2  %parity_buffer_3_load = load i368* @parity_buffer_3, align 16
+
+ST_1: parity_buffer_0_load (9)  [1/1] 0.00ns
+entry_ifconv:3  %parity_buffer_0_load = load i368* @parity_buffer_0, align 16
+
+ST_1: parity_buffer_1_load (10)  [1/1] 0.00ns
+entry_ifconv:4  %parity_buffer_1_load = load i368* @parity_buffer_1, align 16
+
+ST_1: parity_buffer_2_load (11)  [1/1] 0.00ns
+entry_ifconv:5  %parity_buffer_2_load = load i368* @parity_buffer_2, align 16
+
+ST_1: sel_tmp (12)  [1/1] 0.51ns
+entry_ifconv:6  %sel_tmp = icmp eq i2 %tmp, 0
+
+ST_1: sel_tmp2 (13)  [1/1] 0.51ns
+entry_ifconv:7  %sel_tmp2 = icmp eq i2 %tmp, 1
+
+ST_1: sel_tmp4 (14)  [1/1] 0.51ns
+entry_ifconv:8  %sel_tmp4 = icmp eq i2 %tmp, -2
+
+ST_1: newSel (15)  [1/1] 0.00ns (grouped into LUT with out node newSel3)
+entry_ifconv:9  %newSel = select i1 %sel_tmp4, i368 %parity_buffer_2_load, i368 %parity_buffer_1_load
+
+ST_1: or_cond (16)  [1/1] 0.00ns (grouped into LUT with out node newSel3)
+entry_ifconv:10  %or_cond = or i1 %sel_tmp4, %sel_tmp2
+
+ST_1: newSel1 (17)  [1/1] 0.55ns (out node of the LUT)
+entry_ifconv:11  %newSel1 = select i1 %sel_tmp, i368 %parity_buffer_0_load, i368 %parity_buffer_3_load
+
+ST_1: newSel3 (18)  [1/1] 0.55ns (out node of the LUT)
+entry_ifconv:12  %newSel3 = select i1 %or_cond, i368 %newSel, i368 %newSel1
+
+ST_1: StgValue_15 (19)  [1/1] 0.00ns
+entry_ifconv:13  ret i368 %newSel3
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 10ns, clock uncertainty: 1.25ns.
+
+ <State 1>: 1.61ns
+The critical path consists of the following:
+	wire read on port 'empty' [7]  (0 ns)
+	'icmp' operation ('sel_tmp') [12]  (0.512 ns)
+	'select' operation ('newSel1') [17]  (0.55 ns)
+	'select' operation ('newSel3') [18]  (0.55 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A
