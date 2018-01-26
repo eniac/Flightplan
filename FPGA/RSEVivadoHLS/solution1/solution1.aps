@@ -1,10 +1,4 @@
 <solution AutoPilot="com.autoesl.autopilot.solution">
-    <downStreamTool>
-        <DownStreamTool name="vivado"/>
-    </downStreamTool>
-    <clockList>
-        <clock default="false" name="default" period="3"/>
-    </clockList>
     <config>
         <schedule model="RSE_core"/>
     </config>
@@ -67,5 +61,11 @@
         <library name="DefaultPlatform" value="xilinx/zynquplus/zynquplus"/>
         <library name="DefaultPlatform" value="xilinx/zynquplus/zynquplus_fpv7"/>
     </libraryList>
+    <downStreamTool>
+        <DownStreamTool name="vivado"/>
+    </downStreamTool>
+    <clockList>
+        <clock default="false" name="default" period="3"/>
+    </clockList>
 </solution>
 

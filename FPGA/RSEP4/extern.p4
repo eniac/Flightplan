@@ -6,6 +6,18 @@
 extern bit<32> get_and_add(bit<32> addr, bit<32> delta, bit<1> plus);
 
 
+/*
+	while(true)
+	{
+		output reg[addr];
+		reg[addr] ++;
+		if reg[addr] == max;
+			reg[addr] = 0;
+	}
+*/
+extern bit<32> loop(in bit<32> addr,in bit<32> max);
+
+
 
 /* 
 	Simulated counter using get_and_add.
@@ -27,14 +39,14 @@ extern bit<32> get_and_add(bit<32> addr, bit<32> delta, bit<1> plus);
 
 /* [TODO] this may not work in real fpga. Maybe switch to get_and_add */
 /* read and write register, address is 32 bit long */
-@Xilinx_MaxLatency(16)
+//@Xilinx_MaxLatency(16)
 extern bit<32> readr(in bit<32> addr);
-@Xilinx_MaxLatency(16)
+//@Xilinx_MaxLatency(16)
 extern bit<1> writer(in bit<32> addr, in bit<32> data);
 
 /* fec */
-#define FEC_QUEUE_NUMBER 5
-#define FEC_PARITY_NUMBER 5
+#define FEC_QUEUE_NUMBER 8
+#define FEC_PARITY_NUMBER 4
 
 #define FEC_PAYLOAD_SIZE 256
 #define ETH_HEADER_SIZE 112
@@ -60,7 +72,7 @@ extern bit<1> writer(in bit<32> addr, in bit<32> data);
 	there may be 2 operations in the same call, e.g., prepare_encoding and encode
 	return anying if no return value is required (bit<1> below)
 	the latency is a random number (16) now; can be changed to any meaningful number */
-@Xilinx_MaxLatency(16)
+//@Xilinx_MaxLatency(16)
 extern bit<FEC_PACKET_SIZE> fec(in bit<8> operation, in bit<32> index, in bit<1> is_parity, in bit<FEC_PACKET_SIZE> packet);
 
 #else

@@ -28,28 +28,23 @@ void RSE_core(uint8 operation, uint32 index, uint1 is_parity, packet_t data, pac
   int k = FEC_MAX_K;
   int h = FEC_MAX_H;
 
-  switch (operation)
+  if ((operation & OP_PREPARE_ENCODING) != 0)
+    data_buffer[index] = data;
+  else if ((operation & OP_ENCODE) != 0)
   {
-    case OP_PREPARE_ENCODING:
-      data_buffer[index] = data;
-      break;
-
-    case OP_ENCODE:
-      for (int i = 0; i < FEC_PACKET_SIZE; i += FEC_M)
-      {
+    for (int i = 0; i < FEC_PACKET_SIZE; i += FEC_M)
+    {
 #pragma HLS pipeline
-        fec_sym input[FEC_MAX_K];
-        for (int j = 0; j < k; j++)
-          input[j] = (data_buffer[j] >> i) & 0xFF;
-        fec_sym output[FEC_MAX_H];
-        Matrix_multiply_HW(input, output, k, h);
-        for (int j = 0; j < h; j++)
-          parity_buffer[j] = (parity_buffer[j] & ~((uint368) 0xFF << i))
-              | (((uint368) output[j]) << i);
-      }
-      break;
-
-    case OP_GET_ENCODED:
-      *parity = parity_buffer[index];
+      fec_sym input[FEC_MAX_K];
+      for (int j = 0; j < k; j++)
+        input[j] = (data_buffer[j] >> i) & 0xFF;
+      fec_sym output[FEC_MAX_H];
+      Matrix_multiply_HW(input, output, k, h);
+      for (int j = 0; j < h; j++)
+        parity_buffer[j] = (parity_buffer[j] & ~((uint368) 0xFF << i))
+            | (((uint368) output[j]) << i);
+    }
   }
+  else if ((operation & OP_GET_ENCODED) != 0)
+    *parity = parity_buffer[index];
 }

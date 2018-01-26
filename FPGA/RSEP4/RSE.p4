@@ -28,9 +28,9 @@
 #include "xilinx.p4"
 #include "extern.p4"
 
-#define FEC_IN_PORT 0xF
+#define FEC_IN_PORT 0x4
 #define PACE_IN_PORT 0xE
-#define FEEDBACK_IN_PORT 0xD
+#define FEEDBACK_IN_PORT 0x3
 #define IGNORE_IN_PORT 0xC
 
 #define DROP_E_PORT 0xF
@@ -131,6 +131,7 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 	bit<FEC_PACKET_SIZE> pkt_in;
 	bit<FEC_PACKET_SIZE> pkt_out;
 	bit<32> index;
+	bit<32> max;
 	bit<32> index_new;
 	bit<1> parity;
 	bit<32> addr;
@@ -148,71 +149,7 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 		ioports.egress_port = DROP_E_PORT;
 	}
 
-	/* 
-		FEC for HDL version; with a timer; evacuate when timeout
-		assume that there are 2^4 = 16 queues;
-	*/
-	/*
-	#define FEC_QUEUE_SIZE 8
-	#define FEC_QUEUE_NUMBER 16
-
 	// Encode
-	bit<32> t;
-	bit<32> t0;
-	bit<4> index;
-	bit<4> queue;
-	bit<1> do_fec;
-	bit<1> evacuated;
-	{
-		evacuated = 0;
-		
-		// read
-		t = counter();
-		queue = (bit<4>)t;
-		t0 = readr_timer(queue);
-		index = (bit<4>)readr_index(queue);
-
-		// check timeout
-		if (t0>0)
-		{
-			t0 = t0 - 1;
-			if (t0 == 0)
-			{
-				evacuated = 1;
-				index = 0;
-				t0 = 0;
-			}
-		}
-
-		// check full
-		if (index == FEC_QUEUE_SIZE)
-		{
-			evacuated = 1;
-			index = 0;
-			t0 = 0;
-		}
-
-		// check do encoding
-		if (do_fec)
-		{
-			index = index + 1;
-			ioports.egress_port = DROP_E_PORT;
-		}
-
-		writer_timer(queue, t0);
-		writer_index(queue, index);
-		evacuate(evacuated, queue);
-		fec_prepare_encoding(do_fec, fec_hdr.packet, queue, index-1);
-	}
-
-	// [TODO] Send encoded packet [?]
-
-	// [TODO] Decode
-
-	// [TODO] Send decoded packet
-
-	*/
-
     apply {
 
 		hdr.state.encoded = 0;
@@ -228,19 +165,23 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 		pkt_in = 0;
 
 		addr = 0;
+		max = 0;
 		if (ioports.ingress_port == FEC_IN_PORT)
 		{
 			addr = 1;
+			max = FEC_QUEUE_NUMBER;
 		}
 		else if (ioports.ingress_port == FEEDBACK_IN_PORT)
 		{
 			if (hdr.veth.vx == 1)
 			{
 				addr = 2;
+				max = FEC_QUEUE_NUMBER + FEC_PARITY_NUMBER;
 			}
 			else
 			{
 				addr = 3;
+				max = FEC_QUEUE_NUMBER;
 			}
 		}
 		else
@@ -248,6 +189,7 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 			if (hdr.veth.vx == 1)
 			{
 				addr = 4;
+				max = FEC_QUEUE_NUMBER + FEC_PARITY_NUMBER;
 			}
 			else
 			{
@@ -255,7 +197,8 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 			}
 		}
 
-		index = readr(addr);
+//		index = readr(addr);
+		index = loop(addr, max);
 		index_new = index;
 
 		if (ioports.ingress_port == FEC_IN_PORT)
@@ -303,10 +246,13 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 				op = OP_GET_ENCODED;
 				/* send encoded */
 				do_get_encoded = 1;
+				/*
 				if (index == 0)
 				{
 					index = FEC_QUEUE_NUMBER;
 				}
+				*/
+				index = index + FEC_QUEUE_NUMBER;
 
 //				hdr.encoded_payload.data = fec_get_encoded(do_get_encoded, index, parity);
 				index_new = index + 1;
@@ -418,8 +364,8 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 			hdr.veth.type = (bit<15>)(pkt_out >> (FEC_PAYLOAD_SIZE));
 		}
 			
-		dummy = writer(addr, index_new);
-		hdr.state.dummy = dummy;
+//		dummy = writer(addr, index_new);
+//		hdr.state.dummy = dummy;
     }
 }
 

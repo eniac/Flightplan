@@ -33,68 +33,80 @@
 
 `timescale 1 ps / 1 ps
 
-module fec_0_t (
+module loop_0_t (
 	clk_line,
 	rst,
-	tuple_in_fec_input_VALID,
-	tuple_in_fec_input_DATA,
-	tuple_out_fec_output_VALID,
-	tuple_out_fec_output_DATA
+	tuple_in_loop_input_VALID,
+	tuple_in_loop_input_DATA,
+	tuple_out_loop_output_VALID,
+	tuple_out_loop_output_DATA
 );
 
 input clk_line /* unused */ ;
 (* polarity = "high" *) input rst /* unused */ ;
-input tuple_in_fec_input_VALID /* unused */ ;
-input [409:0] tuple_in_fec_input_DATA /* unused */ ;
-output tuple_out_fec_output_VALID /* undriven */ ;
-output [367:0] tuple_out_fec_output_DATA /* undriven */ ;
+input tuple_in_loop_input_VALID /* unused */ ;
+input [64:0] tuple_in_loop_input_DATA /* unused */ ;
+output tuple_out_loop_output_VALID /* undriven */ ;
+output [31:0] tuple_out_loop_output_DATA /* undriven */ ;
 
-wire tuple_out_fec_output_VALID /* undriven */ ;
-wire [367:0] tuple_out_fec_output_DATA /* undriven */ ;
+reg tuple_out_loop_output_VALID /* undriven */ ;
+reg [31:0] tuple_out_loop_output_DATA /* undriven */ ;
 
-wire start;
-wire done;
-wire idle;
-wire ready;
 
-assign start = tuple_in_fec_input_VALID & tuple_in_fec_input_DATA[409];
 
-/* Tuple format for input: tuple_in_fec_input
- 	[409:409]	: stateful_valid_0
-	[408:401]	: operation
-	[400:369]	: index
-	[368:368]	: is_parity
-	[367:0]	: packet
+
+/* Tuple format for input: tuple_in_loop_input
+ 	[64:64]	: stateful_valid_0
+	[63:32]	: addr
+	[31:0]	: max
 
 */
 
 
 
 
-/* Tuple format for output: tuple_out_fec_output
- 	[367:0]	: result_0
+/* Tuple format for output: tuple_out_loop_output
+ 	[31:0]	: result_0
 
 */
 
-RSE_core Core
-(
-  .ap_clk(clk_line),
-  .ap_rst(rst),
-  .ap_start(start),
-  .ap_done(done),
-  .ap_idle(idle),
-  .ap_ready(ready),
-  .operation(tuple_in_fec_input_DATA[408:401]),
-  .index(tuple_in_fec_input_DATA[400:369]),
-  .is_parity(tuple_in_fec_input_DATA[368]),
-  .data(tuple_in_fec_input_DATA[367:0]),
-  .parity(tuple_out_fec_output_DATA),
-  .parity_ap_vld(tuple_out_fec_output_VALID)
-);
+reg [31:0] regs [99:0];
+wire valid;
+wire [31:0] addr;
+wire [31:0] max;
+
+integer i;
+
+assign valid = tuple_in_loop_input_DATA[64];
+assign addr  = tuple_in_loop_input_DATA[63:32];
+assign max   = tuple_in_loop_input_DATA[31:0];
+
+always @( posedge clk_line ) begin
+	if ( rst ) begin
+		for( i = 0; i < 100; i = i + 1 ) begin
+        	        regs[i] <= 0;
+        	end
+	end
+	else  begin
+		if (valid == 1 && tuple_in_loop_input_VALID == 1) begin
+			tuple_out_loop_output_VALID <= 1;
+			tuple_out_loop_output_DATA <= regs[addr];
+			if (regs[addr] + 1 < max) begin
+				regs[addr] <= regs[addr] + 1;
+			end
+			else  begin
+				regs[addr] = 0;						
+			end
+		end
+		else  begin
+			tuple_out_loop_output_VALID <= 0;
+		end
+	end
+end
 
 endmodule
 
 // machine-generated file - do NOT modify by hand !
-// File created on 2018/01/25 19:58:14
+// File created on 2018/01/26 14:43:34
 // by Barista HDL generation library, version TRUNK @ 1007984
 
