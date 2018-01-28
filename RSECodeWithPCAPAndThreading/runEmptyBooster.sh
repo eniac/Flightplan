@@ -24,7 +24,7 @@ ifconfig deviceVeth up promisc
 
 # start empty booster : reads and writes to deviceVeth.
 echo "starting booster..."
-./packetBufferInfra -i deviceVeth &
+./rsetest -i deviceVeth &
 
 # start tcpdump to collect the packets that come back into the network from the device.
 echo "starting tcpdump..."

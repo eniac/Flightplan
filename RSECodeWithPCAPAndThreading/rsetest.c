@@ -105,6 +105,10 @@ struct sniff_tcp {
     u_short th_urp;                 /* urgent pointer */
 };
 
+struct fec_header {
+  uint8_t blockId;
+  uint8_t pktId;
+};
 
 #define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)                (((ip)->ip_vhl) >> 4)
@@ -114,11 +118,16 @@ struct sniff_tcp {
 #define CAPTURE_QUEUE_SIZE 10000
 #define CAPTURE_SIZE 1000
 
+/*TODO: Remove this */
+int cnt =0;
+
 typedef struct packetInfo {
     char* packetStart;
     char* payloadStart; /* Start Address of the payload */
     int payloadLength; /* total length of payload */
 } packetInfo_t;
+
+pcap_t *handle; /*Pcap handle*/
 
 /* Call back registered on capturing a packet */
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
@@ -215,10 +224,12 @@ void my_packet_handler(
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
+    cnt++;
     /* declare pointers to packet headers */
     const struct sniff_ethernet *ethernet;  /* The ethernet header [1] */
     const struct sniff_ip *ip;              /* The IP header */
     const struct sniff_tcp *tcp;            /* The TCP header */
+    // const struct fec_header *fecHeader;
     u_char *payload;                    /* Packet payload */
 
     int size_ip;
@@ -259,6 +270,9 @@ void my_packet_handler(
         /* Starting pointer of the captured packet including the header */
         capturedPacket->packetStart = (char*) header;
 
+        printf("The headers are as follows\n");
+        // printf("");
+
         /*Synchronized producer block.*/
         sem_wait(&empty);
 
@@ -275,6 +289,10 @@ void my_packet_handler(
     /* Print payload in ASCII */
     /*  Uncomment for debugging   */
     // printPayload(size_payload, payload);
+    // fecHeader = (struct fec_header *) (packet + SIZE_ETHERNET);
+    // printf("PktId:: %d :::: blockId:: %d\n", fecHeader->pktId, fecHeader->blockId);
+    // size_t outPktLen = header->len;
+    // pcap_inject(handle,packet,outPktLen);
 
     return;
 }
@@ -296,33 +314,36 @@ void printPayload(int payload_length, u_char* payload) {
 void* capturePackets(void* arg) {
     char *device;
     char error_buffer[PCAP_ERRBUF_SIZE];
-    pcap_t *handle;
-    int timeout_limit = 10000; /* In milliseconds */
     device = deviceToCapture;
     printf("Capturing packets on %s\n", device );
     /* Open device for live capture */
     handle = pcap_open_live(
                  device,
                  BUFSIZ,
-                 0,
-                 timeout_limit,
+                 1, /*set device to promiscous*/
+                 0, /*Timeout of 0*/
                  error_buffer
              );
+
     if (handle == NULL) {
         fprintf(stderr, "Could not open device %s: %s\n", device, error_buffer);
         return NULL;
     }
+
+    /*Indicates that we need to capture only incoming packets.*/
+    // pcap_setdirection(handle, PCAP_D_IN);
+    
     printf("This is the start of capture\n");
-    pcap_loop(handle, CAPTURE_SIZE, my_packet_handler, NULL);
+    pcap_loop(handle, 0, my_packet_handler, NULL);
     printf("Ths is the end of capture\n");
 
-    int ret = pcap_setdirection(handle, PCAP_D_IN);
-    if (ret == -1) {
-        printf("Packet capture failed! \n");
-        pthread_exit(NULL);
-    }
+    // int ret = pcap_setdirection(handle, PCAP_D_IN);
+    // if (ret == -1) {
+    //     printf("Packet capture failed! \n");
+    //     pthread_exit(NULL);
+    // }
     printf("Completed Capturing packets on %s\n", device );
-
+    printf("COUNT is ::::::: %d\n", cnt);
     pthread_exit(NULL);
     return NULL;
 }
@@ -439,6 +460,7 @@ void fec_multi_test(int number_of_tests, unsigned  long data_bits_in_fb) {
 //    results_print(number_of_tests, data_bits_in_fb);
 //    fec_block_print();
 }
+
 /*
  * Single Encode and decode (send H parity packets after K data packets)
  */
@@ -449,7 +471,6 @@ void fec_simple_test(int *e) {
     if ((rc = rse_code(1)) != 0 )  exit(rc);
     fprintf(stderr, "\nSending ");
     D0(fec_block_print());
-
 
     /* Erasure Channel */
     fec_block_delete(e);

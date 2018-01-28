@@ -30,7 +30,7 @@ def main():
 	generateRandomIpPackets()
 
 pktId = 1
-def generateRandomIpPackets(duration = 1, rate = 100, dumpFile = default_pktTmpFile):
+def generateRandomIpPackets(duration = 1, rate = 12, dumpFile = default_pktTmpFile):
 	"""
 	Generates random TCP packet with a source and destination IP and ethernet address.
 	"""
