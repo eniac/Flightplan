@@ -28,9 +28,11 @@ void RSE_core(uint8 operation, uint32 index, uint1 is_parity, packet_t data, pac
   int k = FEC_MAX_K;
   int h = FEC_MAX_H;
 
+  *parity = 0;
   if ((operation & OP_PREPARE_ENCODING) != 0)
     data_buffer[index] = data;
-  else if ((operation & OP_ENCODE) != 0)
+
+  if ((operation & OP_ENCODE) != 0)
   {
     for (int i = 0; i < FEC_PACKET_SIZE; i += FEC_M)
     {
@@ -45,6 +47,7 @@ void RSE_core(uint8 operation, uint32 index, uint1 is_parity, packet_t data, pac
             | (((uint368) output[j]) << i);
     }
   }
-  else if ((operation & OP_GET_ENCODED) != 0)
+
+  if ((operation & OP_GET_ENCODED) != 0)
     *parity = parity_buffer[index];
 }
