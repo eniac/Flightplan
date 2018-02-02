@@ -22,7 +22,6 @@ RSE: RSE.sdnet Packet.user Tuple.user fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec
 
 RSE.sdnet: RSE.p4
 	p4c-sdnet RSE.p4 -o RSE.sdnet
-	./sdnet_patch.sh
 
 clean:
 	rm -fr RSE.sdnet RSE

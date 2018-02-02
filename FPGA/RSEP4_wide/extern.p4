@@ -75,7 +75,7 @@ extern bit<1> writer(in bit<32> addr, in bit<32> data);
 	the latency is a random number (16) now; can be changed to any meaningful number */
 //@Xilinx_MaxLatency(16)
 @Xilinx_MaxLatency(100)
-extern bit<1> fec(in bit<8> operation, in bit<32> index);
+extern bit<FEC_PACKET_SIZE> fec(in bit<8> operation, in bit<32> index, in bit<1> is_parity, in bit<FEC_PACKET_SIZE> packet);
 
 #else
 

@@ -25,13 +25,6 @@
 //   (c) Copyright 1995-2016 Xilinx, Inc.                                   //
 //   All rights reserved.                                                   //
 //----------------------------------------------------------------------------
-
-/*[TODO]
-	- length info after encoded pkt
-*/
-
-#define STREAM_INTERFACE
-
 #include "xilinx.p4"
 #include "extern.p4"
 
@@ -90,8 +83,8 @@ header state_h{
 struct headers_t {
     veth_h         		veth;
 	vid_h 				vid;
-//	payload_h			payload;
-//	encoded_payload_h	encoded_payload;
+	payload_h			payload;
+	encoded_payload_h	encoded_payload;
 	state_h 			state;
 }
 
@@ -108,16 +101,18 @@ parser Parser(packet_in pkt, out headers_t hdr) {
     }
 
     state parse_veth {
+//        pkt.extract(hdr.vid);
         transition extract_encoded_payload;
     }
 
+/* [TODO] find a way to do this only when necessary */
 	state extract_payload {
-//		pkt.extract(hdr.payload);
+		pkt.extract(hdr.payload);
         transition accept;
 	}
 
 	state extract_encoded_payload {
-//		pkt.extract(hdr.encoded_payload);
+		pkt.extract(hdr.encoded_payload);
         transition accept;
 	}
 }
@@ -133,8 +128,8 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 	bit<32> l;
 	bit<1> r;
 
-//	bit<FEC_PACKET_SIZE> pkt_in;
-//	bit<FEC_PACKET_SIZE> pkt_out;
+	bit<FEC_PACKET_SIZE> pkt_in;
+	bit<FEC_PACKET_SIZE> pkt_out;
 	bit<32> index;
 	bit<32> max;
 	bit<32> index_new;
@@ -149,6 +144,12 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 
 	bit<8> op;
 
+
+	action dropPacket() {
+		ioports.egress_port = DROP_E_PORT;
+	}
+
+	// Encode
     apply {
 
 		hdr.state.encoded = 0;
@@ -161,40 +162,59 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 		do_get_decoded = 0;
 		parity = 0;
 		op = 0;
-//		pkt_in = 0;
+		pkt_in = 0;
 
 		addr = 0;
 		max = 0;
-		if (hdr.veth.vx == 0)
+		if (ioports.ingress_port == FEC_IN_PORT)
 		{
-			op = OP_PREPARE_ENCODING;
 			addr = 1;
 			max = FEC_QUEUE_NUMBER;
 		}
+		else if (ioports.ingress_port == FEEDBACK_IN_PORT)
+		{
+			if (hdr.veth.vx == 1)
+			{
+				addr = 2;
+				max = FEC_QUEUE_NUMBER + FEC_PARITY_NUMBER;
+			}
+			else
+			{
+				addr = 3;
+				max = FEC_QUEUE_NUMBER;
+			}
+		}
 		else
 		{
-			op = OP_GET_ENCODED;
-			addr = 2;
-			max = FEC_PARITY_NUMBER;
+			if (hdr.veth.vx == 1)
+			{
+				addr = 4;
+				max = FEC_QUEUE_NUMBER + FEC_PARITY_NUMBER;
+			}
+			else
+			{
+				addr = 5;
+			}
 		}
 
+//		index = readr(addr);
 		index = loop(addr, max);
 		index_new = index;
 
-		if (hdr.veth.vx == 0)
+		if (ioports.ingress_port == FEC_IN_PORT)
 		{
+			op = OP_PREPARE_ENCODING;
 			/* Encode */
-			/*
-			pkt_in = (bit<FEC_PACKET_SIZE>)hdr.payload.data;
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.dst) << (FEC_PAYLOAD_SIZE+48+16));
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.src) << (FEC_PAYLOAD_SIZE+16));
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.vx) << (FEC_PAYLOAD_SIZE+15));
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.type) << (FEC_PAYLOAD_SIZE));
-			*/
+//			do_prepare_encoding = 1;
+
+			pkt_in = (bit<FEC_PACKET_SIZE>)hdr.payload.data | (((bit<FEC_PACKET_SIZE>)hdr.veth.dst) << (FEC_PAYLOAD_SIZE+48+16)) | (((bit<FEC_PACKET_SIZE>)hdr.veth.src) << (FEC_PAYLOAD_SIZE+16)) | (((bit<FEC_PACKET_SIZE>)hdr.veth.vx) << (FEC_PAYLOAD_SIZE+15)) | (((bit<FEC_PACKET_SIZE>)hdr.veth.type) << (FEC_PAYLOAD_SIZE));
+//			dummy = fec_prepare_encoding(do_prepare_encoding, pkt, index);
+//			dummy = fec(op, index, 0, pkt);
+
+//			hdr.state.dummy = dummy;
 
 			hdr.veth.vx = 1;
-//			hdr.vid.id = (bit<24>)(hdr.veth.dst) & VID_MASK;
-			hdr.vid.id = (bit<24>)index;
+			hdr.vid.id = (bit<24>)(hdr.veth.dst) & VID_MASK;
 			hdr.state.fec_data = 1;
 			index_new = index + 1;
 
@@ -202,6 +222,11 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 			{
 				op = op | OP_ENCODE;
 
+//				do_encode = 1;
+
+//				dummy = fec_encode(do_encode);
+
+//				hdr.state.dummy = dummy;
 				index_new = 0;
 				ioports.egress_port = DUPBACK_E_PORT;
 				hdr.veth.vx = 1;
@@ -209,40 +234,134 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 			}
 			
 		}
-		else 
+		else if (ioports.ingress_port == FEEDBACK_IN_PORT)
 		{
-			/* send encoded */
-			do_get_encoded = 1;
-
-			index = index + FEC_QUEUE_NUMBER;
-
-			index_new = index + 1;
-
-			if (index_new == FEC_QUEUE_NUMBER + FEC_PARITY_NUMBER)
+			/* From feedback port, send encoded/decoded packet */
+			if (hdr.veth.vx == 1)
 			{
-				index_new = 0;
+				op = OP_GET_ENCODED;
+				/* send encoded */
+				do_get_encoded = 1;
+				/*
+				if (index == 0)
+				{
+					index = FEC_QUEUE_NUMBER;
+				}
+				*/
+				index = index + FEC_QUEUE_NUMBER;
+
+//				hdr.encoded_payload.data = fec_get_encoded(do_get_encoded, index, parity);
+				index_new = index + 1;
+
+				if (index_new == FEC_QUEUE_NUMBER + FEC_PARITY_NUMBER)
+				{
+					index_new = 0;
+				}
+				else
+				{
+					ioports.egress_port = DUPBACK_E_PORT;
+				}
+
+				hdr.state.encoded = 1;
+				hdr.veth.vx = 1;
+				hdr.vid.id = (bit<24>)(hdr.veth.dst) & VID_MASK;
+//				if (parity == 1)
+				{
+					hdr.vid.id = hdr.vid.id | PARITY_FLAG;
+				}
+
 			}
 			else
 			{
-				ioports.egress_port = DUPBACK_E_PORT;
-			}
+				op = OP_GET_DECODED;
+				/* send decoded */
+//				do_get_decoded = 1;
+//				pkt = fec_get_decoded(do_get_decoded, index);
+//				hdr.payload.data = (bit<FEC_PAYLOAD_SIZE>) pkt;
+//				hdr.veth.dst = (bit<48>)(pkt >> (FEC_PAYLOAD_SIZE+48+16));
+//				hdr.veth.src = (bit<48>)(pkt >> (FEC_PAYLOAD_SIZE+16));
+//				hdr.veth.vx = (bit<1>)(pkt >> (FEC_PAYLOAD_SIZE+15));
+//				hdr.veth.type = (bit<15>)(pkt >> (FEC_PAYLOAD_SIZE));
+				hdr.state.encoded = 0;
 
-			hdr.state.encoded = 1;
-			hdr.veth.vx = 1;
-			hdr.vid.id = (bit<24>)(hdr.veth.dst) & VID_MASK;
-//				if (parity == 1)
+				index_new = index + 1;
+
+				if (index_new == FEC_QUEUE_NUMBER)
+				{
+					index_new = 0;
+				}
+				else
+				{
+					ioports.egress_port = DUPBACK_E_PORT;
+				}
+
+			}
+		}
+		else if (ioports.ingress_port == IGNORE_IN_PORT)
+		{
+			NoAction();
+		}
+		else
+		{
+			if (hdr.veth.vx == 1)
 			{
-				hdr.vid.id = hdr.vid.id | PARITY_FLAG;
-			}
+				op = OP_PREPARE_DECODING;
+				/* Decode */
+//				do_prepare_decoding = 1;
 
+				if ((hdr.vid.id & PARITY_FLAG) == 0)
+				{
+					parity = 0;
+				}
+				else
+				{
+					parity = 1;
+				}
+				pkt_in = hdr.encoded_payload.data;
+//				dummy = fec_prepare_decoding(do_prepare_decoding, pkt, index, parity);
+//				hdr.state.dummy = dummy;
+				ioports.egress_port = DROP_E_PORT;
+
+				index_new = index + 1;
+				if (index_new >= FEC_QUEUE_NUMBER+FEC_PARITY_NUMBER)
+				{
+					op = op | OP_DECODE;
+//					do_decode = 1;
+//					dummy = fec_decode(do_decode);
+//					hdr.state.dummy = dummy;
+					index_new = 0;
+					ioports.egress_port = FEEDBACK_E_PORT;
+					hdr.veth.vx = 0;
+					hdr.state.encoded = 0;
+				}
+				
+			}
+			else
+			{
+				/* simply forward */
+				NoAction();
+			}
 		}
 
-		hdr.state.dummy = fec(op, index);
+		pkt_out = fec(op, index, parity, pkt_in);
+
 
 		if (op == OP_GET_ENCODED)
 		{
-//			hdr.encoded_payload.data = pkt_out;
+			hdr.encoded_payload.data = pkt_out;
 		}
+
+		if (op == OP_GET_DECODED)
+		{
+			hdr.encoded_payload.data = pkt_out;
+			hdr.veth.dst = (bit<48>)(pkt_out >> (FEC_PAYLOAD_SIZE+48+16));
+			hdr.veth.src = (bit<48>)(pkt_out >> (FEC_PAYLOAD_SIZE+16));
+			hdr.veth.vx = (bit<1>)(pkt_out >> (FEC_PAYLOAD_SIZE+15));
+			hdr.veth.type = (bit<15>)(pkt_out >> (FEC_PAYLOAD_SIZE));
+		}
+			
+//		dummy = writer(addr, index_new);
+//		hdr.state.dummy = dummy;
     }
 }
 
@@ -253,7 +372,7 @@ control Deparser(in headers_t hdr, packet_out pkt) {
 
 		if (hdr.veth.vx == 1)
 		{
-			pkt.emit(hdr.vid);
+//			pkt.emit(hdr.vid);
 		}
 
 		if (hdr.state.fec_data == 1)
@@ -263,11 +382,11 @@ control Deparser(in headers_t hdr, packet_out pkt) {
 
 		if (hdr.state.encoded == 1)
 		{
-//			pkt.emit(hdr.encoded_payload);
+			pkt.emit(hdr.encoded_payload);
 		}
 		else
 		{
-//			pkt.emit(hdr.payload);
+			pkt.emit(hdr.payload);
 		}
     }
 }

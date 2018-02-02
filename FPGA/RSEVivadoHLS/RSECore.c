@@ -6,23 +6,26 @@
 #define FEC_PACKET_SIZE 368
 #define BYTES_PER_PACKET ((FEC_PACKET_SIZE + FEC_M - 1) / FEC_M)
 
-#define TOKENPASTE(x, y) x ## y
-#define TOKENPASTE2(x, y) TOKENPASTE(x, y)
-
-#define PACKET_T TOKENPASTE2(uint, FEC_PACKET_SIZE)
-
 #define OP_START_ENCODER    (1 << 0)
 #define OP_ENCODE_PACKET    (1 << 1)
 #define OP_GET_ENCODED      (1 << 2)
 
 #define UNROLL_FACTOR (16)
 
-typedef PACKET_T packet_t;
+typedef struct
+{
+  uint1 Start_of_frame;
+  uint1 End_of_frame;
+  uint64 Data;
+  uint4 Count;
+  uint1 Error;
+} interface;
 
 static fec_sym parity_buffer[BYTES_PER_PACKET][FEC_MAX_H];
 
 void Matrix_multiply_HW(fec_sym Data[FEC_MAX_K], fec_sym Parity[FEC_MAX_H], int k, int h);
 
+#if 0
 void RSE_core(uint8 operation, uint32 index, uint1 is_parity, packet_t data, packet_t * parity)
 {
 #pragma HLS ARRAY_PARTITION variable=parity_buffer complete dim=0
@@ -61,8 +64,8 @@ void RSE_core(uint8 operation, uint32 index, uint1 is_parity, packet_t data, pac
       for (int j = 0; j < UNROLL_FACTOR; j++)
       {
         if (i + j < BYTES_PER_PACKET)
-          Incremental_encode(data & ((1 << FEC_M) - 1), parity_buffer[i + j], index, h,
-              operation & OP_START_ENCODER);
+        Incremental_encode(data & ((1 << FEC_M) - 1), parity_buffer[i + j], index, h,
+            operation & OP_START_ENCODER);
         data >>= FEC_M;
       }
     }
@@ -75,5 +78,23 @@ void RSE_core(uint8 operation, uint32 index, uint1 is_parity, packet_t data, pac
       *parity |= parity_buffer[i][index];
       *parity <<= FEC_M;
     }
+  }
+}
+#endif
+
+void RSE_core(uint8 Operation, uint32 Index, interface Data[100], interface Parity[100])
+{
+#pragma HLS DATA_PACK variable=Data
+#pragma HLS DATA_PACK variable=Parity
+#pragma HLS INTERFACE ap_hs port=Data
+#pragma HLS INTERFACE ap_hs port=Parity
+
+  for (int i = 0; i < 100; i++)
+  {
+    Parity[i].End_of_frame = Data[i].End_of_frame;
+    Parity[i].Start_of_frame = Data[i].Start_of_frame;
+    Parity[i].Count = Data[i].Count;
+    Parity[i].Error = Data[i].Error;
+    Parity[i].Data = Data[i].Data + 1;
   }
 }
