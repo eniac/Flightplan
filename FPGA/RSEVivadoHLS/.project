@@ -47,6 +47,11 @@
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/Encoder.c</location>
 		</link>
 		<link>
+			<name>source/Encoder.h</name>
+			<type>1</type>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/Encoder.h</location>
+		</link>
+		<link>
 			<name>source/RSECore.c</name>
 			<type>1</type>
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSECore.c</location>

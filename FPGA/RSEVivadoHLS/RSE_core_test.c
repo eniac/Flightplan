@@ -1,4 +1,5 @@
 #include "RSE_core_test.h"
+#include "Encoder.h"
 
 #include <stdlib.h>
 
@@ -23,7 +24,10 @@ void Verify_matrix_multiply(int Data_packet_count, int Parity_packet_count, int 
   }
 
   fec_sym Parity[FEC_MAX_H];
-  Matrix_multiply_HW(Data, Parity, Data_packet_count, Parity_packet_count);
+  for (int i = 0; i < FEC_MAX_H; i++)
+    Parity[i] = 0;
+  for (int i = 0; i < Data_packet_count; i++)
+    Incremental_encode(Data[i], Parity, i, Parity_packet_count);
 
   for (int i = 0; i < Parity_packet_count; i++)
     if (fb.d[i][0] != Parity[i])
