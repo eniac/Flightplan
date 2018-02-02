@@ -7,7 +7,7 @@ RSE/XilinxSwitch/XilinxSwitch_vivado: RSE
 	vivado -mode batch -source XilinxSwitch_vivado_packager.tcl
 
 RSE: RSE.sdnet Packet.user Tuple.user fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec_0_t.v loop_0_t.v vivado_sim.bash vivado_sim_waveform.bash
-	sdnet RSE.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir RSE -UE -syncInputs
+	sdnet RSE.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir RSE
 	@cp Packet.user Tuple.user RSE/XilinxSwitch
 	@cp fec_0_t.hpp rse.cpp rse.h RSE/XilinxSwitch/fec_0_t.TB
 	@cp loop_0_t.hpp RSE/XilinxSwitch/loop_0_t.TB
