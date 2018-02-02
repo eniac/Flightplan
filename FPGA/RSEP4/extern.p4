@@ -15,6 +15,7 @@ extern bit<32> get_and_add(bit<32> addr, bit<32> delta, bit<1> plus);
 			reg[addr] = 0;
 	}
 */
+@Xilinx_MaxLatency(100)
 extern bit<32> loop(in bit<32> addr,in bit<32> max);
 
 
@@ -73,6 +74,7 @@ extern bit<1> writer(in bit<32> addr, in bit<32> data);
 	return anying if no return value is required (bit<1> below)
 	the latency is a random number (16) now; can be changed to any meaningful number */
 //@Xilinx_MaxLatency(16)
+@Xilinx_MaxLatency(100)
 extern bit<FEC_PACKET_SIZE> fec(in bit<8> operation, in bit<32> index, in bit<1> is_parity, in bit<FEC_PACKET_SIZE> packet);
 
 #else

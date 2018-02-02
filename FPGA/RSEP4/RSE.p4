@@ -207,11 +207,7 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 			/* Encode */
 //			do_prepare_encoding = 1;
 
-			pkt_in = (bit<FEC_PACKET_SIZE>)hdr.payload.data;
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.dst) << (FEC_PAYLOAD_SIZE+48+16));
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.src) << (FEC_PAYLOAD_SIZE+16));
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.vx) << (FEC_PAYLOAD_SIZE+15));
-			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.type) << (FEC_PAYLOAD_SIZE));
+			pkt_in = (bit<FEC_PACKET_SIZE>)hdr.payload.data | (((bit<FEC_PACKET_SIZE>)hdr.veth.dst) << (FEC_PAYLOAD_SIZE+48+16)) | (((bit<FEC_PACKET_SIZE>)hdr.veth.src) << (FEC_PAYLOAD_SIZE+16)) | (((bit<FEC_PACKET_SIZE>)hdr.veth.vx) << (FEC_PAYLOAD_SIZE+15)) | (((bit<FEC_PACKET_SIZE>)hdr.veth.type) << (FEC_PAYLOAD_SIZE));
 //			dummy = fec_prepare_encoding(do_prepare_encoding, pkt, index);
 //			dummy = fec(op, index, 0, pkt);
 
