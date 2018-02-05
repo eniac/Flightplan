@@ -8,6 +8,7 @@ static void Generate_invert_table(fec_sym Table[FEC_N]);
 /* Addition modulo (number of symbols - 1) */
 static fec_sym Modulo_add(fec_sym X, fec_sym Y)
 {
+#pragma HLS inline
   int Sum = X + Y;
   return Sum > FEC_N - 1 ? Sum - (FEC_N - 1) : Sum;
 }
@@ -15,12 +16,14 @@ static fec_sym Modulo_add(fec_sym X, fec_sym Y)
 /* Add in Galois Field */
 static fec_sym GF_add(fec_sym X, fec_sym Y)
 {
+#pragma HLS inline
   return X ^ Y;
 }
 
 /* Exponentiate in Galois Field */
 static fec_sym GF_exp(fec_sym X)
 {
+#pragma HLS inline
   static fec_sym Table[FEC_N];
   Generate_exp_table(Table);
   return Table[X];
@@ -29,6 +32,7 @@ static fec_sym GF_exp(fec_sym X)
 /* Logarithm in Galois Field */
 static fec_sym GF_log(fec_sym X)
 {
+#pragma HLS inline
   static fec_sym Table[FEC_N];
   Generate_log_table(Table);
   return Table[X];
@@ -37,12 +41,14 @@ static fec_sym GF_log(fec_sym X)
 /* Multiply in Galois Field */
 static fec_sym GF_multiply(fec_sym X, fec_sym Y)
 {
+#pragma HLS inline
   return X > 0 && Y > 0 ? GF_exp(Modulo_add(GF_log(X), GF_log(Y))) : 0;
 }
 
 /* Reciprocal in Galois Field */
 static fec_sym GF_invert(fec_sym X)
 {
+#pragma HLS inline
   static fec_sym Table[FEC_N];
   Generate_invert_table(Table);
   return Table[X];
@@ -170,4 +176,18 @@ void Matrix_multiply_HW(fec_sym Data[FEC_MAX_K], fec_sym Parity[FEC_MAX_H], int 
       Parity[i] = Result;
     }
   }
+}
+
+void Incremental_encode(fec_sym Data, fec_sym Parity[FEC_MAX_H], int Packet_index, int h, int Clear)
+{
+#pragma HLS inline
+  static fec_sym Generator[FEC_MAX_H][FEC_MAX_K] = { {76, 103, 149, 51, 248, 170, 97, 54}, {196,
+      162, 35, 228, 235, 41, 35, 47}, {214, 46, 79, 120, 78, 110, 150, 125}, {95, 234, 248, 174, 92,
+      236, 213, 101}};
+#pragma HLS ARRAY_PARTITION variable=Generator complete dim=0
+// Generate_generator(Generator);
+
+  for (int i = 0; i < FEC_MAX_H; i++)
+    if (i < h)
+      Parity[i] = GF_add(Clear ? 0 : Parity[i], GF_multiply(Data, Generator[i][Packet_index]));
 }

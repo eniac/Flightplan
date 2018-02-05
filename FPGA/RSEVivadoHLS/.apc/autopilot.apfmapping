@@ -3,12 +3,13 @@
   <source>
     <originFiles name="rse.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rse.h"/>
     <originFiles name="RSECore.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSECore.c"/>
+    <originFiles name="Encoder.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/Encoder.h"/>
     <originFiles name="Encoder.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/Encoder.c"/>
   </source>
   <testbench>
-    <originFiles name="RSE_core_test.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSE_core_test.c"/>
-    <originFiles name="RSE_core_test.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSE_core_test.h"/>
-    <originFiles name="rse.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rse.c"/>
     <originFiles name="rsetest.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rsetest.c"/>
+    <originFiles name="rse.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rse.c"/>
+    <originFiles name="RSE_core_test.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSE_core_test.h"/>
+    <originFiles name="RSE_core_test.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSE_core_test.c"/>
   </testbench>
 </autopilotfilemapping:AutoPilotFileMapping>
