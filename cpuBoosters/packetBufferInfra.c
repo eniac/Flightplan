@@ -131,14 +131,23 @@ void my_packet_handler(
 		/*populate the global fec structure for rse encoder and call the encode.*/
 		call_fec_blk_get(blockId);
 
+		/* Encoder */
+		encode_block();
+
 		copy_parity_packets_to_pkt_buffer(blockId);
 
+		/* Simulate loss of packets */
+		simulate_packet_loss();
+
+		/* Decoder */
+		decode_block();
+
 		/*Inject all packets in the block back to the network*/
-		for (int i =0; i< NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++){
+		for (int i = 0; i < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; i++) {
 			char* packetToInject = pkt_buffer[blockId][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
 			pcap_inject(handle, packetToInject, outPktLen);
-			if(i >= NUM_DATA_PACKETS){
+			if (i >= NUM_DATA_PACKETS) {
 				free_parity_memory(packetToInject);
 			}
 		}
@@ -149,7 +158,7 @@ void my_packet_handler(
 	return;
 }
 
-void free_parity_memory(char* packet){
+void free_parity_memory(char* packet) {
 	free(packet);
 	return;
 }
@@ -175,17 +184,12 @@ void call_fec_blk_get(int blockId) {
 
 	fec_blk_get(p, k, h, c, s, o, blockId);
 
-	/* Encoder */
-	encode_block();
+
 
 	/*Print FEC struct*/
 
 
-	// /* Simulate loss of packets */
-	// simulate_packet_loss();
 
-	// /* Decoder */
-	// decode_block();
 }
 
 /**
@@ -376,7 +380,7 @@ int get_payload_length_for_pkt(char* packet) {
 	return sizePayload;
 }
 
-int get_total_packet_size(char* packet){
+int get_total_packet_size(char* packet) {
 	/*We need to account for the newly added tag after the ethernet heaader.*/
 	const struct sniff_ip *ip;              /* The IP header */
 	const struct sniff_tcp *tcp;            /* The TCP header */
@@ -396,18 +400,18 @@ int get_total_packet_size(char* packet){
 		printf("size1\n");
 		return -1;
 	}
-	
+
 	int sizePayload = ntohs(ip->ip_len) - (sizeIP + sizeTCP);
-	int totalSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP + sizePayload; 
-	return totalSize; 
+	int totalSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP + sizePayload;
+	return totalSize;
 }
 
 int copy_parity_packets_to_pkt_buffer(int blockId) {
 	int startIndexOfParityPacket = 0 + NUM_DATA_PACKETS;
 	int sizeOfParityPackets = fb.plen[startIndexOfParityPacket];
-    printf("This is inside copy packets \n");
-    /*For each parity packet*/
-	for (int i=startIndexOfParityPacket; i<(startIndexOfParityPacket+NUM_PARITY_PACKETS); i++) {
+	printf("This is inside copy packets \n");
+	/*For each parity packet*/
+	for (int i = startIndexOfParityPacket; i < (startIndexOfParityPacket + NUM_PARITY_PACKETS); i++) {
 		char* packet = pkt_buffer[blockId][i];
 
 		/*We need to account for the newly added tag after the ethernet heaader.*/
@@ -446,7 +450,7 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		/* TODO: need to modify the size of TCP payload*/
 
 		/*Copy payload from the global fec struct*/
-		memcpy(parityPacket+totalHeaderSize, fb.pdata[i], sizeOfParityPackets);
+		memcpy(parityPacket + totalHeaderSize, fb.pdata[i], sizeOfParityPackets);
 	}
 }
 
