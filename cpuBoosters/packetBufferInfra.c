@@ -44,6 +44,9 @@ void print_global_fb_block();
 int copy_parity_packets_to_pkt_buffer(int blockId);
 void free_parity_memory(char* packet);
 int get_total_packet_size(char* packet);
+u_short compute_csum(struct sniff_ip *ip , int len);
+void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
+
 
 /**
  * @brief      Initialize packet capture
@@ -183,13 +186,6 @@ void call_fec_blk_get(int blockId) {
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 	fec_blk_get(p, k, h, c, s, o, blockId);
-
-
-
-	/*Print FEC struct*/
-
-
-
 }
 
 /**
@@ -333,7 +329,6 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 unsigned char* get_payload_start_for_packet(char* packet) {
 	/*We need to account for the newly added tag after the ethernet heaader.*/
 	const struct sniff_ip *ip;              /* The IP header */
-	const struct sniff_tcp *tcp;            /* The TCP header */
 
 	/* compute ip header offset */
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
@@ -342,15 +337,8 @@ unsigned char* get_payload_start_for_packet(char* packet) {
 		return NULL;
 	}
 
-	/* compute tcp header offset */
-	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
-	int sizeTCP = TH_OFF(tcp) * 4;
-	if (sizeTCP < 20) {
-		return NULL;
-	}
-
-	/* compute tcp payload (segment) offset */
-	unsigned char* payload = (u_char *)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP);
+	/* compute payload offset after IP header */
+	unsigned char* payload = (u_char *)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
 
 	return payload;
 }
@@ -358,7 +346,6 @@ unsigned char* get_payload_start_for_packet(char* packet) {
 int get_payload_length_for_pkt(char* packet) {
 	/*We need to account for the newly added tag after the ethernet heaader.*/
 	const struct sniff_ip *ip;              /* The IP header */
-	const struct sniff_tcp *tcp;            /* The TCP header */
 
 	/* compute ip header offset */
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
@@ -368,15 +355,7 @@ int get_payload_length_for_pkt(char* packet) {
 		return -1;
 	}
 
-	/* compute tcp header offset */
-	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
-	int sizeTCP = TH_OFF(tcp) * 4;
-	if (sizeTCP < 20) {
-		printf("size1\n");
-		return -1;
-	}
-
-	int sizePayload = ntohs(ip->ip_len) - (sizeIP + sizeTCP);
+	int sizePayload = ntohs(ip->ip_len) - (sizeIP);
 	return sizePayload;
 }
 
@@ -435,7 +414,7 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		}
 
 		int totalMallocSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP + sizeOfParityPackets;
-		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP;
+		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
 
 		printf("The totalMallocSize is ::::%d\n", totalMallocSize);
 
@@ -447,11 +426,52 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		/*copy headers from the original packet.*/
 		memcpy(parityPacket, packet, totalHeaderSize);
 
-		/* TODO: need to modify the size of TCP payload*/
-
 		/*Copy payload from the global fec struct*/
 		memcpy(parityPacket + totalHeaderSize, fb.pdata[i], sizeOfParityPackets);
+
+		/*Update the the payload lenght and checksum*/
+		modify_IP_headers_for_parity_packets(sizeOfParityPackets, parityPacket);
 	}
+}
+
+void modify_IP_headers_for_parity_packets(int payloadSize, char* packet) {
+	struct sniff_ip *ip;              /* The IP header */
+
+	/* compute ip header offset */
+	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
+	int sizeIP = IP_HL(ip) * 4;
+	if (sizeIP < 20) {
+		printf("size0\n");
+		return;
+	}
+
+	/*TODO: Need to verify this. */
+	ip->ip_len = payloadSize + sizeIP;
+
+	/*Compute checksum*/
+	ip->ip_sum =  compute_csum(ip, sizeIP);
+}
+
+/* Computes the checksum of the IP header. */
+u_short compute_csum(struct sniff_ip *ipHeader , int len) {
+	long sum = 0;  /* assume 32 bit long, 16 bit short */
+	int i = 0;
+	unsigned short* ip = (unsigned short*) ipHeader;
+	while (len > 1) {
+		sum += *ip;
+		ip++;
+		if (sum & 0x80000000)  /* if high order bit set, fold */
+			sum = (sum & 0xFFFF) + (sum >> 16);
+		len -= 2;
+	}
+
+	if (len)      /* take care of left over byte */
+		sum += (unsigned short) * (unsigned char *)ip;
+
+	while (sum >> 16)
+		sum = (sum & 0xFFFF) + (sum >> 16);
+
+	return ~sum;
 }
 
 int main (int argc, char** argv) {
