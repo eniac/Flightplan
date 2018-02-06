@@ -58,8 +58,8 @@ extern bit<1> writer(in bit<32> addr, in bit<32> data);
 #define PARITY_FLAG (1<<23)
 #define VID_MASK 0x7fffff
 
-#define OP_PREPARE_ENCODING	(1<<0)
-#define OP_ENCODE			(1<<1)
+#define OP_START_ENCODER	(1<<0)
+#define OP_ENCODE_PACKET			(1<<1)
 #define OP_GET_ENCODED		(1<<2)
 #define OP_PREPARE_DECODING (1<<3)
 #define OP_DECODE			(1<<4)

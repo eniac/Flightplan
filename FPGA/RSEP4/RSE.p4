@@ -167,7 +167,7 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 		max = 0;
 		if (hdr.veth.vx == 0)
 		{
-			op = OP_PREPARE_ENCODING;
+			op = OP_ENCODE_PACKET;
 			addr = 1;
 			max = FEC_QUEUE_NUMBER;
 		}
@@ -192,6 +192,9 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 			pkt_in = pkt_in | (((bit<FEC_PACKET_SIZE>)hdr.veth.type) << (FEC_PAYLOAD_SIZE));
 			*/
 
+			if (index == 0)
+				op = op | OP_START_ENCODER;
+
 			hdr.veth.vx = 1;
 //			hdr.vid.id = (bit<24>)(hdr.veth.dst) & VID_MASK;
 			hdr.vid.id = (bit<24>)index;
@@ -200,8 +203,6 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 
 			if (index_new >= FEC_QUEUE_NUMBER)
 			{
-				op = op | OP_ENCODE;
-
 				index_new = 0;
 				ioports.egress_port = DUPBACK_E_PORT;
 				hdr.veth.vx = 1;

@@ -14,7 +14,7 @@ RSE: RSE.sdnet Packet.user Tuple.user fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec
 	@cp fec_0_t.v RSE/XilinxSwitch/fec_0_t.HDL
 	@cp loop_0_t.v RSE/XilinxSwitch/loop_0_t.HDL
 # Fix timing bug in testbench.
-	@cp TB_System_Stim.v RSE/XilinxSwitch/XilinxSwitch.TB
+	@cp TB_System_Stim.v RSE/XilinxSwitch/Testbench
 	@cp ../RSEVivadoHLS/solution1/syn/vhdl/*.vhd RSE/XilinxSwitch/fec_0_t.HDL
 	@cp vivado_sim*.bash RSE/XilinxSwitch
 # Set the correct target FPGA.
