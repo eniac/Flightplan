@@ -5,7 +5,7 @@ import numpy as np
 
 def main():
 	expNames = ["lineRate", "noFec", "fec"]
-	names = ["No Booster", "Passthrough", "FEC"]
+	names = ["Tofino", "Tofino + x86 Fwd", "Tofino + x86 FEC"]
 	plt.figure(figsize=(4, 3))
 	print("Experiment, Avg Throughput (Gb/s), Std. Dev.")
 	for i, expName in enumerate(expNames):
@@ -23,12 +23,12 @@ def main():
 
 	# leg = plt.legend(loc = "center")
 	plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-           ncol=3, mode="expand", borderaxespad=0.)
+           ncol=2, mode="expand", borderaxespad=0.)
 	plt.ylim((-1, 11))
 	plt.xlabel("Time (s)")
 	plt.ylabel("Throughput (Gb/s)")
 	plt.tight_layout()
-	plt.subplots_adjust(top=0.9)
+	plt.subplots_adjust(top=0.8)
 	plt.savefig("2-8-18-cpu.pdf")
 	plt.show()
 

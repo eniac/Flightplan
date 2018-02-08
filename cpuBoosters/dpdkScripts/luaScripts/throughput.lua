@@ -11,7 +11,7 @@ print("starting throughput benchmark\n");
 file = io.open("throughput.txt", "w");
 
 -- pktgen.screen("off"); -- uncomment this to shut the info screen off.
-pktgen.set(txPort, "rate", 99); -- set tx rate.
+pktgen.set(txPort, "rate", 92); -- set tx rate.
 pktgen.set(txPort, "size", 512); -- set tx pkt size.
 pktgen.start(txPort);
 

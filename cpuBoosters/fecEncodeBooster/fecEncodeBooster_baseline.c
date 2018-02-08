@@ -158,9 +158,9 @@ void my_packet_handler(
 	int blockId = get_block_index_of_pkt(packet);
 
 	// TODO: If the packet is a data packet, send it back out asap. 
-	if (pktId < NUM_DATA_PACKETS){
+	// if (pktId < NUM_DATA_PACKETS){
 		pcap_inject(handle, packet, header -> len);		
-	}
+	// }
 
 	// TODO: Invalidate previous incomplete block when the next block starts.
 	if (blockId != lastBlockId){
@@ -172,8 +172,8 @@ void my_packet_handler(
 	if (pkt_buffer_filled[blockId][pktId] == 0) {
 
 		// TODO: copy packet to buffer.
-		memcpy(pkt_buffer[blockId][pktId], packet, header->len);
-		pkt_buffer_filled[blockId][pktId] = 1;
+		// memcpy(pkt_buffer[blockId][pktId], packet, header->len);
+		// pkt_buffer_filled[blockId][pktId] = 1;
 		// pkt_buffer[blockId][pktId] = (char* )packet;
 
 	} else { /*This is not good*/
@@ -188,7 +188,7 @@ void my_packet_handler(
 		/* Encoder */
 		// encode_block();
 
-		copy_parity_packets_to_pkt_buffer(blockId);
+		// copy_parity_packets_to_pkt_buffer(blockId);
 
 		// TODO: disable packet loss and decoder blocks in the encoder.
 		// /* Simulate loss of packets */
