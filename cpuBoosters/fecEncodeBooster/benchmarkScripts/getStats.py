@@ -16,7 +16,7 @@ def main():
 		X, Y = zip(*XY)
 		Y = [y/1000.0 for y in Y]
 		plt.plot(X, Y, label=names[i], marker = "x")
-		XY = XY[10:60]
+		Y = Y[10:60]
 		avg = np.average(Y)
 		dev = np.std(Y)
 		print ("%s, %s, %s"%(names[i], avg, dev))
