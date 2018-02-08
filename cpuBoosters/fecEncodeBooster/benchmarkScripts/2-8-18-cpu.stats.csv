@@ -1,0 +1,5 @@
+Experiment, Avg Throughput (Gb/s), Std. Dev.
+No Booster, 9.1756875, 2.64293022086
+Passthrough, 3.55625, 1.19651128286
+FEC, 0.193671875, 0.0558737568898
+
