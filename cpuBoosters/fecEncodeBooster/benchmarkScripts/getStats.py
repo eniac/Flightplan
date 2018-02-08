@@ -4,8 +4,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 def main():
-	expNames = ["lineRate", "noFec", "fec"]
+	expNames = ["lineRate", "noFec", "fec8", "fec4", "fec2", "fec1"]
 	names = ["Tofino", "Tofino + x86 Fwd", "Tofino + x86 FEC"]
+	allNames = ["Tofino", "Tofino + x86 Fwd", "Tofino + x86 FEC (8)", "Tofino + x86 FEC (4)", "Tofino + x86 FEC (2)", "Tofino + x86 FEC (1)"]
 	plt.figure(figsize=(4, 3))
 	print("Experiment, Avg Throughput (Gb/s), Std. Dev.")
 	for i, expName in enumerate(expNames):
@@ -15,11 +16,12 @@ def main():
 		XY = [(int(l[0]), int(l[1])) for l in lines]
 		X, Y = zip(*XY)
 		Y = [y/1000.0 for y in Y]
-		plt.plot(X, Y, label=names[i], marker = "x")
+		if (i < len(names)):
+			plt.plot(X, Y, label=names[i], marker = "x")
 		Y = Y[10:60]
 		avg = np.average(Y)
 		dev = np.std(Y)
-		print ("%s, %s, %s"%(names[i], avg, dev))
+		print ("%s, %s, %s"%(allNames[i], avg, dev))
 
 	# leg = plt.legend(loc = "center")
 	plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,

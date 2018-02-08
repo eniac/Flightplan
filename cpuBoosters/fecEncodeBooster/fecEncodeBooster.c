@@ -12,6 +12,10 @@
 #define NUM_BLOCKS 256
 #define PKT_BUF_SZ 2048
 
+
+int workerId = 0;
+int workerCt = 1;
+
 int SIZE_FEC_TAG = 0;
 
 typedef struct fec_header {
@@ -29,7 +33,7 @@ pcap_t *handle; /*PCAP handle*/
 int cnt = 0;
 
 char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
-uint8_t pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
+int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
 
 int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
 
@@ -53,7 +57,7 @@ int get_total_packet_size(char* packet);
 u_short compute_csum(struct sniff_ip *ip , int len);
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
-void fec_dbg_printf( const char* format, ... ); 
+//void( fec_dbg_printf)( const char* format, ... ); 
 void print_hex_memory(void *mem, int len);
 // TODO: alloc at startup.
 void alloc_pkt_buffer();
@@ -68,6 +72,7 @@ void alloc_pkt_buffer() {
 	for (int i = 0; i<NUM_BLOCKS; i++){
 		for (int j = 0; j < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; j++){
 			pkt_buffer[i][j] = (char *)malloc(PKT_BUF_SZ);
+			pkt_buffer_filled[i][j] = 0;
 		}
 	}
 }
@@ -92,7 +97,7 @@ void* capturePackets(char* deviceToCapture) {
 	char *device;
 	char error_buffer[PCAP_ERRBUF_SIZE];
 	device = deviceToCapture;
-	fec_dbg_printf("Capturing packets on %s\n", device );
+//(	fec_dbg_printf)("Capturing packets on %s\n", device );
 	/* Open device for live capture */
 	handle = pcap_open_live(
 	             device,
@@ -106,10 +111,10 @@ void* capturePackets(char* deviceToCapture) {
 		return NULL;
 	}
 
-	fec_dbg_printf("This is the start of capture\n");
+//(	fec_dbg_printf)("This is the start of capture\n");
 	pcap_loop(handle, 0, my_packet_handler, NULL);
-	fec_dbg_printf("Ths is the end of capture\n");
-	fec_dbg_printf("Completed Capturing packets on %s\n", device );
+//(	fec_dbg_printf)("Ths is the end of capture\n");
+//(	fec_dbg_printf)("Completed Capturing packets on %s\n", device );
 	return NULL;
 }
 
@@ -138,7 +143,7 @@ int get_packet_index_in_blk(const unsigned char* packet) {
 }
 
 int lastBlockId = 0;
- 
+int lastPacketId = 0;
 /**
  * @brief      packet handler function for pcap
  *
@@ -152,20 +157,32 @@ void my_packet_handler(
     const u_char *packet
 ) {
 
-	const struct fec_header *fecHeader;
+	const struct fec_header *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
+
+	// skip blocks that don't belong to this worker.
+	if ((fecHeader->blockId) % workerCt != workerId){
+		return;
+	}
 
 	int pktId = get_packet_index_in_blk(packet);
 	int blockId = get_block_index_of_pkt(packet);
 
+
+	// TODO: Invalidate block before starting it.
+	if (blockId != lastBlockId){
+		lastBlockId = blockId;
+		invalidate_block_in_pkt_buffer(lastBlockId);
+	}
+	// Hack for rollover correctness in benchmarks.
+	if (pktId < lastPacketId){
+		invalidate_block_in_pkt_buffer(lastBlockId);		
+	}
+	lastPacketId = pktId;
+
+
 	// TODO: If the packet is a data packet, send it back out asap. 
 	if (pktId < NUM_DATA_PACKETS){
 		pcap_inject(handle, packet, header -> len);		
-	}
-
-	// TODO: Invalidate previous incomplete block when the next block starts.
-	if (blockId != lastBlockId){
-		invalidate_block_in_pkt_buffer(lastBlockId);
-		lastBlockId = blockId;
 	}
 
 	/*Update the received pkt in the pkt buffer.*/
@@ -176,10 +193,15 @@ void my_packet_handler(
 		pkt_buffer_filled[blockId][pktId] = 1;
 		// pkt_buffer[blockId][pktId] = (char* )packet;
 
-	} else { /*This is not good*/
-		printf("ERROR: Overwriting existing packet @ %i:%i \n",blockId, pktId);			
+	} 
+	else { /*This is not good*/
+		// The block is invalid -- don't bother processing.
+		invalidate_block_in_pkt_buffer(lastBlockId);		
+		// memcpy(pkt_buffer[blockId][pktId], packet, header->len);
+		// pkt_buffer_filled[blockId][pktId] = 1;
+		// printf("(%i) ERROR: Overwriting existing packet @ %i:%i \n",workerId,blockId, pktId);			
 	}
-	fec_dbg_printf("The header len is ::::: %d\n", header->len);
+//(	fec_dbg_printf)("The header len is ::::: %d\n", header->len);
 	/*check if the block is ready for processing*/
 	if (is_all_pkts_recieved_for_block(blockId) == true) {
 		/*populate the global fec structure for rse encoder and call the encode.*/
@@ -202,7 +224,6 @@ void my_packet_handler(
 		// TODO: only inject the parity packets.
 		// printf("after encode call.\n");
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++) {
-			// printf("injecting %i\n",i);
 			char* packetToInject = pkt_buffer[blockId][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
 			pcap_inject(handle, packetToInject, outPktLen);
@@ -251,7 +272,7 @@ void call_fec_blk_get(int blockId) {
 void encode_block() {
 	int rc;
 	if ((rc = rse_code(1)) != 0 )  exit(rc);
-	fec_dbg_printf("\nSending ");
+//(	fec_dbg_printf)("\nSending ");
 	D0(fec_block_print());
 	// print_global_fb_block();
 }
@@ -321,7 +342,7 @@ void invalidate_block_in_pkt_buffer(int blockId) {
 
 void print_global_fb_block() {
 	for (int i = 0; i < fb.block_N; i++) {
-		fec_dbg_printf("The length of %d packet is %d\n", i, fb.plen[i]);
+	//(	fec_dbg_printf)("The length of %d packet is %d\n", i, fb.plen[i]);
 	}
 }
 
@@ -368,7 +389,7 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 			exit (34);
 		}
 		y = k + i;                                  /* FEC block index */
-		fec_dbg_printf(" The payloadlength for %d is %d\n", y, get_payload_length_for_pkt(pkt_buffer[blockId][y]));
+	//(	fec_dbg_printf)(" The payloadlength for %d is %d\n", y, get_payload_length_for_pkt(pkt_buffer[blockId][y]));
 		z = FEC_MAX_N - o - i - 1;             /* Codeword index */
 		fb.pdata[y] = p[y];
 		fb.cbi[y] = z;
@@ -409,7 +430,7 @@ int get_payload_length_for_pkt(char* packet) {
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
 	int sizeIP = IP_HL(ip) * 4;
 	if (sizeIP < 20) {
-		fec_dbg_printf("size0\n");
+	//(	fec_dbg_printf)("size0\n");
 		return -1;
 	}
 
@@ -426,7 +447,7 @@ int get_total_packet_size(char* packet) {
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
 	int sizeIP = IP_HL(ip) * 4;
 	if (sizeIP < 20) {
-		fec_dbg_printf("size0\n");
+	//(	fec_dbg_printf)("size0\n");
 		return -1;
 	}
 
@@ -434,7 +455,7 @@ int get_total_packet_size(char* packet) {
 	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
 	int sizeTCP = TH_OFF(tcp) * 4;
 	if (sizeTCP < 20) {
-		fec_dbg_printf("size1\n");
+	//(	fec_dbg_printf)("size1\n");
 		return -1;
 	}
 
@@ -446,7 +467,7 @@ int get_total_packet_size(char* packet) {
 int copy_parity_packets_to_pkt_buffer(int blockId) {
 	int startIndexOfParityPacket = 0 + NUM_DATA_PACKETS;
 	int sizeOfParityPackets = fb.plen[startIndexOfParityPacket];
-	fec_dbg_printf("This is inside copy packets \n");
+//(	fec_dbg_printf)("This is inside copy packets \n");
 	/*For each parity packet*/
 	for (int i = startIndexOfParityPacket; i < (startIndexOfParityPacket + NUM_PARITY_PACKETS); i++) {
 		char* packet = pkt_buffer[blockId][i];
@@ -459,7 +480,7 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
 		int sizeIP = IP_HL(ip) * 4;
 		if (sizeIP < 20) {
-			fec_dbg_printf("size0\n");
+		//(	fec_dbg_printf)("size0\n");
 			return -1;
 		}
 
@@ -467,14 +488,14 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
 		int sizeTCP = TH_OFF(tcp) * 4;
 		if (sizeTCP < 20) {
-			fec_dbg_printf("size1\n");
+		//(	fec_dbg_printf)("size1\n");
 			return -1;
 		}
 
 		// int totalMallocSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP + sizeOfParityPackets;
 		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
 
-		// fec_dbg_printf("The totalMallocSize is ::::%d\n", totalMallocSize);
+		////( fec_dbg_printf)("The totalMallocSize is ::::%d\n", totalMallocSize);
 
 
 		/*update the parity packet in the pkt buffer.*/
@@ -490,8 +511,8 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		/*Update the the payload lenght and checksum*/
 		modify_IP_headers_for_parity_packets(sizeOfParityPackets, pkt_buffer[blockId][i]);
 
-		// Set filled.
-		pkt_buffer_filled[blockId][i] = 1;
+		// // Set filled.
+		// pkt_buffer_filled[blockId][i] = 1;
 	}
 }
 
@@ -502,7 +523,7 @@ void modify_IP_headers_for_parity_packets(int payloadSize, char* packet) {
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
 	int sizeIP = IP_HL(ip) * 4;
 	if (sizeIP < 20) {
-		fec_dbg_printf("size0\n");
+	//(	fec_dbg_printf)("size0\n");
 		return;
 	}
 
@@ -536,15 +557,15 @@ u_short compute_csum(struct sniff_ip *ipHeader , int len) {
 	return ~sum;
 }
 
-void fec_dbg_printf( const char* format, ... ) {
+//void ( fec_dbg_printf)( const char* format, ... ) {
 	// printf("lolboat.\n");
-#ifdef DBG_PRINT
-    va_list args;
-    va_start( args, format );
-    vprintf(format, args );
-    va_end( args );
-#endif
-}
+// #ifdef DBG_PRINT
+//     va_list args;
+//     va_start( args, format );
+//     vprintf(format, args );
+//     va_end( args );
+// #endif
+// }
 
 void print_hex_memory(void *mem, int len) {
   int i;
@@ -568,18 +589,26 @@ int main (int argc, char** argv) {
 
 	SIZE_FEC_TAG = sizeof(fec_header_t);
 
-	while ((opt =  getopt(argc, argv, "i:")) != EOF)
+	while ((opt =  getopt(argc, argv, "i:w:t:")) != -1)
 	{
 		switch (opt)
 		{
 		case 'i':
+			printf("deviceToCapture: %s\n",optarg);
 			deviceToCapture = optarg;
 			break;
+		case 'w':
+			workerId = atoi(optarg);
+			break;
+		case 't':
+			workerCt = atoi(optarg);
+			break;
 		default:
-			fec_dbg_printf("\nNot yet defined opt = %d\n", opt);
+			printf("\nNot yet defined opt = %d\n", opt);
 			abort();
 		}
 	}
+	printf("starting worker %i / %i\n",workerId, workerCt);
 	/* start packet capture on the specified interface.*/
 	alloc_pkt_buffer();
 	capturePackets(deviceToCapture);

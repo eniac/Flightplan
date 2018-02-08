@@ -1,3 +1,4 @@
+#!/bin/bash
 INPUT_PCAP=`realpath $1`
 
 NETWORK_IF=enp66s0f0 # tofino side of cable
@@ -32,7 +33,17 @@ ifconfig $NETWORK_IF up promisc
 ifconfig $BOOSTER_IF up promisc
 
 # start booster.
-numactl --cpunodebind 1 --membind 1 ../$BOOSTER_NAME -i $BOOSTER_IF &
+# numactl --cpunodebind 1 --membind 1 ../$BOOSTER_NAME -i $BOOSTER_IF &
+
+NUM_WORKERS=8
+MAX_ID=7
+
+for WORKER_ID in `seq 0 $MAX_ID`
+do
+	echo "starting booster $WORKER_ID"
+	numactl --cpunodebind 1 --membind 1 ../$BOOSTER_NAME -i $BOOSTER_IF -w $WORKER_ID -t $NUM_WORKERS &
+done
+
 sleep 2
 
 # start dpdk.
@@ -41,10 +52,10 @@ cd $DPDK_SCRIPT_DIR
 . ./setDpdkPaths.bash
 ./allocHugePages.sh
 cd $PKTGEN_DIR
-sudo ./app/x86_64-native-linuxapp-gcc/pktgen -l 0,1,2,3 -n 4 -w $NETWORK_IF_PCI_ID -- -P -m "[1:2].[0]" -f $DPDK_SCRIPT_DIR/luaScripts/oneport_throughput.lua -s 0:$INPUT_PCAP
+sudo ./app/x86_64-native-linuxapp-gcc/pktgen -l 0,4,8 -n 4 -w $NETWORK_IF_PCI_ID -- -P -m "[4:8].[0:0]" -f $DPDK_SCRIPT_DIR/luaScripts/oneport_throughput.lua -s 0:$INPUT_PCAP
 # move output file to benchmarks dir.
 sudo chown $real_user $PKTGEN_DIR/throughput.txt
-mv $PKTGEN_DIR/throughput.txt $RESULTS_DIR/pcapThroughput."$EXP_NAME".txt
+mv $PKTGEN_DIR/throughput.txt $RESULTS_DIR/pcapThroughput."$EXP_NAME"4.txt
 
 killall $BOOSTER_NAME
 cd $EXP_DIR
