@@ -4,12 +4,14 @@
 #include "Encoder.h"
 
 #define ETH_HEADER_SIZE (112)
-#define TAG_SIZE (24)
+#define TAG_SIZE (16)
 #define PAYLOAD_SIZE (256)
 
-#define INPUT_PACKET_SIZE (ETH_HEADER_SIZE + TAG_SIZE + PAYLOAD_SIZE)
+#define INPUT_PACKET_SIZE (ETH_HEADER_SIZE + PAYLOAD_SIZE)
+#define FEEDBACK_PACKET_SIZE (INPUT_PACKET_SIZE + TAG_SIZE)
 #define OUTPUT_PACKET_SIZE (ETH_HEADER_SIZE + TAG_SIZE + INPUT_PACKET_SIZE)
 #define BYTES_PER_INPUT_PACKET ((INPUT_PACKET_SIZE + 8 - 1) / 8)
+#define BYTES_PER_FEEDBACK_PACKET ((FEEDBACK_PACKET_SIZE + 8 - 1) / 8)
 #define BYTES_PER_OUTPUT_PACKET ((OUTPUT_PACKET_SIZE + 8 - 1) / 8)
 #define WORDS_PER_OUTPUT_PACKET ((OUTPUT_PACKET_SIZE + 64 - 1) / 64)
 
@@ -19,8 +21,9 @@
 
 typedef struct
 {
-  uint32 Index;
-  uint8 Operation;
+  uint16 Offset;
+  uint16 Index;
+  uint4 Operation;
 } tuple;
 
 typedef struct
@@ -67,7 +70,7 @@ void RSE_core(tuple Tuple, interface * Data, interface Parity[WORDS_PER_OUTPUT_P
       {
         if (8 * i + j < BYTES_PER_INPUT_PACKET)
         {
-          fec_sym Symbol = (Word >> (7 - j)) & 0xFF;
+          fec_sym Symbol = (Word >> 8 * (7 - j)) & 0xFF;
           Incremental_encode(Symbol, parity_buffer[8 * i + j], Tuple.Index, FEC_MAX_H,
               Tuple.Operation & OP_START_ENCODER);
         }
@@ -90,6 +93,7 @@ void RSE_core(tuple Tuple, interface * Data, interface Parity[WORDS_PER_OUTPUT_P
     int Input_finished = 0;
     for (int i = 0; i < WORDS_PER_OUTPUT_PACKET; i++)
     {
+#pragma HLS DEPENDENCE variable=parity_buffer inter false
 #pragma HLS pipeline
 
       interface Input;
@@ -101,7 +105,6 @@ void RSE_core(tuple Tuple, interface * Data, interface Parity[WORDS_PER_OUTPUT_P
       Input_finished = Input.End_of_frame;
 
       uint64 Output_word = 0;
-      int Position = 0;
       for (int j = 0; j < 8; j++)
       {
         Output_word <<= 8;
@@ -109,10 +112,10 @@ void RSE_core(tuple Tuple, interface * Data, interface Parity[WORDS_PER_OUTPUT_P
         {
           Output_word |= (Header_word >> 8 * j) & 0xFF;
         }
-        else if (Position < BYTES_PER_INPUT_PACKET)
+        else if (8 * i + j < BYTES_PER_OUTPUT_PACKET)
         {
-          Output_word |= parity_buffer[Position][Tuple.Index] & 0xFF;
-          Position++;
+          int Position = 8 * i + j - (ETH_HEADER_SIZE + TAG_SIZE + 7) / 8;
+          Output_word |= parity_buffer[Position][Tuple.Index - FEC_MAX_K] & 0xFF;
         }
       }
 
@@ -121,7 +124,7 @@ void RSE_core(tuple Tuple, interface * Data, interface Parity[WORDS_PER_OUTPUT_P
       Parity[i].Data = Output_word;
       Parity[i].Start_of_frame = (i == 0);
       Parity[i].End_of_frame = Last_word;
-      Parity[i].Count = Last_word ? (8 * WORDS_PER_OUTPUT_PACKET - BYTES_PER_OUTPUT_PACKET) : 8;
+      Parity[i].Count = Last_word ? 8 - (8 * WORDS_PER_OUTPUT_PACKET - BYTES_PER_OUTPUT_PACKET) : 8;
       Parity[i].Error = 0;
     }
   }

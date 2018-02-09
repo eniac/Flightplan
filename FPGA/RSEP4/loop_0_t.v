@@ -45,12 +45,12 @@ module loop_0_t (
 input clk_line /* unused */ ;
 (* polarity = "high" *) input rst /* unused */ ;
 input tuple_in_loop_input_VALID /* unused */ ;
-input [64:0] tuple_in_loop_input_DATA /* unused */ ;
+input [24:0] tuple_in_loop_input_DATA /* unused */ ;
 output tuple_out_loop_output_VALID /* undriven */ ;
-output [31:0] tuple_out_loop_output_DATA /* undriven */ ;
+output [15:0] tuple_out_loop_output_DATA /* undriven */ ;
 
 reg tuple_out_loop_output_VALID /* undriven */ ;
-reg [31:0] tuple_out_loop_output_DATA /* undriven */ ;
+reg [15:0] tuple_out_loop_output_DATA /* undriven */ ;
 
 
 
@@ -70,16 +70,16 @@ reg [31:0] tuple_out_loop_output_DATA /* undriven */ ;
 
 */
 
-reg [31:0] regs [99:0];
+reg [15:0] regs [99:0];
 wire valid;
-wire [31:0] addr;
-wire [31:0] max;
+wire [7:0] addr;
+wire [15:0] max;
 
 integer i;
 
-assign valid = tuple_in_loop_input_DATA[64];
-assign addr  = tuple_in_loop_input_DATA[63:32];
-assign max   = tuple_in_loop_input_DATA[31:0];
+assign valid = tuple_in_loop_input_DATA[24];
+assign addr  = tuple_in_loop_input_DATA[23:16];
+assign max   = tuple_in_loop_input_DATA[15:0];
 
 always @( posedge clk_line ) begin
 	if ( rst ) begin
