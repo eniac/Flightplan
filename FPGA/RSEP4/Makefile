@@ -13,6 +13,8 @@ Encoder: Encoder.sdnet Packet.user Tuple.user fec_0_t.hpp rse.cpp rse.h loop_0_t
 	@cp loop_0_t.hpp Encoder/XilinxSwitch/loop_0_t.TB
 	@cp fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL
 	@cp loop_0_t.v Encoder/XilinxSwitch/loop_0_t.HDL
+# Fix backpressure.
+	@sed -ie 's/\(~(backpressure_in)\)/\1 \& packet_out_PACKET6_RDY/' Encoder/XilinxSwitch/S_SYNCERs.HDL/S_SYNCER_for_fec_0.v
 # Fix timing bug in testbench.
 	@cp TB_System_Stim.v Encoder/XilinxSwitch/Testbench
 	@cp ../RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL

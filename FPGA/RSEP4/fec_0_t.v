@@ -246,9 +246,11 @@ assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = Core_parity;
 assign packet_out_packet_out_VAL = Core_parity_ap_vld;
 
-assign tuple_out_fec_output_VALID = packet_out_packet_out_VAL & packet_out_packet_out_RDY;
+assign tuple_out_fec_output_VALID = packet_out_packet_out_VAL & packet_out_packet_out_RDY &
+                                    packet_out_packet_out_SOF;
 assign tuple_out_fec_output_DATA = 0;
-assign tuple_out_control_VALID = packet_out_packet_out_VAL & packet_out_packet_out_RDY;
+assign tuple_out_control_VALID = packet_out_packet_out_VAL & packet_out_packet_out_RDY &
+                                 packet_out_packet_out_SOF;;
 assign tuple_out_control_DATA = 0;
 
 always @( posedge clk_line ) begin
