@@ -4,7 +4,7 @@
 txPort = "0" -- out port.
 rxPort = "0" -- in port.
 
-benchmarkDuration = 60 -- in seconds.
+benchmarkDuration = 10 -- in seconds.
 delayInterval = 1000 -- how long to wait between checking current bit-rate.
 
 -- Setup -- 
@@ -12,7 +12,7 @@ print("starting throughput benchmark\n");
 file = io.open("throughput.txt", "w");
 
 -- pktgen.screen("off"); -- uncomment this to shut the info screen off.
-pktgen.set(txPort, "rate", 99); -- set tx rate.
+pktgen.set(txPort, "rate", 40); -- set tx rate.
 pktgen.set(txPort, "size", 512); -- set tx pkt size.
 pktgen.start(txPort);
 
