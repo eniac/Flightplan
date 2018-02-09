@@ -7,7 +7,7 @@
 /* ethernet headers are always exactly 14 bytes [1] */
 #define SIZE_ETHERNET 14
 
-#define NUM_DATA_PACKETS 3
+#define NUM_DATA_PACKETS 130
 #define NUM_PARITY_PACKETS 3
 #define NUM_BLOCKS 256
 #define PKT_BUF_SZ 2048

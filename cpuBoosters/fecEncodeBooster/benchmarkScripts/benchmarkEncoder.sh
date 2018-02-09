@@ -35,13 +35,13 @@ ifconfig $BOOSTER_IF up promisc
 # start booster.
 # numactl --cpunodebind 1 --membind 1 ../$BOOSTER_NAME -i $BOOSTER_IF &
 
-NUM_WORKERS=8
-MAX_ID=7
+NUM_WORKERS=1
+MAX_ID=0
 
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting booster $WORKER_ID"
-	numactl --cpunodebind 1 --membind 1 ../$BOOSTER_NAME -i $BOOSTER_IF -w $WORKER_ID -t $NUM_WORKERS &
+	numactl --cpunodebind 0 --membind 0 ../$BOOSTER_NAME -i $BOOSTER_IF -w $WORKER_ID -t $NUM_WORKERS &
 done
 
 sleep 2
@@ -52,10 +52,11 @@ cd $DPDK_SCRIPT_DIR
 . ./setDpdkPaths.bash
 ./allocHugePages.sh
 cd $PKTGEN_DIR
-sudo ./app/x86_64-native-linuxapp-gcc/pktgen -l 0,4,8 -n 4 -w $NETWORK_IF_PCI_ID -- -P -m "[4:8].[0:0]" -f $DPDK_SCRIPT_DIR/luaScripts/oneport_throughput.lua -s 0:$INPUT_PCAP
+sudo ./app/x86_64-native-linuxapp-gcc/pktgen -l 1,5,9 -n 4 -w $NETWORK_IF_PCI_ID -- -P -m "[5:9].[0:0]" -f $DPDK_SCRIPT_DIR/luaScripts/oneport_throughput.lua -s 0:$INPUT_PCAP
+# sudo ./app/x86_64-native-linuxapp-gcc/pktgen -l 0,4,8 -n 4 -w $NETWORK_IF_PCI_ID -- -P -m "[4:8].[0:0]" -f $DPDK_SCRIPT_DIR/luaScripts/oneport_throughput.lua -s 0:$INPUT_PCAP
 # move output file to benchmarks dir.
 sudo chown $real_user $PKTGEN_DIR/throughput.txt
-mv $PKTGEN_DIR/throughput.txt $RESULTS_DIR/pcapThroughput."$EXP_NAME"4.txt
+mv $PKTGEN_DIR/throughput.txt $RESULTS_DIR/pcapThroughput."$EXP_NAME""$NUM_WORKERS".txt
 
 killall $BOOSTER_NAME
 cd $EXP_DIR
