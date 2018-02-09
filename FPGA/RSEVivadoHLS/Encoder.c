@@ -110,7 +110,11 @@ static void Generate_generator(fec_sym Generator[FEC_MAX_H][FEC_MAX_N])
 {
   for (int i = 0; i < FEC_MAX_H; i++)
     for (int j = 0; j < FEC_MAX_N; j++)
-      Generator[i][j] = GF_exp((i * j) % FEC_N);
+      if (j == 0 || i == 0)
+        Generator[i][j] = 1;
+      else
+        Generator[i][j] = GF_multiply(j + 1, Generator[i - 1][j]);
+  //Generator[i][j] = GF_exp((i * j) % FEC_N);
 
   for (int k = 0; k < FEC_MAX_H; k++)
   {
@@ -181,9 +185,9 @@ void Matrix_multiply_HW(fec_sym Data[FEC_MAX_K], fec_sym Parity[FEC_MAX_H], int 
 void Incremental_encode(fec_sym Data, fec_sym Parity[FEC_MAX_H], int Packet_index, int h, int Clear)
 {
 #pragma HLS inline
-  static fec_sym Generator[FEC_MAX_H][FEC_MAX_K] = { {76, 103, 149, 51, 248, 170, 97, 54}, {196,
-      162, 35, 228, 235, 41, 35, 47}, {214, 46, 79, 120, 78, 110, 150, 125}, {95, 234, 248, 174, 92,
-      236, 213, 101}};
+  static fec_sym Generator[FEC_MAX_H][FEC_MAX_K] = { {45, 174, 8, 13, 12, 220, 93, 128}, {154, 88,
+      85, 104, 102, 162, 127, 210}, {104, 134, 120, 92, 84, 75, 183, 245}, {222, 113, 36, 56, 63,
+      52, 148, 166}};
 #pragma HLS ARRAY_PARTITION variable=Generator complete dim=0
 // Generate_generator(Generator);
 

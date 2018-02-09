@@ -1,29 +1,29 @@
-All: RSE/XilinxSwitch/XilinxSwitch_vivado
+All: Encoder/XilinxSwitch/XilinxSwitch_vivado
 
-Simulation: RSE
+Simulation: Encoder
 
-RSE/XilinxSwitch/XilinxSwitch_vivado: RSE
-	cd $(realpath RSE/XilinxSwitch); \
+Encoder/XilinxSwitch/XilinxSwitch_vivado: Encoder
+	cd $(realpath Encoder/XilinxSwitch); \
 	vivado -mode batch -source XilinxSwitch_vivado_packager.tcl
 
-RSE: RSE.sdnet Packet.user Tuple.user fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec_0_t.v loop_0_t.v vivado_sim.bash vivado_sim_waveform.bash
-	sdnet RSE.sdnet -skipEval -busType axi -busWidth 64 -UE -clk_line -workDir RSE
-	@cp Packet.user Tuple.user RSE/XilinxSwitch
-	@cp fec_0_t.hpp rse.cpp rse.h RSE/XilinxSwitch/fec_0_t.TB
-	@cp loop_0_t.hpp RSE/XilinxSwitch/loop_0_t.TB
-	@cp fec_0_t.v RSE/XilinxSwitch/fec_0_t.HDL
-	@cp loop_0_t.v RSE/XilinxSwitch/loop_0_t.HDL
+Encoder: Encoder.sdnet Packet.user Tuple.user fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec_0_t.v loop_0_t.v vivado_sim.bash vivado_sim_waveform.bash
+	sdnet Encoder.sdnet -skipEval -busType axi -busWidth 64 -UE -clk_line -workDir Encoder
+	@cp Packet.user Tuple.user Encoder/XilinxSwitch
+	@cp fec_0_t.hpp rse.cpp rse.h Encoder/XilinxSwitch/fec_0_t.TB
+	@cp loop_0_t.hpp Encoder/XilinxSwitch/loop_0_t.TB
+	@cp fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL
+	@cp loop_0_t.v Encoder/XilinxSwitch/loop_0_t.HDL
 # Fix timing bug in testbench.
-	@cp TB_System_Stim.v RSE/XilinxSwitch/Testbench
-	@cp ../RSEVivadoHLS/solution1/syn/vhdl/*.vhd RSE/XilinxSwitch/fec_0_t.HDL
-	@cp vivado_sim*.bash RSE/XilinxSwitch
+	@cp TB_System_Stim.v Encoder/XilinxSwitch/Testbench
+	@cp ../RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
+	@cp vivado_sim*.bash Encoder/XilinxSwitch
 # Set the correct target FPGA.
-	@sed -ie 's:xcvu095-ffva2104-2-e:xczu9eg-ffvb1156-2-i:' RSE/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
+	@sed -ie 's:xcvu095-ffva2104-2-e:xczu9eg-ffvb1156-2-i:' Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
 
-RSE.sdnet: RSE.p4
-	p4c-sdnet RSE.p4 -o RSE.sdnet
+Encoder.sdnet: encoder.p4
+	p4c-sdnet encoder.p4 -o Encoder.sdnet
 	./sdnet_patch.sh
 
 clean:
-	rm -fr RSE.sdnet RSE
+	rm -fr Encoder.sdnet Encoder
 
