@@ -1,0 +1,4 @@
+Experiment, Avg Throughput (Gb/s), Std. Dev.
+Tofino, 9.243, 0.0251451784643
+Tofino + x86 Fwd, 7.79078, 0.0260186779065
+Tofino + x86 FEC, 0.21062, 0.000821948903521
