@@ -61,7 +61,7 @@ architecture RTL of RSEFeedback is
 END COMPONENT;
 
   signal mux_sel             : std_logic;
-  signal demux_sel           : std_logic;
+  signal dup_en              : std_logic;
   signal feedback_in_TVALID  : std_logic;
   signal feedback_in_TREADY  : std_logic;
   signal feedback_in_TDATA   : std_logic_vector(63 downto 0);
@@ -107,32 +107,28 @@ begin
     end if;
   end process;
 
-  p_demux: process(demux_sel, rse_in_TVALID, rse_in_TDATA, rse_in_TKEEP, rse_in_TLAST,
-                   rse_in_TVALID, rse_in_TDATA, rse_in_TKEEP, rse_in_TLAST, axis_out_TREADY,
-                   feedback_in_TREADY)
+  p_dup: process(dup_en, rse_in_TVALID, rse_in_TDATA, rse_in_TKEEP, rse_in_TLAST, axis_out_TREADY,
+                 feedback_in_TREADY)
   begin
-    if demux_sel = '0' then
-      axis_out_TVALID    <= rse_in_TVALID;
-      axis_out_TDATA     <= rse_in_TDATA;
-      axis_out_TKEEP     <= rse_in_TKEEP;
-      axis_out_TLAST     <= rse_in_TLAST;
+    if dup_en = '0' then
       feedback_in_TVALID <= '0';
       feedback_in_TDATA  <= (others => '0');
       feedback_in_TKEEP  <= (others => '0');
       feedback_in_TLAST  <= '0';
       rse_in_TREADY      <= axis_out_TREADY;
     else
-      axis_out_TVALID    <= '0';
-      axis_out_TDATA     <= (others => '0');
-      axis_out_TKEEP     <= (others => '0');
-      axis_out_TLAST     <= '0';
       feedback_in_TVALID <= rse_in_TVALID;
       feedback_in_TDATA  <= rse_in_TDATA;
       feedback_in_TKEEP  <= rse_in_TKEEP;
       feedback_in_TLAST  <= rse_in_TLAST;
-      rse_in_TREADY      <= feedback_in_TREADY;
+      rse_in_TREADY      <= axis_out_TREADY and feedback_in_TREADY;
     end if;
   end process;
+
+  axis_out_TVALID <= rse_in_TVALID;
+  axis_out_TDATA  <= rse_in_TDATA;
+  axis_out_TKEEP  <= rse_in_TKEEP;
+  axis_out_TLAST  <= rse_in_TLAST;
 
   p_packet_cnt: process(clk_line_rst, clk_line)
   begin
@@ -140,7 +136,7 @@ begin
       packet_cnt <= (others => '0');
     elsif rising_edge(clk_line) then
       if enable = '1' and tmp_rse_out_TLAST = '1' and tmp_rse_out_TVALID = '1' and rse_out_TREADY = '1' then
-        if unsigned(packet_cnt) < 12 then
+        if unsigned(packet_cnt) + 1 < 12 then
           packet_cnt <= std_logic_vector(unsigned(packet_cnt) + 1);
         else
           packet_cnt <= (others => '0');
@@ -151,16 +147,16 @@ begin
   
   p_mux_sel: mux_sel <= '0' when unsigned(packet_cnt) < 8 else '1';
   
-  p_demux_sel: process(clk_line_rst, clk_line)
+  p_dup_en: process(clk_line_rst, clk_line)
   begin
     if clk_line_rst = '1' then
-      demux_sel <= '0';
+      dup_en <= '0';
     elsif rising_edge(clk_line) then
       if enable = '1' and tuple_in_VALID = '1' then
-        if unsigned(tuple_in_DATA) = 13 then
-          demux_sel <= '1';
+        if unsigned(tuple_in_DATA(3 downto 0)) = 13 then
+          dup_en <= '1';
         else
-          demux_sel <= '0';
+          dup_en <= '0';
         end if;
       end if;
     end if;
@@ -185,7 +181,7 @@ begin
   end process;
 
   tuple_out_VALID <= update and start_of_packet;
-  tuple_out_DATA  <= (others => '0');
+  tuple_out_DATA  <= x"40" when mux_sel = '0' else x"30";
 
   fifo : fifo_generator_0
     port map

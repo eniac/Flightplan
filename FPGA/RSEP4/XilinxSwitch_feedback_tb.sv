@@ -106,7 +106,7 @@ RSEFeedback_i
 	.clk_line            	( clk_line ),
 	.clk_line_rst        	( clk_line_rst ),
 	.enable_processing   	( enable_processing ),
-	.internal_rst_done   	( internal_rst_done )
+	.internal_rst_done   	( internal_rst_done ),
 	.axis_in_TVALID		( packet_in_packet_in_TVALID ),
 	.axis_in_TREADY		( packet_in_packet_in_TREADY ),
 	.axis_in_TDATA		( packet_in_packet_in_TDATA ),
@@ -138,8 +138,8 @@ assign packet_out_packet_out_TREADY = 1'd1 ;
 
 assign enable_processing = 1'd1 ;
 
-TB_System_Stim
-TB_System_Stim_i
+TB_System_feedback_Stim
+TB_System_feedback_Stim_i
 (
 	.tuple_in_ioports    	( ),
 	.clk_n               	( clk_line ),
