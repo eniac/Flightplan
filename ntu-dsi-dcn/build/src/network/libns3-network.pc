@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-network
+Description: ns-3 module ns3-network
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-network
+Cflags: -I${includedir}
+Requires: libns3-core
+

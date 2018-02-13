@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-csma-layout
+Description: ns-3 module ns3-csma-layout
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-csma-layout
+Cflags: -I${includedir}
+Requires: libns3-csma libns3-network libns3-applications libns3-netanim libns3-point-to-point
+

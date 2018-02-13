@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-point-to-point-layout
+Description: ns-3 module ns3-point-to-point-layout
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-point-to-point-layout
+Cflags: -I${includedir}
+Requires: libns3-internet libns3-point-to-point libns3-mobility libns3-netanim
+

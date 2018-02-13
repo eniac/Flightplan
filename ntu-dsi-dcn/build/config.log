@@ -1,0 +1,873 @@
+# project ns (3.13) configured on Tue Jan 30 18:15:46 2018 by
+# waf 1.6.7 (abi 98, python 20606f0 on linux2)
+# using ./waf configure
+#
+----------------------------------------
+Setting top to
+/mnt/home/niprabhu/ntu-dsi-dcn
+----------------------------------------
+Setting out to
+/mnt/home/niprabhu/ntu-dsi-dcn/build
+----------------------------------------
+Checking for 'gcc' (c compiler)
+find program=['gcc', 'cc'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='CC' -> '/usr/bin/gcc'
+find program=['ar'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='AR' -> '/usr/bin/ar'
+/usr/bin/gcc
+----------------------------------------
+Checking for 'g++' (c++ compiler)
+find program=['g++', 'c++'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='CXX' -> '/usr/bin/g++'
+(tool ar is already loaded, skipping)
+/usr/bin/g++
+----------------------------------------
+Checking for program pkg-config
+/usr/bin/pkg-config
+find program=['pkg-config'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='PKG_CONFIG' -> '/usr/bin/pkg-config'
+---------------------------------------------------------
+Checking for compilation flag -Wl,--soname=foo... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mcxx: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/test.cc -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wl,--soname=foo', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cc', '-c', '-o', 'test.cc.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+---------------------------------------------------------
+Checking for click location
+not found
+---------------------------------------------------------
+Checking for pkg-config flags for GTK_CONFIG_STORE
+['/usr/bin/pkg-config', '--cflags', '--libs', 'gtk+-2.0 >= 2.12']: '' (exit code 1)
+Package gtk+-2.0 was not found in the pkg-config search path.
+Perhaps you should add the directory containing `gtk+-2.0.pc'
+to the PKG_CONFIG_PATH environment variable
+No package 'gtk+-2.0' found
+
+not found
+---------------------------------------------------------
+Checking for pkg-config flags for LIBXML2
+['/usr/bin/pkg-config', '--cflags', '--libs', 'libxml-2.0 >= 2.6']: '' (exit code 1)
+Package libxml-2.0 was not found in the pkg-config search path.
+Perhaps you should add the directory containing `libxml-2.0.pc'
+to the PKG_CONFIG_PATH environment variable
+No package 'libxml-2.0' found
+
+not found
+---------------------------------------------------------
+Checking for type uint128_t
+==>
+#include <stdint.h>
+
+int main() {
+	if ((uint128_t *) 0) return 0;
+	if (sizeof (uint128_t)) return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_9a9aa0a48a7447bdd461f06307f32dc7/test.cpp -> build/.conf_check_9a9aa0a48a7447bdd461f06307f32dc7/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+err: ../test.cpp: In function ‘int main()’:
+../test.cpp:4: error: ‘uint128_t’ was not declared in this scope
+../test.cpp:4: error: expected primary-expression before ‘)’ token
+../test.cpp:4: error: expected ‘)’ before numeric constant
+../test.cpp:5: error: ‘uint128_t’ was not declared in this scope
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/core: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20259472: cxx test.cpp -> test.cpp.1.o}
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/core: The configuration failed
+---------------------------------------------------------
+Checking for type __uint128_t
+==>
+#include <stdint.h>
+
+int main() {
+	if ((__uint128_t *) 0) return 0;
+	if (sizeof (__uint128_t)) return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_703a8a276d4ad265d967b1b45f1fc578/test.cpp -> build/.conf_check_703a8a276d4ad265d967b1b45f1fc578/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_703a8a276d4ad265d967b1b45f1fc578/testbuild/test.cpp.1.o -> build/.conf_check_703a8a276d4ad265d967b1b45f1fc578/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_703a8a276d4ad265d967b1b45f1fc578/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking high precision time implementation
+128-bit integer
+---------------------------------------------------------
+Checking for header stdint.h
+==>
+#include <stdint.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_c59373285bc13999c3df79164cb29af1/test.cpp -> build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/test.cpp.1.o -> build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header inttypes.h
+==>
+#include <inttypes.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/test.cpp -> build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/test.cpp.1.o -> build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header sys/inttypes.h
+==>
+#include <sys/inttypes.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_2ca1edb217ad9cef6c81468eb5adffbb/test.cpp -> build/.conf_check_2ca1edb217ad9cef6c81468eb5adffbb/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+err: ../test.cpp:1:26: error: sys/inttypes.h: No such file or directory
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/core: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20259088: cxx test.cpp -> test.cpp.1.o}
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/core: The configuration failed
+---------------------------------------------------------
+Checking for header sys/types.h
+==>
+#include <sys/types.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_293985459965597c97c3759b44ed252b/test.cpp -> build/.conf_check_293985459965597c97c3759b44ed252b/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_293985459965597c97c3759b44ed252b/testbuild/test.cpp.1.o -> build/.conf_check_293985459965597c97c3759b44ed252b/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_293985459965597c97c3759b44ed252b/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header sys/stat.h
+==>
+#include <sys/stat.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_114df6287ed99356d14a06682bc98197/test.cpp -> build/.conf_check_114df6287ed99356d14a06682bc98197/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_114df6287ed99356d14a06682bc98197/testbuild/test.cpp.1.o -> build/.conf_check_114df6287ed99356d14a06682bc98197/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_114df6287ed99356d14a06682bc98197/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header dirent.h
+==>
+#include <dirent.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_38008f7ca978e5462e378992d39050f1/test.cpp -> build/.conf_check_38008f7ca978e5462e378992d39050f1/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_38008f7ca978e5462e378992d39050f1/testbuild/test.cpp.1.o -> build/.conf_check_38008f7ca978e5462e378992d39050f1/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_38008f7ca978e5462e378992d39050f1/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header stdlib.h
+==>
+#include <stdlib.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_29f41b0aad55c9546dfc9b7ce9859059/test.cpp -> build/.conf_check_29f41b0aad55c9546dfc9b7ce9859059/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_29f41b0aad55c9546dfc9b7ce9859059/testbuild/test.cpp.1.o -> build/.conf_check_29f41b0aad55c9546dfc9b7ce9859059/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_29f41b0aad55c9546dfc9b7ce9859059/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header signal.h
+==>
+#include <signal.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_cc227f9b4319ad1c726eca4fb806395e/test.cpp -> build/.conf_check_cc227f9b4319ad1c726eca4fb806395e/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_cc227f9b4319ad1c726eca4fb806395e/testbuild/test.cpp.1.o -> build/.conf_check_cc227f9b4319ad1c726eca4fb806395e/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_cc227f9b4319ad1c726eca4fb806395e/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header pthread.h
+==>
+
+#include <pthread.h>
+int main ()
+{
+   pthread_mutex_t m;
+   pthread_mutex_init (&m, NULL);
+   return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_2be466e82e703a744ee152afe2b58299/test.cpp -> build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-pthread', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/test.cpp.1.o -> build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-pthread']
+yes
+---------------------------------------------------------
+Checking for header stdint.h
+==>
+#include <stdint.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_c59373285bc13999c3df79164cb29af1/test.cpp -> build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/test.cpp.1.o -> build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_c59373285bc13999c3df79164cb29af1/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header inttypes.h
+==>
+#include <inttypes.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/test.cpp -> build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/test.cpp.1.o -> build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_591f7be6a22ba3cd4f507fd8bc09bd2a/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header sys/inttypes.h
+==>
+#include <sys/inttypes.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_2ca1edb217ad9cef6c81468eb5adffbb/test.cpp -> build/.conf_check_2ca1edb217ad9cef6c81468eb5adffbb/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+err: ../test.cpp:1:26: error: sys/inttypes.h: No such file or directory
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/core: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20378320: cxx test.cpp -> test.cpp.1.o}
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/core: The configuration failed
+---------------------------------------------------------
+Checking for library rt
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_fc0bab0b855f90bf0795892663948c43/test.cpp -> build/.conf_check_fc0bab0b855f90bf0795892663948c43/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-pthread', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_fc0bab0b855f90bf0795892663948c43/testbuild/test.cpp.1.o -> build/.conf_check_fc0bab0b855f90bf0795892663948c43/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_fc0bab0b855f90bf0795892663948c43/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lrt', '-pthread']
+yes
+---------------------------------------------------------
+Checking for header netpacket/packet.h
+==>
+#include <netpacket/packet.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_0927534631877d46f179382e3e16c60a/test.cpp -> build/.conf_check_0927534631877d46f179382e3e16c60a/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_0927534631877d46f179382e3e16c60a/testbuild/test.cpp.1.o -> build/.conf_check_0927534631877d46f179382e3e16c60a/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_0927534631877d46f179382e3e16c60a/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for NSC location
+not found
+---------------------------------------------------------
+Checking for header sys/socket.h
+==>
+#include <sys/socket.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_f620d214e7131b9899e39aa1327dd607/test.cpp -> build/.conf_check_f620d214e7131b9899e39aa1327dd607/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_PACKET_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_f620d214e7131b9899e39aa1327dd607/testbuild/test.cpp.1.o -> build/.conf_check_f620d214e7131b9899e39aa1327dd607/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_f620d214e7131b9899e39aa1327dd607/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for header netinet/in.h
+==>
+#include <netinet/in.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_323c64456e3d4ab2a4101e6f5604e508/test.cpp -> build/.conf_check_323c64456e3d4ab2a4101e6f5604e508/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_PACKET_H=1', '-DHAVE_SYS_SOCKET_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_323c64456e3d4ab2a4101e6f5604e508/testbuild/test.cpp.1.o -> build/.conf_check_323c64456e3d4ab2a4101e6f5604e508/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_323c64456e3d4ab2a4101e6f5604e508/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking boost includes
+1_41
+---------------------------------------------------------
+Checking boost libs
+ok
+---------------------------------------------------------
+Checking for OpenFlow location
+not found
+---------------------------------------------------------
+Checking for library sqlite3
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_39b3cecfac3989b2ed760243cef109e6/test.cpp -> build/.conf_check_39b3cecfac3989b2ed760243cef109e6/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_39b3cecfac3989b2ed760243cef109e6/testbuild/test.cpp.1.o -> build/.conf_check_39b3cecfac3989b2ed760243cef109e6/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_39b3cecfac3989b2ed760243cef109e6/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lsqlite3']
+err: /usr/bin/ld: cannot find -lsqlite3
+collect2: ld returned 1 exit status
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/stats: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20261328: cxxprogram test.cpp.1.o -> testprog}
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_39b3cecfac3989b2ed760243cef109e6/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lsqlite3']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/src/stats: The configuration failed
+---------------------------------------------------------
+Checking for pkg-config flags for SQLITE3
+['/usr/bin/pkg-config', '--cflags', '--libs', 'sqlite3']: '' (exit code 1)
+Package sqlite3 was not found in the pkg-config search path.
+Perhaps you should add the directory containing `sqlite3.pc'
+to the PKG_CONFIG_PATH environment variable
+No package 'sqlite3' found
+
+not found
+---------------------------------------------------------
+Checking for header linux/if_tun.h
+==>
+#include <linux/if_tun.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_e2bf758aaca47858b67848f504a8de27/test.cpp -> build/.conf_check_e2bf758aaca47858b67848f504a8de27/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_e2bf758aaca47858b67848f504a8de27/testbuild/test.cpp.1.o -> build/.conf_check_e2bf758aaca47858b67848f504a8de27/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_e2bf758aaca47858b67848f504a8de27/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+yes
+---------------------------------------------------------
+Checking for program python
+/usr/bin/python
+find program=['python'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='PYTHON' -> '/usr/bin/python'
+['/usr/bin/python', '-c', 'import sys\nfor x in sys.version_info: print(str(x))']
+out: 2
+6
+6
+final
+0
+
+['/usr/bin/python', '-c', "from distutils.sysconfig import get_python_lib\n\nprint(repr(get_python_lib(standard_lib=0, prefix='/usr/local') or ''))"]
+out: '/usr/local/lib/python2.6/site-packages'
+
+['/usr/bin/python', '-c', "from distutils.sysconfig import get_python_lib\n\nprint(repr(get_python_lib(plat_specific=1, standard_lib=0, prefix='/usr/local') or ''))"]
+out: '/usr/local/lib64/python2.6/site-packages'
+
+---------------------------------------------------------
+Checking for python version
+(2, 6, 6, 'final', 0)
+['/usr/bin/python', '-c', "from distutils.sysconfig import get_config_var\n\nprint(repr(get_config_var('prefix') or ''))\nprint(repr(get_config_var('SO') or ''))\nprint(repr(get_config_var('LDFLAGS') or ''))\nprint(repr(get_config_var('LIBDIR') or ''))\nprint(repr(get_config_var('LIBPL') or ''))\nprint(repr(get_config_var('INCLUDEPY') or ''))\nprint(repr(get_config_var('Py_ENABLE_SHARED') or ''))\nprint(repr(get_config_var('MACOSX_DEPLOYMENT_TARGET') or ''))\nprint(repr(get_config_var('LDSHARED') or ''))\nprint(repr(get_config_var('CFLAGS') or ''))"]
+out: '/usr'
+'.so'
+''
+'/usr/lib64'
+'/usr/lib64/python2.6/config'
+'/usr/include/python2.6'
+1
+''
+'gcc -pthread -shared'
+'-fno-strict-aliasing -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv   -DNDEBUG -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv'
+
+Configuration returned from ['/usr/bin/python']:
+"prefix = '/usr'\nSO = '.so'\nLDFLAGS = ''\nLIBDIR = '/usr/lib64'\nLIBPL = '/usr/lib64/python2.6/config'\nINCLUDEPY = '/usr/include/python2.6'\nPy_ENABLE_SHARED = 1\nMACOSX_DEPLOYMENT_TARGET = ''\nLDSHARED = 'gcc -pthread -shared'\nCFLAGS = '-fno-strict-aliasing -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv   -DNDEBUG -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv'"
+
+
+
+# try again with -L$python_LIBDIR: ['/usr/lib64']
+
+---------------------------------------------------------
+Checking for library python2.6 in LIBDIR
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_a0f64fe4f113d65784f0c08d2434c769/test.cpp -> build/.conf_check_a0f64fe4f113d65784f0c08d2434c769/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_a0f64fe4f113d65784f0c08d2434c769/testbuild/test.cpp.1.o -> build/.conf_check_a0f64fe4f113d65784f0c08d2434c769/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_a0f64fe4f113d65784f0c08d2434c769/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64', '-lpython2.6']
+err: /usr/bin/ld: cannot find -lpython2.6
+collect2: ld returned 1 exit status
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20438160: cxxprogram test.cpp.1.o -> testprog}
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_a0f64fe4f113d65784f0c08d2434c769/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64', '-lpython2.6']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+
+
+# try again with -L$python_LIBPL (some systems don't install the python library in $prefix/lib)
+
+---------------------------------------------------------
+Checking for library python2.6 in python_LIBPL
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_b4f54a7897902f5411a74d56a57489ee/test.cpp -> build/.conf_check_b4f54a7897902f5411a74d56a57489ee/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_b4f54a7897902f5411a74d56a57489ee/testbuild/test.cpp.1.o -> build/.conf_check_b4f54a7897902f5411a74d56a57489ee/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_b4f54a7897902f5411a74d56a57489ee/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64/python2.6/config', '-lpython2.6']
+err: /usr/bin/ld: cannot find -lpython2.6
+collect2: ld returned 1 exit status
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20400272: cxxprogram test.cpp.1.o -> testprog}
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_b4f54a7897902f5411a74d56a57489ee/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64/python2.6/config', '-lpython2.6']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+
+
+# try again with -L$prefix/libs, and pythonXY name rather than pythonX.Y (win32)
+
+---------------------------------------------------------
+Checking for library python2.6 in $prefix/libs
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_ee3784ddb6c21b6a16c75ceea8cc53b8/test.cpp -> build/.conf_check_ee3784ddb6c21b6a16c75ceea8cc53b8/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_ee3784ddb6c21b6a16c75ceea8cc53b8/testbuild/test.cpp.1.o -> build/.conf_check_ee3784ddb6c21b6a16c75ceea8cc53b8/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_ee3784ddb6c21b6a16c75ceea8cc53b8/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/libs', '-lpython2.6']
+err: /usr/bin/ld: cannot find -lpython2.6
+collect2: ld returned 1 exit status
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20401424: cxxprogram test.cpp.1.o -> testprog}
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_ee3784ddb6c21b6a16c75ceea8cc53b8/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/libs', '-lpython2.6']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+
+
+# try again with -L$python_LIBDIR: ['/usr/lib64']
+
+---------------------------------------------------------
+Checking for library python26 in LIBDIR
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_5bda35e902d9295648ca7b8e3ebd4b86/test.cpp -> build/.conf_check_5bda35e902d9295648ca7b8e3ebd4b86/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_5bda35e902d9295648ca7b8e3ebd4b86/testbuild/test.cpp.1.o -> build/.conf_check_5bda35e902d9295648ca7b8e3ebd4b86/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_5bda35e902d9295648ca7b8e3ebd4b86/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64', '-lpython26']
+err: /usr/bin/ld: cannot find -lpython26
+collect2: ld returned 1 exit status
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20400528: cxxprogram test.cpp.1.o -> testprog}
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_5bda35e902d9295648ca7b8e3ebd4b86/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64', '-lpython26']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+
+
+# try again with -L$python_LIBPL (some systems don't install the python library in $prefix/lib)
+
+---------------------------------------------------------
+Checking for library python26 in python_LIBPL
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_f7389b7e81f9916e5f10bbeb7b2d57ee/test.cpp -> build/.conf_check_f7389b7e81f9916e5f10bbeb7b2d57ee/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_f7389b7e81f9916e5f10bbeb7b2d57ee/testbuild/test.cpp.1.o -> build/.conf_check_f7389b7e81f9916e5f10bbeb7b2d57ee/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_f7389b7e81f9916e5f10bbeb7b2d57ee/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64/python2.6/config', '-lpython26']
+err: /usr/bin/ld: cannot find -lpython26
+collect2: ld returned 1 exit status
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20400080: cxxprogram test.cpp.1.o -> testprog}
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_f7389b7e81f9916e5f10bbeb7b2d57ee/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib64/python2.6/config', '-lpython26']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+
+
+# try again with -L$prefix/libs, and pythonXY name rather than pythonX.Y (win32)
+
+---------------------------------------------------------
+Checking for library python26 in $prefix/libs
+==>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_b8ebb849c4b07e75089c8920a3c21340/test.cpp -> build/.conf_check_b8ebb849c4b07e75089c8920a3c21340/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_b8ebb849c4b07e75089c8920a3c21340/testbuild/test.cpp.1.o -> build/.conf_check_b8ebb849c4b07e75089c8920a3c21340/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_b8ebb849c4b07e75089c8920a3c21340/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/libs', '-lpython26']
+err: /usr/bin/ld: cannot find -lpython26
+collect2: ld returned 1 exit status
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20401360: cxxprogram test.cpp.1.o -> testprog}
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_b8ebb849c4b07e75089c8920a3c21340/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/libs', '-lpython26']
+
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+
+
+### LIB NOT FOUND
+
+-------------------------------------------------------------------------
+Checking for program python2.6-config,python-config-2.6,python2.6m-config
+not found
+find program=['python2.6-config', 'python-config-2.6', 'python2.6m-config'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='PYTHON_CONFIG' -> ''
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Could not find the program python2.6-config,python-config-2.6,python2.6m-config
+Include path for Python extensions (found via distutils module): '/usr/include/python2.6'
+
+-------------------------------------------------------------------------
+Checking for header Python.h
+==>
+
+#include <Python.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+	void Py_Initialize(void);
+	void Py_Finalize(void);
+#ifdef __cplusplus
+}
+#endif
+int main()
+{
+   Py_Initialize();
+   Py_Finalize();
+   return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_d6c8946949ece91ce43c989711393fec/test.cpp -> build/.conf_check_d6c8946949ece91ce43c989711393fec/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fno-strict-aliasing', '-I/usr/include/python2.6', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+err: ../test.cpp:2:20: error: Python.h: No such file or directory
+
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Tools/c_config.py", line 435, in run_c_code
+    bld.compile()
+  File "/mnt/home/niprabhu/ntu-dsi-dcn/.waf-1.6.7-0a94702c61504c487a251b8d0a04ca9a/waflib/Build.py", line 193, in compile
+    raise Errors.BuildError(self.producer.error)
+BuildError: Build failed
+ -> task failed (exit status 1): 
+	{task 20438928: cxx test.cpp -> test.cpp.1.o}
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fexceptions', '-fstack-protector', '-m64', '-mtune=generic', '-fPIC', '-fwrapv', '-fno-strict-aliasing', '-I/usr/include/python2.6', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '-D_GNU_SOURCE', '-DNDEBUG', '-D_GNU_SOURCE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+
+Could not find the python development headers
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+-------------------------------------------------------------------------
+Checking for []
+[[], '--cflags', '--libs']
+not found
+from /mnt/home/niprabhu/ntu-dsi-dcn/bindings/python: The configuration failed
+-------------------------------------------------------------------------
+Checking for program sudo
+/usr/bin/sudo
+find program=['sudo'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='SUDO' -> '/usr/bin/sudo'
+-------------------------------------------------------------------------
+Checking for program valgrind
+/usr/bin/valgrind
+find program=['valgrind'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='VALGRIND' -> '/usr/bin/valgrind'
+-------------------------------------------------------------------------
+Checking for pkg-config flags for GSL
+['/usr/bin/pkg-config', '--cflags', '--libs', 'gsl']: '' (exit code 1)
+Package gsl was not found in the pkg-config search path.
+Perhaps you should add the directory containing `gsl.pc'
+to the PKG_CONFIG_PATH environment variable
+No package 'gsl' found
+
+not found
+-------------------------------------------------------------------------
+Checking for compilation flag -Wno-error=deprecated-d... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mcxx: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/test.cc -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wno-error=deprecated-declarations', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '../test.cc', '-c', '-o', 'test.cc.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+-------------------------------------------------------------------------
+Checking for compilation flag -Wno-error=deprecated-d... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mc: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/test.c -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o
+[0m
+['/usr/bin/gcc', '-Wno-error=deprecated-declarations', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [33mcprogram: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog
+[0m
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+-------------------------------------------------------------------------
+Checking for compilation flag -fstrict-aliasing... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mcxx: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/test.cc -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wno-error=deprecated-declarations', '-fstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '../test.cc', '-c', '-o', 'test.cc.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+-------------------------------------------------------------------------
+Checking for compilation flag -fstrict-aliasing... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mc: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/test.c -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o
+[0m
+['/usr/bin/gcc', '-fstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [33mcprogram: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog
+[0m
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+-------------------------------------------------------------------------
+Checking for compilation flag -Wstrict-aliasing... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mcxx: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/test.cc -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wno-error=deprecated-declarations', '-fstrict-aliasing', '-Wstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '../test.cc', '-c', '-o', 'test.cc.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+-------------------------------------------------------------------------
+Checking for compilation flag -Wstrict-aliasing... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mc: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/test.c -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o
+[0m
+['/usr/bin/gcc', '-Wstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_IF_TUN_H=1', '-DPYTHONDIR="/usr/local/lib/python2.6/site-packages"', '-DPYTHONARCHDIR="/usr/local/lib64/python2.6/site-packages"', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [33mcprogram: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog
+[0m
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/mnt/home/niprabhu/ntu-dsi-dcn/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+-------------------------------------------------------------------------
+Checking for program doxygen
+not found
+find program=['doxygen'] paths=['/usr/lib64/qt-3.3/bin', '/usr/local/bin', '/bin', '/usr/bin', '/usr/local/sbin', '/usr/sbin', '/sbin', '/home/DBGROUP/niprabhu/bin'] var='DOXYGEN' -> ''
+from /mnt/home/niprabhu/ntu-dsi-dcn: Could not find the program doxygen

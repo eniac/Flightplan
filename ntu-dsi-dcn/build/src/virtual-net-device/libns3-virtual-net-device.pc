@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-virtual-net-device
+Description: ns-3 module ns3-virtual-net-device
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-virtual-net-device
+Cflags: -I${includedir}
+Requires: libns3-network libns3-internet
+

@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-netanim
+Description: ns-3 module ns3-netanim
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-netanim
+Cflags: -I${includedir}
+Requires: libns3-internet libns3-mobility libns3-wimax libns3-wifi libns3-csma
+
