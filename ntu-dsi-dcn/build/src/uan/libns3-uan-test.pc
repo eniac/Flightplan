@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-uan-test
+Description: ns-3 module ns3-uan-test
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-uan-test
+Cflags: -I${includedir}
+Requires: libns3-uan
+

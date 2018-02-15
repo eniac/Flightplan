@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-mpi
+Description: ns-3 module ns3-mpi
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-mpi
+Cflags: -I${includedir}
+Requires: libns3-core libns3-network
+

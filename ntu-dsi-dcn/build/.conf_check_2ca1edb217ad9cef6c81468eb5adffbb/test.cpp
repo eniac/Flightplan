@@ -1,0 +1,5 @@
+#include <sys/inttypes.h>
+
+int main() {
+	return 0;
+}

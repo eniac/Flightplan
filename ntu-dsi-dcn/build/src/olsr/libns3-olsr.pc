@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-olsr
+Description: ns-3 module ns3-olsr
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-olsr
+Cflags: -I${includedir}
+Requires: libns3-internet libns3-config-store libns3-tools libns3-point-to-point libns3-wifi libns3-mobility libns3-applications libns3-csma
+

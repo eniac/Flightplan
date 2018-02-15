@@ -1,0 +1,12 @@
+
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include
+
+Name: libns3-test-test
+Description: ns-3 module ns3-test-test
+Version: devel
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-test-test
+Cflags: -I${includedir}
+Requires: libns3-test
+
