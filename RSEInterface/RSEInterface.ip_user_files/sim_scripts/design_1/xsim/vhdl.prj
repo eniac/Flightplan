@@ -1,7 +1,0 @@
-vhdl xil_defaultlib "../../../bd/design_1/ip/design_1_proc_sys_reset_0_0/sim/design_1_proc_sys_reset_0_0.vhd" 
-vhdl xil_defaultlib "../../../bd/design_1/ip/design_1_proc_sys_reset_1_0/sim/design_1_proc_sys_reset_1_0.vhd" 
-vhdl xil_defaultlib "../../../bd/design_1/ip/design_1_system_ila_0_0/bd_0/ip/ip_0/sim/bd_f60c_ila_lib_0.vhd" 
-vhdl xil_defaultlib "../../../bd/design_1/ip/design_1_system_ila_0_0/bd_0/hdl/bd_f60c.vhd" 
-vhdl xil_defaultlib "../../../bd/design_1/ip/design_1_system_ila_0_0/sim/design_1_system_ila_0_0.vhd" 
-vhdl xil_defaultlib "../../../bd/design_1/hdl/design_1.vhd" 
-nosort
