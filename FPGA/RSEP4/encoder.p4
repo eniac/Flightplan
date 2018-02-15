@@ -100,14 +100,14 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
 		if (hdr.veth.vx == 0)
 		{
 			op = OP_ENCODE_PACKET;
-			reg_addr = 1;
+			reg_addr = 0;
 			max = FEC_QUEUE_NUMBER;
 			payload_offset = ETH_HEADER_SIZE;
 		}
 		else
 		{
 			op = OP_GET_ENCODED;
-			reg_addr = 2;
+			reg_addr = 1;
 			max = FEC_PARITY_NUMBER;
 			payload_offset = VETH_HEADER_SIZE;
 		}

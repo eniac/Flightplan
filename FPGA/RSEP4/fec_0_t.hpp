@@ -120,11 +120,6 @@ public:
 
 	// engine function
 	void operator()() {
-		if (fec_input.stateful_valid.to_ulong() == 0)
-		{
-			control.done = 1;
-			return;
-		}
 		std::cout << "===================================================================" << std::endl;
 		std::cout << "Entering engine " << _name << std::endl;
 		// input packet
@@ -142,76 +137,83 @@ public:
 		// TODO: *********************************
 		// TODO: *** USER ENGINE FUNCTIONALITY ***
 		// TODO: *********************************
-		unsigned long op = fec_input.operation.to_ulong();
-		unsigned long index = fec_input.index.to_ulong();
-		unsigned long offset = fec_input.data_offset.to_ulong();
-		fec_sym* p;
-
-		std::cerr<<"packet size = "<<packet_in.size()<<std::endl;
-		packet_out = packet_in;
-
-		if (op & OP_START_ENCODER)
+		if (fec_input.stateful_valid.to_ulong() == 1)
 		{
-			int ret = rse_init();
-			std::cout<< "[P4] rse init result: "<<ret<<std::endl;      
+			unsigned long op = fec_input.operation.to_ulong();
+			unsigned long index = fec_input.index.to_ulong();
+			unsigned long offset = fec_input.data_offset.to_ulong();
+			fec_sym* p;
 
-			for (int i=0; i<FEC_QUEUE_NUMBER+FEC_PARITY_NUMBER; i++)
+			std::cerr<<"packet size = "<<packet_in.size()<<std::endl;
+			packet_out = packet_in;
+
+			if (op & OP_START_ENCODER)
 			{
-				if (fb.pdata[i] != nullptr)
+				int ret = rse_init();
+				std::cout<< "[P4] rse init result: "<<ret<<std::endl;      
+
+				for (int i=0; i<FEC_QUEUE_NUMBER+FEC_PARITY_NUMBER; i++)
 				{
-					delete fb.pdata[i];
-					fb.pdata[i] = nullptr;
+					if (fb.pdata[i] != nullptr)
+					{
+						delete fb.pdata[i];
+						fb.pdata[i] = nullptr;
+					}
+					fb.pdata[i] = new fec_sym[ETH_MTU];
 				}
-				fb.pdata[i] = new fec_sym[ETH_MTU];
+
+				fb.block_C = ETH_MTU;
+				fb.block_N = FEC_QUEUE_NUMBER+FEC_PARITY_NUMBER;
 			}
 
-			fb.block_C = ETH_MTU;
-			fb.block_N = FEC_QUEUE_NUMBER+FEC_PARITY_NUMBER;
+			if (op & OP_ENCODE_PACKET)
+			{
+
+				p = fb.pdata[index];
+
+				/*[!] assuming fec_sym is 8 bits wide */
+				for (int i = 0; i<packet_in.size(); i++)
+				{
+					p[i] = (fec_sym) packet_in[i];
+				}
+
+				fb.cbi[index] = index;
+				fb.plen[index] = packet_in.size();
+				fb.pstat[index] = FEC_FLAG_KNOWN;
+				std::cout<< "[P4] Encoder: stored a packet at position " << index<<std::endl;
+
+
+				fec_sym y = FEC_QUEUE_NUMBER + index;                                  /* FEC block index */
+				fec_sym z = FEC_MAX_N - index - 1;             /* Codeword index */
+				fb.cbi[y] = z;
+				fb.plen[y] = fb.block_C;
+				fb.pstat[y] = FEC_FLAG_WANTED;
+
+				if (index == FEC_QUEUE_NUMBER-1)
+				{
+					rse_code(1);
+					fec_block_print();
+				}
+			}
+
+			if (op & OP_GET_ENCODED)
+			{
+				std::cout<<"[P4] offset = "<<offset<<std::endl;
+				p = fb.pdata[index];
+				int packet_size = packet_out.size();
+				for (int i = offset/8; i<packet_size; i++)
+				{
+					packet_out.pop_back();
+				}
+				for (int i = 0; i<packet_size - 2; i++)
+				{
+					packet_out.push_back(p[i]);
+				}
+			}
 		}
-
-		if (op & OP_ENCODE_PACKET)
+		else
 		{
-
-			p = fb.pdata[index];
-
-			/*[!] assuming fec_sym is 8 bits wide */
-			for (int i = 0; i<packet_in.size(); i++)
-			{
-				p[i] = (fec_sym) packet_in[i];
-			}
-
-			fb.cbi[index] = index;
-			fb.plen[index] = packet_in.size();
-			fb.pstat[index] = FEC_FLAG_KNOWN;
-			std::cout<< "[P4] Encoder: stored a packet at position " << index<<std::endl;
-
-
-			fec_sym y = FEC_QUEUE_NUMBER + index;                                  /* FEC block index */
-			fec_sym z = FEC_MAX_N - index - 1;             /* Codeword index */
-			fb.cbi[y] = z;
-			fb.plen[y] = fb.block_C;
-			fb.pstat[y] = FEC_FLAG_WANTED;
-
-			if (index == FEC_QUEUE_NUMBER-1)
-			{
-				rse_code(1);
-				fec_block_print();
-			}
-		}
-
-		if (op & OP_GET_ENCODED)
-		{
-			std::cout<<"[P4] offset = "<<offset<<std::endl;
-			p = fb.pdata[index];
-			int packet_size = packet_out.size();
-			for (int i = offset/8; i<packet_size; i++)
-			{
-				packet_out.pop_back();
-			}
-			for (int i = 0; i<packet_size - 2; i++)
-			{
-				packet_out.push_back(p[i]);
-			}
+			packet_out = packet_in;
 		}
 	
 		control.done = 1;

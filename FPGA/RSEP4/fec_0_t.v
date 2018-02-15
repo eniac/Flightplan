@@ -99,8 +99,8 @@ wire tuple_out_fec_output_DATA /* undriven */ ;
 
 wire Tuple_FIFO_wr_en;
 wire Tuple_FIFO_rd_en;
-wire [35:0] Tuple_FIFO_din;
-wire [35:0] Tuple_FIFO_dout;
+wire [36:0] Tuple_FIFO_din;
+wire [36:0] Tuple_FIFO_dout;
 wire Tuple_FIFO_empty;
 wire Tuple_FIFO_almost_full;
 
@@ -115,7 +115,7 @@ wire Core_start;
 wire Core_done;
 wire Core_idle;
 wire Core_ready;
-wire [35:0] Core_tuple;
+wire [36:0] Core_tuple;
 wire Core_tuple_ap_vld;
 wire [70:0] Core_data_dout;
 wire Core_data_empty_n;
@@ -138,7 +138,7 @@ reg Tuple_output;
 
 */
 
-defparam Tuple_FIFO.WRITE_DATA_WIDTH = 36; 
+defparam Tuple_FIFO.WRITE_DATA_WIDTH = 37; 
 defparam Tuple_FIFO.FIFO_WRITE_DEPTH = 512; 
 defparam Tuple_FIFO.PROG_FULL_THRESH = 287; 
 defparam Tuple_FIFO.PROG_EMPTY_THRESH = 287; 
@@ -225,7 +225,7 @@ RSE_core Core
 );
 
 assign Tuple_FIFO_wr_en = tuple_in_fec_input_VALID;
-assign Tuple_FIFO_din = tuple_in_fec_input_DATA[35:0];
+assign Tuple_FIFO_din = tuple_in_fec_input_DATA;
 assign Tuple_FIFO_rd_en = ~Tuple_output & ~Tuple_FIFO_empty;
 
 assign Data_FIFO_wr_en = packet_in_packet_in_VAL;

@@ -1,0 +1,8 @@
+.metadata
+webtalk
+*.bit
+*.a
+*.o
+*.elf
+*.log
+

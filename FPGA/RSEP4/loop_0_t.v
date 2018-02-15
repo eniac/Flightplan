@@ -70,7 +70,7 @@ reg [15:0] tuple_out_loop_output_DATA /* undriven */ ;
 
 */
 
-reg [15:0] regs [99:0];
+reg [15:0] regs [1:0];
 wire valid;
 wire [7:0] addr;
 wire [15:0] max;
@@ -83,7 +83,7 @@ assign max   = tuple_in_loop_input_DATA[15:0];
 
 always @( posedge clk_line ) begin
 	if ( rst ) begin
-		for( i = 0; i < 100; i = i + 1 ) begin
+		for( i = 0; i < 2; i = i + 1 ) begin
         	        regs[i] <= 0;
         	end
 	end
@@ -98,9 +98,7 @@ always @( posedge clk_line ) begin
 				regs[addr] = 0;						
 			end
 		end
-		else  begin
-			tuple_out_loop_output_VALID <= 0;
-		end
+		tuple_out_loop_output_VALID <= tuple_in_loop_input_VALID;
 	end
 end
 

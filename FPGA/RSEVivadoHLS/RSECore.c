@@ -24,6 +24,7 @@ typedef struct
   uint16 Offset;
   uint16 Index;
   uint4 Operation;
+  uint1 Valid;
 } tuple;
 
 typedef struct
@@ -50,7 +51,24 @@ void RSE_core(tuple Tuple, interface * Data, interface Parity[WORDS_PER_OUTPUT_P
 
 #pragma HLS ARRAY_PARTITION variable=parity_buffer complete dim=0
 
-  if (Tuple.Operation & OP_ENCODE_PACKET)
+  if (Tuple.Valid == 0)
+  {
+    int i = 0;
+    while (1)
+    {
+      Parity[i].Data = Data[i].Data;
+      Parity[i].End_of_frame = Data[i].End_of_frame;
+      Parity[i].Start_of_frame = Data[i].Start_of_frame;
+      Parity[i].Count = Data[i].Count;
+      Parity[i].Error = Data[i].Error;
+
+      if (Data[i].End_of_frame)
+        break;
+
+      i++;
+    }
+  }
+  else if (Tuple.Operation & OP_ENCODE_PACKET)
   {
     int i = 0;
     while (1)

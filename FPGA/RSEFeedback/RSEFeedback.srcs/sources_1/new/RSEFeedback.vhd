@@ -58,7 +58,7 @@ architecture RTL of RSEFeedback is
       wr_rst_busy : out std_logic;
       rd_rst_busy : out std_logic
     );
-END COMPONENT;
+end component;
 
   signal mux_sel             : std_logic;
   signal dup_en              : std_logic;
