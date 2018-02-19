@@ -9,7 +9,7 @@ rm -rf xsim.dir
 set -euo pipefail
 set -x
 find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv % || true; } 
-find -name "*.vhd" | { xargs -I % /home/gyzuh/SDx/SDx/2017.1/Vivado/bin/xvhdl % || true; }
+find -name "*.vhd" | { xargs -I % ${XILINX_VIVADO}/bin/xvhdl % || true; }
 mkdir -p xsim.dir/xsc
 find -name "*.c" | xargs ${XILINX_VIVADO}/bin/xsc -mt off -v 1
 LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -c -fPIC -o xsim.dir/xsc/rse.o fec_0_t.TB/rse.cpp
