@@ -1,6 +1,6 @@
 All: RSEFeedbackVivado
 
-RSEFeedbackVivado: Sources/RSEFeedback.vhd Sources/component.xml Sources/fifo_generator_0.xci
+RSEFeedbackVivado: Sources/RSEFeedback.vhd Sources/component.xml Sources/fifo_generator_0/fifo_generator_0.xci
 	vivado -mode batch -source Create_project.tcl
 
 clean:

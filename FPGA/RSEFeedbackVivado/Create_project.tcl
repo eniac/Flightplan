@@ -97,7 +97,6 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 
 # Set IP repository paths
 set obj [get_filesets sources_1]
-#set_property "ip_repo_paths" "[file normalize "$origin_dir/RSEFeedbackVivado/RSEFeedbackVivado.srcs/sources_1"]" $obj
 
 # Rebuild user ip_repo's index before adding any source files
 update_ip_catalog -rebuild
@@ -132,7 +131,7 @@ set_property -name "top" -value "RSEFeedback" -objects $obj
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
- "[file normalize "$origin_dir/Sources/fifo_generator_0.xci"]"\
+ "[file normalize "$origin_dir/Sources/fifo_generator_0/fifo_generator_0.xci"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

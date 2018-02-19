@@ -87,13 +87,6 @@
     <spirit:version>1.00.a</spirit:version>
     <spirit:componentInstances>
       <spirit:componentInstance>
-        <spirit:instanceName>RSEFeedbackVivado_0</spirit:instanceName>
-        <spirit:componentRef spirit:library="user" spirit:name="RSEFeedbackVivado" spirit:vendor="upenn.edu" spirit:version="1.0"/>
-        <spirit:configurableElementValues>
-          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_RSEFeedbackVivado_0_0</spirit:configurableElementValue>
-        </spirit:configurableElementValues>
-      </spirit:componentInstance>
-      <spirit:componentInstance>
         <spirit:instanceName>XilinxSwitch_0</spirit:instanceName>
         <spirit:componentRef spirit:library="sdnet" spirit:name="XilinxSwitch" spirit:vendor="xilinx.com" spirit:version="1.0"/>
         <spirit:configurableElementValues>
@@ -250,6 +243,13 @@
           <spirit:configurableElementValue spirit:referenceId="PSU__NUM_FABRIC_RESETS">2</spirit:configurableElementValue>
         </spirit:configurableElementValues>
       </spirit:componentInstance>
+      <spirit:componentInstance>
+        <spirit:instanceName>RSEFeedbackVivado_0</spirit:instanceName>
+        <spirit:componentRef spirit:library="user" spirit:name="RSEFeedbackVivado" spirit:vendor="upenn.edu" spirit:version="1.0"/>
+        <spirit:configurableElementValues>
+          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_RSEFeedbackVivado_0_0</spirit:configurableElementValue>
+        </spirit:configurableElementValues>
+      </spirit:componentInstance>
     </spirit:componentInstances>
     <spirit:interconnections>
       <spirit:interconnection>
@@ -327,11 +327,11 @@
       <spirit:adHocConnection>
         <spirit:name>M00_AXIS_ACLK_1</spirit:name>
         <spirit:internalPortReference spirit:componentRef="zynq_ultra_ps_e_0" spirit:portRef="pl_clk1"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line"/>
         <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="clk_line"/>
         <spirit:internalPortReference spirit:componentRef="proc_sys_reset_1" spirit:portRef="slowest_sync_clk"/>
         <spirit:internalPortReference spirit:componentRef="proc_sys_reset_2" spirit:portRef="slowest_sync_clk"/>
         <spirit:internalPortReference spirit:componentRef="system_ila_0" spirit:portRef="clk"/>
+        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="ACLK"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="M00_AXIS_ACLK"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="ACLK"/>
@@ -406,8 +406,8 @@
       <spirit:adHocConnection>
         <spirit:name>proc_sys_reset_2_peripheral_reset</spirit:name>
         <spirit:internalPortReference spirit:componentRef="proc_sys_reset_2" spirit:portRef="peripheral_reset"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line_rst"/>
         <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="clk_line_rst"/>
+        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line_rst"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>util_vector_logic_0_Res</spirit:name>
@@ -442,8 +442,8 @@
       <spirit:adHocConnection>
         <spirit:name>xlconstant_3_dout</spirit:name>
         <spirit:internalPortReference spirit:componentRef="zynq_ultra_ps_e_0" spirit:portRef="emio_gpio_o"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="enable_processing"/>
         <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="enable_processing"/>
+        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="enable_processing"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>xxv_ethernet_0_rx_clk_out_0</spirit:name>
