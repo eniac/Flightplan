@@ -1,8 +1,8 @@
 <project xmlns="com.autoesl.autopilot.project" name="RSEVivadoHLS" top="RSE_core">
     <includePaths/>
     <libraryPaths/>
-    <Simulation>
-        <SimFlow name="csim" csimMode="0" lastCsimMode="0" compiler="true"/>
+    <Simulation argv="">
+        <SimFlow name="csim" ldflags="" mflags="" csimMode="0" lastCsimMode="0" compiler="true"/>
     </Simulation>
     <files xmlns="">
         <file name="../rsetest.c" sc="0" tb="1" cflags=" "/>
