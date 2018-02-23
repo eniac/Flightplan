@@ -95,21 +95,21 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
 
-# Set IP repository paths
-set obj [get_filesets sources_1]
-
-# Rebuild user ip_repo's index before adding any source files
-update_ip_catalog -rebuild
-
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
+ "[file normalize "$origin_dir/Sources/Config.vhd"]"\
  "[file normalize "$origin_dir/Sources/RSEFeedback.vhd"]"\
  "[file normalize "$origin_dir/Sources/component.xml"]"\
 ]
 add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
+set file "$origin_dir/Sources/Config.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
 set file "$origin_dir/Sources/RSEFeedback.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
@@ -175,7 +175,6 @@ if {[string equal [get_runs -quiet synth_1] ""]} {
   set_property flow "Vivado Synthesis 2017" [get_runs synth_1]
 }
 set obj [get_runs synth_1]
-set_property -name "needs_refresh" -value "1" -objects $obj
 
 # set the current synth run
 current_run -synthesis [get_runs synth_1]

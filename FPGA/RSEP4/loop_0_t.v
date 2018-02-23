@@ -33,6 +33,8 @@
 
 `timescale 1 ps / 1 ps
 
+`include "Configuration.v"
+
 module loop_0_t (
 	clk_line,
 	rst,
@@ -45,45 +47,28 @@ module loop_0_t (
 input clk_line /* unused */ ;
 (* polarity = "high" *) input rst /* unused */ ;
 input tuple_in_loop_input_VALID /* unused */ ;
-input [24:0] tuple_in_loop_input_DATA /* unused */ ;
+input [`FEC_PACKET_INDEX_WIDTH + `FEC_REG_ADDR_WIDTH:0] tuple_in_loop_input_DATA /* unused */ ;
 output tuple_out_loop_output_VALID /* undriven */ ;
-output [15:0] tuple_out_loop_output_DATA /* undriven */ ;
+output [`FEC_PACKET_INDEX_WIDTH - 1:0] tuple_out_loop_output_DATA /* undriven */ ;
 
 reg tuple_out_loop_output_VALID /* undriven */ ;
-reg [15:0] tuple_out_loop_output_DATA /* undriven */ ;
+reg [`FEC_PACKET_INDEX_WIDTH - 1:0] tuple_out_loop_output_DATA /* undriven */ ;
 
 
-
-
-/* Tuple format for input: tuple_in_loop_input
- 	[64:64]	: stateful_valid_0
-	[63:32]	: addr
-	[31:0]	: max
-
-*/
-
-
-
-
-/* Tuple format for output: tuple_out_loop_output
- 	[31:0]	: result_0
-
-*/
-
-reg [15:0] regs [1:0];
+reg [`FEC_PACKET_INDEX_WIDTH - 1:0] regs [`FEC_REG_COUNT - 1:0];
 wire valid;
-wire [7:0] addr;
-wire [15:0] max;
+wire [`FEC_REG_ADDR_WIDTH - 1:0] addr;
+wire [`FEC_PACKET_INDEX_WIDTH - 1:0] max;
 
 integer i;
 
-assign valid = tuple_in_loop_input_DATA[24];
-assign addr  = tuple_in_loop_input_DATA[23:16];
-assign max   = tuple_in_loop_input_DATA[15:0];
+assign valid = tuple_in_loop_input_DATA[`FEC_PACKET_INDEX_WIDTH + `FEC_REG_ADDR_WIDTH];
+assign addr  = tuple_in_loop_input_DATA[`FEC_PACKET_INDEX_WIDTH + `FEC_REG_ADDR_WIDTH - 1:`FEC_PACKET_INDEX_WIDTH];
+assign max   = tuple_in_loop_input_DATA[`FEC_PACKET_INDEX_WIDTH - 1:0];
 
 always @( posedge clk_line ) begin
 	if ( rst ) begin
-		for( i = 0; i < 2; i = i + 1 ) begin
+		for( i = 0; i < `FEC_REG_COUNT; i = i + 1 ) begin
         	        regs[i] <= 0;
         	end
 	end

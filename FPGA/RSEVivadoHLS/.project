@@ -42,6 +42,11 @@
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/solution1/.tcls</location>
 		</link>
 		<link>
+			<name>source/Configuration.h</name>
+			<type>1</type>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEConfig/Configuration.h</location>
+		</link>
+		<link>
 			<name>source/Encoder.c</name>
 			<type>1</type>
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/Encoder.c</location>

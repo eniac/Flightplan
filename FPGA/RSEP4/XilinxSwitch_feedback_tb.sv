@@ -246,7 +246,29 @@ reg [1:0] bresp;
 
 
 
-initial begin
+string packet_file = "Packet.user"; 
+
+
+
+string tuple_file = "Tuple.user"; 
+
+
+
+import "DPI-C" context function void XilinxSwitch_DPI( 
+    input string t_packet_file,             
+    input int    t_packet_in_type,          
+    input string t_tuple_file,              
+    input int    t_packet_out_type,         
+    input int    t_bus_width,               
+    input int    t_verbosity                
+);                                          
+
+
+
+ initial begin
+    if ($value$plusargs("PKT=%s", packet_file)) begin end
+    if ($value$plusargs("TUP=%s",  tuple_file)) begin end
+    XilinxSwitch_DPI(packet_file, 0, tuple_file, 1, 64, 1);
     fw_done = 0;
     stim_file = 1;
     check_file = 1;

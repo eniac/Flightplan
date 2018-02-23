@@ -33,137 +33,132 @@
 #include "xilinx.p4"
 #include "extern.p4"
 
-#define DUPBACK_E_PORT 0xD
+typedef bit<48> MacAddress;
 
-typedef bit<48>     MacAddress;
-
-header veth_h {
-    MacAddress          dst;
-    MacAddress          src;
-    bit<1>             	vx;
-    bit<15>             type;
+header eth_h
+{
+	MacAddress	dst;
+	MacAddress	src;
+	bit<1>		encoded;
+	bit<15>		type;
 }
 
-header vid_h {
-	bit<VTAG_SIZE>			id;
+header fec_h
+{
+	bit<1>				parity;
+	bit<FEC_BLOCK_INDEX_WIDTH>	block_index;
+	bit<FEC_PACKET_INDEX_WIDTH>	packet_index;
 }
 
-/* for passing global states between control blocks
-	NOT for forwarding */
-header state_h{
-	bit<1> dummy;
-	bit<1> encoded;
-	bit<1> fec_data;
+header x_h
+{
+	bit<1>	dummy;
 }
 
 struct headers_t {
-    veth_h         		veth;
-	vid_h 				vid;
-	state_h 			state;
+	eth_h	eth;
+	fec_h	fec;
+	x_h	x;
 }
 
-@Xilinx_MaxPacketRegion(1518*8)  // in bits
-parser Parser(packet_in pkt, out headers_t hdr) {
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)  // in bits
+parser Parser(packet_in pkt, out headers_t hdr)
+{
+	state start
+	{
+		pkt.extract(hdr.eth);
+		transition select(hdr.eth.encoded)
+		{
+			0       : accept;
+			1       : parse_fec;
+			default : accept;
+	        }
+	}
 
-    state start {
-        pkt.extract(hdr.veth);
-        transition select(hdr.veth.vx) {
-			0  : accept;
-            1  : parse_veth;
-            default : accept;
-        }
-    }
-
-    state parse_veth {
-		pkt.extract(hdr.vid);
-        transition accept;
-    }
+	state parse_fec
+	{
+		pkt.extract(hdr.fec);
+	        transition accept;
+	}
 }
 
-control Forward(inout headers_t hdr, inout switch_metadata_t ioports) {
+control Forward(inout headers_t hdr, inout switch_metadata_t ioports)
+{
+	bit<FEC_PACKET_INDEX_WIDTH>	index;
+	bit<FEC_PACKET_INDEX_WIDTH>	max;
+	bit<FEC_OFFSET_WIDTH>		payload_offset;
+	bit<FEC_REG_ADDR_WIDTH>		reg_addr;
+	bit<FEC_OP_WIDTH>		op;
 
-	bit<REG_SIZE> index;
-	bit<REG_SIZE> max;
-	bit<REG_SIZE> index_new;
-	bit<REG_SIZE> payload_offset;
-	bit<REG_ADDR_SIZE> reg_addr;
-	bit<4> op;
-
-    apply {
-
-		hdr.state.encoded = 0;
-		hdr.state.fec_data = 0;
+	apply
+	{
 		op = 0;
-
 		reg_addr = 0;
 		max = 0;
-		if (hdr.veth.vx == 0)
+
+		if (hdr.eth.encoded == 0)
 		{
-			op = OP_ENCODE_PACKET;
+			op = FEC_OP_ENCODE_PACKET;
 			reg_addr = 0;
-			max = FEC_QUEUE_NUMBER;
-			payload_offset = ETH_HEADER_SIZE;
+			max = FEC_K;
+			payload_offset = FEC_ETH_HEADER_SIZE;
 		}
 		else
 		{
-			op = OP_GET_ENCODED;
+			op = FEC_OP_GET_ENCODED;
 			reg_addr = 1;
-			max = FEC_PARITY_NUMBER;
-			payload_offset = VETH_HEADER_SIZE;
+			max = FEC_H;
+			payload_offset = FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE;
 		}
 
 		index = loop(reg_addr, max);
-		index_new = index;
 
-		if (hdr.veth.vx == 0)
+		hdr.fec.block_index = 0;
+		hdr.fec.packet_index = (bit<FEC_PACKET_INDEX_WIDTH>) index;
+
+		if (hdr.eth.encoded == 0)
 		{
 			/* Encode */
-			hdr.veth.vx = 1;
-			hdr.vid.id = (bit<VTAG_SIZE>)index;
-			hdr.state.fec_data = 1;
-			index_new = index + 1;
 
 			if (index == 0)
 			{
-				op = op | OP_START_ENCODER;
-			}
-
-			if (index < FEC_PARITY_NUMBER)
-			{
-				ioports.egress_port = DUPBACK_E_PORT;
+				op = op | FEC_OP_START_ENCODER;
 			}
 			
+			hdr.fec.parity = 0;
+			hdr.eth.encoded = 1;
 		}
 		else 
 		{
 			/* send encoded */
-			index = index + FEC_QUEUE_NUMBER;
+			index = index + FEC_K;
 
-			index_new = index + 1;
-
-			if (index < FEC_PARITY_NUMBER)
-			{
-				ioports.egress_port = DUPBACK_E_PORT;
-			}
-
-			hdr.state.encoded = 1;
-			hdr.veth.vx = 1;
-			hdr.vid.id = (bit<VTAG_SIZE>)index;
-			hdr.vid.id = hdr.vid.id | PARITY_FLAG;
-
+			hdr.fec.parity = 1;
 		}
 
-		hdr.state.dummy = fec(op, index, payload_offset);
+		if (index < FEC_H)
+		{
+			ioports.egress_port = FEC_DUPLICATE_OUTPUT_PORT;
+		}
+		else
+		{
+			ioports.egress_port = FEC_REGULAR_OUTPUT_PORT;
+		}
+
+		hdr.fec.setValid();
+
+		hdr.x.dummy = fec(op, index, payload_offset);
 
     }
 }
 
-@Xilinx_MaxPacketRegion(1518*8)  // in bits
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)  // in bits
 control Deparser(in headers_t hdr, packet_out pkt) {
-    apply {
-        pkt.emit(hdr.veth);
-		pkt.emit(hdr.vid);
-    }
+	apply
+	{
+		pkt.emit(hdr.eth);
+		pkt.emit(hdr.fec);
+	}
 }
 
 XilinxSwitch(Parser(), Forward(), Deparser()) main;
