@@ -178,6 +178,18 @@ In no particular order:
 
 Have low locality of traffic (wrt racks) to avoid correlated failures (i.e., data and compute is spread out) wrt power and hardware~\cite{jupiter}.
 
+How different designs deal with failure
+Fat Tree~\cite{Al-Fares:2008:SCD:1402946.1402967} -- relies on explicit scheduling of large flows. BFD.
+VL2~\cite{Greenberg:2011:VSF:1897852.1897877}
+PortLand~\cite{NiranjanMysore:2009:PSF:1594977.1592575}
+TRILL~\cite{TRILL}
+SEATTLE~\cite{Kim:2008:FSS:1402946.1402961}
+Jupiter~\cite{Singh:2016:JRD:2991470.2975159}
+BCube~\cite{Guo:2009:BHP:1594977.1592577}
+Shadow MACs~\cite{Agarwal:2014:SMS:2620728.2620758}
+
+BFD~\cite{BFD}
+
 
 
 \section{Mitigating network mishaps}
@@ -203,7 +215,7 @@ How to pair boosters together.
 This interferes with load-balancing.
   Or how can load-balancing take failing links into account.
 
-  background~\cite{cite http://www.comp.nus.edu.sg/~yuhf/eec-sigcomm10.pdf}
+  background~\cite{Chen:2012:EEE:2182751.2182754}
 
 How sensitive are we to topology, addressing schemes, and routing strategy (including load balancing) that might be in place to utilise fan-out or path diversity
 (We don't want to get too involved in traffic diffusion, ideally, but can it be escaped?)
@@ -228,7 +240,7 @@ longer.
   \item If the switch-ToR link fails, the whole rack (~30x links) are
     affected, whereas if a host-ToR link fails then that's a single link.
   \item Similarly, addressing between FEC-protected hosts is reduced by a
-    factor of ~30, since we can make use of hierarchical addressing. This
+    factor of \~30, since we can make use of hierarchical addressing. This
     affects the number of problematic links we can mitigate against.
   \item Having host-level boosters would be very expensive, to purchase, power, and connect the boosters to each host. Rather than improve things for individual hosts at high expense, we seek improve things for racks at moderate expense.
 \end{itemize}
