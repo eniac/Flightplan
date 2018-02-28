@@ -31,6 +31,8 @@
 \usepackage{xspace}
 \newcommand{\OurSys}{Wharf\xspace}
 
+\usepackage{algorithm2e}
+
 \begin{document}
 \title{Mitigating faulty links using in-network computing}
 %\title{SIG Proceedings Paper in LaTeX Format}
@@ -160,14 +162,49 @@ test-bed that includes programmable switches and reconfigurable hardware.
 
 \section{Introduction}
 
+In this paper we describe \OurSys, an in-network distributed mitigation for
+faulty links.  We claim that our design requires minimal configuration, is
+transparent to end-points~\cite{Saltzer84end-to-endarguments} and does not
+conflict with network architecture choices (e.g., what topology to use and how
+to route over it). We model \OurSys using ns-3 and evaluate implementations
+for CPUs and FPGAs.
+
 
 \section{Background}
-Fat-tree topology, and port density.
-CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}.
+%Fat-tree topology, and port density.
+%CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}.
 
 \section{Design}
 For simplicity we assume that the underlying network is Ethernet, but this is
 not a requirement.
+
+\paragraph{Link monitoring.}
+  We continuosly poll network port counters to infer malfunctioning modules or links.
+
+\paragraph{Normal operation.}
+  Frames are forwarded to non-faulty links as normal.
+
+\paragraph{Failing links.}
+  When a frame is to be forwarded to a faulty link, we act according to our policy:
+  \begin{itemize}
+    \item Drop the packet (if the link has been disabled); or
+    \item Classify the packet, encode it, and forward.
+  \end{itemize}
+
+The policy details:
+\begin{itemize}
+  \item How much buffer to apportion for queueing.
+      And what to do when the buffer is filled.
+  \item What are the traffic classifications.
+      And how does each classification map into parameters for FEC.
+      Timeout for each classification, for encoding and decoding.
+      When the encoding timer expires, the remaining packet spaces are zeroed out to provide padding.
+\end{itemize}
+
+\paragraph{Receiving frames.}
+If the received frame is not \OurSys-encapsulated then forward it as normal.
+Otherwise buffer it and when sufficiently-many parity packets are received (or timer expires), decode the packets. Drop padding packets, and forward the other packets.
+
 
 \begin{figure}
   \centering
@@ -191,15 +228,13 @@ not a requirement.
 \end{figure}
 
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.2\paperwidth]{flowchart.pdf}
-  \caption{\label{fig:flowchart}Outline of \OurSys's behaviour.}
-\end{figure}
-
-
 \section{Implementation}
 \section{Evaluation}
+We evaluate \OurSys using different types of traffic to measure its improvement
+to application-level behaviour in the presence of lossy links.
+
+%We run \OurSys in 3 configurations: outside the switch, on the switch, and in the switch.
+
 \section{Conclusion}
 
 \bibliographystyle{ACM-Reference-Format}
