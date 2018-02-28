@@ -28,6 +28,7 @@
 
 \acmPrice{15.00}
 
+\usepackage{xspace}
 \newcommand{\OurSys}{Wharf\xspace}
 
 \begin{document}
@@ -158,29 +159,42 @@ test-bed that includes programmable switches and reconfigurable hardware.
 \maketitle
 
 \section{Introduction}
+
+
 \section{Background}
 Fat-tree topology, and port density.
 CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}.
 
 \section{Design}
+For simplicity we assume that the underlying network is Ethernet, but this is
+not a requirement.
+
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{header_format.pdf}
-  \caption{\label{fig:format}\FIXME{header format}}
+  \caption{\label{fig:format}Switches can have multiple links between them.
+  Traffic on faulty links is encapsulated as shown above: the frame's EtherType
+  is moved inside the \OurSys tag (and later moved back after the frame crosses
+  the link), the frame's EtherType is changed to \OurSys, and the packet is
+  classified to a particular Traffic Class and given a transient link-local
+  identifier.}
 \end{figure}
 
 
 \begin{figure}
   \centering
   \includegraphics[width=0.3\paperwidth]{example_network.pdf}
-  \caption{\label{fig:example-net}\FIXME{example network}}
+  \caption{\label{fig:example-net}An example network consisting of four
+  switches (S1-S4) and four hosts (H1-H4). Each link is assumed to have
+  capacity $R$ unless the link is faulty, in which case it has capacity $F < R$.
+  In this example, the failing link diminishes the bandwidth of H1.}
 \end{figure}
 
 
 \begin{figure}
   \centering
   \includegraphics[width=0.2\paperwidth]{flowchart.pdf}
-  \caption{\label{fig:flowchart}\FIXME{flowchar}}
+  \caption{\label{fig:flowchart}Outline of \OurSys's behaviour.}
 \end{figure}
 
 
