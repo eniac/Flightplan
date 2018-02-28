@@ -98,7 +98,7 @@
 
 \begin{abstract}
 Failing network links are usually disabled, and packets are routed around them
-until the links are repaired.  This is done despite it often being possible
+until the links are repaired.  But it is often possible
 to utilise some of a failing link's capacity. Losing what remains of a link's
 capacity is deemed preferable to the erratic effect that unreliable links can
 have on application-level behaviour.
@@ -110,7 +110,8 @@ can help mitigate rolling failures in datacenter networks, and that our design
 can interoperate with existing network architecture and configuration choices,
 such as for multi-path routing.
 
-We evaluate our design by using an ns-3 model, and evalaute our implementation on a physical test-bed that includes programmable switches and reconfigurable hardware. We find that we can reliably improve \FIXME{parameter} by \FIXME{proportion}.
+We model our design using ns-3, and evaluate our implementation on a physical
+test-bed that includes programmable switches and reconfigurable hardware.
 \end{abstract}
 
 %
@@ -162,6 +163,27 @@ Fat-tree topology, and port density.
 CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}.
 
 \section{Design}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\paperwidth]{header_format.pdf}
+  \caption{\label{fig:format}\FIXME{header format}}
+\end{figure}
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{example_network.pdf}
+  \caption{\label{fig:example-net}\FIXME{example network}}
+\end{figure}
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.2\paperwidth]{flowchart.pdf}
+  \caption{\label{fig:flowchart}\FIXME{flowchar}}
+\end{figure}
+
+
 \section{Implementation}
 \section{Evaluation}
 \section{Conclusion}
