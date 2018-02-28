@@ -1,5 +1,7 @@
 \documentclass[sigconf]{acmart}
 
+\newcommand{\FIXME}[1]{{\color{red}{\textbf{FIXME:}#1}}}
+
 \usepackage{booktabs} % For formal tables
 
 % Copyright
@@ -33,7 +35,17 @@
 %\titlenote{Produces the permission block, and copyright information}
 %\subtitle{Extended Abstract}
 
-\author{Penn-DCOMP}
+\author{Anirudh Chelluri \kern1em
+ Andre DeHon \kern1em
+ Hans Giesen \kern1em
+ Boon Thau Loo \kern1em
+ Nishanth Prabhu \kern1em
+ Lei Shi \kern1em
+ John Sonchack \kern1em
+ Nik Sultana}
+\affiliation{%
+\institution{University of Pennsylvania}}
+
 %\author{Firstname Lastname}
 %\authornote{Note}
 %\orcid{1234-5678-9012}
@@ -80,7 +92,8 @@
 
 
 % The default list of authors is too long for headers}
-\renewcommand{\shortauthors}{F. Lastname et al.}
+%\renewcommand{\shortauthors}{F. Lastname et al.}
+\renewcommand{\shortauthors}{A. Chelluri et al.}
 
 
 \begin{abstract}
@@ -152,14 +165,19 @@ application's priorities.
 \maketitle
 
 \section{Introduction}
+Idea: handle common failure or exceptional modes in the network without invoking a controller.
+The controller is already running on each ToR.
+Shift in provision of network equipment~\cite{farrington2009data}
+
 
 \section{Mishaps in datacenter networks}
 In no particular order:
-1) Congestion,
+1) Congestion due to bursts in computation or traffic,
 2) Corruption (link/interface failure),
 3) Node (host/switch) failure.
 
 Have low locality of traffic (wrt racks) to avoid correlated failures (i.e., data and compute is spread out) wrt power and hardware~\cite{jupiter}.
+
 
 
 \section{Mitigating network mishaps}
@@ -171,13 +189,31 @@ or at the ToR.
 
 Control process to determine when to activate boosters, and possibly what parameters to use.
 
+\FIXME{Complementing ECN marking with marking for corruption?}
+
+
 \includegraphics[width=0.4\paperwidth]{topology.pdf}
 
-\section{Use-cases}
 
-\subsection{Forward Error Correction}
+\section{Design}
+\FIXME{diagram}
+When to activate booster, and on which flows.
+How to pair boosters together.
 
-According to Zhuo et al~\cite{} corruption affects fewer links (2-4\% -- wrt congested links or total links?), but the effects are heavier, and the failure is stable over time, when compared with congestion.
+This interferes with load-balancing.
+  Or how can load-balancing take failing links into account.
+
+  background~\cite{cite http://www.comp.nus.edu.sg/~yuhf/eec-sigcomm10.pdf}
+
+How sensitive are we to topology, addressing schemes, and routing strategy (including load balancing) that might be in place to utilise fan-out or path diversity
+(We don't want to get too involved in traffic diffusion, ideally, but can it be escaped?)
+
+
+
+
+\section{Example: Network-layer FEC}
+
+According to Zhuo et al~\cite{Zhuo:2017:UMP:3098822.3098849} corruption affects fewer links (2-4\% -- wrt congested links or total links?), but the effects are heavier, and the failure is stable over time, when compared with congestion.
 
 They only look at switch-switch links: we do not have any data whether server
 links are less likely to fail. Failures have low locality (not zero, because
@@ -200,25 +236,41 @@ longer.
 
 Technical issues:
 \begin{enumerate}
+  \item Link-layer source quenching when boosting, rather than relying on higher-layer protocols (e.g., TCP's congestion control).
   \item Placement (Need to specify network topology early on.)
   \item How the system should react to packet reordering, and retransmissions.
   \item Can FEC (and other boosters) be done independently from load-balancing?
   \item Interaction of FEC with error correction in PHY.
   \item How many failed links does the system tolerate with given resources?
   \item To what extent is corruption reduced to congestion by this work?
+  \item How interacts with multipath routing.
 \end{enumerate}
+
+We base our model on fat-tree topology~\cite{Al-Fares:2008:SCD:1402946.1402967}.
+  involves a lot of cabling, opportunities for link faults
+
+
+L2 network~\cite{PortLand} and label switching?    
+
+ns-3 Model
+
+\FIXME{Describe tagging format}
 
 FEC in PHY/medium. Link-level + frame-level + erasure vs error correction.
 
 What happens upon retransmission of TCP? Or are we able to eliminate retransmissions?
 
 
-\subsection{TBD}
-
-\section{Implementation}
+\section{Prototype implementation}
 Some bits done in P4, and other bits that can co-/entirely run on FPGA or a host's CPU.
 
+Streaming flits through SDNet block.
+
+source quench and slack buffer, similar to Stop and Go in Myrinet~\cite{342015}.
+
+
 \section{Evaluation}
+\FIXME{table/graph}
 Ultimately we'd like to show application-level service quality, but
 network-level performance might be a pragmatic surrogate.
 
@@ -235,12 +287,14 @@ Data centers:
 Eden.
 CorrOpt.
 CONGA.
+NaaS.
+NetAgg.
 
 Boosting elsewhere: JMS' work from the 90's.
 
 \section{Conclusion}
 
 \bibliographystyle{ACM-Reference-Format}
-\bibliography{sigproc} 
+\bibliography{paper}
 
 \end{document}
