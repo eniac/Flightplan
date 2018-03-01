@@ -170,6 +170,17 @@ and how to route over it). We model \OurSys using ns-3 and evaluate
 implementations for CPUs and FPGAs.
 
 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{example_network.pdf}
+  \caption{\label{fig:example-net}An example network consisting of four
+    switches (S1-S4) and four hosts (H1-H4). Faulty links are shown as dashed lines.
+    Each link is assumed to have capacity $R$ unless the link is faulty, in
+    which case it has capacity $F < R$.  In this example, the failing link
+    diminishes the bandwidth of H1.}
+\end{figure}
+
+
 \section{Background}
 %Fat-tree topology, and port density.
 %CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}.
@@ -247,18 +258,20 @@ in~\S\ref{sec:implementation}.
 
 \paragraph{Sending proxy.}
 \FIXME{pseudocode}    
+Fig.~\ref{fig:example-loss}
+Fig.~\ref{fig:example-loss2}
 For each port, need a single buffer with the largest $k+h$ for all $c$.
 All received tagged frames will be sent there and processed.
 Two more buffers: current $c$, and largest-received $n$.
 
 \paragraph{Receiving proxy.}
 \FIXME{pseudocode}    
+Fig.~\ref{fig:example-decode}
 \FIXME{usefulness of a block ID e.g., $b \in \mathbb{N} = \{0, 1\}$ to avoid collisions.}
 
-The received computes $T(c)$ to determine
+The received computes $T(c)$ to determine    
 If the received frame is not \OurSys-encapsulated then forward it as normal.
 Otherwise buffer it and when sufficiently-many parity packets are received (or timer expires), decode the packets. Drop padding packets, and forward the other packets.
-
 
 \begin{figure}
   \centering
@@ -271,17 +284,6 @@ Otherwise buffer it and when sufficiently-many parity packets are received (or t
   identifier.}
 \end{figure}
 
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.3\paperwidth]{example_network.pdf}
-  \caption{\label{fig:example-net}An example network consisting of four
-  switches (S1-S4) and four hosts (H1-H4). Each link is assumed to have
-  capacity $R$ unless the link is faulty, in which case it has capacity $F < R$.
-  In this example, the failing link diminishes the bandwidth of H1.}
-\end{figure}
-
-
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{loss_example.pdf}
@@ -291,11 +293,16 @@ Otherwise buffer it and when sufficiently-many parity packets are received (or t
   and their processing is sequential across that link.}
 \end{figure}
 
-
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{loss_example2.pdf}
   \caption{\label{fig:example-loss2}To mitigate bursty loss a block counter is added.}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\paperwidth]{decode_example.pdf}
+  \caption{\label{fig:example-decode}Prior to decoding each block is mapped to the buffer for its traffic class.}
 \end{figure}
 
 
