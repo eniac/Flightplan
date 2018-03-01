@@ -8,6 +8,9 @@ library UniSim;
 library UniMacro;
   use UniMacro.VComponents.all;
 
+library Work;
+  use Work.Config.all;
+
 entity RSEFeedback is
   port
   (
@@ -136,7 +139,7 @@ begin
       packet_cnt <= (others => '0');
     elsif rising_edge(clk_line) then
       if enable = '1' and tmp_rse_out_TLAST = '1' and tmp_rse_out_TVALID = '1' and rse_out_TREADY = '1' then
-        if unsigned(packet_cnt) + 1 < 12 then
+        if unsigned(packet_cnt) + 1 < FEC_K + FEC_H then
           packet_cnt <= std_logic_vector(unsigned(packet_cnt) + 1);
         else
           packet_cnt <= (others => '0');
@@ -153,7 +156,7 @@ begin
       dup_en <= '0';
     elsif rising_edge(clk_line) then
       if enable = '1' and tuple_in_VALID = '1' then
-        if unsigned(tuple_in_DATA(3 downto 0)) = 13 then
+        if unsigned(tuple_in_DATA(3 downto 0)) = 1 then
           dup_en <= '1';
         else
           dup_en <= '0';

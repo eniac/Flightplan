@@ -5,6 +5,8 @@
 #ifndef _FEC_H
 #define _FEC_H
 
+#include "Configuration.h"
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -24,9 +26,9 @@
 /***************************************************************************/
 #define     FEC_N           (1 << FEC_M)    /* 2^m = Max symbol value + 1 */
 //#define     FEC_MAX_N       12        /* Max packets in FEC block (< FEC_N) */
-#define     FEC_MAX_N       12 /* Max packets in FEC block (< FEC_N) */
-#define     FEC_MAX_H       4         /* MAX h parities (< FEC_N -1) */
-#define     FEC_MAX_K       (FEC_MAX_N - FEC_MAX_H)  /* MAX k data packets */
+#define     FEC_MAX_N       (FEC_MAX_K + FEC_MAX_H) /* Max packets in FEC block (< FEC_N) */
+//#define     FEC_MAX_H       4         /* MAX h parities (< FEC_N -1) */
+//#define     FEC_MAX_K       (FEC_MAX_N - FEC_MAX_H)  /* MAX k data packets */
 
 /***************************************************************************/
 /* FEC Block Definitions                                                   */

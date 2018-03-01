@@ -5,6 +5,8 @@
 #ifndef _FEC_H
 #define _FEC_H
 
+#include "Configuration.h"
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -40,9 +42,9 @@
 /* Codeword Definition (using m-bit symbols defined for FEC packet)        */
 /***************************************************************************/
 
-#define     FEC_MAX_N       12        /* Max packets in FEC block (< FEC_N) */
-#define     FEC_MAX_H       4                        /* MAX h parities */
-#define     FEC_MAX_K       (FEC_MAX_N - FEC_MAX_H)  /* MAX K data packets */
+#define     FEC_MAX_N       (FEC_MAX_K + FEC_MAX_H)        /* Max packets in FEC block (< FEC_N) */
+//#define     FEC_MAX_H       4                        /* MAX h parities */
+//#define     FEC_MAX_K       (FEC_MAX_N - FEC_MAX_H)  /* MAX K data packets */
 
 /***************************************************************************/
 /* FEC Block Definitions                                                   */

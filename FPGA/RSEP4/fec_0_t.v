@@ -33,6 +33,8 @@
 
 `timescale 1 ps / 1 ps
 
+`include "Configuration.v"
+
 module fec_0_t (
 	clk_line,
 	rst,
@@ -81,7 +83,7 @@ input [22:0] tuple_in_control_DATA /* unused */ ;
 output tuple_out_control_VALID /* undriven */ ;
 output [22:0] tuple_out_control_DATA /* undriven */ ;
 input tuple_in_fec_input_VALID /* unused */ ;
-input [36:0] tuple_in_fec_input_DATA /* unused */ ;
+input [`FEC_OP_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_OFFSET_WIDTH:0] tuple_in_fec_input_DATA /* unused */ ;
 output tuple_out_fec_output_VALID /* undriven */ ;
 output tuple_out_fec_output_DATA /* undriven */ ;
 
@@ -99,8 +101,8 @@ wire tuple_out_fec_output_DATA /* undriven */ ;
 
 wire Tuple_FIFO_wr_en;
 wire Tuple_FIFO_rd_en;
-wire [36:0] Tuple_FIFO_din;
-wire [36:0] Tuple_FIFO_dout;
+wire [`FEC_OP_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_OFFSET_WIDTH:0] Tuple_FIFO_din;
+wire [`FEC_OP_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_OFFSET_WIDTH:0] Tuple_FIFO_dout;
 wire Tuple_FIFO_empty;
 wire Tuple_FIFO_almost_full;
 
@@ -115,7 +117,7 @@ wire Core_start;
 wire Core_done;
 wire Core_idle;
 wire Core_ready;
-wire [36:0] Core_tuple;
+wire [`FEC_OP_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_OFFSET_WIDTH:0] Core_tuple;
 wire Core_tuple_ap_vld;
 wire [70:0] Core_data_dout;
 wire Core_data_empty_n;
@@ -126,19 +128,7 @@ wire Core_parity_ap_ack;
 
 reg Tuple_output;
 
-/* Tuple format for input: tuple_in_fec_input
- 	[40:40]	: stateful_valid
-	[39:32]	: operation
-	[31:0]	: index
-
-*/
-
-/* Tuple format for output: tuple_out_fec_output
- 	[0:0]	: result
-
-*/
-
-defparam Tuple_FIFO.WRITE_DATA_WIDTH = 37; 
+defparam Tuple_FIFO.WRITE_DATA_WIDTH = `FEC_OP_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_OFFSET_WIDTH + 1; 
 defparam Tuple_FIFO.FIFO_WRITE_DEPTH = 512; 
 defparam Tuple_FIFO.PROG_FULL_THRESH = 287; 
 defparam Tuple_FIFO.PROG_EMPTY_THRESH = 287; 
@@ -250,7 +240,7 @@ assign tuple_out_fec_output_VALID = packet_out_packet_out_VAL & packet_out_packe
                                     packet_out_packet_out_SOF;
 assign tuple_out_fec_output_DATA = 0;
 assign tuple_out_control_VALID = packet_out_packet_out_VAL & packet_out_packet_out_RDY &
-                                 packet_out_packet_out_SOF;;
+                                 packet_out_packet_out_SOF;
 assign tuple_out_control_DATA = 0;
 
 always @( posedge clk_line ) begin

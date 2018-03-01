@@ -12,29 +12,29 @@ public:
 
 	// tuple types
 	struct fec_input_t {
-		static const size_t _SIZE = 37;
+		static const size_t _SIZE = 23;
 		_LV<1> stateful_valid;
-		_LV<4> operation;
-		_LV<16> index;
-		_LV<16> data_offset;
-		fec_input_t& operator=(_LV<37> _x) {
-			stateful_valid = _x.slice(36,36);
-			operation = _x.slice(35,32);
-			index = _x.slice(31,16);
-			data_offset = _x.slice(15,0);
+		_LV<3> operation;
+		_LV<8> index;
+		_LV<11> payload_offset;
+		fec_input_t& operator=(_LV<23> _x) {
+			stateful_valid = _x.slice(22,22);
+			operation = _x.slice(21,19);
+			index = _x.slice(18,11);
+			payload_offset = _x.slice(10,0);
 			return *this;
 		}
-		_LV<37> get_LV() { return (stateful_valid,operation,index,data_offset); }
-		operator _LV<37>() { return get_LV(); } 
+		_LV<23> get_LV() { return (stateful_valid,operation,index,payload_offset); }
+		operator _LV<23>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\toperation = " + operation.to_string() + "\n" + "\t\tindex = " + index.to_string() + "\n" + "\t\tdata_offset = " + data_offset.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\toperation = " + operation.to_string() + "\n" + "\t\tindex = " + index.to_string() + "\n" + "\t\tpayload_offset = " + payload_offset.to_string() + "\n" + "\t)";
 		}
 		fec_input_t() {} 
-		fec_input_t( _LV<1> _stateful_valid, _LV<4> _operation, _LV<16> _index, _LV<16> _data_offset) {
+		fec_input_t( _LV<1> _stateful_valid, _LV<3> _operation, _LV<8> _index, _LV<11> _payload_offset) {
 			stateful_valid = _stateful_valid;
 			operation = _operation;
 			index = _index;
-			data_offset = _data_offset;
+			payload_offset = _payload_offset;
 		}
 	};
 	struct fec_output_t {
@@ -100,14 +100,6 @@ public:
 	// TODO: *** USER ENGINE MEMBERS ***
 	// TODO: ***************************
 
-#define FEC_QUEUE_NUMBER 8
-#define FEC_PARITY_NUMBER 4
-#define ETH_MTU (200)
-
-#define OP_START_ENCODER	(1<<0)
-#define OP_ENCODE_PACKET	(1<<1)
-#define OP_GET_ENCODED 		(1<<2)
-
 	// engine ctor
 	fec_0_t(std::string _n, std::string _filename = "") : _name(_n) {
 
@@ -141,32 +133,32 @@ public:
 		{
 			unsigned long op = fec_input.operation.to_ulong();
 			unsigned long index = fec_input.index.to_ulong();
-			unsigned long offset = fec_input.data_offset.to_ulong();
+			unsigned long offset = fec_input.payload_offset.to_ulong();
 			fec_sym* p;
 
 			std::cerr<<"packet size = "<<packet_in.size()<<std::endl;
 			packet_out = packet_in;
 
-			if (op & OP_START_ENCODER)
+			if (op & FEC_OP_START_ENCODER)
 			{
 				int ret = rse_init();
 				std::cout<< "[P4] rse init result: "<<ret<<std::endl;      
 
-				for (int i=0; i<FEC_QUEUE_NUMBER+FEC_PARITY_NUMBER; i++)
+				for (int i=0; i<FEC_K+FEC_H; i++)
 				{
 					if (fb.pdata[i] != nullptr)
 					{
 						delete fb.pdata[i];
 						fb.pdata[i] = nullptr;
 					}
-					fb.pdata[i] = new fec_sym[ETH_MTU];
+					fb.pdata[i] = new fec_sym[200];
 				}
 
-				fb.block_C = ETH_MTU;
-				fb.block_N = FEC_QUEUE_NUMBER+FEC_PARITY_NUMBER;
+				fb.block_C = 200;
+				fb.block_N = FEC_K+FEC_H;
 			}
 
-			if (op & OP_ENCODE_PACKET)
+			if (op & FEC_OP_ENCODE_PACKET)
 			{
 
 				p = fb.pdata[index];
@@ -183,20 +175,20 @@ public:
 				std::cout<< "[P4] Encoder: stored a packet at position " << index<<std::endl;
 
 
-				fec_sym y = FEC_QUEUE_NUMBER + index;                                  /* FEC block index */
+				fec_sym y = FEC_K + index;                                  /* FEC block index */
 				fec_sym z = FEC_MAX_N - index - 1;             /* Codeword index */
 				fb.cbi[y] = z;
 				fb.plen[y] = fb.block_C;
 				fb.pstat[y] = FEC_FLAG_WANTED;
 
-				if (index == FEC_QUEUE_NUMBER-1)
+				if (index == FEC_K-1)
 				{
 					rse_code(1);
 					fec_block_print();
 				}
 			}
 
-			if (op & OP_GET_ENCODED)
+			if (op & FEC_OP_GET_ENCODED)
 			{
 				std::cout<<"[P4] offset = "<<offset<<std::endl;
 				p = fb.pdata[index];
