@@ -268,7 +268,8 @@ mitigate against this, as shown in Fig.~\ref{fig:example-loss2}.
   locally on the switch, rather than remotely on a separate machine.
 
 \paragraph{Receiving proxy.}
-\OurSys-tagged frames are buffered as shown in Fig.~\ref{fig:example-decode}.
+\OurSys-tagged frames are buffered as shown in Fig.~\ref{fig:example-decode},
+and non-parity frames are untagged and forwarded immediately.
 For each $c$, when the buffer is full, or its $t$ (relative to when the first
 frame was buffered) expires, or a frame from a successive block arrives, then
 decoding is triggered. Decoding consists of using the parity frames to
@@ -277,12 +278,29 @@ is no more work to be done for this block.
 
 \paragraph{Sending proxy.}
 The pseudo-code is shown in Algorithm~\ref{alg:sending}.
+As with decoding, the encoding of a block (to produce parity frames) is
+triggered when the block is full (all $k$ frames have been accounted for) or
+$t$ for that $c$ expires (relative to when the first frame was inserted into
+the block). Non-parity frames are tagged and forwarded immediately.
+
+Due to its operation, the sending proxy can cause congestion at egress.
+For example, if $k = h$, and $R$ is 10Gbps, and we are receiving traffic bound for
+a faulty link at rate $R$, then we would need to send at 20Gbps if the encoder
+can run at line rate. There are two ways of dealing with this: we either buffer
+the traffic (using the space allocated in~\S\ref{sec:policy}) until the rate
+subsides, or signal the sending host to lower its sending rate, or both (by
+allocating some space for queueing, and source-quenching when this starts to
+run out).
+
 For feedback to hosts, to reduce congestion, we use layer-2 flow control.
 This is effective but drastic, since it cuts off \emph{all} the traffic that
 network interface would otherwise send (including traffic along non-faulty
-links). Higher-layer flow control would be difficult to interact with.
-The alternative choice is buffering, the allocation of which is part of the
-policy~(\S\ref{sec:policy}).
+links). Higher-layer flow control (e.g., TCP's) would be difficult to interact
+with. In the worst case the link's lossiness will be turned into
+congestion, which leads to loss, and higher-layer protocols can react to this.
+However, our reaction time to congestion can occur much more quickly than if
+we relied on higher-layer protocols, and this also reduces the amount of
+retransmitted traffic.
 
 \begin{algorithm}
 \caption{\label{alg:sending}Sending proxy}
