@@ -299,15 +299,15 @@ congestion as they normally would.
 \Input{frame to be forwarded}
 \Output{forwarding decision}
 \uIf(\tcc*[h]{Link has been disabled}){policy = drop}{
-drop frame
+drop frame\;
 }\Else(\tcc*[h]{Use FEC}){
   $c = P(\mathrm{frame})$ \tcc*[r]{Classify the frame}
   \uIf(\tcc*[h]{Block is being sent}){busy(c)}{
-drop frame
+drop frame\;
 }\Else{
   $\overline{\mathrm{frame}}$ = encapsulate($c, \mathrm{frame}$)\;
   addToBlock($c$, $\overline{\mathrm{frame}}$)\;
-  forward($\overline{\mathrm{frame}}$)\;
+  forward $\overline{\mathrm{frame}}$\;
 }
 }
 \caption{\label{alg:sending}Sending proxy}
