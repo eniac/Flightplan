@@ -305,7 +305,9 @@ drop frame
   \uIf(\tcc*[h]{Block is being sent}){busy(c)}{
 drop frame
 }\Else{
-  addToBlock($c$, frame) \tcc*[r]{And encapsulate}
+  $\overline{\mathrm{frame}}$ = encapsulate($c, \mathrm{frame}$)\;
+  addToBlock($c$, $\overline{\mathrm{frame}}$)\;
+  forward($\overline{\mathrm{frame}}$)\;
 }
 }
 \caption{\label{alg:sending}Sending proxy}
