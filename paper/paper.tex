@@ -262,6 +262,15 @@ mitigate against this, as shown in Fig.~\ref{fig:example-loss2}.
   modules or links. This is done as in
   CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}, but failure-inference is done
   locally on the switch, rather than remotely on a separate machine.
+  Sometimes a switch cannot itself realise if one of its link is
+  malfunctioning, since the malfunction would be inferrable from the adjacent
+  element's counters (e.g., through an increase in frame errors). Thus switches
+  might need to inform eachother about errors on the transmitting side. To do
+  this we employ LLDP and use a custom TLV to signal to the receiving switch
+  that the link (for traffic travelling in the opposite direction) is failing.
+  The switch's monitoring would then follow the policy to disable the link or
+  channel outgoing frames through the Sending proxy.
+
 
 \paragraph{Receiving proxy.}
 \OurSys-tagged frames are buffered as shown in Fig.~\ref{fig:example-decode},
