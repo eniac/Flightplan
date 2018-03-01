@@ -281,10 +281,11 @@ the block). Non-parity frames are tagged and forwarded immediately.
 
 Due to its operation, the sending proxy can cause congestion at egress.
 For example, if $k = h$, and we are receiving traffic bound for
-a faulty link at rate $R$, then we would need to send at $2R$ if the encoder
-can run at line rate. We simply drop new frames that cannot be put onto the
-link fast enough (i.e., before they are placed into a block). This lack of
-capacity is communicated by the $\mathit{busy}(c)$ predicate in
+a faulty link at rate $R$, then we would need to send at $2R$ at each interval
+of $k$ incoming frames, at which time the sending proxy produces $h$ additional
+frames for output. We simply drop new frames that cannot be put onto the link
+fast enough (i.e., before they are placed into a block). This lack of capacity
+is communicated by the $\mathit{busy}(c)$ predicate in
 Algorithm~\ref{alg:sending}, which indicates that the FEC computation is
 ongoing, or its results are still being serialised onto the medium. This loss
 will communicate to higher-layer protocols that congestion is occurring (both
