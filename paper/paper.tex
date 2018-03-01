@@ -34,7 +34,7 @@
 \usepackage{algorithm2e}
 
 \begin{document}
-\title{Mitigating faulty links using in-network computing}
+\title{In-network computing to the rescue of faulty links}
 %\title{SIG Proceedings Paper in LaTeX Format}
 %\titlenote{Produces the permission block, and copyright information}
 %\subtitle{Extended Abstract}
@@ -192,8 +192,9 @@ prototype.
 
 \OurSys infers failing links and follows a policy on how to process frames
 intended for those links. For all frames that cross failing links, we tag the
-frames and complement them with extra parity information to help the next hop
-recover frames that were lost in transit.
+frames and use a \emph{forward error-correction} scheme: we complement frames
+with extra parity frames to help the next hop recover frames that were lost in
+transit.
 
 In this section we describe \OurSys's policy choices for managing failing
 links, and how the chosen policy is followed in the network.
@@ -251,13 +252,14 @@ the Receiving proxy after ingress.
 
 \paragraph{\OurSys frame encapsulation}
 Frames sent over faulty links are encapsulated as shown in Fig.~\ref{fig:format}.
-Except for EtherType (whose size is standardised) the sizes of the tag's fields
+The original frame is fully encapsulated, and the new header consists of the original source and destination addresses, as well as a custom EtherType for \OurSys.
+After the Ethernet header we add a \OurSys tag, the field-sizes of which
 are deployment-specific: the sizes we use in our implementation are specified
 in~\S\ref{sec:implementation}.
 The information in the \OurSys tag is sufficient to distinguish blocks in
 non-bursty loss, as illustrated in Fig.~\ref{fig:example-loss}. If loss is
 bursty then an additional small number of bits can be added to the tag to
-mitigate against bursty losses, as shown in Fig.~\ref{fig:example-loss2}.
+mitigate against this, as shown in Fig.~\ref{fig:example-loss2}.
 
 \paragraph{Link monitoring agent.}
   We continuosly poll network port counters to infer malfunctioning transceiver
@@ -294,7 +296,8 @@ policy~(\S\ref{sec:policy}).
   is moved inside the \OurSys tag (and later moved back after the frame crosses
   the link), the frame's EtherType is changed to \OurSys, and the frame is
   classified to a particular Traffic Class and given a transient link-local
-  identifier.}
+  identifier: these are shown as $c$ and $n$ respectively in
+  Fig.~\ref{fig:example-loss}.}
 \end{figure}
 
 \begin{figure}
