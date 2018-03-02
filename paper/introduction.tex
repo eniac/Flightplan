@@ -1,0 +1,18 @@
+\section{Introduction}
+
+In this paper we describe \OurSys, an in-network distributed mitigation for
+faulty links.  We claim that our design requires minimal configuration, is
+transparent to end-points~\cite{Saltzer84end-to-endarguments} and does not
+conflict with existing network architecture choices (e.g., what topology to use
+and how to route over it). We model \OurSys using ns-3 and evaluate
+implementations for CPUs and FPGAs.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{example_network.pdf}
+  \caption{\label{fig:example-net}An example network consisting of four
+    switches (S1-S4) and four hosts (H1-H4). Faulty links are shown as dashed lines.
+    Each link is assumed to have capacity $R$ unless the link is faulty, in
+    which case it has capacity $F < R$.  In this example, the failing link
+    diminishes the bandwidth of H1.}
+\end{figure}
