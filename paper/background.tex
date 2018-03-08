@@ -1,5 +1,34 @@
 \section{Background}
-%Fat-tree topology, and port density.
-%CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}.
-%Sources of failure: switch, transceivers, link medium.
+A communication network is architected to handle variation in its state
+arising from environmental interference, component failure, congestion and
+corruption of data. In this paper we describe a technique to enhance the
+reliability of failing links.
 
+Our approach could be compared to existing link-layer mitigations for
+unreliable transmission, such as network-wide hop-by-hop protection, as in
+X.25~\cite{X25}, and link-layer retransmission as in the 802.11~\cite{WiFi} family of
+standards. The mitigation chosen for each system mostly depends on
+the transmission medium: X.25 was designed to work with unreliable links,
+whereas 802.11 uses a shared medium. We follow the same thinking,
+and our design is based on properties of the medium: we concentrate on wired
+10-Gbps Ethernet; typically such links are reliable (i.e., have low error
+rates) and they are not shared (i.e., point-to-point).
+Instead of using an ARQ scheme as in X.25 and 802.11, we use forward
+error-correction (FEC). This simplifies our design, obviating the need for
+windows and timers, and requires less memory to implement since the sender
+will not attempt to resend a frame.
+
+Our link-layer FEC complements the physical-layer FEC that is used in
+high-capacity Ethernet links: the physical-layer FEC helps the link sustain a
+given capacity over longer distances, whereas our FEC is intended to mitigate
+a errors that do not arise because of challenging environmental factors; rather
+the errors arise because of faults.
+
+Our approach also complements higher-layer reliability measures, as provided by
+TCP for example.  TCP provides end-to-end reliability, whereas we concentrate
+on link-level reliability. Unlike TCP, we are able to distinguish congestion
+from corruption as the cause of packet loss, and we are able to locate the
+lossy links in the network. Thus we can react to them much more quickly than
+TCP at the end-points. As with TCP, our mechanism results in a reduced
+transmission rate, but this is necessary since the link capacity has been
+reduce because of the link's failure.
