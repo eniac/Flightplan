@@ -32,3 +32,26 @@ lossy links in the network. Thus we can react to them much more quickly than
 TCP at the end-points. As with TCP, our mechanism results in a reduced
 transmission rate, but this is necessary since the link capacity has been
 reduce because of the link's failure.
+
+In this paper we focus on Clos
+topologies~\cite{Al-Fares:2008:SCD:1402946.1402967}, which are popular in
+practice~\cite[\S3.1]{Singh:2016:JRD:2991470.2975159}.
+We believe that our design could be useful in mitigating faulty links in a Clos
+topology due to the large number links they contain when compared to the
+hierarchical topology (thus are more exposed to link-related faults), and due
+to the challenge involved in making the most of (cheaper) low-radix switches:
+``A key drawback of the topology was the low radix of
+the ToR switch, which caused issues when links failed.
+If the left uplink of a source ToR and the right uplink
+of  a  destination  ToR  failed  within  a  MTTR  window,
+machines  on  these  ToRs  could  not  communicate  with
+each other even though they could communicate with
+other machines -- an intransitive disconnect not handled
+well by applications.''~\cite[\S3.1]{Singh:2016:JRD:2991470.2975159}
+
+Centralised approaches have been described in the literature to mitigate
+faulty links in a WAN~\cite{traffic-engineering-with-forward-fault-correction}
+and datacenters~\cite{Zhuo:2017:UMP:3098822.3098849}. In comparison our approach
+is not centralised, and takes place in the network: a switch can activate
+FEC with adjacent switches over faulty links, until the links are replaced or
+repaired.
