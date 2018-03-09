@@ -46,6 +46,44 @@ Ethernet subsystem, finally, returns the packets to the network.
 
 \subsection{Header processing}
 
+We use p4 to implement high-level packet processing logic and 
+
+use Xilinx P4-SDNet tool chain to translate p4 program into FPGA and integrate everything together
+
+The translation goes through 3 steps:
+
+First, from P4 to SDNet
+
+Second, from sdnet to RTL implementaion and C++ high-level simulation
+
+Third, add prepheral blocks with Vivado Design Suit
+
+what does P4 do?
+Parse packet, modify and tag headers as is described in Design chapter, extract payload for encoder,
+control encoder's operation
+
+what is SDNet?
+intermediate language, describes the interface, layout, and data flow of data processing engines
+at a level closer to RTL modules compared to P4.
+
+%introduce RTL/FPGA?
+
+several challenges:
+1. Both P4 and SDNet encourage programs working like a flow - you should never go back and touch anything
+a second time. This ensures the efficiency of the program but also makes it harder to express complex
+logics. We think it can be a future work to translate a loosely written program into one with such constrains.
+Currently we do this manually by keeping in mind a dependency graph of program lines and doing a topological sort
+to decide the final order. Using compound operations like $read\_and\_add\_one$ also helps mitigating this problem.
+
+2. P4 is designed particularly for header processing. There are many irrelevant things not supported but
+necessary in our work, especially payload processing. Most bookkeeping operations can be finished with the
+help of external functions like $read\_and\_add\_one$, later implemented in C or Verilog. We also integrate the encoder
+into the design by defining an external function for it. However, encoding payload through this interface can be a
+great waste for both time and space due to P4's nature of passing and processing a packet as a whole, no matter how long it is. Futunately, the
+flexibility we seek can be found by redirecting SDNet's internal packet flow, which works similar to a 64-bit AXI Stream bus,
+to the engine for encoder. This involves modification of less than 10 lines of code per SDNet program, and can be finished by a simple script.
+
+
 \subsection{FEC encoder}
 
 The current implementation is limited to packet encoding, but our intention is
