@@ -10,7 +10,7 @@ X.25~\cite{X25}, and link-layer retransmission as in the 802.11~\cite{WiFi} fami
 standards. The mitigation chosen for each system mostly depends on
 the transmission medium: X.25 was designed to work with unreliable links,
 whereas 802.11 uses a shared medium. We follow the same thinking,
-and our design is based on properties of the medium: we concentrate on wired
+and our design is based on properties of the medium: we concentrate on wireline
 10-Gbps Ethernet; typically such links are reliable (i.e., have low error
 rates) and they are not shared (i.e., point-to-point).
 Instead of using an ARQ scheme as in X.25 and 802.11, we use forward
@@ -35,7 +35,7 @@ reduce because of the link's failure.
 
 In this paper we focus on Clos
 topologies~\cite{Al-Fares:2008:SCD:1402946.1402967}, which are popular in
-practice~\cite[\S3.1]{Singh:2016:JRD:2991470.2975159}.
+practice~\cite{Singh:2016:JRD:2991470.2975159}.
 We believe that our design could be useful in mitigating faulty links in a Clos
 topology due to the large number links they contain when compared to the
 hierarchical topology (thus are more exposed to link-related faults), and due
