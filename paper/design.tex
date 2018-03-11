@@ -26,7 +26,8 @@ zeroed out to provide padding.)
 The values $(k, h, t)$ influence the latency with which frames belonging to $c$
 cross the switch, as well the likely recovery of frames belonging to $c$. For
 example, for interactive applications we would want to use a small $k$ and $t$.
-
+\amd{somewhere, maybe here, should make it clear that parity ``frames'' are
+  sent in separate packets ... not so clear to me from reading this}
 
 \subsection{Link-failure management policy}
 \label{sec:policy}
@@ -77,7 +78,7 @@ mitigate against this, as shown in Fig.~\ref{fig:example-loss2}.
   Sometimes a switch cannot itself realise if one of its link is
   malfunctioning, since the malfunction would be inferrable from the adjacent
   element's counters (e.g., through an increase in frame errors). Thus switches
-  might need to inform eachother about errors on the transmitting side. To do
+  might need to inform each other about errors on the transmitting side. To do
   this we employ LLDP and use a custom TLV to signal to the receiving switch
   that the link (for traffic travelling in the opposite direction) is failing.
   The switch's monitoring would then follow the policy to disable the link or
@@ -92,6 +93,12 @@ frame was buffered) expires, or a frame from a successive block arrives, then
 decoding is triggered. Decoding consists of using the parity frames to
 reconstruct the lost data frames; if no data frames have been lost then there
 is no more work to be done for this block.
+\amd{I've been assuming a simpler version...as soon as there are enough
+  packets to perform decoding, we do.  Then we discard any subsequent
+  packets that arrive in the block.  No timeout on decode.  On the FPGA
+  where we are designed for full rate when decoding, this doesn't slow
+  anything down.  On a processor that cannot maintian full-rate decoding,
+  not doing decoding could be a performance optimization.}
 
 \paragraph{Sending proxy.}
 The pseudo-code is shown in Algorithm~\ref{alg:sending}.
@@ -131,6 +138,8 @@ drop frame\;
   forward $\overline{\mathrm{frame}}$\;
 }
 }
+
+\amd{not show parity packet injection?}
 \caption{\label{alg:sending}Sending proxy}
 \end{algorithm}
 
