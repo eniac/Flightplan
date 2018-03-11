@@ -1,6 +1,9 @@
 \documentclass[sigconf]{acmart}
 
-\newcommand{\FIXME}[1]{{\color{red}{\textbf{FIXME:}#1}}}
+\newcommand{\FIXME}[1]{{\color{red}{\textbf{FIXME:} #1}}}
+\newcommand{\amdrev}[1]{{\color{blue}{#1}}}
+\newcommand{\amd}[1]{{\color{blue}{[\textbf{AMD Comment:} #1]}}}
+
 
 \usepackage{booktabs} % For formal tables
 
@@ -40,13 +43,15 @@
 %\subtitle{Extended Abstract}
 
 \author{Anirudh Chelluri \kern1em
- Andr\'e DeHon \kern1em
  Hans Giesen \kern1em
- Boon Thau Loo \kern1em
  Nishanth Prabhu \kern1em
  Lei Shi \kern1em
  John Sonchack \kern1em
- Nik Sultana}
+ Nik Sultana \kern1em
+% suggest PIs go last -- amd
+ Andr\'e DeHon \kern1em
+ Boon Thau Loo 
+}
 \affiliation{%
 \institution{University of Pennsylvania}}
 

@@ -21,7 +21,8 @@ will not attempt to resend a frame.
 Our link-layer FEC complements the physical-layer FEC that is used in
 high-capacity Ethernet links: the physical-layer FEC helps the link sustain a
 given capacity over longer distances, whereas our FEC is intended to mitigate
-a errors that do not arise because of challenging environmental factors; rather
+%a  -- typo? -- amd
+errors that do not arise because of challenging environmental factors; rather
 the errors arise because of faults.
 
 Our approach also complements higher-layer reliability measures, as provided by
@@ -32,9 +33,14 @@ lossy links in the network. Thus we can react to them much more quickly than
 TCP at the end-points. As with TCP, our mechanism results in a reduced
 transmission rate, but this is necessary since the link capacity has been
 reduce because of the link's failure.
+\amd{Somewhere (maybe here, maybe later) I think we need to make the case
+  that the FEC solution in this scenario results in (significantly?) less
+  reduction in transmission rater than the TCP retransmission mechanism.}
 
 In this paper we focus on Clos
-topologies~\cite{Al-Fares:2008:SCD:1402946.1402967}, which are popular in
+topologies~\cite{clos_bstj1953,Al-Fares:2008:SCD:1402946.1402967}, 
+%% surely we can give Clos credit for Clos networks... -- AMD
+which are popular in
 practice~\cite{Singh:2016:JRD:2991470.2975159}.
 We believe that our design could be useful in mitigating faulty links in a Clos
 topology due to the large number links they contain when compared to the
