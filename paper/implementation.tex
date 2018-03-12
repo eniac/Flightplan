@@ -1,6 +1,8 @@
 \section{Implementation}
 \label{sec:implementation}
 
+\newcommand{\leicom}[1]{{\color{blue}{[\textbf{Lei Comment:} #1]}}}
+
 \subsection{Overview}
 
 To meet the performance requirements of the data center, we implemented \OurSys
@@ -51,20 +53,19 @@ Ethernet subsystem, finally, returns the packets to the network.
 \subsection{Header processing}
 
 We use p4 to implement high-level packet processing logic and 
-
-use Xilinx P4-SDNet tool chain to translate p4 program into FPGA and integrate everything together
-
+use Xilinx P4-SDNet tool chain to translate p4 program into FPGA and integrate everything together.
 The translation goes through 3 steps:
 
 First, from P4 to SDNet
 
 Second, from sdnet to RTL implementaion and C++ high-level simulation
 
-Third, add prepheral blocks with Vivado Design Suit
+Third, add preipheral blocks with Vivado Design Suit
 
-what does P4 do?
-Parse packet, modify and tag headers as is described in Design chapter, extract payload for encoder,
-control encoder's operation
+To be specific, P4 is used for parsing packet, tagging headers as is described in Design chapter,
+extracting payload for encoder, and bookkeeping of packet classes.
+
+\iffalse
 
 what is SDNet?
 intermediate language, describes the interface, layout, and data flow of data processing engines
@@ -75,7 +76,61 @@ at a level closer to RTL modules compared to P4.
 
 %introduce RTL/FPGA?
 
-several challenges:
+\fi
+
+Although P4 is easy to use and works very well in fullfilling its duty by design,
+we did meet several technical challenges in our specific task:
+
+1. P4's variables only keep their values within the processing of one packet.
+The program is stateless across packets, which makes it impossible to track
+a sequence of packets. We implement stateful logics, e.g., registers, in
+FPGA and link to P4 programs through the interface of external functions.
+This makes it possible for P4 to do bookkeeping, but also raises another problem:
+
+2. Both P4 and SDNet encourage programs working like a flow. Parser, deparser,
+variable updates and external functions are all treated as processing blocks. 
+And all blocks are chained into a Directed Acyclic Graph(DAG), starting 
+from the input port, ending in the output port. Each packet only enters
+and exits a block at most once, including the stateful registers we defined.
+This ensures the efficiency of the program, especially low latency per packet, 
+but also makes it harder to express complex logics. For example, it is forbidden
+to read a value from a register, do some calculation and then write the updated 
+value back, since the register will be accessed twice, causing a cycle.
+Updating the same register at two different branches is also forbidden to
+avoid a potential cycle.
+
+Directly designing a program following these constraints can be very messy
+and unintuitive. So we start with a more modular program that violates the
+syntax slightly and then translate it to a valid program. We think it can be 
+a future work to do the translation automatically. Currently we do this manually
+by 1)keeping in mind a dependency graph of variable updates and external function 
+calls, 2)merging concurrent calls to the same function, 3)replacing cycles with
+atomic read-modify-write functions, and 4)doing a topological sort to decide 
+the final order of code. An observation here is that most calculations used
+for tracking packets can be replace by an atomic operation "read-and-add-one",
+which makes step 3) possible.
+
+3. As is mentioned above, there is no interface designed for payload processing
+in P4. The abstract P4 provides is to see a packet as a whole. This is usually 
+tolerable for headers since they tend to be short. However, it is desirable to process
+the payload, up to nearly 1500 bytes long in Ethernet, in a cut-through way, so that we can 
+save the space for a extremely wide bus and the long latency for buffering the 
+whole packet. This lack of feature incurs some difficulties in the integration of header processor and encoder.
+Although we can literally split the system into a P4 pre-processor, a P4 post-processor, 
+and an FPGA encoder block in-between like the concept model, leaving the payload parsing task to FPGA,
+it would require considerable engineering effort and largely nullify P4's convenience.
+
+Fortunately, we found that the generated SDNet intermediate code, although not well documented,
+in fact provides the abstract of a packet stream. We are able to embed the encoder in the P4 switch by
+defining it as an external function, leaving out the actual input data. Then we 
+redirect the data stream in the generated SDNet code to include the encoder block in
+its path. In this way, the encoder is able to receive the content of the packet as a stream
+on a 64-bit wide bus, while keeping the ability to use P4 for parsing and bookkeeping.
+The modification can be finished with a script in less than 10 lines of code.
+
+\leicom{well...... is this too long?}
+
+\iffalse
 1. Both P4 and SDNet encourage programs working like a flow - you should never go back and touch anything
 a second time. This ensures the efficiency of the program but also makes it harder to express complex
 logics. We think it can be a future work to translate a loosely written program into one with such constrains.
@@ -101,6 +156,7 @@ about that above).  Do we want to dig into the fact that P4 doesn't give us
 the expressiveness to stream payload processing, but SDNet does?  ... if
 so, we'll need to setup the problem better here and be clearer about the
 shape of the solution.}
+\fi
 
 \subsection{FEC Encoder}
 
