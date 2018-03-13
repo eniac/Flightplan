@@ -276,18 +276,6 @@
         <spirit:internalPortReference spirit:componentRef="axi_interconnect_0" spirit:portRef="ARESETN"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
-        <spirit:name>M00_AXIS_ACLK_1</spirit:name>
-        <spirit:internalPortReference spirit:componentRef="zynq_ultra_ps_e_0" spirit:portRef="pl_clk1"/>
-        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="clk_line"/>
-        <spirit:internalPortReference spirit:componentRef="proc_sys_reset_1" spirit:portRef="slowest_sync_clk"/>
-        <spirit:internalPortReference spirit:componentRef="proc_sys_reset_2" spirit:portRef="slowest_sync_clk"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line"/>
-        <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="ACLK"/>
-        <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="M00_AXIS_ACLK"/>
-        <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="ACLK"/>
-        <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="S00_AXIS_ACLK"/>
-      </spirit:adHocConnection>
-      <spirit:adHocConnection>
         <spirit:name>M00_AXIS_ACLK_2</spirit:name>
         <spirit:internalPortReference spirit:componentRef="xxv_ethernet_0" spirit:portRef="tx_clk_out_0"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="M00_AXIS_ACLK"/>
@@ -393,6 +381,14 @@
         <spirit:internalPortReference spirit:componentRef="xxv_ethernet_0" spirit:portRef="rx_clk_out_0"/>
         <spirit:internalPortReference spirit:componentRef="xxv_ethernet_0" spirit:portRef="rx_core_clk_0"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="S00_AXIS_ACLK"/>
+        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="clk_line"/>
+        <spirit:internalPortReference spirit:componentRef="proc_sys_reset_1" spirit:portRef="slowest_sync_clk"/>
+        <spirit:internalPortReference spirit:componentRef="proc_sys_reset_2" spirit:portRef="slowest_sync_clk"/>
+        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line"/>
+        <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="ACLK"/>
+        <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="M00_AXIS_ACLK"/>
+        <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="ACLK"/>
+        <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="S00_AXIS_ACLK"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>xxv_ethernet_0_user_rx_reset_0</spirit:name>
@@ -893,7 +889,7 @@
         <spirit:instanceName>auto_cc</spirit:instanceName>
         <spirit:componentRef spirit:library="ip" spirit:name="axis_clock_converter" spirit:vendor="xilinx.com" spirit:version="1.1"/>
         <spirit:configurableElementValues>
-          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_auto_cc_1</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_auto_cc_0</spirit:configurableElementValue>
         </spirit:configurableElementValues>
       </spirit:componentInstance>
       <spirit:componentInstance>
@@ -1400,13 +1396,6 @@
         </spirit:configurableElementValues>
       </spirit:componentInstance>
       <spirit:componentInstance>
-        <spirit:instanceName>auto_cc</spirit:instanceName>
-        <spirit:componentRef spirit:library="ip" spirit:name="axis_clock_converter" spirit:vendor="xilinx.com" spirit:version="1.1"/>
-        <spirit:configurableElementValues>
-          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_auto_cc_0</spirit:configurableElementValue>
-        </spirit:configurableElementValues>
-      </spirit:componentInstance>
-      <spirit:componentInstance>
         <spirit:instanceName>auto_ss_u</spirit:instanceName>
         <spirit:componentRef spirit:library="ip" spirit:name="axis_subset_converter" spirit:vendor="xilinx.com" spirit:version="1.1"/>
         <spirit:configurableElementValues>
@@ -1417,13 +1406,8 @@
     </spirit:componentInstances>
     <spirit:interconnections>
       <spirit:interconnection>
-        <spirit:name>auto_ss_si_r_to_auto_cc</spirit:name>
+        <spirit:name>auto_ss_si_r_to_auto_ss_u</spirit:name>
         <spirit:activeInterface spirit:busRef="M_AXIS" spirit:componentRef="auto_ss_si_r"/>
-        <spirit:activeInterface spirit:busRef="S_AXIS" spirit:componentRef="auto_cc"/>
-      </spirit:interconnection>
-      <spirit:interconnection>
-        <spirit:name>auto_cc_to_auto_ss_u</spirit:name>
-        <spirit:activeInterface spirit:busRef="M_AXIS" spirit:componentRef="auto_cc"/>
         <spirit:activeInterface spirit:busRef="S_AXIS" spirit:componentRef="auto_ss_u"/>
       </spirit:interconnection>
     </spirit:interconnections>
@@ -1432,24 +1416,12 @@
         <spirit:name>S_AXIS_ACLK_1</spirit:name>
         <spirit:externalPortReference spirit:portRef="S_AXIS_ACLK"/>
         <spirit:internalPortReference spirit:componentRef="auto_ss_si_r" spirit:portRef="aclk"/>
-        <spirit:internalPortReference spirit:componentRef="auto_cc" spirit:portRef="s_axis_aclk"/>
+        <spirit:internalPortReference spirit:componentRef="auto_ss_u" spirit:portRef="aclk"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>S_AXIS_ARESETN_1</spirit:name>
         <spirit:externalPortReference spirit:portRef="S_AXIS_ARESETN"/>
         <spirit:internalPortReference spirit:componentRef="auto_ss_si_r" spirit:portRef="aresetn"/>
-        <spirit:internalPortReference spirit:componentRef="auto_cc" spirit:portRef="s_axis_aresetn"/>
-      </spirit:adHocConnection>
-      <spirit:adHocConnection>
-        <spirit:name>M_AXIS_ACLK_1</spirit:name>
-        <spirit:externalPortReference spirit:portRef="M_AXIS_ACLK"/>
-        <spirit:internalPortReference spirit:componentRef="auto_cc" spirit:portRef="m_axis_aclk"/>
-        <spirit:internalPortReference spirit:componentRef="auto_ss_u" spirit:portRef="aclk"/>
-      </spirit:adHocConnection>
-      <spirit:adHocConnection>
-        <spirit:name>M_AXIS_ARESETN_1</spirit:name>
-        <spirit:externalPortReference spirit:portRef="M_AXIS_ARESETN"/>
-        <spirit:internalPortReference spirit:componentRef="auto_cc" spirit:portRef="m_axis_aresetn"/>
         <spirit:internalPortReference spirit:componentRef="auto_ss_u" spirit:portRef="aresetn"/>
       </spirit:adHocConnection>
     </spirit:adHocConnections>
