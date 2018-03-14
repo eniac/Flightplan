@@ -2,7 +2,8 @@
 #COPTS = -g -O3 -Wall -Wstrict-prototypes # -DNDEBUG
 
 CC    = g++
-COPTS = -O3
+#COPTS = -O3
+COPTS = -g
 LIBS = -lpcap -lpthread
 rsetest: rsetest.c rse.h rse.o Makefile
 	 $(CC) $(COPTS) -o rsetest rsetest.c rse.o $(LIBS)
