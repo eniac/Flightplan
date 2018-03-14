@@ -11,9 +11,6 @@ on the Xilinx Zynq UltraScale+ MPSoC ZCU102 Evaluation Kit.  This platform is
 powered by a ZU9EG System-on-Chip FPGA consisting of a quad-core ARM Cortex-A53, a
 dual-core ARM Cortex-R5, and a programmable fabric with 274K lookup tables
 (LUTs) and 1800 18Kb embedded memories (BRAMs).
-% I guess we need to introduce FPGA more for a network audience...
-% Why did we choose to implement on FPGA?
-%   Support by example of network paper that performs well on FPGA?
 
 \begin{figure}
   \centering
@@ -170,14 +167,13 @@ error correction codes.  This comes with the benefit of requiring fewer error
 correction bits.  RSE is a linear code, which means that every codeword can be
 obtained by a linear combination of codewords.  Assuming we have a vector $x$,
 which contains a message with $k$ values or symbols, encoding consists merely
-of multiplying $x$ with a $k \times h$generator matrix $G$, yielding an $n$-symbol
+of multiplying $x$ with a $k \times n$generator matrix $G$, yielding an $n$-symbol
 codeword $c = xG$.  The coefficients of the
 generator are constants that are determined by the values of $k$ and $h$.  What
 makes RSE complex is that arithmetic operations are performed in a finite (Galois)
 field to ensure that mathematic operations on integers in a finite range yield
 again integers in the same range.  Due to space limitations, we will not discuss
 RSE in more detail.
-\hg{Still have to check the math in the section above.}
 
 In our encoder, the message consists of all symbols in a block that are at a
 certain offset from the start of a data packet.  Similarly, a codeword contains
@@ -186,16 +182,35 @@ all packets in the block.  If the packet lengths in a group differ, all packets
 will be padded up to the length of the longest packet.
 With the described data assignment, output symbols at
 different offsets are independent, so they can be computed in parallel.  The
-Ethernet MAC produces one 64-bit word per cycle.  Eight matrix multiplier
-instances would suffice to sustain the throughput of the Ethernet MAC.  The
+Ethernet MAC produces 64-bit words at a 156.25 Mhz line rate.  With 8-bit symbols as in our
+encoder implementation, 8 matrix-vector multiplier instances running at
+line rate would suffice to sustain the throughput of the Ethernet MAC.  The
 latency and storage requirements of this straightforward implementation are
 high as encoding cannot start until all packets in a group have been received.
 Therefore, we propose to encode the packets incrementally.  Incremental
 encoding exploits the fact that associativity of addition enables us to
-rearrange the terms of the sums that form the matrix multiplication.
+rearrange the terms of the sums that form the matrix-vector multiplication.
 When a new input symbol is received, the partial sums for that symbol are
 calculated and the output symbols are updated.
 
+Now, we will derive the resource requirements in terms of multiplications.
+The matrix-vector multiplication requires $k \times n$ multiplications.  The
+first $k$ columns are an identity matrix because RSE does not alter data
+packets.  The output values can be computed without multiplications.  The
+remaining $kh$ multiplications are performed once for each $k$-symbol message,
+resulting in $h$ multiplications per input symbol.  We saw that we need 8
+matrix-vector multipliers to sustain 10 Gbit/s, so altogether $8h$ multipliers
+clocked at line rate should be sufficient.  As a consequence, we expect that
+providing a higher level of protection against erasures for a given throughput
+constraint requires more hardware.  Multiplications in the Galois field can be
+implemented in several ways.  Straightforward computation of the result would
+demand too many resources.  We advocate an implementation that computes the
+multiplication $m$ of $a$ and $b$ with the formula $m = \exp^{\log a + \log b}$.
+The logarithms and exponents can be looked up in 8-bit tables with 256 entries.
+Such tables can be implemented in the local memories (BRAMs) of the FPGA.  
+The coefficients of the generator matrix are constants.  The associated
+logarithms can be precomputed, leaving only 2 lookup tables per multiplier,
+resulting in a grand total of $16h$ BRAMs.
 
 \amd{what do we want to highlight here?
   (1) data parallel nature of way FEC RSE is defined ... allows operate on
@@ -208,6 +223,8 @@ calculated and the output symbols are updated.
   (4) maybe sketch out how much hardware is needed (8$\times$(2+1)$\times$k
   BRAMs)
 }
+\hg{Ad. 2: I would say h scales up, not k, at least for the encoder.  Are you
+referring to the decoder by any chance?}
 
 \begin{comment}
 Introduce P4.
