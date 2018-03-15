@@ -9,20 +9,20 @@ unreliable transmission, such as network-wide hop-by-hop protection, as in
 X.25~\cite{X25}, and link-layer retransmission as in the 802.11~\cite{WiFi} family of
 standards. The mitigation chosen for each system mostly depends on
 the transmission medium: X.25 was designed to work with unreliable links,
-whereas 802.11 uses a shared medium. We follow the same thinking,
+whereas 802.11 uses a shared medium. Our thinking is similar,
 and our design is based on properties of the medium: we concentrate on wireline
-10-Gbps Ethernet; typically such links are reliable (i.e., have low error
+10Gbps Ethernet; typically such links are reliable (i.e., have low error
 rates) and they are not shared (i.e., point-to-point).
 Instead of using an ARQ scheme as in X.25 and 802.11, we use forward
-error-correction (FEC). This simplifies our design, obviating the need for
-windows and timers, and requires less memory to implement since the sender
-will not attempt to resend a frame.
+error-correction (FEC). This simplifies our design, obviating the need
+for windows for in-flight data since the sender will not attempt to
+resend a frame, and this diminishes the memory needed.
 
 Our link-layer FEC complements the physical-layer FEC that is used in
 high-capacity Ethernet links: the physical-layer FEC helps the link sustain a
 given capacity over longer distances, whereas our FEC is intended to mitigate
 errors that do not arise because of challenging environmental factors; rather
-the errors arise because of faults.
+the errors arise because of physical damage to the link or failing transceivers.
 
 Our approach also complements higher-layer reliability measures, as provided by
 TCP for example.  TCP provides end-to-end reliability, whereas we concentrate
@@ -37,14 +37,13 @@ reduce because of the link's failure.
   reduction in transmission rater than the TCP retransmission mechanism.}
 
 In this paper we focus on Clos
-topologies~\cite{clos_bstj1953,Al-Fares:2008:SCD:1402946.1402967}, 
+topologies~\cite{clos_bstj1953}, 
 %% surely we can give Clos credit for Clos networks... -- AMD
-which are popular in
-practice~\cite{Singh:2016:JRD:2991470.2975159}.
+which are used in datacenters~\cite{Singh:2016:JRD:2991470.2975159}.
 We believe that our design could be useful in mitigating faulty links in a Clos
-topology due to the large number links they contain when compared to the
-hierarchical topology (thus are more exposed to link-related faults), and due
-to the challenge involved in making the most of (cheaper) low-radix switches:
+topology due to the large number links they contain when compared to a
+hierarchical topology~\cite{Al-Fares:2008:SCD:1402946.1402967} (thus are more exposed to link-related faults), and due
+to the challenge involved in making the most of (cheaper) low-radix switches in datacenters:
 ``A key drawback of the topology was the low radix of
 the ToR switch, which caused issues when links failed.
 If the left uplink of a source ToR and the right uplink
