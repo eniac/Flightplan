@@ -140,9 +140,7 @@ drop frame\;
   forward $\overline{\mathrm{frame}}$\;
 }
 }
-
-\amd{not show parity packet injection?}
-\caption{\label{alg:sending}Sending proxy}
+\caption{\label{alg:sending}Sending proxy. If the block's $k$ has been reached, then addToBlock will start the process of generating and sending parity frames. This process is also began if the block's $k$ has not been reached but $t$ expires.}
 \end{algorithm}
 
 %\begin{algorithm}
