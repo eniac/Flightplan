@@ -27,7 +27,7 @@ void Verify_matrix_multiply(int Data_packet_count, int Parity_packet_count, int 
   for (int i = 0; i < FEC_MAX_H; i++)
     Parity[i] = 0;
   for (int i = 0; i < Data_packet_count; i++)
-    Incremental_encode(Data[i], Parity, i, Parity_packet_count);
+    Incremental_encode(Data[i], Parity, i, Parity_packet_count, i == 0);
 
   for (int i = 0; i < Parity_packet_count; i++)
     if (fb.d[i][0] != Parity[i])
