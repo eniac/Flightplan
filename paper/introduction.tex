@@ -3,8 +3,8 @@ Advances in networking, hardware architecture, and programming
 languages in recent years have converged to make the choice between
 network performance and programmability easier: one can increasingly
 afford both.
-This has enabled research into hardware implementations of a variety
-of applications that were previously confined to software for
+This has enabled research into hardware implementations of various
+applications that were previously confined to software for
 programmability, or to expensive and inflexible ASICs for performance.
 
 Most prior research in this area has adapted \emph{existing}
@@ -22,8 +22,8 @@ of its kind. \OurSys is an in-network distributed
 mitigation for faulty links.  We claim that our design requires
 minimal configuration, is transparent to
 end-points and does not conflict
-with existing network architecture choices (e.g., what topology to use
-and how to route over it). We model \OurSys using ns-3 and evaluate
+with existing network architecture choices (e.g., the network's topology,
+and how packets are routed over it). We model \OurSys using ns-3 and evaluate
 implementations for CPUs and FPGAs.
 
 \OurSys can work with various types of networks, but we think it can
@@ -51,7 +51,7 @@ also needs a careful design since link management might interfere with
 other features of the network, such as topology and routing~
 \cite{Greenberg:2011:VSF:1897852.1897877,
 NiranjanMysore:2009:PSF:1594977.1592575,
-Agarwal:2014:SMS:2620728.2620758}
+Agarwal:2014:SMS:2620728.2620758},
 transport~\cite{Raiciu:2011:IDP:2043164.2018467,Alizadeh:2010:DCT:1851275.1851192}
 and load balancing~\cite{Alizadeh:2014:CDC:2740070.2626316}.
 In designing \OurSys we sought to make it transparent to other
