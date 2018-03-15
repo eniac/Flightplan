@@ -205,12 +205,49 @@ providing a higher level of protection against erasures for a given throughput
 constraint requires more hardware.  Multiplications in the Galois field can be
 implemented in several ways.  Straightforward computation of the result would
 demand too many resources.  We advocate an implementation that computes the
-multiplication $m$ of $a$ and $b$ with the formula $m = \exp^{\log a + \log b}$.
+multiplication $m$ of $a$ and $b$ with the formula $m = e^{\log a + \log b}$.
 The logarithms and exponents can be looked up in 8-bit tables with 256 entries.
 Such tables can be implemented in the local memories (BRAMs) of the FPGA.  
 The coefficients of the generator matrix are constants.  The associated
 logarithms can be precomputed, leaving only 2 lookup tables per multiplier,
 resulting in a grand total of $16h$ BRAMs.
+
+Listing~\ref{Multiplier} shows the source code of the non-incremental
+matrix-vector multiplier.  It can be compiled with a regular software
+compiler and executed on a microprocessor, for instance, to debug the code.
+In addition, Vivado HLS can generate an FPGA implementation
+from the code, guided by the pragmas, which are ignored by software compilers.
+A similar implementation in Verilog or VHDL requires in the order of hundreds
+of lines.  The {\tt pipeline} pragma directs the tool to construct a
+hardware pipeline that can start executing one invocation of the function
+every clock cycle.  Vivado automatically inserts a suitable number of registers
+to achieve the desired clock period.
+The {\tt Dat}, {\tt Par}, and {\tt Gen} arrays are mapped
+on BRAMs by default.  The pipeline would need {\tt MAX\_K} values from {\tt Dat}
+per clock cycle although a dual-port BRAM can supply only 2 values.  The
+solution is to divide the data in {\tt Dat} over multiple BRAMs that can be
+accessed simultaneously.  We accomplish that with the {\tt ARRAY\_PARTITION}
+pragma.
+
+\begin{lstlisting}[language=C,basicstyle=\footnotesize,numbers=left,
+                   captionpos=b,caption={Matrix-Vector Multiplier},
+                   label=Multiplier]
+void Enc(char Dat[MAX_K], char Par[MAX_H], int k, int h) {
+#pragma HLS ARRAY_PARTITION variable=Dat complete dim=1
+#pragma HLS ARRAY_PARTITION variable=Par complete dim=1
+  static char Gen[MAX_H][MAX_K] = { ... };
+#pragma HLS ARRAY_PARTITION variable=Gen complete dim=0
+#pragma HLS pipeline
+  for (int i = 0; i < MAX_H; i++) {
+    int Res = 0;
+    for (int j = 0; j < MAX_K; j++) {
+      if (i < h && j < k)
+        Res = GF_add(Result, GF_mul(Dat[j], Gen[i][j]));
+    }
+    Par[i] = Res;
+  }
+}
+\end{lstlisting}
 
 \amd{what do we want to highlight here?
   (1) data parallel nature of way FEC RSE is defined ... allows operate on
