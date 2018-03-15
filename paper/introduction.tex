@@ -17,7 +17,7 @@ network stacks~\cite{Istvan:2016:CBI:2930611.2930639},
 regex matching on payloads~\cite{Woods:2010:CED:1920841.1920926},
 and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
 
-In this paper we describe \OurSys, which to our knowledge is the first
+In this paper we describe \OurSys, which to our knowledge is the first application
 of its kind. \OurSys is an in-network distributed
 mitigation for faulty links.  We claim that our design requires
 minimal configuration, is transparent to
@@ -42,13 +42,12 @@ Running \OurSys as an in-network function makes more sense than
 running it in end-hosts since the problem that \OurSys mitigates is
 scoped in the network itself. Just as some application features are
 best managed end-to-end~\cite{Saltzer84end-to-endarguments}, handling
-link failure is best done at the link's level. Not only are we able to
+link failure seems best done at the link's level. Not only are we able to
 identify the faulty link directly, but, unlike higher-layer protocols,
 we can also distinguish link failure from congestion.
-\FIXME{here address Andre's comment re. TCP?}
 
-Programmable hardware is not sufficient to solve this problem: one
-also needs careful design since link management might interfere with
+Programmable hardware alone is not sufficient to solve this problem: one
+also needs a careful design since link management might interfere with
 other features of the network, such as topology and routing~
 \cite{Greenberg:2011:VSF:1897852.1897877,
 NiranjanMysore:2009:PSF:1594977.1592575,
@@ -59,10 +58,16 @@ In designing \OurSys we sought to make it transparent to other
 features of the network, to facilitate its interoperation with
 existing networks.
 
-\paragraph{Contributions.}
-\amd{What are we claiming as contributions? (not clear to me...and we need
-  to make it crystal clear to potential reviewers) (1) proposal-of/strategy-for using FEC for wired
-  links in dater center? (2) link adaptation scheme? (3) 10Gbps FPGA implementation?}
+Our contributions include (i)~the design of \OurSys, which relies on a
+link-layer forward error-correction (FEC) scheme to mitigate failing
+links, and (ii)~the FPGA implementation of \OurSys to saturate 10Gbps
+links. Part of our implementation is in
+P4~\cite{Bosshart:2014:PPP:2656877.2656890} over SDNet, and we
+transcended P4's limitations~\cite{Dang:2017:WPL:3050220.3050231} by
+writing external functions in C for high-level synthesis.
+They key challenge we encountered was in streaming packets through our
+external functions, and we believe that our approach could be a
+helpful take-away for other researchers.
 
 The next section describes the background and related work of the problem we
 are solving, before we describe our design~(\S\ref{sec:design}) and
