@@ -27,8 +27,9 @@ zeroed out to provide padding.)
 The values $(k, h, t)$ influence the latency with which frames belonging to $c$
 cross the switch, as well the likely recovery of frames belonging to $c$. For
 example, for interactive applications we would want to use a small $k$ and $t$.
-\amd{somewhere, maybe here, should make it clear that parity ``frames'' are
-  sent in separate packets ... not so clear to me from reading this}
+Parity frames are new frames that are put onto the medium, so by
+increasing $h$ we create more contention for the link, which reduces
+the capacity available for data from applications crossing that link.
 
 \subsection{Link-failure management policy}
 \label{sec:policy}
