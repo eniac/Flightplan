@@ -17,11 +17,11 @@ error correction?
 \begin{figure}
   \centering
   \includegraphics[width=0.3\paperwidth]{exp_topo.pdf}
-  \caption{\label{fig:format} Testbed topology for benchmarks.}
+  \caption{\label{fig:exp_topo} Testbed topology for benchmarks.}
 \end{figure}
 
 Figure~\ref{fig:exp_topo} depicts the testbed we used to benchmark \OurSys.
-The two traffic generation hosts are each connected to a different \OurSys
+The two traffic generation hosts are each connected to different \OurSys
 enabled switches, which are themselves connected by a 10 GbE link. The
 switches are Wedge BF32-100X's with P4 programmable forwarding engines. We
 evaluate three possible deployment models for \OurSys: an FPGA external to
@@ -83,7 +83,7 @@ switch.
 \end{figure}
 
 \subsection{Application Throughput}
-Figure~\ref{fig:tput} shows iperf throughput in the testbed as link quality
+Figure~\ref{fig:app_tput} shows iperf throughput in the testbed as link quality
 decreases, using the behavioral model of \OurSys. 
 
 \subsection{Large Scale Analysis}
