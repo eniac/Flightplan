@@ -65,7 +65,7 @@ link-layer forward error-correction (FEC) scheme to mitigate failing
 links, and (ii)~the FPGA implementation of \OurSys to saturate 10Gbps
 links. Part of our implementation is in
 P4~\cite{Bosshart:2014:PPP:2656877.2656890} over SDNet, and we
-transcended P4's limitation \amdrev{to header processing}~\cite{Dang:2017:WPL:3050220.3050231} by
+transcended P4's limitation to header processing~\cite{Dang:2017:WPL:3050220.3050231} by
 writing external functions in C for high-level synthesis.
 They key challenge we encountered was in streaming packets through our
 external functions, and we believe that our approach could be a
