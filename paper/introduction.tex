@@ -19,7 +19,9 @@ and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
 
 In this paper we describe \OurSys, which to our knowledge is the first application
 of its kind. \OurSys is an in-network distributed
-mitigation for faulty links.  We claim that our design requires
+mitigation for faulty links.  
+%We claim that  -- not think necessary - AMD
+Our design requires
 minimal configuration, is transparent to
 end-points and does not conflict
 with existing network architecture choices (e.g., the network's topology,
@@ -63,11 +65,12 @@ link-layer forward error-correction (FEC) scheme to mitigate failing
 links, and (ii)~the FPGA implementation of \OurSys to saturate 10Gbps
 links. Part of our implementation is in
 P4~\cite{Bosshart:2014:PPP:2656877.2656890} over SDNet, and we
-transcended P4's limitations~\cite{Dang:2017:WPL:3050220.3050231} by
+transcended P4's limitation \amdrev{to header processing}~\cite{Dang:2017:WPL:3050220.3050231} by
 writing external functions in C for high-level synthesis.
 They key challenge we encountered was in streaming packets through our
 external functions, and we believe that our approach could be a
-helpful take-away for other researchers.
+helpful take-away for other researchers. \amd{...but we currently don't
+  deliver on this.}
 
 The next section describes the background and related work of the problem we
 are solving, before we describe our design~(\S\ref{sec:design}) and

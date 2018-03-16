@@ -7,7 +7,7 @@
 \subsection{Overview}
 %To meet the performance requirements of the data center, we implemented \OurSys
 We implemented \OurSys
-on the Xilinx Zynq UltraScale+ MPSoC ZCU102 Evaluation Kit.  This board has 4 SFP+ cages and we process network traffic on its
+on the Xilinx Zynq UltraScale+ MPSoC ZCU102 Evaluation Kit.  This board has 4 SFP+ cages, and we process network traffic on its
 ZU9EG System-on-Chip FPGA, which consists of a quad-core ARM Cortex-A53, a
 dual-core ARM Cortex-R5, and a programmable fabric with 274K lookup tables
 (LUTs) and 1800 18Kb embedded memories (BRAMs).
@@ -48,7 +48,8 @@ exploiting the parallellism of the FEC core, so we implemented the core in
 hardware-synthesizable C. The code can be compiled and executed on a
 general-purpose CPU, but we can also synthesize the code for an FPGA
 in Vivado HLS.  Guided by pragmas added by the developer, Vivado HLS takes
-advantage of parallelism in the code to achieve a high performance.
+advantage of parallelism in the code to 
+achieve  high performance.
 
 The encoded or decoded output of the FEC core feeds into the header
 post-processing, which encapsulates the payloads in Ethernet packets, before packets are returned to the network.
@@ -202,6 +203,8 @@ $h$.\FIXME{Can this be cast more directly in language that corresponds to concep
 %field to ensure that mathematic operations on integers in a finite range yield
 %again integers in the same range.
 Due to space limitations, we will not discuss RSE in more detail.
+\amd{somewhere we should be clear x is striped across corresponding bytes
+  in k packets}
 
 %In our encoder, the message consists of all symbols in a block that are at a
 %certain offset from the start of a data packet.
@@ -226,7 +229,9 @@ When a new input symbol is received, the partial sums for that symbol are
 calculated and the output symbols are updated.
 
 We now derive the resource requirements in terms of multiplications.
-The matrix-vector multiplication requires $k \times n$ multiplications. \FIXME{Not clear what $n$ is}
+The matrix-vector multiplication requires $k \times n$
+multiplications. \FIXME{Not clear what $n$ is}
+\amd{n=k+h ?}
 The first $k$ columns are an identity matrix because RSE does not alter data
 packets.  The output values can be computed without multiplications.  The
 remaining $kh$ multiplications are performed once for each $k$-symbol message,
@@ -238,7 +243,10 @@ constraint requires more hardware.  Multiplications in the Galois field can be
 implemented in several ways.  Straightforward computation of the result would
 demand too many resources.  We advocate an implementation that computes the
 multiplication $m$ of $a$ and $b$ with the formula $m = e^{\log a + \log b}$.
-The logarithms and exponents can be looked up in 8-bit tables with 256 entries.
+The logarithms and exponents can be looked up in 8-bit tables with 256
+entries.
+\amd{8-bit comes out of nowhere.  Do we need to state that we are working
+  with 8-bit symbols (GF(256)?) first for this to make sense?}
 Such tables can be implemented in the local memories (BRAMs) of the FPGA.  
 The coefficients of the generator matrix are constants.  The associated
 logarithms can be precomputed, leaving only 2 lookup tables per multiplier,
@@ -247,7 +255,10 @@ resulting in a grand total of $16h$ BRAMs.
 Listing~\ref{Multiplier} shows the source code of the non-incremental
 matrix-vector multiplier. \FIXME{This paragraph+snippet is tricky, since we earlier dismissed using the non-incremental approach.}
 It can be compiled with a regular software
-compiler and executed on a microprocessor, for instance, to debug the code.
+compiler and executed on a microprocessor
+%, for instance, 
+\amdrev{for a software implementation or}
+to debug the code.
 In addition, Vivado HLS can generate an FPGA implementation
 from the code, guided by the pragmas, which are ignored by software compilers.
 A similar implementation in Verilog or VHDL requires in the order of hundreds
@@ -282,19 +293,19 @@ void Enc(char Dat[MAX_K], char Par[MAX_H], int k, int h) {
 }
 \end{lstlisting}
 
-\amd{what do we want to highlight here?
-  (1) data parallel nature of way FEC RSE is defined ... allows operate on
-  the 8 bytes in the 64b per cycle payload independently in data-parallel
-  fashion.
-  (2) as k scales up, demands more compute...which can address with more
-  hardware.
-  (3) result is can build hardware to process in a spatial pipeline at the
-  160\,MHz data rate necessary to meet 10Gbps link.
-  (4) maybe sketch out how much hardware is needed (8$\times$(2+1)$\times$k
-  BRAMs)
-}
-\hg{Ad. 2: I would say h scales up, not k, at least for the encoder.  Are you
-referring to the decoder by any chance?}
+% \amd{what do we want to highlight here?
+%   (1) data parallel nature of way FEC RSE is defined ... allows operate on
+%   the 8 bytes in the 64b per cycle payload independently in data-parallel
+%   fashion.
+%   (2) as k scales up, demands more compute...which can address with more
+%   hardware.
+%   (3) result is can build hardware to process in a spatial pipeline at the
+%   160\,MHz data rate necessary to meet 10Gbps link.
+%   (4) maybe sketch out how much hardware is needed (8$\times$(2+1)$\times$k
+%   BRAMs)
+% }
+% \hg{Ad. 2: I would say h scales up, not k, at least for the encoder.  Are you
+% referring to the decoder by any chance?} \amd{yes, I got h and k confused here}
 
 \begin{comment}
 Introduce P4.
