@@ -5,51 +5,56 @@
 \newcommand{\hg}[1]{{\color{green}{[\textbf{Hans Comment:} #1]}}}
 
 \subsection{Overview}
-
-To meet the performance requirements of the data center, we implemented \OurSys
-on the Xilinx Zynq UltraScale+ MPSoC ZCU102 Evaluation Kit.  This platform is
-powered by a ZU9EG System-on-Chip FPGA consisting of a quad-core ARM Cortex-A53, a
+%To meet the performance requirements of the data center, we implemented \OurSys
+We implemented \OurSys
+on the Xilinx Zynq UltraScale+ MPSoC ZCU102 Evaluation Kit.  This board has 4 SFP+ cages and we process network traffic on its
+ZU9EG System-on-Chip FPGA, which consists of a quad-core ARM Cortex-A53, a
 dual-core ARM Cortex-R5, and a programmable fabric with 274K lookup tables
 (LUTs) and 1800 18Kb embedded memories (BRAMs).
 
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{Top_level.pdf}
-  \caption{\label{fig:toplevel} Block diagram of encoder / decoder pipeline}
+  \caption{\label{fig:toplevel} Block diagram of FEC encoder / decoder pipeline.
+  }
 \end{figure}
 
 A top-level diagram of the implementation is shown in Fig.~\ref{fig:toplevel}.
-Packets arrive on one of the 4 SFP+ cages via a 10Gbps Ethernet cable.
-A dedicated 10~Gigabit Transceiver deserializes the packets.  After further
-processing by a dedicated Ethernet PHY and in-fabric MAC layer, the entire
-packet including Ethernet header is output on a 64-bit AXI Stream bus at 160\,MHz.
+%Packets arrive on one of the 4 SFP+ cages via a 10Gbps Ethernet cable.
+%A dedicated 10~Gigabit Transceiver deserializes the packets.  After further
+%processing by a dedicated Ethernet PHY and in-fabric MAC layer, the entire
+%packet including Ethernet header is output on a 64-bit AXI Stream bus at 160\,MHz.
+%
+%The next stage in the pipeline performs packet header preprocessing.  With
+%ease of implementation and portability in mind, we implemented this in P4, a
+%domain-specific programming language for packet processing that is target- and
+%protocol-agnostic \cite{p4_sigcomm_review2014}.
+We implement header processing in
+P4~\cite{Bosshart:2014:PPP:2656877.2656890}, which is compiled to FPGA
+logic using Xilinx's SDNet tool suite.  Header processing (described
+further in~\S\ref{sec:impl:header-processing}) includes the frame
+tagging described in~\S\ref{sec:design}.
 
-The next stage in the pipeline performs packet header preprocessing.  With
-ease of implementation and portability in mind, we implemented this in P4, a
-domain-specific programming language for packet processing that is target- and
-protocol-agnostic \cite{p4_sigcomm_review2014}.  The raw payload, i.e. the frame stripped of Ethernet
-header, is forwarded to the FEC core.  \amdrev{The P4 is compiled to FPGA
-  logic using Xilinx's SDNet tool suite.}
-
-The FEC core can be an encoder (for the Sending Proxy) or decoder (for the
-Receiving Proxy).  In both cases, the FEC core
-produces payloads that are the result of, respectively, encoding or decoding
-the received group of payloads.  Similar to the header processing, the FEC core
-was also created with ease of implementation in mind.  P4 is not suitable
+The frame is then forwarded to the FEC core, which can be an encoder (for the Sending Proxy) or decoder (for the
+Receiving Proxy).
+%In both cases, the FEC core
+%produces payloads that are the result of, respectively, encoding or decoding
+%the received group of payloads.  Similar to the header processing, the FEC core
+%was also created with ease of implementation in mind.
+P4 is not suitable
 for
-\amdrev{payload processing or}
-exploiting the parallellism of the FEC core, so we described the core in
-hardware-synthesizable C.  As usual, the code can be compiled and executed on a
-general-purpose CPU.  More importantly, we can synthesize the code for an FPGA
+payload processing or
+exploiting the parallellism of the FEC core, so we implemented the core in
+hardware-synthesizable C. The code can be compiled and executed on a
+general-purpose CPU, but we can also synthesize the code for an FPGA
 in Vivado HLS.  Guided by pragmas added by the developer, Vivado HLS takes
 advantage of parallelism in the code to achieve a high performance.
 
 The encoded or decoded output of the FEC core feeds into the header
-post-processing, which encapsulates the payloads in Ethernet packets.  The
-Ethernet subsystem, finally, returns the packets to the network.
+post-processing, which encapsulates the payloads in Ethernet packets, before packets are returned to the network.
 
 \subsection{Header processing}
-
+\label{sec:impl:header-processing}
 We use p4 to implement high-level packet processing logic and 
 use Xilinx P4-SDNet tool chain to translate p4 program into FPGA and integrate everything together.
 The translation goes through 3 steps:
