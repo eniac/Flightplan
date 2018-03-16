@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include "rse.h"
+#include "fecDefs.h"
 
 /* ethernet headers are always exactly 14 bytes [1] */
 #define SIZE_ETHERNET 14
@@ -18,16 +19,6 @@ int workerCt = 1;
 
 int SIZE_FEC_TAG = 0;
 
-typedef struct fec_header {
-	uint8_t blockId;
-	uint8_t pktId;
-} fec_header_t;
-
-void my_packet_handler(
-    u_char *args,
-    const struct pcap_pkthdr *header,
-    const u_char *packet
-);
 pcap_t *handle; /*PCAP handle*/
 
 int cnt = 0;
@@ -38,6 +29,7 @@ int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Glob
 int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
 
 
+void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 void* capturePackets(char* deviceToCapture);
 bool is_all_pkts_recieved_for_block(int blockId);
 int get_packet_index_in_blk(char* packet);
@@ -57,7 +49,6 @@ int get_total_packet_size(char* packet);
 u_short compute_csum(struct sniff_ip *ip , int len);
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
-//void( fec_dbg_printf)( const char* format, ... ); 
 void print_hex_memory(void *mem, int len);
 // TODO: alloc at startup.
 void alloc_pkt_buffer();
@@ -76,6 +67,10 @@ void alloc_pkt_buffer() {
 		}
 	}
 }
+
+/**
+ * Clean up.
+ */
 void free_pkt_buffer() {
 	for (int i = 0; i<NUM_BLOCKS; i++){
 		for (int j = 0; j < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; j++){
@@ -127,7 +122,7 @@ void* capturePackets(char* deviceToCapture) {
  */
 int get_block_index_of_pkt(const unsigned char* packet) {
 	fec_header_t *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
-	return fecHeader->blockId;
+	return fecHeader->block_id;
 }
 
 /**
@@ -139,7 +134,7 @@ int get_block_index_of_pkt(const unsigned char* packet) {
  */
 int get_packet_index_in_blk(const unsigned char* packet) {
 	fec_header_t *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
-	return fecHeader->pktId;
+	return fecHeader->index;
 }
 
 int lastBlockId = 0;
@@ -160,7 +155,7 @@ void my_packet_handler(
 	const struct fec_header *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
 
 	// skip blocks that don't belong to this worker.
-	if ((fecHeader->blockId) % workerCt != workerId){
+	if ((fecHeader->block_id) % workerCt != workerId){
 		return;
 	}
 
