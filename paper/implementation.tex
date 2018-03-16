@@ -180,49 +180,58 @@ shape of the solution.}
 
 \subsection{FEC Encoder}
 \label{sec:impl:fec-encoder}
+In this section we describe our generation of parity frames. Currently
+we can only decode on a CPU; our FPGA implementation of the decode is
+work-in-progress.
 
-The current implementation is limited to packet encoding, but our intention is
-to implement the decoder too.
+%The current implementation is limited to packet encoding, but our intention is
+%to implement the decoder too.
 
-Error correction is performed with a Reed-Solomon erasure (RSE) code.  Erasure codes
-require prior knowledge of which packets data is missing, as opposed to regular
-error correction codes.  This comes with the benefit of requiring fewer error
-correction bits.  RSE is a linear code, which means that every codeword can be
-obtained by a linear combination of codewords.  Assuming we have a vector $x$,
+In \OurSys error correction is performed with a Reed-Solomon erasure (RSE) code~\FIXME{\cite{citation}}. % Erasure codes
+%require prior knowledge of which packets data is missing, as opposed to regular
+%error correction codes.  This comes with the benefit of requiring fewer error
+%correction bits.  RSE is a linear code, which means that every codeword can be
+%obtained by a linear combination of codewords. 
+Assuming we have a vector $x$,
 which contains a message with $k$ values or symbols, encoding consists merely
-of multiplying $x$ with a $k \times n$generator matrix $G$, yielding an $n$-symbol
+of multiplying $x$ with a $k \times n$ generator matrix $G$, yielding an $n$-symbol
 codeword $c = xG$.  The coefficients of the
-generator are constants that are determined by the values of $k$ and $h$.  What
-makes RSE complex is that arithmetic operations are performed in a finite (Galois)
-field to ensure that mathematic operations on integers in a finite range yield
-again integers in the same range.  Due to space limitations, we will not discuss
-RSE in more detail.
+generator are constants that are determined by the values of $k$ and
+$h$.\FIXME{Can this be cast more directly in language that corresponds to concepts used up to now -- packets in particular, or translate ``vector''/``message''/``symbols'' to objects that have been previously described?}
+% What makes RSE complex is that arithmetic operations are performed in a finite (Galois)
+%field to ensure that mathematic operations on integers in a finite range yield
+%again integers in the same range.
+Due to space limitations, we will not discuss RSE in more detail.
 
-In our encoder, the message consists of all symbols in a block that are at a
-certain offset from the start of a data packet.  Similarly, a codeword contains
-one symbol for each output packet.  We iterate over the offset to generate
-all packets in the block.  If the packet lengths in a group differ, all packets
-will be padded up to the length of the longest packet.
-With the described data assignment, output symbols at
-different offsets are independent, so they can be computed in parallel.  The
-Ethernet MAC produces 64-bit words at a 156.25 Mhz line rate.  With 8-bit symbols as in our
-encoder implementation, 8 matrix-vector multiplier instances running at
-line rate would suffice to sustain the throughput of the Ethernet MAC.  The
-latency and storage requirements of this straightforward implementation are
-high as encoding cannot start until all packets in a group have been received.
-Therefore, we propose to encode the packets incrementally.  Incremental
-encoding exploits the fact that associativity of addition enables us to
+%In our encoder, the message consists of all symbols in a block that are at a
+%certain offset from the start of a data packet.
+%Similarly, a codeword contains
+%one symbol for each output packet.  We iterate over the offset to generate
+%all packets in the block.  If the packet lengths in a group differ, all packets
+%will be padded up to the length of the longest packet.
+%With the described data assignment, output symbols at
+%different offsets are independent, so they can be computed in parallel.  The
+%Ethernet MAC produces 64-bit words at a 156.25 Mhz line rate.
+%For 8-bit symbols -- corresponding to bytes -- 8 matrix-vector multiplier instances running at
+%line rate would suffice to sustain the throughput of the Ethernet MAC.
+The encoder could be implemented to work in two ways:
+non-incrementally on a group of packets, or incrementally as each
+packet arrives. The non-incremental approach is more straightforward
+but incurs high latency and storage requirements, since  encoding
+cannot start until all packets in a group have been received.
+
+We opted for the incremental approach, which exploits the associativity of addition to
 rearrange the terms of the sums that form the matrix-vector multiplication.
 When a new input symbol is received, the partial sums for that symbol are
 calculated and the output symbols are updated.
 
-Now, we will derive the resource requirements in terms of multiplications.
-The matrix-vector multiplication requires $k \times n$ multiplications.  The
-first $k$ columns are an identity matrix because RSE does not alter data
+We now derive the resource requirements in terms of multiplications.
+The matrix-vector multiplication requires $k \times n$ multiplications. \FIXME{Not clear what $n$ is}
+The first $k$ columns are an identity matrix because RSE does not alter data
 packets.  The output values can be computed without multiplications.  The
 remaining $kh$ multiplications are performed once for each $k$-symbol message,
 resulting in $h$ multiplications per input symbol.  We saw that we need 8
-matrix-vector multipliers to sustain 10 Gbit/s, so altogether $8h$ multipliers
+matrix-vector multipliers to sustain 10 Gbps, so altogether $8h$ multipliers
 clocked at line rate should be sufficient.  As a consequence, we expect that
 providing a higher level of protection against erasures for a given throughput
 constraint requires more hardware.  Multiplications in the Galois field can be
@@ -236,7 +245,8 @@ logarithms can be precomputed, leaving only 2 lookup tables per multiplier,
 resulting in a grand total of $16h$ BRAMs.
 
 Listing~\ref{Multiplier} shows the source code of the non-incremental
-matrix-vector multiplier.  It can be compiled with a regular software
+matrix-vector multiplier. \FIXME{This paragraph+snippet is tricky, since we earlier dismissed using the non-incremental approach.}
+It can be compiled with a regular software
 compiler and executed on a microprocessor, for instance, to debug the code.
 In addition, Vivado HLS can generate an FPGA implementation
 from the code, guided by the pragmas, which are ignored by software compilers.
