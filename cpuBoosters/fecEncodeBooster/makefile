@@ -8,8 +8,8 @@ fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h rse.o makefile
 fecEncodeBooster_baseline: fecEncodeBooster_baseline.c $(VENCORE_CODE)/rse.h rse.o makefile
 	g++ -I$(VENCORE_CODE) -O2 -o fecEncodeBooster_baseline fecEncodeBooster_baseline.c rse.o -lpcap
 
-rse.o:	rse.c $(VENCORE_CODE)/rse.h makefile
-	g++ -I$(VENCORE_CODE) -O3 -c rse.c
+rse.o:	$(VENCORE_CODE)/rse.c $(VENCORE_CODE)/rse.h makefile
+	g++ -I$(VENCORE_CODE) -O3 -c $(VENCORE_CODE)/rse.c
 
 clean: 
 	$(RM) fecEncodeBooster
