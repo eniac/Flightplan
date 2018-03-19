@@ -1,5 +1,14 @@
 #include <stdint.h>
+#ifndef IN_SOFTWARE
 #include <ap_cint.h>
+#else
+typedef unsigned long uint1;
+typedef unsigned long uint3;
+typedef unsigned long uint4;
+typedef unsigned long uint11;
+typedef unsigned long uint8;
+typedef unsigned long uint64;
+#endif
 
 #include "Encoder.h"
 

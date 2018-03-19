@@ -766,8 +766,12 @@ int rse_code(int mode_flag) {
 #endif
     for (c=0; c < fb.block_C; c++) {
         code_equations_duplicate(pari);
-        matrix_multiply(know, INDEX_KNOW, pari, INDEX_PARI, c);
-        Verify_matrix_multiply(know, pari, c);
+#ifdef VENCORE_ENCODER
+        matrix_multiply(know, INDEX_KNOW, pari, INDEX_PARI, c); // from Vencore
+#else
+        encode_matrix(know, pari, c); // Hans' implementation
+#endif
+        Verify_matrix_multiply(know, pari, c); // Checks against Hans' implementation
 #ifdef FEC_DBG_PRINT_STEP3
         fprintf(stderr, "\nStep 3-%d: Multiply %d known packets by %d codewords, to create:\n", c, know, pari);
         fprintf(stderr, "Input ");  code_equation_print('d', pari, want);
