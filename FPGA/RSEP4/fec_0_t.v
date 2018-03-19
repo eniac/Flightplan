@@ -59,45 +59,49 @@ module fec_0_t (
 	tuple_in_fec_input_VALID,
 	tuple_in_fec_input_DATA,
 	tuple_out_fec_output_VALID,
-	tuple_out_fec_output_DATA
+	tuple_out_fec_output_DATA,
+	backpressure_in,
+	backpressure_out
 );
 
-input clk_line /* unused */ ;
-(* polarity = "high" *) input rst /* unused */ ;
-input packet_in_packet_in_SOF /* unused */ ;
-input packet_in_packet_in_EOF /* unused */ ;
-input packet_in_packet_in_VAL /* unused */ ;
-output packet_in_packet_in_RDY /* undriven */ ;
-input [63:0] packet_in_packet_in_DAT /* unused */ ;
-input [3:0] packet_in_packet_in_CNT /* unused */ ;
-input packet_in_packet_in_ERR /* unused */ ;
-output packet_out_packet_out_SOF /* undriven */ ;
-output packet_out_packet_out_EOF /* undriven */ ;
-output packet_out_packet_out_VAL /* undriven */ ;
-input packet_out_packet_out_RDY /* unused */ ;
-output [63:0] packet_out_packet_out_DAT /* undriven */ ;
-output [3:0] packet_out_packet_out_CNT /* undriven */ ;
-output packet_out_packet_out_ERR /* undriven */ ;
-input tuple_in_control_VALID /* unused */ ;
-input [22:0] tuple_in_control_DATA /* unused */ ;
-output tuple_out_control_VALID /* undriven */ ;
-output [22:0] tuple_out_control_DATA /* undriven */ ;
-input tuple_in_fec_input_VALID /* unused */ ;
-input [`FEC_OP_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_OFFSET_WIDTH:0] tuple_in_fec_input_DATA /* unused */ ;
-output tuple_out_fec_output_VALID /* undriven */ ;
-output tuple_out_fec_output_DATA /* undriven */ ;
+input clk_line ;
+(* polarity = "high" *) input rst ;
+input packet_in_packet_in_SOF ;
+input packet_in_packet_in_EOF ;
+input packet_in_packet_in_VAL ;
+output packet_in_packet_in_RDY ;
+input [63:0] packet_in_packet_in_DAT ;
+input [3:0] packet_in_packet_in_CNT ;
+input packet_in_packet_in_ERR ;
+output packet_out_packet_out_SOF ;
+output packet_out_packet_out_EOF ;
+output packet_out_packet_out_VAL ;
+input packet_out_packet_out_RDY ;
+output [63:0] packet_out_packet_out_DAT ;
+output [3:0] packet_out_packet_out_CNT ;
+output packet_out_packet_out_ERR ;
+input tuple_in_control_VALID ;
+input [22:0] tuple_in_control_DATA ;
+output tuple_out_control_VALID ;
+output [22:0] tuple_out_control_DATA ;
+input tuple_in_fec_input_VALID ;
+input [`FEC_OP_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_OFFSET_WIDTH:0] tuple_in_fec_input_DATA ;
+output tuple_out_fec_output_VALID ;
+output tuple_out_fec_output_DATA ;
+input backpressure_in ;
+output backpressure_out ;
 
-wire packet_in_packet_in_RDY /* undriven */ ;
-wire packet_out_packet_out_SOF /* undriven */ ;
-wire packet_out_packet_out_EOF /* undriven */ ;
-wire packet_out_packet_out_VAL /* undriven */ ;
-wire [63:0] packet_out_packet_out_DAT /* undriven */ ;
-wire [3:0] packet_out_packet_out_CNT /* undriven */ ;
-wire packet_out_packet_out_ERR /* undriven */ ;
-wire tuple_out_control_VALID /* undriven */ ;
-wire [22:0] tuple_out_control_DATA /* undriven */ ;
-wire tuple_out_fec_output_VALID /* undriven */ ;
-wire tuple_out_fec_output_DATA /* undriven */ ;
+wire packet_in_packet_in_RDY ;
+wire packet_out_packet_out_SOF ;
+wire packet_out_packet_out_EOF ;
+wire packet_out_packet_out_VAL ;
+wire [63:0] packet_out_packet_out_DAT ;
+wire [3:0] packet_out_packet_out_CNT ;
+wire packet_out_packet_out_ERR ;
+wire tuple_out_control_VALID ;
+wire [22:0] tuple_out_control_DATA ;
+wire tuple_out_fec_output_VALID ;
+wire tuple_out_fec_output_DATA ;
 
 wire Tuple_FIFO_wr_en;
 wire Tuple_FIFO_rd_en;
@@ -214,6 +218,8 @@ RSE_core Core
   .Parity_ap_ack(Core_parity_ap_ack)
 );
 
+assign packet_in_packet_in_RDY = packet_out_packet_out_RDY;
+
 assign Tuple_FIFO_wr_en = tuple_in_fec_input_VALID;
 assign Tuple_FIFO_din = tuple_in_fec_input_DATA;
 assign Tuple_FIFO_rd_en = ~Tuple_output & ~Tuple_FIFO_empty;
@@ -228,18 +234,18 @@ assign Core_tuple = Tuple_FIFO_dout;
 assign Core_tuple_ap_vld = Tuple_FIFO_rd_en;
 assign Core_data_dout = Data_FIFO_dout;
 assign Core_data_empty_n = ~Data_FIFO_empty;
-assign Core_parity_ap_ack = packet_out_packet_out_RDY;
+assign Core_parity_ap_ack = ~backpressure_in;
 
-assign packet_in_packet_in_RDY = ~(Tuple_FIFO_almost_full | Data_FIFO_almost_full);
+assign backpressure_out = Tuple_FIFO_almost_full | Data_FIFO_almost_full;
 
 assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_out_DAT,
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = Core_parity;
-assign packet_out_packet_out_VAL = Core_parity_ap_vld;
+assign packet_out_packet_out_VAL = Core_parity_ap_vld & ~backpressure_in;
 
-assign tuple_out_fec_output_VALID = packet_out_packet_out_VAL & packet_out_packet_out_RDY &
+assign tuple_out_fec_output_VALID = packet_out_packet_out_VAL & (~backpressure_in) &
                                     packet_out_packet_out_SOF;
 assign tuple_out_fec_output_DATA = 0;
-assign tuple_out_control_VALID = packet_out_packet_out_VAL & packet_out_packet_out_RDY &
+assign tuple_out_control_VALID = packet_out_packet_out_VAL & (~backpressure_in) &
                                  packet_out_packet_out_SOF;
 assign tuple_out_control_DATA = 0;
 

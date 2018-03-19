@@ -3,7 +3,7 @@
 
 #include "Encoder.h"
 
-#define PAYLOAD_SIZE (256)
+#define PAYLOAD_SIZE (8192)
 
 #define INPUT_PACKET_SIZE (FEC_ETH_HEADER_SIZE + PAYLOAD_SIZE)
 #define FEEDBACK_PACKET_SIZE (INPUT_PACKET_SIZE + FEC_HEADER_SIZE)
@@ -51,7 +51,8 @@ void RSE_core(tuple_interface Tuple, packet_interface * Data,
 #pragma HLS INTERFACE ap_fifo port=Data
 #pragma HLS INTERFACE ap_hs port=Parity
 
-#pragma HLS ARRAY_PARTITION variable=parity_buffer complete dim=0
+#pragma HLS ARRAY_PARTITION variable=parity_buffer cyclic factor=8 dim=1
+#pragma HLS ARRAY_PARTITION variable=parity_buffer complete dim=2
 
   if (Tuple.Valid == 0)
   {

@@ -409,11 +409,6 @@ int codewords_check_bounds(void) {
         D0(fprintf (stderr, "\n FEC_MAX_N (%d) > FEC_N (%d)\n", FEC_MAX_N, FEC_N));
         return (FEC_ERR_INVALID_PARAMS);
     }
-    if (FEC_EXTRA_COLS > 1) {
-        D0(fprintf (stderr, "\n FEC_EXTRA_COLS (%d) > 1\n", FEC_EXTRA_COLS));
-        D0(fprintf (stderr, "Allowed, but not implemented: modify rse.c near FEC_EXTRA_COLS\n"));
-        return (FEC_ERR_INVALID_PARAMS);
-    }
     if (FEC_MAX_COLS < 1) {
         D0(fprintf (stderr, "\n FEC_MAX_COLS (%d) < 1\n", FEC_MAX_COLS));
         return (FEC_ERR_INVALID_PARAMS);
@@ -717,8 +712,8 @@ void matrix_multiply(fec_sym COUNT_KNOW, fec_sym *INDEX_KNOW, fec_sym COUNT_PARI
                 data = 0;                               /* if packet has < c symbols */
             }
             /* B) leave room to code length */
-            if ((c == fb.block_C - 1) && (cq < FEC_MAX_K) && (FEC_EXTRA_COLS > 0)) {
-                data = fb.plen[INDEX_KNOW[i]];            /* Use lenght as data */
+            if ((c >= fb.block_C - FEC_EXTRA_COLS) && (cq < FEC_MAX_K) && (FEC_EXTRA_COLS > 0)) {
+                data = (fb.plen[INDEX_KNOW[i]] >> (8 * (c - (fb.block_C - FEC_EXTRA_COLS)))) & 0xFF;            /* Use lenght as data */
             }
             D2(fprintf(stderr, "%04x  ", data));
 
@@ -746,10 +741,10 @@ void write_accumulated_sum_into_wanted_packets(fec_sym *INDEX_WANT, fec_sym want
     for (j=0; j<want; j++) {
         q = INDEX_WANT[j];
         fb.pdata[q][c] = fcm.d[j][0];
-        if ( (c==fb.block_C - 1) && (mode_flag != 0) ){
+        if ( (c >= fb.block_C - FEC_EXTRA_COLS) && (mode_flag != 0) ){
             fb.pstat[q] = FEC_FLAG_KNOWN;           /* If last packet symbol: a) Add flag */
             if (fb.cbi[q] < FEC_MAX_K) {            /* b) Put length value into FEC block */
-                if (FEC_EXTRA_COLS > 0) fb.plen[q]=fcm.d[j][0];
+                if (FEC_EXTRA_COLS > 0) fb.plen[q]+=fcm.d[j][0] << (8 * (c - (fb.block_C - FEC_EXTRA_COLS)));
                 else                    fb.plen[q]=fb.block_C;
             }
         }

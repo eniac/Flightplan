@@ -151,10 +151,10 @@ public:
 						delete fb.pdata[i];
 						fb.pdata[i] = nullptr;
 					}
-					fb.pdata[i] = new fec_sym[200];
+					fb.pdata[i] = new fec_sym[1600];
 				}
 
-				fb.block_C = 200;
+				fb.block_C = 1600;
 				fb.block_N = FEC_K+FEC_H;
 			}
 

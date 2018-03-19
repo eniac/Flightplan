@@ -30,7 +30,7 @@ Encoder: Encoder.sdnet Packet.user Tuple.user Packet_feedback_in.axi \
 	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/loop_0_t.HDL/Configuration.v
 	@cp Encoder/XilinxSwitch/loop_0_t.HDL/Configuration.v Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
 # Fix backpressure.
-	@sed -i 's/\(~(backpressure_in)\)/\1 \& packet_out_PACKET6_RDY/' Encoder/XilinxSwitch/S_SYNCERs.HDL/S_SYNCER_for_fec_0.v
+	@cp XilinxSwitch.v Encoder/XilinxSwitch
 # Fix timing bug in testbench.
 	@cp TB_System_Stim.v Encoder/XilinxSwitch/Testbench
 # Set the correct target FPGA.

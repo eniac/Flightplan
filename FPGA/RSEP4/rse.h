@@ -19,7 +19,7 @@
 #define     FEC_M           8               /* symbol size (default) */
 //#define     FEC_M           16              /* symbol size (Faster?) */
 #define     FEC_MAX_COLS	10000           /* Max symbols in one packet */
-#define     FEC_EXTRA_COLS	1               /* Extra Parity symbols to code length */
+#define     FEC_EXTRA_COLS	2               /* Extra Parity symbols to code length */
 
 /***************************************************************************/
 /* Codeword Definition (using m-bit symbols defined for FEC packet)        */
@@ -41,7 +41,7 @@ typedef fec_sym (*fec_blk)[FEC_MAX_COLS];	/* packet structure of C columns */
 /* Packet Storage in rsetest.c is contiguous ([K+H] by [FEC_MAX_COLS] matrix) */
 /* but, in general, need not be (so pass as pointers) */
 struct fec_block {
-    fec_sym    block_C;                     /* Number of Symbols in Parity packets */
+    int        block_C;                     /* Number of Symbols in Parity packets */
     fec_sym    block_N;                     /* Actual number of packets in FEC block */
     fec_sym    *pdata[FEC_N-1];             /* ptrs to each possible packet in FEC block */
     fec_sym    cbi[FEC_N-1];                /* Code-Block Index (0 to FEC_N-2) */
