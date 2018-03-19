@@ -106,10 +106,7 @@ extern struct fec_matrices fcm;             /* Declare FEC code matrix fcm */
 
 
 #define     MAX_PRINT_COLUMNS   8      /* Max columns printed in tables */
-// #define     FEC_DBG_LEVEL_0             /* Leave defined, unless want no printing */
-// #define     FEC_DBG_LEVEL_1             /* Leave defined, unless want no printing */
-//#define     FEC_DBG_LEVEL_2                /*Leave defined, unless want no printing */
-// #define     FEC_DBG_LEVEL_3             /* Leave defined, unless want no printing */
+#define     FEC_DBG_LEVEL_0             /* Leave defined, unless want no printing */
 
 //#define     FEC_DBG_LEVEL_1
 //#define     FEC_DBG_LEVEL_2             /* print major events */
