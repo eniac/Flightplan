@@ -106,8 +106,8 @@ while (my $Line = <$Input_file>)
   $Inside_module = 0 if ($Line eq ");");
 
   $Start_of_FEC = $Line_number if ($Inside_module && $Line eq "(" && $Module_name eq "fec_0");
-  $Back_pres_source = $Line_number if ($Inside_module && $Module_name eq $Input_module && $#Tokens > 0 && $Tokens[0] eq ".backpressure_out" );
-  $Back_pres_dest = $Line_number if ($Inside_module && $Module_name eq $Output_module && $#Tokens > 0 && $Tokens[0] eq ".backpressure_in" );
+  $Back_pres_dest = $Line_number if ($Inside_module && $Module_name eq $Input_module && $#Tokens > 0 && $Tokens[0] eq ".backpressure_in" );
+  $Back_pres_source = $Line_number if ($Inside_module && $Module_name eq $Output_module && $#Tokens > 0 && $Tokens[0] eq ".backpressure_out" );
 
   $Line_number++;
 }
@@ -127,11 +127,11 @@ while (my $Line = <$Input_file>)
 
   if ($Line_number == $Back_pres_source)
   {
-    print "\t.backpressure_out\t( fec_backpressure_in )\n";
+    print "\t.backpressure_out\t( fec_backpressure_in ),\n";
   }
   elsif ($Line_number == $Back_pres_dest)
   {
-    print "\t.backpressure_in\t( fec_backpressure_out_3 )\n";
+    print "\t.backpressure_in\t( fec_backpressure_out_3 ),\n";
   }
   else
   {
