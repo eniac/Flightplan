@@ -10,7 +10,8 @@
 #include "netdissect.h"
 #include "extract.h"
 
-#define PARITY_MASK (0x80)
+#define PARITY_MASK      (0x80)
+#define BLOCK_INDEX_MASK (0x7F)
 
 #define PACKET_TYPE_OFFSET  (0)
 #define BLOCK_INDEX_OFFSET  (0)
@@ -24,7 +25,7 @@ fec_print(netdissect_options *ndo, const u_char *pptr, u_int len)
 		ND_PRINT("FEC Parity");
 	else
 		ND_PRINT("FEC Data");
-	ND_PRINT(", block %u", pptr[BLOCK_INDEX_OFFSET]);
+	ND_PRINT(", block %u", pptr[BLOCK_INDEX_OFFSET] & BLOCK_INDEX_MASK);
 	ND_PRINT(", packet %u", pptr[PACKET_INDEX_OFFSET]);
 	ND_PRINT(", length: %u", len);
 	ND_PRINT(", contents:");
