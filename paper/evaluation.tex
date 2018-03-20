@@ -24,25 +24,74 @@ error correction?
 Figure~\ref{fig:exp_topo} depicts the testbed we used to benchmark \OurSys.
 The two traffic generation hosts are each connected to different \OurSys
 enabled switches, which are themselves connected by a 10 GbE link. The
-switches are Wedge BF32-100X's with P4 programmable forwarding engines. We
-evaluate three possible deployment models for \OurSys: an FPGA external to
-the switch; a software implementation running on the switch CPU; and an ASIC  
-implementation integrated into the switch forwarding engine. 
+switches are Wedge BF32-100X's with Barefoot Tofino~\cite{tofino} P4 
+programmable forwarding engines. 
+
+% We
+% evaluate three possible deployment models for \OurSys: an FPGA external to
+% the switch; a software implementation running on the switch CPU; and an ASIC  
+% implementation integrated into the switch forwarding engine. 
 
 \subsection{\OurSys models}
-\subsubsection{Behavioral model}
-Figure~\ref{fig:app_tput} shows iperf throughput in the testbed as link quality
-decreases, using the behavioral model of \OurSys.
-To benchmark the ASIC implementation, we use a behavioral model. Instead  of
-dropping packets, the switches tag packets to be dropped in their  egress
-pipelines. The receiving switch recirculates all the data packets in a block 
-until it either counts K distinct packets from that block, i.e., the number of packets 
-required to decode, or a single packet from a subsequent block. If the counter 
-reached K, \OurSys models a successful decode by stripping any tags from the 
-data packets in the block and forwarding them on. On the other hand, if 
-a packet from the next block arrives before the decode is complete, \OurSys 
-models a failed decode by simply dropping all the packets from the current 
-block and moving on to the next one. 
+
+\subsubsection{Line Rate P4 Model.} To measure the effect of faulty links and
+\OurSys at the application level, we implemented a P4 program that models
+lossy links and the FEC encoder / decoder. The model runs at line rate on the
+Barefoot Tofinos in our testbed alongside layer 2 forwarding. It captures
+three overheads that are important to applications: the bandwidth overhead
+that the encoder adds by inserting parity packets and \OurSys headers; the
+latency overhead that the decoder adds when recovering lost packets; and the
+transport layer overhead that  drops from corruption add.
+
+
+\begin{itemize}
+
+\item The \textbf{Encoder Model} encapsulates packets with the \OurSys  header
+and generates blank parity packets. It tracks per-port block IDs and  packet
+indices using P4 register arrays. It recirculates the largest packet in each
+block until the block is complete, then cloning the packet with the Tofino's
+multicast engine.
+
+\item The \textbf{Faulty Link Model} adds a header to each packet
+indicating whether or not the neighbor switch should consider it lost. It
+selects packets for loss according to a simple binomial distribution
+implemented with the Tofino's random number generator. The model only 
+applies to packets egressing on ports configured to model faulty links. 
+
+\item The \textbf{Decoder Model} applies to all packets ingressing on a
+modeled faulty link, before any other forwarding logic. For packets  that are
+tagged as not lost, the model removes the \OurSys and loss  headers and allows
+them to continue to the standard forwarding  pipeline. Instead of dropping
+lost packets, it recirculates them until all the packets  for the block
+arrive. The model then decides whether to recover the  lost packets based on
+per-block counters for the number of non-lost  data and parity packets. If at
+least K data plus parity packets were not lost, the model  "recovers" all of
+the lost packets by removing their loss headers and  forwarding them normally.
+If recovery fails, the model simply drops the  lost packets without
+forwarding.
+
+\end{itemize}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{figures/lossVsTput.pdf}
+  \caption{\label{fig:lossVsTput} Iperf throughput at different loss rates.}
+\end{figure}
+
+Figure~\ref{fig:lossVsTput} shows TCP throughput, measured with 60 second Iperf 
+trials, as we varied the probability of packet loss. With \OurSys, Iperf sustained 
+over 5 Gb/s with loss up to $10^{-1}$ (1 out of every 10 packets dropped). Without 
+\OurSys, Iperf's throughput at that level of loss was under 25 Mb/s. 
+
+\OurSys's parity packets reduced throughput at all levels of loss, 
+proportional to H. At loss rates greater than or equal to $10^{-4}$ the 
+parity packets had less of an impact on TCP throughput than lost packets, for 
+most configurations tested. To reduce the overhead of parity packets, the FEC 
+can be tuned for the loss rate of each specific link, which is 
+stable over time~\cite{corropt}.
+
+Figure~\ref{fig:lossVsLatency} shows UDP latency statistics ...
+
 
 
 \subsubsection{Event-based simulation}
@@ -66,11 +115,6 @@ FPGA requirements are obtained from the Xilinx compiler, and the
 timing statistics are measured using ingress and egress timestamps on
 the switch.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.3\paperwidth]{fake_tput.pdf}
-  \caption{\label{fig:app_tput} Application throughput.}
-\end{figure}
 
 \begin{table}
 % \footnotesize
