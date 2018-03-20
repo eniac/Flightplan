@@ -3,7 +3,7 @@
 % We evaluate \OurSys using different types of traffic to measure its improvement
 % to application-level behaviour in the presence of lossy links.
 
-We evaluate \OurSys with microbenchmarks and simulation to answer three questions.
+We evaluate \OurSys with microbenchmarks and network simulation to answer these questions:
 \begin{itemize}
 
 \item What are the resource requirements for \OurSys with different levels of 
@@ -11,9 +11,10 @@ error correction?
 
 \item How much does \OurSys improve application throughput across lossy links?
 
-\item What benefit can \OurSys have to networks at large?
+%\item What benefit can \OurSys have to networks at large?
 \end{itemize}
 
+\subsection{Setup}
 \begin{figure}
   \centering
   \includegraphics[width=0.3\paperwidth]{exp_topo.pdf}
@@ -28,6 +29,10 @@ evaluate three possible deployment models for \OurSys: an FPGA external to
 the switch; a software implementation running on the switch CPU; and an ASIC  
 implementation integrated into the switch forwarding engine. 
 
+\subsection{\OurSys models}
+\subsubsection{Behavioral model}
+Figure~\ref{fig:app_tput} shows iperf throughput in the testbed as link quality
+decreases, using the behavioral model of \OurSys.
 To benchmark the ASIC implementation, we use a behavioral model. Instead  of
 dropping packets, the switches tag packets to be dropped in their  egress
 pipelines. The receiving switch recirculates all the data packets in a block 
@@ -38,6 +43,34 @@ data packets in the block and forwarding them on. On the other hand, if
 a packet from the next block arrives before the decode is complete, \OurSys 
 models a failed decode by simply dropping all the packets from the current 
 block and moving on to the next one. 
+
+
+\subsubsection{Event-based simulation}
+Figure/Table~\ref{tab:simulation} shows something about the overall benefit of \OurSys from a network-wide perspective, based on an ns-3 event-driven simulation.
+This model has better fidelity than the previous model, but is not run on real hardware. This also means we can simulate larger networks. Here we present data for experiments that are comparable to the setups used in the other evaluations.
+
+
+\subsection{Encoder Microbenchmarks}
+Here we evaluate the implementation directly, not using a model.
+Latency and throughput graphs for experiments involving different loss rates, and the encoder working on the CPU and FPGA.
+Note: we have not optimised the CPU implementation.
+
+
+\subsection{FPGA resource consumption}
+Table~\ref{tab:microbenchmarks} shows the resource requirements for the FPGA implementations of
+\OurSys with different H and K parameters.
+%CPU cycles for the software
+%implementation are measured using Linux performance counters and averaged over
+%X packets,
+FPGA requirements are obtained from the Xilinx compiler, and the
+timing statistics are measured using ingress and egress timestamps on
+the switch.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{fake_tput.pdf}
+  \caption{\label{fig:app_tput} Application throughput.}
+\end{figure}
 
 \begin{table}
 % \footnotesize
@@ -66,31 +99,6 @@ Processing Time (ns) & & & & \\
 \label{tab:microbenchmarks}
 \end{center}
 \end{table}
-
-\subsection{Encoder Microbenchmarks}
-Table~\ref{tab:microbenchmarks} shows the resource requirements (\emph{
-or latencies or throughputs}) for the software and  FPGA implementations of
-\OurSys with different H and K parameters. CPU cycles for the software
-implementation are measured using Linux performance counters and averaged over
-X packets, FPGA requirements are obtained from the Xilinx compiler, and the
-timing statistics are measured using ingress and egress timestamps on the
-switch.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.3\paperwidth]{fake_tput.pdf}
-  \caption{\label{fig:app_tput} Application throughput.}
-\end{figure}
-
-\subsection{Application Throughput}
-Figure~\ref{fig:app_tput} shows iperf throughput in the testbed as link quality
-decreases, using the behavioral model of \OurSys. 
-
-\subsection{Large Scale Analysis}
-Figure/Table~\ref{tab:simulation} shows something about the overall benefit of \OurSys from a network-wide perspective, based on an ns-3 event-driven simulation.
-
-% Microbenchmarks
-
 
 
 %We run \OurSys in 3 configurations: outside the switch, on the switch, and in the switch.
