@@ -20,8 +20,12 @@
 #define     FEC_N           (1 << FEC_M)   /* 2^m = Max symbol value + 1 */
 //#define     FEC_MAX_N       350            /* Max packets in FEC block (< FEC_N) */
 #define     FEC_MAX_N       (FEC_N-1)      /* Max packets in FEC block (< FEC_N) */
+#ifndef FEC_MAX_H
 #define     FEC_MAX_H       16             /* MAX h parities (< FEC_MAX_N) */
+#endif // FEC_MAX_H
+#ifndef FEC_MAX_K
 #define     FEC_MAX_K       (FEC_MAX_N - FEC_MAX_H)  /* MAX k data packets */
+#endif // FEC_MAX_K
 
 /***************************************************************************/
 /* FEC Packet Definition (to hold data and additional length info)         */
