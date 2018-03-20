@@ -2,14 +2,14 @@ VENCORE_CODE=../../RSECodeVanilla/
 
 all: fecEncodeBooster fecEncodeBooster_baseline
 
-fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h rse.o makefile
-	g++ -I$(VENCORE_CODE) -O2 -o fecEncodeBooster fecEncodeBooster.c rse.o -lpcap
+fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h $(VENCORE_CODE)/rse.o makefile
+	g++ -I$(VENCORE_CODE) -O2 -o fecEncodeBooster fecEncodeBooster.c $(VENCORE_CODE)/rse.o -lpcap
 
-fecEncodeBooster_baseline: fecEncodeBooster_baseline.c $(VENCORE_CODE)/rse.h rse.o makefile
-	g++ -I$(VENCORE_CODE) -O2 -o fecEncodeBooster_baseline fecEncodeBooster_baseline.c rse.o -lpcap
+fecEncodeBooster_baseline: fecEncodeBooster_baseline.c $(VENCORE_CODE)/rse.h $(VENCORE_CODE)/rse.o makefile
+	g++ -I$(VENCORE_CODE) -O2 -o fecEncodeBooster_baseline fecEncodeBooster_baseline.c $(VENCORE_CODE)/rse.o -lpcap
 
-rse.o:	$(VENCORE_CODE)/rse.c $(VENCORE_CODE)/rse.h makefile
-	g++ -I$(VENCORE_CODE) -O3 -c $(VENCORE_CODE)/rse.c
+rse.o:
+	make -C $(VENCORE_CODE)
 
 clean: 
 	$(RM) fecEncodeBooster
