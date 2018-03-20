@@ -6,6 +6,7 @@
 #include "rse.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
 
 /***************************************************************************/
 /* Define Size of FEC BLOCK (K and H) and Packet (C) and erasure channel   */
