@@ -35,40 +35,39 @@ programmable forwarding engines.
 \subsection{\OurSys models}
 
 \subsubsection{Line Rate P4 Model.} To measure the effect of faulty links and
-\OurSys at the application level, we implemented a P4 program that models
-lossy links and the FEC encoder / decoder. The model runs at line rate on the
+\OurSys at the application level, we implemented a P4 model of lossy links and 
+the FEC encoder / decoder. The model runs at line rate on the
 Barefoot Tofinos in our testbed alongside layer 2 forwarding. It captures
 three overheads that are important to applications: the bandwidth overhead
 that the encoder adds by inserting parity packets and \OurSys headers; the
 latency overhead that the decoder adds when recovering lost packets; and the
 transport layer overhead that  drops from corruption add.
 
-
 \begin{itemize}
 
-\item The \textbf{Encoder Model} encapsulates packets with the \OurSys  header
-and generates blank parity packets. It tracks per-port block IDs and  packet
-indices using P4 register arrays. It recirculates the largest packet in each
-block until the block is complete, then cloning the packet with the Tofino's
-multicast engine.
+\item The \textbf{Encoder Model} encapsulates each packet  egressing on the
+faulty link with the \OurSys header and inserts blank  parity packets into the
+flow. It tracks per-port block IDs and  packet indices using P4 register
+arrays. To generate parity packets, the  model clones the largest packet in
+each block with the Tofino's multicast engine. The clone operation is 
+delayed until a block completes using recirculation.
 
-\item The \textbf{Faulty Link Model} adds a header to each packet
-indicating whether or not the neighbor switch should consider it lost. It
-selects packets for loss according to a simple binomial distribution
-implemented with the Tofino's random number generator. The model only 
-applies to packets egressing on ports configured to model faulty links. 
 
-\item The \textbf{Decoder Model} applies to all packets ingressing on a
-modeled faulty link, before any other forwarding logic. For packets  that are
-tagged as not lost, the model removes the \OurSys and loss  headers and allows
-them to continue to the standard forwarding  pipeline. Instead of dropping
-lost packets, it recirculates them until all the packets  for the block
-arrive. The model then decides whether to recover the  lost packets based on
-per-block counters for the number of non-lost  data and parity packets. If at
-least K data plus parity packets were not lost, the model  "recovers" all of
-the lost packets by removing their loss headers and  forwarding them normally.
-If recovery fails, the model simply drops the  lost packets without
-forwarding.
+\item The \textbf{Faulty Link Model} adds a header to each packet egressing
+the faulty link that indicates whether or not the neighbor switch should
+consider it lost. It selects packets for loss according to a simple binomial
+distribution implemented with the Tofino's random number generator. 
+
+\item The \textbf{Decoder Model} applies, before any other forwarding logic,
+to all packets ingressing from a modeled faulty link. For packets  that are
+not tagged as lost, the model simply removes the \OurSys and loss headers and
+allows them to continue to the standard forwarding  pipeline. The model
+recirculates  lost packets until the next block begins, at which point it
+decides whether  to recover them based on the number of non-lost data and
+parity packets it has  observed in the block.  If it counted at least K data
+plus parity packets  in the block, the model  "recovers" all of the lost
+packets by removing their loss headers and  forwarding them normally. If
+recovery fails, the model simply drops the  lost packets without forwarding.
 
 \end{itemize}
 
