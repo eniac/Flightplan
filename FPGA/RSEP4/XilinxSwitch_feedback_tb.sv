@@ -47,7 +47,7 @@ wire [0:0] tuple_in_ioports_VALID ;
 wire [7:0] tuple_in_ioports_DATA ;
 wire [0:0] enable_processing ;
 wire [0:0] packet_out_packet_out_TVALID ;
-wire [0:0] packet_out_packet_out_TREADY ;
+reg [0:0] packet_out_packet_out_TREADY ;
 wire [63:0] packet_out_packet_out_TDATA ;
 wire [7:0] packet_out_packet_out_TKEEP ;
 wire [0:0] packet_out_packet_out_TLAST ;
@@ -133,8 +133,9 @@ RSEFeedback_i
 	.tuple_out_DATA		( tuple_in_ioports_DATA )
 );
 
-
-assign packet_out_packet_out_TREADY = 1'd1 ;
+always @( posedge clk_line ) begin
+	packet_out_packet_out_TREADY <= $urandom % 2;
+end
 
 assign enable_processing = 1'd1 ;
 
