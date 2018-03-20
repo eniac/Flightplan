@@ -151,6 +151,12 @@ implementing our FEC. We found that SDNet implements an extensible
 pipeline of functional blocks -- for parsing, deparsing, updating
 state, etc -- to which we can add our external function. This allowed us to implement our function as a stream processor, for cut-through behaviour through SDNet.
 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\paperwidth]{figures/sdnet-interface.png}
+  \caption{\label{fig:sdnet-interface}SDNet bridges P4 header processor and C encoder}
+\end{figure}
+
 \iffalse
 1. Both P4 and SDNet encourage programs working like a flow - you should never go back and touch anything
 a second time. This ensures the efficiency of the program but also makes it harder to express complex
