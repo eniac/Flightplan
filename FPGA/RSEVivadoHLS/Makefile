@@ -1,4 +1,4 @@
-VENCORE_CODE=../../RSECodeVanilla/
+VENCORE_CODE=../../RSECode/
 
 rsetest:
 	@gcc -I$(VENCORE_CODE) -std=c99 -DUSE_OLD_GENERATOR -DIN_SOFTWARE -DVENCORE_ENCODER -o rsetest *.c

@@ -1,4 +1,4 @@
-VENCORE_CODE=../../RSECodeVanilla/
+VENCORE_CODE=../../RSECode/
 
 all: fecEncodeBooster fecEncodeBooster_baseline
 
