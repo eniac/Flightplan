@@ -187,6 +187,7 @@ shape of the solution.}
 
 \subsection{FEC Encoder}
 \label{sec:impl:fec-encoder}
+
 In this section we describe our generation of parity frames. Currently
 we can only decode on a CPU; our FPGA implementation of the decode is
 work-in-progress.
@@ -194,23 +195,42 @@ work-in-progress.
 %The current implementation is limited to packet encoding, but our intention is
 %to implement the decoder too.
 
-In \OurSys error correction is performed with a Reed-Solomon erasure (RSE) code~\FIXME{\cite{citation}}. % Erasure codes
+In \OurSys, error correction is performed with a Reed-Solomon erasure (RSE) code~\cite{rse}
+\hg{Note that this reference covers only error correction, not dealing with erasures}.
+% Erasure codes
 %require prior knowledge of which packets data is missing, as opposed to regular
 %error correction codes.  This comes with the benefit of requiring fewer error
 %correction bits.  RSE is a linear code, which means that every codeword can be
 %obtained by a linear combination of codewords. 
 Assuming we have a vector $x$,
-which contains a message with $k$ values or symbols, encoding consists merely
-of multiplying $x$ with a $k \times n$ generator matrix $G$, yielding an $n$-symbol
-codeword $c = xG$.  The coefficients of the
-generator are constants that are determined by the values of $k$ and
-$h$.\FIXME{Can this be cast more directly in language that corresponds to concepts used up to now -- packets in particular, or translate ``vector''/``message''/``symbols'' to objects that have been previously described?}
-% What makes RSE complex is that arithmetic operations are performed in a finite (Galois)
-%field to ensure that mathematic operations on integers in a finite range yield
-%again integers in the same range.
+which contains a message with $k$ symbols of $m$ bits, encoding consists merely
+of multiplying $x$ with a $k \times n$ generator matrix $G$. The result is an
+$n$-symbol codeword $c = xG$, where $n$ satisfies $n = k + h$.   The coefficients of the
+generator matrix are constants that are determined by the values of $k$ and
+$h$.
+%\FIXME{Can this be cast more directly in language that corresponds to concepts used up to now
+%-- packets in particular, or translate ``vector''/``message''/``symbols'' to objects that have been previously described?}
+%   HG: No.  Vectors and messages are orthogonal to packets.  We could call symbols
+%       bytes if we ignore $m$ as a variable, but describing an instance of the algorithm
+%       as "the RSE algorithm" just to save a couple of words seems a bit ugly.
+What makes RSE complex is that arithmetic operations are performed in a finite (Galois)
+field to ensure that mathematic operations on integers in a finite range yield
+again integers in the same range.  \hg{I put this line back in because otherwise
+the mention of the Galois field in the resource requirements comes out of nowhere.
+If space is an issue, we can not mention this and compute resource requirements in
+units of multiplications.}
+Earlier, we used $k$ and $h$ to count packets.  This choice was intentional as
+Figure~\ref{fig:Striping} demonstrates.
 Due to space limitations, we will not discuss RSE in more detail.
-\amd{somewhere we should be clear x is striped across corresponding bytes
-  in k packets}
+%\amd{somewhere we should be clear x is striped across corresponding bytes
+%  in k packets}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\paperwidth]{Striping.pdf}
+  \caption{\label{fig:Striping} Correspondence beween packet data, messages and codewords.
+  }
+\end{figure}
 
 %In our encoder, the message consists of all symbols in a block that are at a
 %certain offset from the start of a data packet.
@@ -225,7 +245,7 @@ Due to space limitations, we will not discuss RSE in more detail.
 %line rate would suffice to sustain the throughput of the Ethernet MAC.
 The encoder could be implemented to work in two ways:
 non-incrementally on a group of packets, or incrementally as each
-packet arrives. The non-incremental approach is more straightforward
+packet arrives. The non-incremental approach is more straightforward,
 but incurs high latency and storage requirements, since  encoding
 cannot start until all packets in a group have been received.
 
@@ -236,35 +256,34 @@ calculated and the output symbols are updated.
 
 We now derive the resource requirements in terms of multiplications.
 The matrix-vector multiplication requires $k \times n$
-multiplications. \FIXME{Not clear what $n$ is}
-\amd{n=k+h ?}
+multiplications. %\FIXME{Not clear what $n$ is}
+%\amd{n=k+h ?}
 The first $k$ columns are an identity matrix because RSE does not alter data
 packets.  The output values can be computed without multiplications.  The
 remaining $kh$ multiplications are performed once for each $k$-symbol message,
-resulting in $h$ multiplications per input symbol.  We saw that we need 8
-matrix-vector multipliers to sustain 10 Gbps, so altogether $8h$ multipliers
-clocked at line rate should be sufficient.  As a consequence, we expect that
+resulting in $h$ multiplications per input symbol.  As a consequence, we expect that
 providing a higher level of protection against erasures for a given throughput
-constraint requires more hardware.  Multiplications in the Galois field can be
-implemented in several ways.  Straightforward computation of the result would
-demand too many resources.  We advocate an implementation that computes the
+constraint requires more hardware.  The encoder receives
+packets from a 10-Gbps Ethernet MAC via a 64-bit AXI bus at a 156.25 Mhz line
+rate.  For 8-bit symbols, 8 matrix-vector multiplier instances running at
+line rate would suffice to sustain 10 Gbps, so altogether $8h$ Galois-field multiplications
+are needed.  To save resources, we use an implementation that computes the
 multiplication $m$ of $a$ and $b$ with the formula $m = e^{\log a + \log b}$.
 The logarithms and exponents can be looked up in 8-bit tables with 256
 entries.
-\amd{8-bit comes out of nowhere.  Do we need to state that we are working
-  with 8-bit symbols (GF(256)?) first for this to make sense?}
+%\amd{8-bit comes out of nowhere.  Do we need to state that we are working
+%  with 8-bit symbols (GF(256)?) first for this to make sense?}
 Such tables can be implemented in the local memories (BRAMs) of the FPGA.  
 The coefficients of the generator matrix are constants.  The associated
 logarithms can be precomputed, leaving only 2 lookup tables per multiplier,
 resulting in a grand total of $16h$ BRAMs.
 
-Listing~\ref{Multiplier} shows the source code of the non-incremental
-matrix-vector multiplier. \FIXME{This paragraph+snippet is tricky, since we earlier dismissed using the non-incremental approach.}
+Listing~\ref{Multiplier} shows the source code of the
+matrix-vector multiplier. %\FIXME{This paragraph+snippet is tricky, since we earlier dismissed using the non-incremental approach.}
 It can be compiled with a regular software
 compiler and executed on a microprocessor
 %, for instance, 
-\amdrev{for a software implementation or}
-to debug the code.
+for a software implementation or to debug the code.
 In addition, Vivado HLS can generate an FPGA implementation
 from the code, guided by the pragmas, which are ignored by software compilers.
 A similar implementation in Verilog or VHDL requires in the order of hundreds
@@ -272,30 +291,26 @@ of lines.  The {\tt pipeline} pragma directs the tool to construct a
 hardware pipeline that can start executing one invocation of the function
 every clock cycle.  Vivado automatically inserts a suitable number of registers
 to achieve the desired clock period.
-The {\tt Dat}, {\tt Par}, and {\tt Gen} arrays are mapped
-on BRAMs by default.  The pipeline would need {\tt MAX\_K} values from {\tt Dat}
+The {\tt Par} and {\tt Gen} arrays are mapped
+on BRAMs by default.  The pipeline would need {\tt MAX\_H} values from {\tt Par}
 per clock cycle although a dual-port BRAM can supply only 2 values.  The
-solution is to divide the data in {\tt Dat} over multiple BRAMs that can be
+solution is to divide the data in {\tt Par} over multiple BRAMs that can be
 accessed simultaneously.  We accomplish that with the {\tt ARRAY\_PARTITION}
 pragma.
+\hg{Array\_reshape pragma probably makes more sense.  Still have to test it
+though.}
 
 \begin{lstlisting}[language=C,basicstyle=\footnotesize,numbers=left,
                    captionpos=b,caption={Matrix-Vector Multiplier},
                    label=Multiplier]
-void Enc(char Dat[MAX_K], char Par[MAX_H], int k, int h) {
-#pragma HLS ARRAY_PARTITION variable=Dat complete dim=1
+void Enc(char Dat, char Par[MAX_H], int Pkt, int h) {
 #pragma HLS ARRAY_PARTITION variable=Par complete dim=1
   static char Gen[MAX_H][MAX_K] = { ... };
 #pragma HLS ARRAY_PARTITION variable=Gen complete dim=0
 #pragma HLS pipeline
-  for (int i = 0; i < MAX_H; i++) {
-    int Res = 0;
-    for (int j = 0; j < MAX_K; j++) {
-      if (i < h && j < k)
-        Res = GF_add(Result, GF_mul(Dat[j], Gen[i][j]));
-    }
-    Par[i] = Res;
-  }
+  for (int i = 0; i < MAX_H; i++)
+    if (i < h)
+      Par[i] = GF_add(Par[i], GF_mul(Dat[j], Gen[i][Pkt]));
 }
 \end{lstlisting}
 
