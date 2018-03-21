@@ -61,7 +61,7 @@ architecture RTL of RSEFeedback is
       wr_rst_busy : out std_logic;
       rd_rst_busy : out std_logic
     );
-end component;
+  end component;
 
   signal mux_sel             : std_logic;
   signal dup_en_reg          : std_logic;
@@ -120,7 +120,7 @@ begin
   end process;
 
   p_dup: process(dup_sel, rse_in_TVALID, rse_in_TDATA, rse_in_TKEEP, rse_in_TLAST,
-                 axis_out_TREADY, feedback_in_TREADY)
+                 axis_out_TREADY, feedback_in_TREADY, tmp_rse_in_TREADY)
   begin
     if dup_sel = '0' then
       feedback_in_TVALID <= '0';
@@ -129,7 +129,7 @@ begin
       feedback_in_TLAST  <= '0';
       tmp_rse_in_TREADY  <= axis_out_TREADY;
     else
-      feedback_in_TVALID <= rse_in_TVALID;
+      feedback_in_TVALID <= rse_in_TVALID and tmp_rse_in_TREADY;
       feedback_in_TDATA  <= rse_in_TDATA;
       feedback_in_TKEEP  <= rse_in_TKEEP;
       feedback_in_TLAST  <= rse_in_TLAST;
@@ -137,7 +137,7 @@ begin
     end if;
   end process;
 
-  axis_out_TVALID <= rse_in_TVALID;
+  axis_out_TVALID <= rse_in_TVALID and tmp_rse_in_TREADY;
   axis_out_TDATA  <= rse_in_TDATA;
   axis_out_TKEEP  <= rse_in_TKEEP;
   axis_out_TLAST  <= rse_in_TLAST;
@@ -210,7 +210,7 @@ begin
     );
     
   fifo_din            <= feedback_in_TDATA & feedback_in_TKEEP & feedback_in_TLAST;
-  fifo_wr_en          <= feedback_in_TVALID and tmp_rse_in_TREADY;
+  fifo_wr_en          <= feedback_in_TVALID;
   feedback_in_TREADY  <= not fifo_full;
 
   feedback_out_TDATA  <= fifo_dout(72 downto 9);

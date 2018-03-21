@@ -1,0 +1,61 @@
+To measure the effect of faulty links and
+\OurSys at the application level, we implemented a P4 model of lossy links and
+the FEC encoder / decoder. The model runs at line  rate alongside the layer 2
+forwarding in the Barefoot Tofinos in our  testbed. It captures three
+overheads that are important to applications: the bandwidth overhead that the
+encoder adds by inserting parity packets and \OurSys headers; the latency
+overhead that the decoder adds when recovering lost packets; and the transport
+layer overhead that faulty links add by causing packet drops.
+
+\begin{itemize}
+
+\item The \textbf{Encoder Model} encapsulates each packet  egressing on the
+faulty link with the \OurSys header and inserts blank  parity packets into the
+flow. It tracks per-port block IDs and  packet indices using P4 register
+arrays. To generate parity packets, the  model clones the largest packet in
+each block with the Tofino's multicast engine. The clone operation is 
+delayed until all the data packets in a block egress, using recirculation.
+
+
+\item The \textbf{Faulty Link Model} adds a \emph{loss header} to each packet
+egressing the faulty link. The header indicates whether or not the neighbor
+switch should consider the packet lost. The model selects packets for loss
+according to a simple binomial distribution implemented with the Tofino's
+random number generator.
+
+\item The \textbf{Decoder Model} applies to all packets ingressing from a
+modeled faulty link, before any other forwarding logic. For packets that are
+not tagged as lost, the model simply removes the \OurSys and loss headers and
+allows them to continue to the standard forwarding  pipeline. The model
+recirculates  lost packets until the next block begins, at which point it
+decides whether  to recover them based on the number of non-lost data and
+parity packets it has  observed in the block.  If it counted at least K data
+plus parity packets  in the block, the model  "recovers" all of the lost
+packets by removing their loss headers and  forwarding them normally. If
+recovery fails, the model simply drops the  lost packets without forwarding.
+
+\end{itemize}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{figures/lossVsTput.pdf}
+  \caption{\label{fig:lossVsTput} Iperf throughput at different loss rates.}
+\end{figure}
+
+Figure~\ref{fig:lossVsTput} shows TCP throughput, measured with 60 second Iperf 
+trials, as we varied the probability of packet loss. With \OurSys, Iperf sustained 
+over 5 Gb/s with loss up to $10^{-1}$ (1 out of every 10 packets dropped). Without 
+\OurSys, Iperf's throughput at that level of loss was under 25 Mb/s. 
+
+% This figure shows the impact of H. 
+\OurSys's parity packets reduced throughput at all levels of loss, 
+proportional to H. At loss rates greater than or equal to $10^{-4}$ the 
+parity packets had less of an impact on TCP throughput than lost packets, for 
+most configurations tested. To reduce the overhead of parity packets, the FEC 
+can be tuned for the loss rate of each specific link, which is 
+stable over time~\cite{corropt}.
+
+
+% This figure shows the impact of K.
+Figure~\ref{fig:lossVsLatency} shows UDP latency statistics ...
+
