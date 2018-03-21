@@ -24,25 +24,19 @@ error correction?
 Figure~\ref{fig:exp_topo} depicts the testbed we used to benchmark \OurSys.
 The two traffic generation hosts are each connected to different \OurSys
 enabled switches, which are themselves connected by a 10 GbE link. The
-switches are Wedge BF32-100X's with P4 programmable forwarding engines. We
-evaluate three possible deployment models for \OurSys: an FPGA external to
-the switch; a software implementation running on the switch CPU; and an ASIC  
-implementation integrated into the switch forwarding engine. 
+switches are Wedge BF32-100X's with Barefoot Tofino~\cite{tofino} P4 
+programmable forwarding engines. 
+
+% We
+% evaluate three possible deployment models for \OurSys: an FPGA external to
+% the switch; a software implementation running on the switch CPU; and an ASIC  
+% implementation integrated into the switch forwarding engine. 
 
 \subsection{\OurSys models}
-\subsubsection{Behavioral model}
-Figure~\ref{fig:app_tput} shows iperf throughput in the testbed as link quality
-decreases, using the behavioral model of \OurSys.
-To benchmark the ASIC implementation, we use a behavioral model. Instead  of
-dropping packets, the switches tag packets to be dropped in their  egress
-pipelines. The receiving switch recirculates all the data packets in a block 
-until it either counts K distinct packets from that block, i.e., the number of packets 
-required to decode, or a single packet from a subsequent block. If the counter 
-reached K, \OurSys models a successful decode by stripping any tags from the 
-data packets in the block and forwarding them on. On the other hand, if 
-a packet from the next block arrives before the decode is complete, \OurSys 
-models a failed decode by simply dropping all the packets from the current 
-block and moving on to the next one. 
+
+\subsubsection{Line Rate P4 Model.} 
+\input{p4models}
+
 
 
 \subsubsection{Event-based simulation}
@@ -66,11 +60,6 @@ FPGA requirements are obtained from the Xilinx compiler, and the
 timing statistics are measured using ingress and egress timestamps on
 the switch.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.3\paperwidth]{fake_tput.pdf}
-  \caption{\label{fig:app_tput} Application throughput.}
-\end{figure}
 
 \begin{table}
 % \footnotesize

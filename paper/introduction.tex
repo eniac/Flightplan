@@ -28,17 +28,26 @@ with existing network architecture choices (e.g., the network's topology,
 and how packets are routed over it). We model \OurSys using ns-3 and evaluate
 implementations for CPUs and FPGAs.
 
-\OurSys can work with various types of networks, but we think it can
-be especially helpful in mitigating failing links in datacenters,
-which has previously been studied by Zhuo et
-al.~\cite{Zhuo:2017:UMP:3098822.3098849}.
-Datacenter networks are ever more expansive and their architecture
-involves a large number of links to attain a larger bisection
-bandwidth. Their performance is critical to many widely-used
-applications, including those running on private and public clouds.
-The current practice of polling and disabling links from the edge of
-the network is slow, and adds more contention over non-failing links.
-\OurSys can help make such networks more resilient to failing links, with minimal configuration overhead.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{figures/timeVsTput.pdf}
+  \caption{\label{fig:timeVsTput} Intermittent packet drops at low rates, like those 
+  caused by faulty links, drastically reduce TCP throughput.}
+\end{figure}
+
+
+\OurSys can work with various types of networks, but we think it can be
+especially helpful in mitigating failing links in datacenters, which has
+previously been studied by Zhuo et al.~\cite{Zhuo:2017:UMP:3098822.3098849}.
+Datacenter networks are ever more expansive and their architecture involves a
+large number of links to attain a larger bisection bandwidth. Their
+performance is critical to many widely-used applications, including those
+running on private and public clouds. Faulty  links have a significant impact
+on these applications, as Figure~\ref{fig:timeVsTput}  illustrates. The
+current practice of polling and disabling links from the edge of the network
+is slow, and adds more contention over non-failing links. \OurSys can help
+make such networks more resilient to failing links, with minimal configuration
+overhead.
 
 Running \OurSys as an in-network function makes more sense than
 running it in end-hosts since the problem that \OurSys mitigates is
