@@ -31,7 +31,7 @@ using namespace std;
 
 #define MTU 1500
 
-pcap_t * descr_in, *descr_out, *pcap;
+pcap_t * pcap;
 
 uint64_t byteCt, pktCt;
 
@@ -42,7 +42,7 @@ void print_hex_memory(void *mem, int len);
 
 int main(int argc, char *argv[]){
   int opt = 0;
-  char *if_name;
+  char *if_name = nullptr;
   while ((opt =  getopt(argc, argv, "i:")) != EOF)
   {
     switch (opt)
