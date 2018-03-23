@@ -74,6 +74,7 @@ reg SOP ;
 reg temp_last ;
 reg [7:0] temp_keep ;
 reg [63:0] temp_data ;
+reg [31:0] cycles;
 
 always @( posedge file_done ) begin
 	fd_pkt <= $fopen("Packet_feedback_in.axi", "r") ;
@@ -89,31 +90,44 @@ always @( posedge clk_n ) begin
 		packet_in_packet_in_TKEEP <= 0 ;
 		packet_in_packet_in_TVALID <= 0 ;
 		packet_in_packet_in_TDATA <= 0 ;
+		cycles <= 0;
 	end
 	else  begin
 		if ( ( ( packet_in_packet_in_TREADY && fw_done ) && ~stim_eof ) ) begin
-			if ( ( 32'h3 != $fscanf(fd_pkt, "%x %x %x", temp_last, temp_keep, temp_data) ) ) begin
-				stim_eof <= 1 ;
-				$display("[%0t]  INFO: finished packet stimulus file", $time);
+			if ( cycles == 0 ) begin
+				if ( ( 32'h3 != $fscanf(fd_pkt, "%x %x %x", temp_last, temp_keep, temp_data) ) ) begin
+					stim_eof <= 1 ;
+					$display("[%0t]  INFO: finished packet stimulus file", $time);
+					packet_in_packet_in_TLAST <= 0 ;
+					packet_in_packet_in_TKEEP <= 0 ;
+					packet_in_packet_in_TVALID <= 0 ;
+					packet_in_packet_in_TDATA <= 0 ;
+				end
+				else  begin
+					packet_in_packet_in_TLAST <= temp_last ;
+					packet_in_packet_in_TKEEP <= temp_keep ;
+					packet_in_packet_in_TDATA <= temp_data ;
+					packet_in_packet_in_TVALID <= 1 ;
+					if ( SOP ) begin
+						tuple_in_valid <= 1 ;
+						if ( ( 32'h1 != $fscanf(fd_tup, "%x ", tuple_in_ioports) ) ) begin
+							tuple_in_ioports <= 0 ;
+							$display("[%0t] ERROR: error when reading tuple stimulus file", $time);
+							$finish(1);
+						end
+					end
+					SOP <= packet_in_packet_in_TLAST ;
+					if ( temp_last ) begin
+						cycles <= 0;
+					end
+				end
+			end
+			else  begin
+				cycles <= cycles - 1;
 				packet_in_packet_in_TLAST <= 0 ;
 				packet_in_packet_in_TKEEP <= 0 ;
 				packet_in_packet_in_TVALID <= 0 ;
 				packet_in_packet_in_TDATA <= 0 ;
-			end
-			else  begin
-				packet_in_packet_in_TLAST <= temp_last ;
-				packet_in_packet_in_TKEEP <= temp_keep ;
-				packet_in_packet_in_TDATA <= temp_data ;
-				packet_in_packet_in_TVALID <= 1 ;
-				if ( SOP ) begin
-					tuple_in_valid <= 1 ;
-					if ( ( 32'h1 != $fscanf(fd_tup, "%x ", tuple_in_ioports) ) ) begin
-						tuple_in_ioports <= 0 ;
-						$display("[%0t] ERROR: error when reading tuple stimulus file", $time);
-						$finish(1);
-					end
-				end
-				SOP <= packet_in_packet_in_TLAST ;
 			end
 		end
 	end
