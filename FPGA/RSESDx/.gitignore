@@ -5,4 +5,6 @@ webtalk
 *.o
 *.elf
 *.log
+RSE_hardware/design_1_wrapper.mmi
+RSE_hardware/system.hdf
 

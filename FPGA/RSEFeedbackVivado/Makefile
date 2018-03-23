@@ -12,6 +12,6 @@ RSEFeedbackVivado: Sources/RSEFeedback.vhd Sources/component.xml Sources/fifo_ge
 	vivado -mode batch -source Create_project.tcl
 
 clean:
-	rm -fr RSEFeedbackVivado *.jou *.log \
+	rm -fr RSEFeedbackVivado *.jou *.log vivado_*.backup.log vivado_*.backup.jou \
 	       $(shell find Sources/fifo_generator_0 -type f ! -path Sources/fifo_generator_0/fifo_generator_0.xci)
 

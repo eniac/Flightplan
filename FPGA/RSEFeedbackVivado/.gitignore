@@ -1,6 +1,8 @@
 RSEFeedbackVivado
 vivado.jou
 vivado.log
+vivado_*.backup.log
+vivado_*.backup.jou
 Sources/Config.vhd
 Sources/fifo_generator_0/*.dcp
 Sources/fifo_generator_0/*_sim_netlist.v*
