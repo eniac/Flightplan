@@ -1,11 +1,11 @@
 #include <pcap.h>
+#include <net/ethernet.h>
 #include <stdint.h>
 #include <unistd.h>
 #include "fecDefs.h"
 #include "rse.h"
 
-/* ethernet headers are always exactly 14 bytes [1] */
-#define SIZE_ETHERNET 14
+#define SIZE_ETHERNET sizeof(struct ether_header)
 
 #define NUM_DATA_PACKETS 130
 #define NUM_PARITY_PACKETS 3
