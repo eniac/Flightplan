@@ -60,7 +60,7 @@ void my_packet_handler(
 		/*populate the global fec structure for rse encoder and call the encode.*/
 		call_fec_blk_get(fecHeader->block_id);
 
-#ifdef FEC_ENCODE_BOOSTER_BASELINE
+#ifndef FEC_ENCODE_BOOSTER_BASELINE
 		/* Encoder */
 		encode_block();
 
