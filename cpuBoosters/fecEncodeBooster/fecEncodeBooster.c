@@ -32,9 +32,8 @@ void my_packet_handler(
 	if (fecHeader->block_id != lastBlockId){
 		lastBlockId = fecHeader->block_id;
 		zeroout_block_in_pkt_buffer(lastBlockId);
-	}
-	// Hack for rollover correctness in benchmarks.
-	if (fecHeader->index < lastPacketId){
+	} else if (fecHeader->index < lastPacketId){
+		// Hack for rollover correctness in benchmarks.
 		zeroout_block_in_pkt_buffer(lastBlockId);
 	}
 	lastPacketId = fecHeader->index;
