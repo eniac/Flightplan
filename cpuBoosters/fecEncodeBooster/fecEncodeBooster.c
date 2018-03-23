@@ -26,7 +26,6 @@ void my_packet_handler(
 		return;
 	}
 
-	// TODO: Invalidate block before starting it.
 	if (fecHeader->block_id != lastBlockId){
 		lastBlockId = fecHeader->block_id;
 		zeroout_block_in_pkt_buffer(lastBlockId);
@@ -37,16 +36,13 @@ void my_packet_handler(
 	}
 	lastPacketId = fecHeader->index;
 
-
-	// TODO: If the packet is a data packet, send it back out asap. 
 	if (fecHeader->index < NUM_DATA_PACKETS){
-		pcap_inject(handle, packet, header -> len);
+		pcap_inject(handle, packet, header->len);
 	}
 
 	/*Update the received pkt in the pkt buffer.*/
 	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == 0) {
 
-		// TODO: copy packet to buffer.
 		memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index], packet, header->len);
 		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = 1;
 		// pkt_buffer[fecHeader->block_id][fecHeader->index] = (char* )packet;
@@ -71,17 +67,7 @@ void my_packet_handler(
 		copy_parity_packets_to_pkt_buffer(fecHeader->block_id);
 #endif // FEC_ENCODE_BOOSTER_BASELINE
 
-		// TODO: disable packet loss and decoder blocks in the encoder.
-		// /* Simulate loss of packets */
-		// simulate_packet_loss();
-
-		// /* Decoder */
-		// decode_block();
-
 		/*Inject all packets in the block back to the network*/
-
-		// TODO: only inject the parity packets.
-		// printf("after encode call.\n");
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++) {
 			char* packetToInject = pkt_buffer[fecHeader->block_id][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
