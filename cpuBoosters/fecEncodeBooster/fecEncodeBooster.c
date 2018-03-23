@@ -12,13 +12,16 @@ int lastPacketId = 0;
  * @param      args    The arguments
  * @param[in]  header  The header
  * @param[in]  packet  The packet
+ *
+ * Packets in a block can be reordered, but blocks must not have their packets mixed:
+ * this code gets confused if packets of one block appear while the code is encoding another,
+ * and unless is_all_pkts_recieved_for_block()==true then the parity packets won't be sent out.
  */
 void my_packet_handler(
     u_char *args,
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
-
 	const struct fec_header *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
 
 	// skip blocks that don't belong to this worker.
@@ -53,7 +56,6 @@ void my_packet_handler(
 		// printf("(%i) ERROR: Overwriting existing packet @ %i:%i \n",workerId,fecHeader->block_id, fecHeader->index);
 	}
 
-//(	fec_dbg_printf)("The header len is ::::: %d\n", header->len);
 	/*check if the block is ready for processing*/
 	if (is_all_pkts_recieved_for_block(fecHeader->block_id) == true) {
 		/*populate the global fec structure for rse encoder and call the encode.*/
