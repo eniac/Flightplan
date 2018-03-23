@@ -42,6 +42,18 @@ recovery fails, the model simply drops the corrupt packets without forwarding.
   \caption{\label{fig:lossVsTput} Iperf throughput at different loss rates.}
 \end{figure}
 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{figures/udpLatency.pdf}
+  \caption{\label{fig:lossVsLatencyUdp} Network latency for a 100 Mb/s UDP flow (H = 5, loss rate = $10 ^{-2}$).}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.3\paperwidth]{figures/tcpLatency.pdf}
+  \caption{\label{fig:lossVsLatencyTcp} Network latency for a 9 Gb/s TCP flow (K = 25, H = 5, loss rate = $10 ^{-2}$).}
+\end{figure}
+
 Figure~\ref{fig:lossVsTput} shows the benefit that FEC has on TCP throughput
 at different rates of packet loss, measured with 60 second iperf trials. With
 \OurSys, Iperf sustained  over 5 Gb/s with loss up to $10^{-1}$ (1 out of
@@ -60,5 +72,32 @@ time~\cite{corropt}.
 
 
 % This figure shows the impact of K.
-Figure~\ref{fig:lossVsLatency} shows UDP latency statistics ...
+
+To understand how FEC impacts latency, we measured the latency  between the
+ingress pipeline from the source server and the egress pipeline  to the sink
+server, using the nanosecond precision  timestamps of the Tofino, with packets
+routed back through the first  switch before egressing to the sink.
+Figure~\ref{fig:lossVsLatencyUdp}  plots an EWMA of latency for packets in a
+100 Mb/s UDP flow. For  intact packets, latency was low because they did not
+invoke  the decoder. For  recovered packets, however, the decoder increased
+latency. Average  latency increased with block size because  recovery requires
+the decoder to wait until all the parity packets  for a block arrive. The
+maximum observed latency for recovered packets  was high, around 9 MS. This
+was due to the behavior of the iperf  UDP generator, which periodically paused
+for up to 9 MS between  sending packets, to meet the 100 Mb/s target. The high
+inter-packet  arrival time stalled the generation of parity packets and thus
+the  recovery of any lost packets in the same block.
+
+Figure~\ref{fig:lossVsLatencyTcp} plots a time series of latency EWMA  for TCP
+packets in a single maximum rate flow (around 9 Gb/s). The difference in
+latency between recovered versus intact packets was almost indistinguishable.
+Latency for all packets was not dominated by the decoder, by instead by time
+spent  in egress buffers in the switch, which repeatedly filled due to TCPs
+congestion  control dynamics, i.e., causing the familiar ``sawtooth'' pattern
+in Figure~\ref{fig:lossVsLatencyTcp}. Additionally, the latency for packet
+recovery was lower with the TCP workload because average packet rate was
+around 1 order of magnitude higher.
+
+
+
 

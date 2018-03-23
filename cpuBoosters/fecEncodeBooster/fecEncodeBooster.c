@@ -203,10 +203,12 @@ void my_packet_handler(
 		/*populate the global fec structure for rse encoder and call the encode.*/
 		call_fec_blk_get(blockId);
 
+#ifdef FEC_ENCODE_BOOSTER_BASELINE
 		/* Encoder */
 		encode_block();
 
 		copy_parity_packets_to_pkt_buffer(blockId);
+#endif // FEC_ENCODE_BOOSTER_BASELINE
 
 		// TODO: disable packet loss and decoder blocks in the encoder.
 		// /* Simulate loss of packets */

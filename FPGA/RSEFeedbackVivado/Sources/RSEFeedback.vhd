@@ -90,12 +90,14 @@ architecture RTL of RSEFeedback is
   signal fifo_dout           : std_logic_vector(72 downto 0);
   signal fifo_full           : std_logic;
   signal fifo_empty          : std_logic;
-  signal output_read         : std_logic;
-  signal output_valid        : std_logic;
+  signal output_read         : std_logic; -- Data on output of feedback is actually ready by main pipeline
+  signal output_valid        : std_logic; -- Data is waiting at output of feedback (identical to feedback_out_TVALID)
   signal fifo_cnt            : std_logic_vector(3 downto 0);
   signal first_word          : std_logic;
   signal data_available      : std_logic;
   signal packet_available    : std_logic;
+  signal inc_cntr            : std_logic;
+  signal dec_cntr            : std_logic;
 
 begin
 
@@ -218,7 +220,7 @@ begin
   feedback_out_TLAST  <= fifo_dout(0); 
   feedback_out_TVALID <= output_valid;
   packet_available    <= '0' when unsigned(fifo_cnt) = 0 else '1';
-  data_available      <= packet_available when first_word = '1' else not fifo_empty;
+  data_available      <= packet_available when feedback_out_TLAST = '1' else not fifo_empty;
   fifo_rd_en          <= (feedback_out_TREADY or not output_valid) and data_available;
   output_read         <= output_valid and feedback_out_TREADY;
 
@@ -235,15 +237,17 @@ begin
     end if;
   end process;
 
+  inc_cntr <= fifo_wr_en and feedback_in_TLAST;
+  dec_cntr <= first_word and output_read;
+
   p_fifo_cnt: process(clk_line_rst, clk_line)
   begin
     if clk_line_rst = '1' then
       fifo_cnt <= (others => '0');
     elsif rising_edge(clk_line) then
-      if fifo_wr_en = '1' and feedback_in_TLAST = '1' then
+      if inc_cntr = '1' and dec_cntr = '0' then
         fifo_cnt <= std_logic_vector(unsigned(fifo_cnt) + 1);
-      end if;
-      if first_word = '1' and output_read = '1' then
+      elsif dec_cntr = '1' and inc_cntr = '0' then
         fifo_cnt <= std_logic_vector(unsigned(fifo_cnt) - 1);
       end if;
     end if;
