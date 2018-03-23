@@ -5,6 +5,7 @@ All: Build_project
 Create_project: RSEVivado
 Build_project: Create_project
 	vivado -mode batch -source Build_project.tcl
+	@cp RSEVivado/RSEVivado.runs/impl_1/design_1_wrapper.sysdef /RSEVivado/RSEVivado.sdk/design_1_wrapper.hdf
 
 RSEVivado: Sources/Constraints.xdc Sources/design_1.bd Sources/design_1_wrapper.vhd
 	vivado -mode batch -source Create_project.tcl
