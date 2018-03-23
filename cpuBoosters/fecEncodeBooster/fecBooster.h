@@ -31,7 +31,7 @@ extern int Default_erase_list[FEC_MAX_N];
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 void* capturePackets(char* deviceToCapture);
 bool is_all_pkts_recieved_for_block(int blockId);
-void invalidate_block_in_pkt_buffer(int blockId);
+void zeroout_block_in_pkt_buffer(int blockId);
 int get_payload_length_for_pkt(char* packet);
 unsigned char* get_payload_start_for_packet(char* packet);
 void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId);

@@ -29,11 +29,11 @@ void my_packet_handler(
 	// TODO: Invalidate block before starting it.
 	if (fecHeader->block_id != lastBlockId){
 		lastBlockId = fecHeader->block_id;
-		invalidate_block_in_pkt_buffer(lastBlockId);
+		zeroout_block_in_pkt_buffer(lastBlockId);
 	}
 	// Hack for rollover correctness in benchmarks.
 	if (fecHeader->index < lastPacketId){
-		invalidate_block_in_pkt_buffer(lastBlockId);
+		zeroout_block_in_pkt_buffer(lastBlockId);
 	}
 	lastPacketId = fecHeader->index;
 
@@ -53,7 +53,7 @@ void my_packet_handler(
 	} 
 	else { /*This is not good*/
 		// The block is invalid -- don't bother processing.
-		invalidate_block_in_pkt_buffer(lastBlockId);		
+		zeroout_block_in_pkt_buffer(lastBlockId);
 		// memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index], packet, header->len);
 		// pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = 1;
 		// printf("(%i) ERROR: Overwriting existing packet @ %i:%i \n",workerId,fecHeader->block_id, fecHeader->index);
@@ -93,7 +93,7 @@ void my_packet_handler(
 		}
 
 		/*Lastly just invalidate the block in the buffer*/
-		// invalidate_block_in_pkt_buffer(fecHeader->block_id);
+		// zeroout_block_in_pkt_buffer(fecHeader->block_id);
 	}
 	return;
 }
