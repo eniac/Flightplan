@@ -77,30 +77,6 @@ void* capturePackets(char* deviceToCapture) {
 	return NULL;
 }
 
-/**
- * @brief      Gets the block index of packet.
- *
- * @param      packet  The packet
- *
- * @return     The block index of packet.
- */
-int get_block_index_of_pkt(const unsigned char* packet) {
-	fec_header_t *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
-	return fecHeader->block_id;
-}
-
-/**
- * @brief      returns the packet Index within a FEC block for the given packet.
- *
- * @param      packet  The packet
- *
- * @return     The packet index in block.
- */
-int get_packet_index_in_blk(const unsigned char* packet) {
-	fec_header_t *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
-	return fecHeader->index;
-}
-
 void free_parity_memory(char* packet) {
 	free(packet);
 	return;
