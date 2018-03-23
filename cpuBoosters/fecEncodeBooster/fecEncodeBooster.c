@@ -77,9 +77,6 @@ void my_packet_handler(
 			// 	free_parity_memory(packetToInject);
 			// }
 		}
-
-		/*Lastly just invalidate the block in the buffer*/
-		// zeroout_block_in_pkt_buffer(fecHeader->block_id);
 	}
 	return;
 }
