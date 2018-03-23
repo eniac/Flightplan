@@ -41,12 +41,11 @@ void encode_block();
 void decode_block();
 void print_global_fb_block();
 int copy_parity_packets_to_pkt_buffer(int blockId);
-void free_parity_memory(char* packet);
 int get_total_packet_size(char* packet);
 u_short compute_csum(struct sniff_ip *ip , int len);
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
 void print_hex_memory(void *mem, int len);
-// TODO: alloc at startup.
+
 void alloc_pkt_buffer();
 void free_pkt_buffer();

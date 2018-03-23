@@ -42,10 +42,8 @@ void my_packet_handler(
 
 	/*Update the received pkt in the pkt buffer.*/
 	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == 0) {
-
 		memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index], packet, header->len);
 		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = 1;
-		// pkt_buffer[fecHeader->block_id][fecHeader->index] = (char* )packet;
 	} 
 	else { /*This is not good*/
 		// The block is invalid -- don't bother processing.
@@ -54,6 +52,7 @@ void my_packet_handler(
 		// pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = 1;
 		// printf("(%i) ERROR: Overwriting existing packet @ %i:%i \n",workerId,fecHeader->block_id, fecHeader->index);
 	}
+
 //(	fec_dbg_printf)("The header len is ::::: %d\n", header->len);
 	/*check if the block is ready for processing*/
 	if (is_all_pkts_recieved_for_block(fecHeader->block_id) == true) {
@@ -72,10 +71,6 @@ void my_packet_handler(
 			char* packetToInject = pkt_buffer[fecHeader->block_id][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
 			pcap_inject(handle, packetToInject, outPktLen);
-
-			// if (i >= NUM_DATA_PACKETS) {
-			// 	free_parity_memory(packetToInject);
-			// }
 		}
 	}
 	return;

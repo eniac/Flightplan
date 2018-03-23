@@ -77,11 +77,6 @@ void* capturePackets(char* deviceToCapture) {
 	return NULL;
 }
 
-void free_parity_memory(char* packet) {
-	free(packet);
-	return;
-}
-
 
 /**
  * @brief      Wrapper to populate the fec structure.
