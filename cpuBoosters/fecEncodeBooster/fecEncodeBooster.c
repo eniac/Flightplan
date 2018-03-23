@@ -37,14 +37,14 @@ void my_packet_handler(
 	}
 	// Hack for rollover correctness in benchmarks.
 	if (pktId < lastPacketId){
-		invalidate_block_in_pkt_buffer(lastBlockId);		
+		invalidate_block_in_pkt_buffer(lastBlockId);
 	}
 	lastPacketId = pktId;
 
 
 	// TODO: If the packet is a data packet, send it back out asap. 
 	if (pktId < NUM_DATA_PACKETS){
-		pcap_inject(handle, packet, header -> len);		
+		pcap_inject(handle, packet, header -> len);
 	}
 
 	/*Update the received pkt in the pkt buffer.*/
@@ -54,7 +54,6 @@ void my_packet_handler(
 		memcpy(pkt_buffer[blockId][pktId], packet, header->len);
 		pkt_buffer_filled[blockId][pktId] = 1;
 		// pkt_buffer[blockId][pktId] = (char* )packet;
-
 	} 
 	else { /*This is not good*/
 		// The block is invalid -- don't bother processing.
@@ -102,4 +101,3 @@ void my_packet_handler(
 	}
 	return;
 }
-
