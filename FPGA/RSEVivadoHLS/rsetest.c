@@ -13,9 +13,9 @@
 /* Define Size of FEC BLOCK (K and H) and Packet (C) and erasure channel   */
 /***************************************************************************/
 
-#define		Default_H   3     /* FEC Parity packets: h <= FEC_MAX_H */
-#define		Default_K   3     /* Data packets: k < FEC_MAX_N - FEC_MAX_H */
-#define		Default_C   2     /* App data symbols per packet: c <= FEC_MAX_COLS */
+#define		Default_H   FEC_H     /* FEC Parity packets: h <= FEC_MAX_H */
+#define		Default_K   FEC_K     /* Data packets: k < FEC_MAX_N - FEC_MAX_H */
+#define		Default_C   2         /* App data symbols per packet: c <= FEC_MAX_COLS */
 
 /* An array defines packets that are lost (erased) using the FEC block index
    (from 0 to FEC_MAX_N-1). The last element in the array must be FEC_MAX_N,

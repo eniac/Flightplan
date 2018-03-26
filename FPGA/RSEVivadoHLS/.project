@@ -64,7 +64,7 @@
 		<link>
 			<name>source/rse.h</name>
 			<type>1</type>
-			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rse.h</location>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/RSECode/rse.h</location>
 		</link>
 		<link>
 			<name>testbench/RSE_core_test.c</name>
@@ -79,7 +79,7 @@
 		<link>
 			<name>testbench/rse.c</name>
 			<type>1</type>
-			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rse.c</location>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/RSECode/rse.c</location>
 		</link>
 		<link>
 			<name>testbench/rsetest.c</name>
