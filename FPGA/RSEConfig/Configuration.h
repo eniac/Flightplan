@@ -1,6 +1,9 @@
 // Configuration constants
 // =======================
 
+// BE CAREFUL WHEN MODIFYING THIS FILE!
+// This file is also the basis of files included in Verilog and P4 code.
+
 // Number of data packets in a group
 #define FEC_K (8)
 // Number of parity packets in a group
