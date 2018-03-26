@@ -27,9 +27,13 @@ zeroed out to provide padding.)
 The values $(k, h, t)$ influence the latency with which frames belonging to $c$
 cross the switch, as well the likely recovery of frames belonging to $c$. For
 example, for interactive applications we would want to use a small $k$ and $t$.
+
+\lei{Deleted some. Seems to be redundance of 3.3-sending proxy}
+\iffalse
 Parity frames are new frames that are put onto the medium, so by
 increasing $h$ we create more contention for the link, which reduces
 the capacity available for data from applications crossing that link.
+\fi
 
 \subsection{Link-failure management policy}
 \label{sec:policy}
@@ -80,7 +84,7 @@ Frames sent over faulty links are encapsulated as shown in Fig.~\ref{fig:format}
 The original frame is fully encapsulated, and the new header consists of the original source and destination addresses, as well as a custom EtherType for \OurSys.
 After the Ethernet header we add a \OurSys tag, the field-sizes of which
 are deployment-specific: the sizes we use in our implementation are specified
-in~\S\ref{sec:implementation}.
+in~\S\ref{sec:implementation}. \FIXME{I believe we are not specifying it}
 The information in the \OurSys tag is sufficient to distinguish blocks in
 non-bursty loss, as illustrated in Fig.~\ref{fig:example-loss}. If loss is
 bursty then an additional small number of bits can be added to the tag to
@@ -88,7 +92,7 @@ tell blocks apart, as shown in Fig.~\ref{fig:example-loss2}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.3\paperwidth]{header_format.pdf}
+  \includegraphics[width=0.25\paperwidth]{figures/paper-fig-3.pdf}
   \caption{\label{fig:format}Switches can have multiple links between them.
   Traffic on faulty links is encapsulated as shown above: the frame's EtherType
   is moved inside the \OurSys tag (and later moved back after the frame crosses
@@ -100,7 +104,7 @@ tell blocks apart, as shown in Fig.~\ref{fig:example-loss2}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.3\paperwidth]{loss_example.pdf}
+  \includegraphics[width=0.35\paperwidth]{figures/paper-fig-4.pdf}
   \caption{\label{fig:example-loss}The expectation for strictly monotonic frame
   number $n$ ensures that we can distingush successive blocks. Note that frame
   reordering is not possible because they are being sent over the same link,
@@ -109,7 +113,7 @@ tell blocks apart, as shown in Fig.~\ref{fig:example-loss2}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.3\paperwidth]{loss_example2.pdf}
+  \includegraphics[width=0.35\paperwidth]{figures/paper-fig-5.pdf}
   \caption{\label{fig:example-loss2}To mitigate bursty loss, a block sequence number is added.}
 \end{figure}
 
@@ -189,6 +193,6 @@ details in caption of diagrams.}
 %\end{algorithm}
 \begin{figure}
   \centering
-  \includegraphics[width=0.3\paperwidth]{decode_example.pdf}
+  \includegraphics[width=0.4\paperwidth]{figures/paper-fig-6.pdf}
   \caption{\label{fig:example-decode}Prior to decoding each block is mapped to the buffer for its traffic class.}
 \end{figure}

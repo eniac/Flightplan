@@ -42,7 +42,7 @@ Receiving Proxy).
 %was also created with ease of implementation in mind.
 P4 is not suitable
 for
-payload processing or
+%payload processing or
 exploiting the parallellism of the FEC core, so we implemented the core in
 hardware-synthesizable C. The code can be compiled and executed on a
 general-purpose CPU, but we can also synthesize the code for an FPGA
@@ -57,7 +57,7 @@ post-processing, which encapsulates the payloads in Ethernet packets, before pac
 \label{sec:impl:header-processing}
 We use P4 to implement high-level packet processing logic and
 use Xilinx's P4-SDNet toolchain to translate our P4 program into RTL
-and integrate everything together.
+and integrate modules together.
 %The translation goes through 3 steps:
 %
 %First, from P4 to SDNet
@@ -66,8 +66,8 @@ and integrate everything together.
 %
 %Third, add preipheral blocks with Vivado Design Suit
 %
-Our P4 program carries out packet parsing, header tagging as is
-described in~\S\ref{sec:design}, extracting payload for encoder, and
+Our P4 program carries out packet parsing, header tagging,
+extracting payload for encoder, and
 bookkeeping of packet classes.
 
 \iffalse
@@ -143,21 +143,26 @@ an interface between P4 code and the more general computing we need
 for FEC (described below in~\S\ref{sec:impl:fec-encoder}), which we
 implement in hardware-synthesizable C.
 
+\iffalse
 The interface between P4 and external functions emerged as a very
 important part of our implementation, since whole packets must flow
 through it between the P4 environment to the more general logic
-implementing our FEC. We found that SDNet implements an extensible
-pipeline of functional blocks -- for parsing, deparsing, updating
-state, processing packet stream, etc -- to which we can add our external function. 
+implementing our FEC. 
+\fi
+This interface emerged as a very important part of our implementaion,
+since whole packets must flow through it between two different levels
+of abstractions.
+We found that SDNet implements an extensible
+pipeline of functional blocks chained by a packet stream, to which we can add our external function. 
 %This allowed us to implement our function as a stream processor, for cut-through behaviour through SDNet.
-As is shown by Fig.~\ref{fig:sdnet-interface}, we are able to implement
+As is shown by Fig.~\ref{fig:sdnet-interface}, this allows us to implement
 our function as a stream processor with cut-through behaviour and glue it
 to the header processor.
 
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{figures/sdnet-interface.png}
-  \caption{\label{fig:sdnet-interface}Abstract provided by each layer; grey blocks are translated to the pipeline illustrated in next level.}
+  \caption{\label{fig:sdnet-interface}Abstraction provided by each layer; grey blocks are translated to the pipeline illustrated in next level.}
 \end{figure}
 
 \iffalse
@@ -223,7 +228,7 @@ the mention of the Galois field in the resource requirements comes out of nowher
 If space is an issue, we can not mention this and compute resource requirements in
 units of multiplications.}
 Earlier, we used $k$ and $h$ to count packets.  This choice was intentional as
-Figure~\ref{fig:Striping} demonstrates.
+Figure~\ref{fig:Striping} demonstrates.\lei{I can't see the intention......}
 Due to space limitations, we will not discuss RSE in more detail.
 %\amd{somewhere we should be clear x is striped across corresponding bytes
 %  in k packets}
@@ -302,6 +307,7 @@ accessed simultaneously.  We accomplish that with the {\tt ARRAY\_PARTITION}
 pragma.
 \hg{Array\_reshape pragma probably makes more sense.  Still have to test it
 though.}
+\lei{\#Shrink Candidate\#}
 
 \begin{lstlisting}[language=C,basicstyle=\footnotesize,numbers=left,
                    captionpos=b,caption={Matrix-Vector Multiplier},
