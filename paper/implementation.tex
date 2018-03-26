@@ -1,7 +1,6 @@
 \section{Implementation}
 \label{sec:implementation}
 
-\newcommand{\leicom}[1]{{\color{blue}{[\textbf{Lei Comment:} #1]}}}
 \newcommand{\hg}[1]{{\color{green}{[\textbf{Hans Comment:} #1]}}}
 
 \subsection{Overview}
@@ -134,7 +133,7 @@ at a level closer to RTL modules compared to P4.
 %on a 64-bit wide bus, while keeping the ability to use P4 for parsing and bookkeeping.
 %The modification can be finished with a script in less than 10 lines of code.
 %
-%\leicom{well...... is this too long?}
+%\lei{well...... is this too long?}
 
          
 Since we compute over whole frames -- and not only headers -- we could
@@ -149,12 +148,16 @@ important part of our implementation, since whole packets must flow
 through it between the P4 environment to the more general logic
 implementing our FEC. We found that SDNet implements an extensible
 pipeline of functional blocks -- for parsing, deparsing, updating
-state, etc -- to which we can add our external function. This allowed us to implement our function as a stream processor, for cut-through behaviour through SDNet.
+state, processing packet stream, etc -- to which we can add our external function. 
+%This allowed us to implement our function as a stream processor, for cut-through behaviour through SDNet.
+As is shown by Fig.~\ref{fig:sdnet-interface}, we are able to implement
+our function as a stream processor with cut-through behaviour and glue it
+to the header processor.
 
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{figures/sdnet-interface.png}
-  \caption{\label{fig:sdnet-interface}SDNet bridges P4 header processor and C encoder}
+  \caption{\label{fig:sdnet-interface}Abstract provided by each layer; grey blocks are translated to the pipeline illustrated in next level.}
 \end{figure}
 
 \iffalse
