@@ -1,15 +1,20 @@
-all: fecEncodeBooster fecEncodeBooster_baseline
+VENCORE_CODE=../../RSECode/
+#COMPILED_RSE=$(VENCORE_CODE)
+COMPILED_RSE=../../FPGA/RSEVivadoHLS
 
-fecEncodeBooster: fecEncodeBooster.c rse.h rse.o makefile
-	g++ -O2 -o fecEncodeBooster fecEncodeBooster.c rse.o -lpcap
+all: rse.o fecEncodeBooster fecEncodeBooster_baseline
 
-fecEncodeBooster_baseline: fecEncodeBooster.c rse.h rse.o makefile
-	g++ -DFEC_ENCODE_BOOSTER_BASELINE -O2 -o fecEncodeBooster_baseline fecEncodeBooster.c rse.o -lpcap
+fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile
+	g++ -I$(VENCORE_CODE) -O2 -o fecEncodeBooster fecEncodeBooster.c $(COMPILED_RSE)/rse.o -lpcap
 
-rse.o:	rse.c rse.h makefile
-	g++ -O3 -c rse.c
+fecEncodeBooster_baseline: fecEncodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile
+	g++ -DFEC_ENCODE_BOOSTER_BASELINE -I$(VENCORE_CODE) -O2 -o fecEncodeBooster_baseline fecEncodeBooster_baseline.c $(COMPILED_RSE)/rse.o -lpcap
+
+rse.o:
+	make -C $(COMPILED_RSE) rse.o
 
 clean: 
 	$(RM) fecEncodeBooster
 	$(RM) fecEncodeBooster_baseline
 	$(RM) *.o
+	$(RM) $(COMPILED_RSE)/rse.o

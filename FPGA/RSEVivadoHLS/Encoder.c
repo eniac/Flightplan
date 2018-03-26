@@ -1,3 +1,4 @@
+#include "Configuration.h"
 #include "rse.h"
 
 //#define USE_OLD_GENERATOR

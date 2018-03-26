@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include "wharf_pcap.h"
 #include "rse.h"
 #include "fecDefs.h"
 
