@@ -1,5 +1,5 @@
 open_project RSEVivado/RSEVivado.xpr
-generate_target all [get_files Sources/design_1.bd]
+generate_target all [get_files -of_objects [get_filesets sources_1] [list "*design_1.bd"]]
 launch_runs impl_1 -to_step write_bitstream -jobs 2
 wait_on_run impl_1
 set synth_status [get_property STATUS [get_runs synth_1]]
