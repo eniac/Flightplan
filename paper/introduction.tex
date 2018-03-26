@@ -45,7 +45,7 @@ performance is critical to many widely-used applications, including those
 running on private and public clouds. Faulty  links have a significant impact
 on these applications, as Figure~\ref{fig:timeVsTput}  illustrates. The
 current practice of polling and disabling links from the edge of the network
-is slow, and adds more contention over non-failing links. \OurSys can help
+reacts slowly, and adds more contention over non-failing links. \OurSys can help
 make such networks more resilient to failing links, with minimal configuration
 overhead.
 
@@ -76,10 +76,12 @@ links. Part of our implementation is in
 P4~\cite{Bosshart:2014:PPP:2656877.2656890} over SDNet, and we
 transcended P4's limitation to header processing~\cite{Dang:2017:WPL:3050220.3050231} by
 writing external functions in C for high-level synthesis.
-They key challenge we encountered was in streaming packets through our
+%They key challenge we encountered was in streaming packets through our
+It is also a challenge to stream packets through our
 external functions, and we believe that our approach could be a
 helpful take-away for other researchers. \amd{...but we currently don't
   deliver on this.}
+  \lei{fixed words}
 
 The next section describes the background and related work of the problem we
 are solving, before we describe our design~(\S\ref{sec:design}) and
