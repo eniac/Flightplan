@@ -62,7 +62,7 @@ echo "starting tcpreplay..."
 tcpreplay --preload-pcap --quiet --loop=100 --topspeed -i networkVeth $INPUT_PCAP
 sleep 1
 
-# # cleanup
+# cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
 killall tcpdump
 killall $BOOSTER_NAME
