@@ -21,7 +21,7 @@ Encoder: Encoder.sdnet Packet.user Tuple.user Packet_feedback_in.axi \
 	@mkdir -p Encoder/XilinxSwitch/Feedback
 	@cp ../RSEFeedbackVivado/Sources/RSEFeedback.vhd Encoder/XilinxSwitch/Feedback
 	@cp ../RSEFeedbackVivado/Sources/Config.vhd Encoder/XilinxSwitch/Feedback/Config.vhd
-	@cp ../RSEFeedbackVivado/Sources/fifo_generator_0/sim/fifo_generator_0.v Encoder/XilinxSwitch/Feedback
+	@cp ../RSEFeedbackVivado/RSEFeedbackVivado/RSEFeedbackVivado.srcs/sources_1/ip/fifo_generator_0/sim/fifo_generator_0.v Encoder/XilinxSwitch/Feedback
 	@cp XilinxSwitch_feedback_tb.sv TB_System_feedback_Stim.v Encoder/XilinxSwitch/Testbench
 	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
 	@cp vivado_sim*.bash Encoder/XilinxSwitch

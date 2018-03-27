@@ -32,7 +32,7 @@ void Verify_matrix_multiply(int Data_packet_count, int Parity_packet_count, int 
   for (int i = 0; i < Parity_packet_count; i++)
     // fb.d[i][0] is output from Vencore's FEC
     // Parity[i] is output from Hans' FEC
-    if (fb.d[i][0] != Parity[i])
+    if (fcm.d[i][0] != Parity[i])
     {
       fputs("Encoder output is not matching.\n", stderr);
       exit(1);
@@ -59,5 +59,5 @@ void encode_matrix(int Data_packet_count, int Parity_packet_count, int Position)
     Incremental_encode(Data[i], Parity, i, Parity_packet_count, i == 0);
 
   for (int i = 0; i < Parity_packet_count; i++)
-    fb.d[i][0] = Parity[i];
+    fcm.d[i][0] = Parity[i];
 }

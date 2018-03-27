@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include "fecBooster.h"
+#include "wharf_pcap.h"
 
 int workerId = 0;
 int workerCt = 1;
@@ -75,11 +76,6 @@ void* capturePackets(char* deviceToCapture) {
 //(	fec_dbg_printf)("Ths is the end of capture\n");
 //(	fec_dbg_printf)("Completed Capturing packets on %s\n", device );
 	return NULL;
-}
-
-void free_parity_memory(char* packet) {
-	free(packet);
-	return;
 }
 
 
@@ -166,13 +162,13 @@ bool is_all_pkts_recieved_for_block(int blockId) {
 }
 
 /**
- * @brief      Invalidates the given block in the buffer.
+ * @brief      Zeros-out the given block in the buffer.
  *
  * @param[in]  blockId  The block identifier
  */
-void invalidate_block_in_pkt_buffer(int blockId) {
+void zeroout_block_in_pkt_buffer(int blockId) {
 	int blockSize = NUM_PARITY_PACKETS + NUM_DATA_PACKETS;
-	for (int i = 0; i < blockSize; i++) { /*TODO: replace 6 with a macro*/
+	for (int i = 0; i < blockSize; i++) {
 		pkt_buffer_filled[blockId][i] = 0;
 	}
 	return;
