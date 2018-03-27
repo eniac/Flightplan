@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include "fecBooster.h"
+#include "wharf_pcap.h"
 
 int workerId = 0;
 int workerCt = 1;
