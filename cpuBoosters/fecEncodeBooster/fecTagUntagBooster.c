@@ -9,7 +9,6 @@ void my_packet_handler(
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
-			fprintf(stderr, "Doing thing\n");
 	u_char *new_packet = (u_char *)malloc(1500/*FIXME const*/);
 	memcpy(new_packet, packet, header->len);
 	int tagged_size = wharf_tag_frame(new_packet, header->len);

@@ -3,7 +3,7 @@ COMPILED_RSE=$(VENCORE_CODE)
 # For Configuration.h
 OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
-all: fecBooster.o fecEncodeBooster fecEncodeBooster_baseline
+all: fecBooster.o fecEncodeBooster fecEncodeBooster_baseline fecTagUntagBooster
 
 fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h
 	g++ -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -c fecBooster.c -lpcap
