@@ -76,7 +76,7 @@ architecture RTL of RSEFeedback is
   signal feedback_out_TDATA  : std_logic_vector(63 downto 0);
   signal feedback_out_TKEEP  : std_logic_vector(7 downto 0);
   signal feedback_out_TLAST  : std_logic;
-  signal packet_cnt          : std_logic_vector(3 downto 0);
+  signal packet_cnt          : std_logic_vector(FEC_PACKET_INDEX_WIDTH - 1 downto 0);
   signal tmp_rse_out_TVALID  : std_logic;
   signal tmp_rse_out_TLAST   : std_logic;
   signal enable              : std_logic;
@@ -88,8 +88,8 @@ architecture RTL of RSEFeedback is
   signal fifo_dout           : std_logic_vector(72 downto 0);
   signal fifo_full           : std_logic;
   signal fifo_empty          : std_logic;
-  signal output_read         : std_logic; -- Data on output of feedback is actually ready by main pipeline
-  signal output_valid        : std_logic; -- Data is waiting at output of feedback (identical to feedback_out_TVALID)
+  signal output_read         : std_logic;
+  signal output_valid        : std_logic;
   signal fifo_cnt            : std_logic_vector(3 downto 0);
   signal first_word          : std_logic;
   signal data_available      : std_logic;
@@ -155,7 +155,7 @@ begin
     end if;
   end process;
   
-  p_mux_sel: mux_sel <= '0' when unsigned(packet_cnt) < 8 else '1';
+  p_mux_sel: mux_sel <= '0' when unsigned(packet_cnt) < FEC_K else '1';
   
   p_dup_en_reg: process(clk_line_rst, clk_line)
   begin
