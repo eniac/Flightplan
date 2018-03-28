@@ -10,7 +10,8 @@ int workerCt = 1;
 
 int SIZE_FEC_TAG = 0;
 
-pcap_t *handle; /*PCAP handle*/
+pcap_t *input_handle = NULL;
+pcap_t *output_handle = NULL;
 
 int cnt = 0;
 
@@ -43,39 +44,6 @@ void free_pkt_buffer() {
 		}
 	}
 
-}
-
-
-/**
- * @brief      Initialize packet capture
- *
- * @param      deviceToCapture  The device to capture
- *
- * @return
- */
-void* capturePackets(char* deviceToCapture) {
-	char *device;
-	char error_buffer[PCAP_ERRBUF_SIZE];
-	device = deviceToCapture;
-//(	fec_dbg_printf)("Capturing packets on %s\n", device );
-	/* Open device for live capture */
-	handle = pcap_open_live(
-	             device,
-	             BUFSIZ,
-	             1, /*set device to promiscous*/
-	             0, /*Timeout of 0*/
-	             error_buffer
-	         );
-	if (handle == NULL) {
-		fprintf(stderr, "Could not open device %s: %s\n", device, error_buffer);
-		return NULL;
-	}
-
-//(	fec_dbg_printf)("This is the start of capture\n");
-	pcap_loop(handle, 0, my_packet_handler, NULL);
-//(	fec_dbg_printf)("Ths is the end of capture\n");
-//(	fec_dbg_printf)("Completed Capturing packets on %s\n", device );
-	return NULL;
 }
 
 
@@ -412,9 +380,17 @@ void print_hex_memory(void *mem, int len) {
   printf("\n");
 }
 
+void forward_frame(const void * packet, int len) {
+	if (NULL != output_handle) {
+		pcap_inject(output_handle, packet, len);
+	} else {
+		pcap_inject(input_handle, packet, len);
+	}
+}
 
 int main (int argc, char** argv) {
-	char* deviceToCapture;
+	char* inputInterface = NULL;
+	char* outputInterface = NULL;
 	int opt = 0;
 	int rc;
 
@@ -428,8 +404,12 @@ int main (int argc, char** argv) {
 		switch (opt)
 		{
 		case 'i':
-			printf("deviceToCapture: %s\n",optarg);
-			deviceToCapture = optarg;
+			printf("inputInterface: %s\n",optarg);
+			inputInterface = optarg;
+			break;
+		case 'o':
+			printf("outputInterface: %s\n",optarg);
+			outputInterface = optarg;
 			break;
 		case 'w':
 			workerId = atoi(optarg);
@@ -442,9 +422,39 @@ int main (int argc, char** argv) {
 			abort();
 		}
 	}
+
+	if (NULL == input_handle && NULL == output_handle) {
+		fprintf(stderr, "Need -i parameter at least\n");
+		exit(1);
+	}
+
 	printf("starting worker %i / %i\n",workerId, workerCt);
-	/* start packet capture on the specified interface.*/
 	alloc_pkt_buffer();
-	capturePackets(deviceToCapture);
+
+	if (NULL != output_handle) {
+		char output_error_buffer[PCAP_ERRBUF_SIZE];
+		output_handle = pcap_open_live(outputInterface, BUFSIZ, 0, 0, output_error_buffer);
+		if (output_handle == NULL) {
+			fprintf(stderr, "Could not open device %s: %s\n", outputInterface, output_error_buffer);
+			exit(1);
+		}
+	}
+
+	char input_error_buffer[PCAP_ERRBUF_SIZE];
+	input_handle = pcap_open_live(
+	             inputInterface,
+	             BUFSIZ,
+	             1, /*set device to promiscous*/
+	             0, /*Timeout of 0*/
+	             input_error_buffer
+	         );
+	if (input_handle == NULL) {
+		fprintf(stderr, "Could not open device %s: %s\n", inputInterface, input_error_buffer);
+		exit(1);
+	}
+
+	pcap_loop(input_handle, 0, my_packet_handler, NULL);
+
+
 	free_pkt_buffer();
 }

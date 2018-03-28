@@ -29,7 +29,6 @@ extern int Default_erase_list[FEC_MAX_N];
 
 
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
-void* capturePackets(char* deviceToCapture);
 bool is_all_pkts_recieved_for_block(int blockId);
 void zeroout_block_in_pkt_buffer(int blockId);
 int get_payload_length_for_pkt(char* packet);
@@ -46,6 +45,7 @@ u_short compute_csum(struct sniff_ip *ip , int len);
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
 void print_hex_memory(void *mem, int len);
+void forward_frame(const void * packet, int len);
 
 void alloc_pkt_buffer();
 void free_pkt_buffer();
