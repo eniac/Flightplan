@@ -429,6 +429,14 @@ int wharf_strip_frame(u_char* packet, int size) {
   return size - offset;
 }
 
+void forward_frame(const void * packet, int len) {
+	if (NULL != output_handle) {
+		pcap_inject(output_handle, packet, len);
+	} else {
+		pcap_inject(input_handle, packet, len);
+	}
+}
+
 int main (int argc, char** argv) {
 	char* inputInterface = NULL;
 	char* outputInterface = NULL;
@@ -440,7 +448,7 @@ int main (int argc, char** argv) {
 
 	SIZE_FEC_TAG = sizeof(fec_header_t);
 
-	while ((opt =  getopt(argc, argv, "i:w:t:")) != -1)
+	while ((opt = getopt(argc, argv, "i:o:w:t:")) != -1)
 	{
 		switch (opt)
 		{
@@ -464,7 +472,7 @@ int main (int argc, char** argv) {
 		}
 	}
 
-	if (NULL == input_handle && NULL == output_handle) {
+	if (NULL == inputInterface && NULL == outputInterface) {
 		fprintf(stderr, "Need -i parameter at least\n");
 		exit(1);
 	}
@@ -472,7 +480,7 @@ int main (int argc, char** argv) {
 	printf("starting worker %i / %i\n",workerId, workerCt);
 	alloc_pkt_buffer();
 
-	if (NULL != output_handle) {
+	if (NULL != outputInterface) {
 		char output_error_buffer[PCAP_ERRBUF_SIZE];
 		output_handle = pcap_open_live(outputInterface, BUFSIZ, 0, 0, output_error_buffer);
 		if (output_handle == NULL) {

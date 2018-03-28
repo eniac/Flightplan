@@ -23,6 +23,6 @@ void my_packet_handler(
 			exit(1);
 		}
 	}
-	pcap_inject(handle, new_packet, new_size);
+	forward_frame(new_packet, new_size);
 	free(new_packet);
 }
