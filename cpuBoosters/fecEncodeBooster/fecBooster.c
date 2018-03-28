@@ -486,35 +486,12 @@ int main (int argc, char** argv) {
 	free_pkt_buffer();
 }
 
-// NOTE heavily based on copy_parity_packets_to_pkt_buffer()
-// FIXME WIP
 int copy_data_packets_to_pkt_buffer(int blockId) {
-	int sizeOfParityPackets = fb.plen[0];
-	/*For each parity packet*/
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
-		char* packet = pkt_buffer[blockId][i];
-
-		/*We need to account for the newly added tag after the ethernet heaader.*/
-		const struct sniff_ip *ip;              /* The IP header */
-
-		/* compute ip header offset */
-		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
-		int sizeIP = IP_HL(ip) * 4;
-		if (sizeIP < 20) {
-		//(	fec_dbg_printf)("size0\n");
-			return -1;
+		if (PACKET_PRESENT != pkt_buffer_filled[blockId][i]) {
+			const FRAME_SIZE_TYPE original_frame_size = (FRAME_SIZE_TYPE)(*pkt_buffer[blockId][i]);
+			memcpy(pkt_buffer[blockId][i] + sizeof(FRAME_SIZE_TYPE), fb.pdata[i], original_frame_size);
+			pkt_buffer_filled[blockId][i] = PACKET_RECOVERED;
 		}
-
-		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
-
-		/*copy headers from the original packet.*/
-		memcpy(pkt_buffer[blockId][i], packet, totalHeaderSize);
-		/*Copy payload from the global fec struct*/
-		memcpy(pkt_buffer[blockId][i] + totalHeaderSize, fb.pdata[i], sizeOfParityPackets);
-
-		/*Update the the payload lenght and checksum*/
-		modify_IP_headers_for_parity_packets(sizeOfParityPackets, pkt_buffer[blockId][i]);
-
-		pkt_buffer_filled[blockId][i] = PACKET_RECOVERED;
 	}
 }
