@@ -15,6 +15,7 @@ pcap_t *handle; /*PCAP handle*/
 int cnt = 0;
 
 char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
+
 int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
 
 int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
@@ -28,7 +29,7 @@ void alloc_pkt_buffer() {
 	for (int i = 0; i<NUM_BLOCKS; i++){
 		for (int j = 0; j < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; j++){
 			pkt_buffer[i][j] = (char *)malloc(PKT_BUF_SZ);
-			pkt_buffer_filled[i][j] = 0;
+			pkt_buffer_filled[i][j] = PACKET_ABSENT;
 		}
 	}
 }
@@ -153,7 +154,7 @@ void decode_block() {
 bool is_all_pkts_recieved_for_block(int blockId) {
 	int blockSize = NUM_PARITY_PACKETS + NUM_DATA_PACKETS;
 	for (int i = 0; i < blockSize; i++) {
-		if (pkt_buffer_filled[blockId][i] == 0) {
+		if (pkt_buffer_filled[blockId][i] == PACKET_ABSENT) {
 			// printf("all_pkts_received_fail @ (%i, %i)\n",blockId, i);
 			return false;
 		}
@@ -169,7 +170,7 @@ bool is_all_pkts_recieved_for_block(int blockId) {
 void zeroout_block_in_pkt_buffer(int blockId) {
 	int blockSize = NUM_PARITY_PACKETS + NUM_DATA_PACKETS;
 	for (int i = 0; i < blockSize; i++) {
-		pkt_buffer_filled[blockId][i] = 0;
+		pkt_buffer_filled[blockId][i] = PACKET_ABSENT;
 	}
 	return;
 }
@@ -346,7 +347,7 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		modify_IP_headers_for_parity_packets(sizeOfParityPackets, pkt_buffer[blockId][i]);
 
 		// // Set filled.
-		// pkt_buffer_filled[blockId][i] = 1;
+		// pkt_buffer_filled[blockId][i] = PACKET_PRESENT;
 	}
 }
 
@@ -447,4 +448,38 @@ int main (int argc, char** argv) {
 	alloc_pkt_buffer();
 	capturePackets(deviceToCapture);
 	free_pkt_buffer();
+}
+
+// NOTE heavily based on copy_parity_packets_to_pkt_buffer()
+// FIXME WIP
+int copy_data_packets_to_pkt_buffer(int blockId) {
+	int sizeOfParityPackets = fb.plen[0];
+	/*For each parity packet*/
+	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
+		char* packet = pkt_buffer[blockId][i];
+
+		/*We need to account for the newly added tag after the ethernet heaader.*/
+		const struct sniff_ip *ip;              /* The IP header */
+		const struct sniff_tcp *tcp;            /* The TCP header */
+
+		/* compute ip header offset */
+		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
+		int sizeIP = IP_HL(ip) * 4;
+		if (sizeIP < 20) {
+		//(	fec_dbg_printf)("size0\n");
+			return -1;
+		}
+
+		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
+
+		/*copy headers from the original packet.*/
+		memcpy(pkt_buffer[blockId][i], packet, totalHeaderSize);
+		/*Copy payload from the global fec struct*/
+		memcpy(pkt_buffer[blockId][i] + totalHeaderSize, fb.pdata[i], sizeOfParityPackets);
+
+		/*Update the the payload lenght and checksum*/
+		modify_IP_headers_for_parity_packets(sizeOfParityPackets, pkt_buffer[blockId][i]);
+
+		pkt_buffer_filled[blockId][i] = PACKET_RECOVERED;
+	}
 }

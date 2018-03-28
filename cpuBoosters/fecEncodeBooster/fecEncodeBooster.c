@@ -43,15 +43,15 @@ void my_packet_handler(
 	}
 
 	/*Update the received pkt in the pkt buffer.*/
-	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == 0) {
+	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == PACKET_ABSENT) {
 		memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index], packet, header->len);
-		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = 1;
+		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = PACKET_PRESENT;
 	} 
 	else { /*This is not good*/
 		// The block is invalid -- don't bother processing.
 		zeroout_block_in_pkt_buffer(lastBlockId);
 		// memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index], packet, header->len);
-		// pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = 1;
+		// pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = PACKET_PRESENT;
 		// printf("(%i) ERROR: Overwriting existing packet @ %i:%i \n",workerId,fecHeader->block_id, fecHeader->index);
 	}
 
