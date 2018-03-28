@@ -40,7 +40,7 @@ void my_packet_handler(
 	lastPacketId = fecHeader->index;
 
 	if (fecHeader->index < NUM_DATA_PACKETS){
-		pcap_inject(handle, packet, header->len);
+		forward_frame(packet, header->len);
 	}
 
 	/*Update the received pkt in the pkt buffer.*/
@@ -72,7 +72,7 @@ void my_packet_handler(
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++) {
 			char* packetToInject = pkt_buffer[fecHeader->block_id][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
-			pcap_inject(handle, packetToInject, outPktLen);
+			forward_frame(packetToInject, outPktLen);
 		}
 	}
 	return;
