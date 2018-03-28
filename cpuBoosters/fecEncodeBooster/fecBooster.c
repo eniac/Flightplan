@@ -239,7 +239,6 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 	}
 }
 
-
 unsigned char* get_payload_start_for_packet(char* packet) {
 	/*We need to account for the newly added tag after the ethernet heaader.*/
 	const struct sniff_ip *ip;              /* The IP header */
@@ -276,7 +275,6 @@ int get_payload_length_for_pkt(char* packet) {
 int get_total_packet_size(char* packet) {
 	/*We need to account for the newly added tag after the ethernet heaader.*/
 	const struct sniff_ip *ip;              /* The IP header */
-	const struct sniff_tcp *tcp;            /* The TCP header */
 
 	/* compute ip header offset */
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
@@ -286,16 +284,8 @@ int get_total_packet_size(char* packet) {
 		return -1;
 	}
 
-	/* compute tcp header offset */
-	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
-	int sizeTCP = TH_OFF(tcp) * 4;
-	if (sizeTCP < 20) {
-	//(	fec_dbg_printf)("size1\n");
-		return -1;
-	}
-
-	int sizePayload = ntohs(ip->ip_len) - (sizeIP + sizeTCP);
-	int totalSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP + sizePayload;
+	int sizePayload = ntohs(ip->ip_len) - (sizeIP /*FIXME should not care about TCP: + sizeTCP*/);
+	int totalSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP /*FIXME should not care about TCP: + sizeTCP*/ + sizePayload;
 	return totalSize;
 }
 
@@ -309,7 +299,6 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 
 		/*We need to account for the newly added tag after the ethernet heaader.*/
 		const struct sniff_ip *ip;              /* The IP header */
-		const struct sniff_tcp *tcp;            /* The TCP header */
 
 		/* compute ip header offset */
 		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
@@ -319,19 +308,7 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 			return -1;
 		}
 
-		/* compute tcp header offset */
-		tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
-		int sizeTCP = TH_OFF(tcp) * 4;
-		if (sizeTCP < 20) {
-		//(	fec_dbg_printf)("size1\n");
-			return -1;
-		}
-
-		// int totalMallocSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP + sizeTCP + sizeOfParityPackets;
 		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
-
-		////( fec_dbg_printf)("The totalMallocSize is ::::%d\n", totalMallocSize);
-
 
 		/*update the parity packet in the pkt buffer.*/
 		// char* parityPacket = (char *) malloc(totalMallocSize);
@@ -460,7 +437,6 @@ int copy_data_packets_to_pkt_buffer(int blockId) {
 
 		/*We need to account for the newly added tag after the ethernet heaader.*/
 		const struct sniff_ip *ip;              /* The IP header */
-		const struct sniff_tcp *tcp;            /* The TCP header */
 
 		/* compute ip header offset */
 		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
