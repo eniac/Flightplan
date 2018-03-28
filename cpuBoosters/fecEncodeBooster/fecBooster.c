@@ -10,7 +10,8 @@ int workerCt = 1;
 
 int SIZE_FEC_TAG = 0;
 
-pcap_t *handle; /*PCAP handle*/
+pcap_t *input_handle = NULL;
+pcap_t *output_handle = NULL;
 
 int cnt = 0;
 
@@ -44,39 +45,6 @@ void free_pkt_buffer() {
 		}
 	}
 
-}
-
-
-/**
- * @brief      Initialize packet capture
- *
- * @param      deviceToCapture  The device to capture
- *
- * @return
- */
-void* capturePackets(char* deviceToCapture) {
-	char *device;
-	char error_buffer[PCAP_ERRBUF_SIZE];
-	device = deviceToCapture;
-//(	fec_dbg_printf)("Capturing packets on %s\n", device );
-	/* Open device for live capture */
-	handle = pcap_open_live(
-	             device,
-	             BUFSIZ,
-	             1, /*set device to promiscous*/
-	             0, /*Timeout of 0*/
-	             error_buffer
-	         );
-	if (handle == NULL) {
-		fprintf(stderr, "Could not open device %s: %s\n", device, error_buffer);
-		return NULL;
-	}
-
-//(	fec_dbg_printf)("This is the start of capture\n");
-	pcap_loop(handle, 0, my_packet_handler, NULL);
-//(	fec_dbg_printf)("Ths is the end of capture\n");
-//(	fec_dbg_printf)("Completed Capturing packets on %s\n", device );
-	return NULL;
 }
 
 
@@ -390,9 +358,58 @@ void print_hex_memory(void *mem, int len) {
   printf("\n");
 }
 
+static unsigned int class_id = 0;
+static unsigned int block_id = 0;
+static unsigned int frame_index = 0;
+
+int wharf_tag_frame(u_char* packet, int size) {
+  if (size >= FRAME_SIZE_CUTOFF) {
+    fprintf(stderr, "Frame too big for tagging (%d)", size);
+    exit(1);
+  }
+
+  u_char *old_packet = (u_char *)malloc(size);
+  memcpy(old_packet, packet, size);
+  struct ether_header *eth_header = (struct ether_header *)packet;
+  eth_header->ether_type=htons(WHARF_ETHERTYPE);
+  struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
+  tag->class_id = class_id;
+  tag->block_id = block_id;
+  tag->index = frame_index;
+  tag->size = size;
+
+  frame_index = (frame_index + 1) % NUM_DATA_PACKETS;
+  if (0 == frame_index) {
+    block_id = (block_id + 1) % MAX_BLOCK;
+  }
+
+  memcpy(packet + sizeof(struct ether_header) + sizeof(struct fec_header), old_packet, size);
+  free(old_packet);
+  return sizeof(struct ether_header) + sizeof(struct fec_header) + size;
+}
+
+int wharf_strip_frame(u_char* packet, int size) {
+  struct ether_header *eth_header = (struct ether_header *)packet;
+  if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
+    fprintf(stderr, "Cannot strip non-Wharf frame");
+    exit(1);
+  }
+  struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
+  if (tag->index >= NUM_DATA_PACKETS) {
+    fprintf(stderr, "Cannot strip non-data Wharf frame");
+    exit(1);
+  }
+  const int original_size = tag->size;
+  const int offset = sizeof(struct ether_header) + sizeof(struct fec_header);
+  for (int i = 0; i < original_size; i++) {
+    packet[i] = packet[i + offset];
+  }
+  return size - offset;
+}
 
 int main (int argc, char** argv) {
-	char* deviceToCapture;
+	char* inputInterface = NULL;
+	char* outputInterface = NULL;
 	int opt = 0;
 	int rc;
 
@@ -406,8 +423,12 @@ int main (int argc, char** argv) {
 		switch (opt)
 		{
 		case 'i':
-			printf("deviceToCapture: %s\n",optarg);
-			deviceToCapture = optarg;
+			printf("inputInterface: %s\n",optarg);
+			inputInterface = optarg;
+			break;
+		case 'o':
+			printf("outputInterface: %s\n",optarg);
+			outputInterface = optarg;
 			break;
 		case 'w':
 			workerId = atoi(optarg);
@@ -420,10 +441,40 @@ int main (int argc, char** argv) {
 			abort();
 		}
 	}
+
+	if (NULL == input_handle && NULL == output_handle) {
+		fprintf(stderr, "Need -i parameter at least\n");
+		exit(1);
+	}
+
 	printf("starting worker %i / %i\n",workerId, workerCt);
-	/* start packet capture on the specified interface.*/
 	alloc_pkt_buffer();
-	capturePackets(deviceToCapture);
+
+	if (NULL != output_handle) {
+		char output_error_buffer[PCAP_ERRBUF_SIZE];
+		output_handle = pcap_open_live(outputInterface, BUFSIZ, 0, 0, output_error_buffer);
+		if (output_handle == NULL) {
+			fprintf(stderr, "Could not open device %s: %s\n", outputInterface, output_error_buffer);
+			exit(1);
+		}
+	}
+
+	char input_error_buffer[PCAP_ERRBUF_SIZE];
+	input_handle = pcap_open_live(
+	             inputInterface,
+	             BUFSIZ,
+	             1, /*set device to promiscous*/
+	             0, /*Timeout of 0*/
+	             input_error_buffer
+	         );
+	if (input_handle == NULL) {
+		fprintf(stderr, "Could not open device %s: %s\n", inputInterface, input_error_buffer);
+		exit(1);
+	}
+
+	pcap_loop(input_handle, 0, my_packet_handler, NULL);
+
+
 	free_pkt_buffer();
 }
 

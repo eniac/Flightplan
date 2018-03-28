@@ -76,6 +76,7 @@ packets had less of an impact on TCP throughput than lost packets, for  most
 configurations tested. To reduce bandwidth overhead, the FEC  can be tuned for the
 loss rate of each specific link, which is reportedly stable over
 time~\cite{corropt}.
+\lei{TODO: fix cite}
 
 
 % This figure shows the impact of K.
@@ -94,17 +95,18 @@ was due to the behavior of the iperf  UDP generator, which periodically paused
 for up to 9 MS between  sending packets, to meet the 100 Mb/s target. The high
 inter-packet  arrival time stalled the generation of parity packets and thus
 the  recovery of any lost packets in the same block.
+\lei{\#Shrink Candidate\#}
 
 Figure~\ref{fig:lossVsLatencyTcp} plots a time series of latency EWMA  for TCP
 packets in a single maximum rate flow (around 9 Gb/s). The difference in
 latency between recovered versus intact packets was almost indistinguishable.
-Latency for all packets was not dominated by the decoder, by instead by time
+Latency for all packets was not dominated by the decoder, but instead by time
 spent  in egress buffers in the switch, which repeatedly filled due to TCPs
 congestion  control dynamics, i.e., causing the familiar ``sawtooth'' pattern
 in Figure~\ref{fig:lossVsLatencyTcp}. Additionally, the latency for packet
 recovery was lower with the TCP workload because average packet rate was
 around 1 order of magnitude higher.
-
+\lei{\#Shrink Candidate\#}
 
 
 

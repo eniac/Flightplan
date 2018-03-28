@@ -17,6 +17,7 @@ Instead of using an ARQ scheme as in X.25 and 802.11, we use forward
 error-correction (FEC). This simplifies our design, obviating the need
 for windows for in-flight data since the sender will not attempt to
 resend a frame, and this diminishes the memory needed.
+\lei{\#Shrink Candidate\#}
 
 Our link-layer FEC complements the physical-layer FEC that is used in
 high-capacity Ethernet links: the physical-layer FEC helps the link sustain a
@@ -52,6 +53,8 @@ machines  on  these  ToRs  could  not  communicate  with
 each other even though they could communicate with
 other machines -- an intransitive disconnect not handled
 well by applications.''~\cite[\S3.1]{Singh:2016:JRD:2991470.2975159}
+\lei{\#Shrink Candidate\# I can't see where this topology significantly affect our design decision. 
+Also, do we have to cite such a long paragraph? }
 
 Centralised approaches have been described in the literature to mitigate
 faulty links in a WAN~\cite{traffic-engineering-with-forward-fault-correction}
