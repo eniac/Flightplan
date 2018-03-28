@@ -1,5 +1,9 @@
 VENCORE_CODE=../../RSECode
+
+# To use Vencore's or Hans' implementation of the FEC
 COMPILED_RSE=$(VENCORE_CODE)
+#COMPILED_RSE=../../FPGA/RSEVivadoHLS
+
 # For Configuration.h
 OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
