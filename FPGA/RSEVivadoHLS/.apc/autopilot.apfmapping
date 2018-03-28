@@ -10,7 +10,7 @@
   <testbench>
     <originFiles name="RSE_core_test.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSE_core_test.c"/>
     <originFiles name="RSE_core_test.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/RSE_core_test.h"/>
-    <originFiles name="rsetest.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rsetest.c"/>
     <originFiles name="rse.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rse.c"/>
+    <originFiles name="rsetest.c" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/RSEVivadoHLS/rsetest.c"/>
   </testbench>
 </autopilotfilemapping:AutoPilotFileMapping>
