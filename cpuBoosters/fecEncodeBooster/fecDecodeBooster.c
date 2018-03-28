@@ -4,27 +4,20 @@
 
 #include "fecBooster.h"
 
-bool nothing_to_decode = true;
+bool nothing_to_decode = true; // This is true when the buffer doesn't contain any packets for decoding.
 int lastBlockId = 0;
 
 // Try to decode new packets, and forward them on.
+// FIXME possible race condition if have simultaneous timer expiry and a packet arrival that also triggers the decode.
 void decode_and_forward(const struct fec_header *fecHeader) {
-	if (nothing_to_decode) {
+	if (nothing_to_decode || is_all_pkts_recieved_for_block(fecHeader->block_id)) {
 		return;
-	}
-
-	// FIXME when decode is run, find out what "new" packets we have and forward them. then the buffer is made available to another block_id
-
-
-	if (is_all_pkts_recieved_for_block(fecHeader->block_id) == true) {
-		return; // Since no need to decode
 	}
 
 	decode_block();
 
 	copy_data_packets_to_pkt_buffer(fecHeader->block_id);
 
-	// FIXME only inject recovered data packets into the network
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
 		if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == PACKET_RECOVERED) {
 			char* packetToInject = pkt_buffer[fecHeader->block_id][i];
@@ -71,6 +64,7 @@ void my_packet_handler(
 
 	// Buffer data and parity packets in case need to decode.
 	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == PACKET_ABSENT) {
+		nothing_to_decode = false;
 		memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index], packet, header->len);
 		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = PACKET_PRESENT;
 	}
