@@ -23,7 +23,7 @@ void decode_and_forward(const int block_id) {
 		if (pkt_buffer_filled[block_id][i] == PACKET_RECOVERED) {
 			char* packetToInject = pkt_buffer[block_id][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
-			pcap_inject(handle, packetToInject, outPktLen); // FIXME use forwarding function
+			forward_frame(packetToInject, outPktLen);
 		}
 	}
 
@@ -70,8 +70,8 @@ void my_packet_handler(
 
 	// Forward data packets immediately
 	if (fecHeader->index < NUM_DATA_PACKETS){
-		// FIXME strip tag; and use forwarding function
-		pcap_inject(handle, packet, header->len);
+		// FIXME strip tag
+		forward_frame(packet, header->len);
 	}
 
 	// Buffer data and parity packets in case need to decode.
