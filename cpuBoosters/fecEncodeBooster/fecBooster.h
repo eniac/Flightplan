@@ -46,6 +46,7 @@ void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
 int wharf_tag_frame(u_char* packet, int size);
 int wharf_strip_frame(u_char* packet, int size);
+#define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header))
 
 void print_hex_memory(void *mem, int len);
 void forward_frame(const void * packet, int len);
