@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-
 #include "fecBooster.h"
 
 int lastBlockId = 0;
