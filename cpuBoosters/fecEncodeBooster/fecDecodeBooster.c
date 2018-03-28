@@ -74,8 +74,8 @@ void my_packet_handler(
 
 	// Forward data packets immediately
 	if (fecHeader->index < NUM_DATA_PACKETS){
-		// FIXME strip tag
-		forward_frame(packet, header->len);
+		forward_frame(packet + WHARF_ORIG_FRAME_OFFSET,
+		 header->len - WHARF_ORIG_FRAME_OFFSET); // This also strips the Wharf tag.
 	}
 
 	// Buffer data and parity packets in case need to decode.
