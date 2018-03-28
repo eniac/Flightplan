@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,9 +53,12 @@ void my_packet_handler(
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
-	// FIXME check ethertype; proceed if it's Wharf
-
-	const struct fec_header *fecHeader = (fec_header_t *) (packet + SIZE_ETHERNET);
+	struct ether_header *eth_header = (struct ether_header *)packet;
+	if (WHARF_ETHERTYPE != ntohs(eth_header->ether_type)) {
+		fprintf(stderr, "Received untagged frame -- ignoring\n");
+		return;
+	}
+	const struct fec_header *fecHeader = (struct fec_header *)(packet + sizeof(struct ether_header));
 
 	// skip blocks that don't belong to this worker.
 	if ((fecHeader->block_id) % workerCt != workerId){
