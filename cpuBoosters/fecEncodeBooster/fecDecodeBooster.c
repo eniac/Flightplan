@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -26,7 +27,17 @@ void decode_and_forward(const int block_id) {
 		}
 	}
 
+	signal(SIGALRM, SIG_IGN);
 	nothing_to_decode = true;
+}
+
+void sigalrm_handler(int signal) {
+	if (signal != SIGALRM) {
+		fprintf(stderr, "Unexpected signal: %d\n", signal);
+		exit(1);
+	}
+
+	decode_and_forward(lastBlockId);
 }
 
 /**
@@ -53,7 +64,8 @@ void my_packet_handler(
 	if (fecHeader->block_id != lastBlockId) {
 		decode_and_forward(fecHeader->block_id);
 		lastBlockId = fecHeader->block_id;
-		// FIXME set/refresh timer on arrival of new block_id: when timer expires then run decode.
+		alarm(WHARF_DECODE_TIMEOUT);
+		signal(SIGALRM, sigalrm_handler);
 	}
 
 	// Forward data packets immediately

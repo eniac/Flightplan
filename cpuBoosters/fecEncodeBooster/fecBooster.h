@@ -54,3 +54,5 @@ void free_pkt_buffer();
 #define PACKET_ABSENT 0
 #define PACKET_PRESENT 1
 #define PACKET_RECOVERED 2
+
+#define WHARF_DECODE_TIMEOUT 1
