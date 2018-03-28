@@ -380,12 +380,53 @@ void print_hex_memory(void *mem, int len) {
   printf("\n");
 }
 
-void forward_frame(const void * packet, int len) {
-	if (NULL != output_handle) {
-		pcap_inject(output_handle, packet, len);
-	} else {
-		pcap_inject(input_handle, packet, len);
-	}
+static unsigned int class_id = 0;
+static unsigned int block_id = 0;
+static unsigned int frame_index = 0;
+
+int wharf_tag_frame(u_char* packet, int size) {
+  if (size >= FRAME_SIZE_CUTOFF) {
+    fprintf(stderr, "Frame too big for tagging (%d)", size);
+    exit(1);
+  }
+
+  u_char *old_packet = (u_char *)malloc(size);
+  memcpy(old_packet, packet, size);
+  struct ether_header *eth_header = (struct ether_header *)packet;
+  eth_header->ether_type=htons(WHARF_ETHERTYPE);
+  struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
+  tag->class_id = class_id;
+  tag->block_id = block_id;
+  tag->index = frame_index;
+  tag->size = size;
+
+  frame_index = (frame_index + 1) % NUM_DATA_PACKETS;
+  if (0 == frame_index) {
+    block_id = (block_id + 1) % MAX_BLOCK;
+  }
+
+  memcpy(packet + sizeof(struct ether_header) + sizeof(struct fec_header), old_packet, size);
+  free(old_packet);
+  return sizeof(struct ether_header) + sizeof(struct fec_header) + size;
+}
+
+int wharf_strip_frame(u_char* packet, int size) {
+  struct ether_header *eth_header = (struct ether_header *)packet;
+  if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
+    fprintf(stderr, "Cannot strip non-Wharf frame");
+    exit(1);
+  }
+  struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
+  if (tag->index >= NUM_DATA_PACKETS) {
+    fprintf(stderr, "Cannot strip non-data Wharf frame");
+    exit(1);
+  }
+  const int original_size = tag->size;
+  const int offset = sizeof(struct ether_header) + sizeof(struct fec_header);
+  for (int i = 0; i < original_size; i++) {
+    packet[i] = packet[i + offset];
+  }
+  return size - offset;
 }
 
 int main (int argc, char** argv) {

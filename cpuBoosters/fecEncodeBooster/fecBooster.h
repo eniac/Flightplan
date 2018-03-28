@@ -44,6 +44,9 @@ int get_total_packet_size(char* packet);
 u_short compute_csum(struct sniff_ip *ip , int len);
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
+int wharf_tag_frame(u_char* packet, int size);
+int wharf_strip_frame(u_char* packet, int size);
+
 void print_hex_memory(void *mem, int len);
 void forward_frame(const void * packet, int len);
 
