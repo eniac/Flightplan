@@ -7,13 +7,16 @@ COMPILED_RSE=$(VENCORE_CODE)
 # For Configuration.h
 OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
-all: fecBooster.o fecEncodeBooster fecEncodeBooster_baseline fecDecodeBooster fecTagUntagBooster
+all: fecBooster.o fecEncodeBooster fecEncodeBooster_baseline fecDecodeBooster fecTagUntagBooster fecTagEncodeBooster
 
 fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h
 	g++ -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -c fecBooster.c -lpcap
 
 fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
 	g++ -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -o fecEncodeBooster fecEncodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o -lpcap
+
+fecTagEncodeBooster: fecTagEncodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
+	g++ -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -o fecTagEncodeBooster fecTagEncodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o -lpcap
 
 fecDecodeBooster: fecDecodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
 	g++ -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -o fecDecodeBooster fecDecodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o -lpcap
