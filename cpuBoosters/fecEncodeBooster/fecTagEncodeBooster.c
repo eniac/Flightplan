@@ -38,7 +38,9 @@ void my_packet_handler(
 
 	/*Update the received pkt in the pkt buffer.*/
 	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == PACKET_ABSENT) {
-		memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index], packet, header->len);
+		FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(pkt_buffer[fecHeader->block_id][fecHeader->index]);
+		*original_frame_size = fecHeader->size;
+		memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index] + sizeof(FRAME_SIZE_TYPE), packet, header->len);
 		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = PACKET_PRESENT;
 	} 
 	else {
