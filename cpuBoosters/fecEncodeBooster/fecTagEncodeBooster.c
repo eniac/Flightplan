@@ -5,42 +5,35 @@
 #include "fecBooster.h"
 
 int lastBlockId = 0;
-int lastPacketId = 0;
 /**
  * @brief      packet handler function for pcap
  *
  * @param      args    The arguments
  * @param[in]  header  The header
  * @param[in]  packet  The packet
- *
- * Packets in a block can be reordered, but blocks must not have their packets mixed:
- * this code gets confused if packets of one block appear while the code is encoding another,
- * and unless is_all_pkts_recieved_for_block()==true then the parity packets won't be sent out.
  */
 void my_packet_handler(
     u_char *args,
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
-	const struct fec_header *fecHeader = (struct fec_header *) (packet + SIZE_ETHERNET);
-
-	// skip blocks that don't belong to this worker.
-	if ((fecHeader->block_id) % workerCt != workerId){
-		return;
+	if (workerCt > 1){
+		fprintf(stderr, "This booster doesn't work across workers at present\n");
+		exit(1);
 	}
+
+	u_char *new_packet = NULL;
+	int tagged_size = wharf_tag_frame(packet, header->len, &new_packet);
+
+	const struct fec_header *fecHeader = (struct fec_header *) (new_packet + SIZE_ETHERNET);
 
 	if (fecHeader->block_id != lastBlockId){
 		lastBlockId = fecHeader->block_id;
 		zeroout_block_in_pkt_buffer(lastBlockId);
-	} else if (fecHeader->index < lastPacketId){
-		fprintf(stderr, "fecHeader->index got smaller?\n");
-	} else if (fecHeader->index > lastPacketId + 1){
-		fprintf(stderr, "Missed a packet\n");
 	}
-	lastPacketId = fecHeader->index;
 
 	if (fecHeader->index < NUM_DATA_PACKETS){
-		forward_frame(packet, header->len);
+		forward_frame(new_packet, tagged_size);
 	}
 
 	/*Update the received pkt in the pkt buffer.*/
@@ -49,7 +42,8 @@ void my_packet_handler(
 		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = PACKET_PRESENT;
 	} 
 	else {
-		fprintf(stderr, "Not buffering duplicate packet\n");
+		fprintf(stderr, "Tagging produced a duplicate packet\n");
+		exit(1);
 	}
 
 	/*check if the block is ready for processing*/
