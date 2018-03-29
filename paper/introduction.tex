@@ -9,13 +9,14 @@ programmability, or to expensive and inflexible ASICs for performance.
 
 Most prior research in this area has adapted \emph{existing}
 applications to run in hardware at line rate.
-Example applications include:
+Example applications include
 key-value stores~\cite{Li:2017:KHI:3132747.3132756},
-network testing~\cite{Shahbaz:2013:AOS:2537857.2537880},
-network stacks~\cite{Istvan:2016:CBI:2930611.2930639},
-consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
-regex matching on payloads~\cite{Woods:2010:CED:1920841.1920926},
-and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
+%network testing~\cite{Shahbaz:2013:AOS:2537857.2537880},
+and
+network stacks~\cite{Istvan:2016:CBI:2930611.2930639}.
+%consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
+%regex matching on payloads~\cite{Woods:2010:CED:1920841.1920926},
+%and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
 
 In this paper we describe \OurSys, which to our knowledge is the first application
 of its kind. \OurSys is an in-network distributed
@@ -69,10 +70,10 @@ we can also distinguish link failure from congestion.
 Programmable network hardware alone is not sufficient to solve this problem: one
 also needs a careful design since link management might interfere with
 other features of the network, such as topology and routing~
-\cite{Greenberg:2011:VSF:1897852.1897877,
-NiranjanMysore:2009:PSF:1594977.1592575,
-Agarwal:2014:SMS:2620728.2620758},
-transport~\cite{Raiciu:2011:IDP:2043164.2018467,Alizadeh:2010:DCT:1851275.1851192}
+\cite{Greenberg:2011:VSF:1897852.1897877},
+%NiranjanMysore:2009:PSF:1594977.1592575,
+%Agarwal:2014:SMS:2620728.2620758},
+transport~\cite{Raiciu:2011:IDP:2043164.2018467} %,Alizadeh:2010:DCT:1851275.1851192}
 and load balancing~\cite{Alizadeh:2014:CDC:2740070.2626316}.
 In designing \OurSys, we sought to make it transparent to other
 features of the network, to facilitate its interoperation with
