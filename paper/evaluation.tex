@@ -62,15 +62,14 @@ for in this paper.
  & \multicolumn{2}{|c|}{Retransmitted packets} & \\
 Link loss & no FEC & FEC & FEC Overhead (\%) \\
 \midrule
-$10^{-3}$ & 127 & 0 & 10 \\
-$10^{-4}$ & 20  & 0 & 10 \\
-$10^{-5}$ & 1   & 0 & 10 \\
+$10^{-3}$ & 152  & 0 & 20 \\
+$10^{-4}$ & 23   & 0 & 20 \\
+$10^{-5}$ & 2    & 0 & 20 \\
 \bottomrule
 \end{tabular}
 \caption{TCP retransmission behaviour with FEC, and FEC's overhead.
-  We model sending 5MB at 2Gbps. For FEC we used a block size of 11,
-  consisting of 10 data packets and one parity packet.\FIXME{Update
-  this table with most recent numbers}
+  We model sending 10MB at 2Gbps. For FEC we used a block size of 6,
+  consisting of 5 data packets and 1 parity packet.
 }
 \label{tab:ns3}
 \end{center}
