@@ -105,7 +105,7 @@ can be further reduced because several arrays were overpartitioned.
 %implementation are measured using Linux performance counters and averaged over
 %X packets,
 The timing statistics are measured using ingress and egress timestamps on
-the switch.
+the switch.\FIXME{remove?}
 
 \iffalse
 \begin{table}
@@ -147,22 +147,24 @@ Proc. Time (ns) & & & & & & \\
 \toprule
 $(k, h)$ & $(25, 1)$ & $(25, 5)$ & $(25,10)$ & $(50, 1)$ \\
 \midrule
-\emph{Software} & & & & \\
-\cmidrule{1-1}
-Cycles & & & & \\
-Proc. Time (ns) & & & & \\
-\midrule
-\emph{FPGA} & & & & \\
-\cmidrule{1-1}
+%\emph{Software} & & & & \\
+%\cmidrule{1-1}
+%Cycles & & & & \\
+%Proc. Time (ns) & & & & \\
+%\midrule
+%\emph{FPGA} & & & & \\
+%\cmidrule{1-1}
 BRAM (18Kb) & 135 (7\%) & 186 (10\%) & 248 (14\%) & 135 (7\%) \\
 DSP & 0 (0\%) & 0 (0\%) & 0 (0\%) & 0 (0\%) \\
 Flip-flop & 52420 (10\%) & 53415 (10\%) & 54497 (10\%) & 52420 (10\%) \\
 LUT & 31372 (11\%) & 32439 (12\%) & 33136 (12\%) & 31368 (11\%) \\
-Proc. Time (ns) & & & & \\
+Proc. Time (ns) & \FIXME{?} & & & \\
 \bottomrule
 \end{tabular}
 % }
-\caption{Resource and Performance Comparison of FPGA and CPU implementations of \OurSys with different configurations.}
+\caption{Resource and Performance measurement %Comparison
+of the FPGA %and CPU
+implementation of \OurSys with different configurations.}
 \label{tab:microbenchmarks}
 \end{center}
 \end{table}
