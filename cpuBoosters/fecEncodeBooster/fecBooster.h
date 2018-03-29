@@ -7,8 +7,8 @@
 
 #define SIZE_ETHERNET sizeof(struct ether_header)
 
-#define NUM_DATA_PACKETS 130
-#define NUM_PARITY_PACKETS 3
+#define NUM_DATA_PACKETS 8
+#define NUM_PARITY_PACKETS 4
 #define NUM_BLOCKS 256
 #define PKT_BUF_SZ 2048
 

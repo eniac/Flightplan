@@ -12,8 +12,8 @@ applications to run in hardware at line rate.
 Example applications include:
 key-value stores~\cite{Li:2017:KHI:3132747.3132756},
 network testing~\cite{Shahbaz:2013:AOS:2537857.2537880},
-consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
 network stacks~\cite{Istvan:2016:CBI:2930611.2930639},
+consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
 regex matching on payloads~\cite{Woods:2010:CED:1920841.1920926},
 and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
 
@@ -25,8 +25,10 @@ Our design requires
 minimal configuration, is transparent to
 end-points and does not conflict
 with existing network architecture choices (e.g., the network's topology,
-and how packets are routed over it). We model \OurSys using ns-3 and evaluate
-implementations for CPUs and FPGAs.
+and how packets are routed over it).
+We evaluate implementations for CPUs and FPGAs, and model a modified
+design using ns-3.
+
 
 \begin{figure}
   \centering
@@ -64,7 +66,7 @@ link failure seems best done at the link's level. Not only are we able to
 identify the faulty link directly, but, unlike higher-layer protocols,
 we can also distinguish link failure from congestion.
 
-Programmable hardware alone is not sufficient to solve this problem: one
+Programmable network hardware alone is not sufficient to solve this problem: one
 also needs a careful design since link management might interfere with
 other features of the network, such as topology and routing~
 \cite{Greenberg:2011:VSF:1897852.1897877,

@@ -15,20 +15,7 @@ We evaluated \OurSys with microbenchmarks and network simulation.
 %\item What benefit can \OurSys have to networks at large?
 %\end{itemize}
 
-\subsection{Setup}
-\begin{figure}
-  \centering
-  \includegraphics[width=0.3\paperwidth]{exp_topo.pdf}
-  \caption{\label{fig:exp_topo} Testbed topology for benchmarks.}
-\end{figure}
 
-Figure~\ref{fig:exp_topo} depicts the testbed we used to benchmark \OurSys.
-\hg{This setup was not used to test the FPGA, so it probably does not
-belong in a section on its own.}
-The two traffic generation hosts are each connected to different \OurSys
-enabled switches, which are themselves connected by a 10 GbE link. The
-switches are Wedge BF32-100X's with Barefoot Tofino~\cite{tofino} P4 
-programmable forwarding engines. \lei{TODO: fix cite}
 
 % We
 % evaluate three possible deployment models for \OurSys: an FPGA external to
@@ -43,9 +30,40 @@ programmable forwarding engines. \lei{TODO: fix cite}
 
 
 \subsubsection{Event-based simulation}
-Figure/Table~\ref{tab:simulation} shows something about the overall benefit of \OurSys from a network-wide perspective, based on an ns-3 event-driven simulation.
-This model has better fidelity than the previous model, but is not run on real hardware. This also means we can simulate larger networks. Here we present data for experiments that are comparable to the setups used in the other evaluations.
-\lei{\#Shrink Candidate\#}
+We customised a fat-tree datacenter topology in ns-3~\cite{ns3-dcn} to
+model (i)~a link with loss characteristics as described by Zhuo et
+al.~\cite{Zhuo:2017:UMP:3098822.3098849}; and (ii)~FEC to support
+transport protocols. In this model we experimented with end-to-end
+error correction rather than link-layer, to simulate a more complex
+implementation without incurring the burden of implementing it fully.
+
+Table~\ref{tab:ns3} shows our results for a simulation of a 128-node
+fat-tree network with 10Gbps links where two nodes communicate over
+TCP. We see that end-to-end FEC incurs significant end-to-end
+overhead, making it less appealing than the link-layer design we opted
+for in this paper.
+
+\begin{table}
+% \footnotesize
+\begin{center}
+\small
+\begin{tabular}{c|cc|c}
+\toprule
+ & \multicolumn{2}{|c|}{Retransmitted packets} & \\
+Link loss & no FEC & FEC & FEC Overhead (\%) \\
+\midrule
+$10^{-3}$ & 152  & 0 & 20 \\
+$10^{-4}$ & 23   & 0 & 20 \\
+$10^{-5}$ & 2    & 0 & 20 \\
+\bottomrule
+\end{tabular}
+\caption{TCP retransmission behaviour with FEC, and FEC's overhead.
+  We model sending 10MB at 2Gbps. For FEC we used a block size of 6,
+  consisting of 5 data packets and 1 parity packet.
+}
+\label{tab:ns3}
+\end{center}
+\end{table}
 
 
 \subsection{Encoder Microbenchmarks}
