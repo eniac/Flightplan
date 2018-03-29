@@ -14,47 +14,33 @@ and our design is based on properties of the medium: we concentrate on wireline
 10Gbps Ethernet; typically such links are reliable (i.e., have low error
 rates) and they are not shared (i.e., point-to-point).
 Instead of using an ARQ scheme as in X.25 and 802.11, we use forward
-error-correction (FEC). This simplifies our design, obviating the need
-for windows for in-flight data since the sender will not attempt to
-resend a frame, and this diminishes the memory needed.
-\lei{\#Shrink Candidate\#}
+error-correction (FEC).
+This simplifies our design, obviating the need for windows and this
+diminishes the memory needed for in-flight data since the sender will
+not attempt to resend a frame.
 
 Our link-layer FEC complements the physical-layer FEC that is used in
 high-capacity Ethernet links: the physical-layer FEC helps the link sustain a
 given capacity over longer distances, whereas our FEC is intended to mitigate
 errors that do not arise because of challenging environmental factors; rather
-the errors arise because of physical damage to the link or failing transceivers.
+the errors arise because of physical damage to the link or failing transceivers~\cite{Zhuo:2017:UMP:3098822.3098849}.
 
 Our approach also complements higher-layer reliability measures, as provided by
 TCP for example.  TCP provides end-to-end reliability, whereas we concentrate
 on link-level reliability. Unlike TCP, we are able to distinguish congestion
 from corruption as the cause of packet loss, and we are able to locate the
 lossy links in the network. Thus we can react to them much more quickly than
-TCP at the end-points. As with TCP, our mechanism results in a reduced
+TCP at the end-points; we evaluate this in~\S\ref{sec:evaluation}. As with TCP, our mechanism results in a reduced
 transmission rate, but this is necessary since the link capacity has been
 reduce because of the link's failure.
-\amd{Somewhere (maybe here, maybe later) I think we need to make the case
-  that the FEC solution in this scenario results in (significantly?) less
-  reduction in transmission rater than the TCP retransmission mechanism.}
 
 In this paper we focus on Clos
 topologies~\cite{clos_bstj1953}, 
 %% surely we can give Clos credit for Clos networks... -- AMD
 which are used in datacenters~\cite{Singh:2016:JRD:2991470.2975159}.
 We believe that our design could be useful in mitigating faulty links in a Clos
-topology due to the large number links they contain when compared to a
-hierarchical topology~\cite{Al-Fares:2008:SCD:1402946.1402967} (thus are more exposed to link-related faults), and due
-to the challenge involved in making the most of (cheaper) low-radix switches in datacenters:
-``A key drawback of the topology was the low radix of
-the ToR switch, which caused issues when links failed.
-If the left uplink of a source ToR and the right uplink
-of  a  destination  ToR  failed  within  a  MTTR  window,
-machines  on  these  ToRs  could  not  communicate  with
-each other even though they could communicate with
-other machines -- an intransitive disconnect not handled
-well by applications.''~\cite[\S3.1]{Singh:2016:JRD:2991470.2975159}
-\lei{\#Shrink Candidate\# I can't see where this topology significantly affect our design decision. 
-Also, do we have to cite such a long paragraph? }
+topology due to the large number links it uses when compared to a
+hierarchical topology~\cite{Al-Fares:2008:SCD:1402946.1402967}, which makes exposes it more to link-related faults.
 
 Centralized approaches have been described in the literature to mitigate
 faulty links in a WAN~\cite{traffic-engineering-with-forward-fault-correction}
