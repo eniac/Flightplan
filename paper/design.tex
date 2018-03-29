@@ -70,8 +70,8 @@ the Receiving proxy after ingress.
   modules or links. This is done as in
   CorrOpt~\cite{Zhuo:2017:UMP:3098822.3098849}, but failure-inference is done
   locally on the switch, rather than remotely on a separate machine.
-  Sometimes a switch cannot itself realise if one of its links is
-  malfunctioning, since the malfunction would be inferrable from the adjacent
+  Sometimes a switch cannot itself realize if one of its links is
+  malfunctioning, since the malfunction would be inferable from the adjacent
   element's counters (e.g., through an increase in frame errors). Thus switches
   might need to inform each other about errors on the transmitting side. To do
   this we employ LLDP and use a custom TLV to signal to the receiving switch
@@ -106,7 +106,7 @@ tell blocks apart, as shown in Fig.~\ref{fig:example-loss2}.
   \centering
   \includegraphics[width=0.35\paperwidth]{figures/paper-fig-4.pdf}
   \caption{\label{fig:example-loss}The expectation for strictly monotonic frame
-  number $n$ ensures that we can distingush successive blocks. Note that frame
+  number $n$ ensures that we can distinguish successive blocks. Note that frame
   reordering is not possible because they are being sent over the same link,
   and their processing is sequential across that link.}
 \end{figure}
@@ -132,7 +132,7 @@ frames for output. We simply drop new frames that cannot be put onto the link
 fast enough (i.e., before they are placed into a block). This lack of capacity
 is communicated by the $\mathit{busy}(c)$ predicate in
 Algorithm~\ref{alg:sending}, which indicates that the FEC computation is
-ongoing, or its results are still being serialised onto the medium. This loss
+ongoing, or its results are still being serialized onto the medium. This loss
 will communicate to higher-layer protocols that congestion is occurring (both
 due to the link capacity being reduced, and because of the extra overhead of
 sending the parity frames), and the end-hosts network stacks can react to this
@@ -171,11 +171,11 @@ is no more work to be done for this block.
   packets to perform decoding, we do.  Then we discard any subsequent
   packets that arrive in the block.  No timeout on decode.  On the FPGA
   where we are designed for full rate when decoding, this doesn't slow
-  anything down.  On a processor that cannot maintian full-rate decoding,
+  anything down.  On a processor that cannot maintain full-rate decoding,
   not doing decoding could be a performance optimization.}\\
 \lei{I've switched paragraph 1 and 2, 3 and 4. This order follows the listing at the beginning,
 looks more natural to me, and avoids use-before-define. I also lifted the diagrams. It is difficult
-to understand the design from plain text for people unfamilar with this. Also, there are too many
+to understand the design from plain text for people unfamiliar with this. Also, there are too many
 details in caption of diagrams.}
 
 %\begin{algorithm}

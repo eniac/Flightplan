@@ -19,7 +19,7 @@ and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
 
 In this paper we describe \OurSys, which to our knowledge is the first application
 of its kind. \OurSys is an in-network distributed
-mitigation for faulty links.  
+mitigation of faulty links.
 %We claim that  -- not think necessary - AMD
 Our design requires
 minimal configuration, is transparent to
@@ -51,7 +51,14 @@ overhead.
 
 Running \OurSys as an in-network function makes more sense than
 running it in end-hosts since the problem that \OurSys mitigates is
-scoped in the network itself. Just as some application features are
+typically restricted to a fraction of the network.  Applying \OurSys to
+end-hosts adds overhead to all links, also the links that never fail.
+%HG: I found the argument that it happens in the network, so we have to fix it
+%    there weak.  E.g., TCP flow control also deals with lost packets, a
+%    phenomenon that happens in the network, but it is done on the host.
+%scoped in the network itself.
+%HG: I find the next sentence also a weak argument, candidate for removal.
+Just as some application features are
 best managed end-to-end~\cite{Saltzer84end-to-endarguments}, handling
 link failure seems best done at the link's level. Not only are we able to
 identify the faulty link directly, but, unlike higher-layer protocols,
@@ -65,23 +72,24 @@ NiranjanMysore:2009:PSF:1594977.1592575,
 Agarwal:2014:SMS:2620728.2620758},
 transport~\cite{Raiciu:2011:IDP:2043164.2018467,Alizadeh:2010:DCT:1851275.1851192}
 and load balancing~\cite{Alizadeh:2014:CDC:2740070.2626316}.
-In designing \OurSys we sought to make it transparent to other
+In designing \OurSys, we sought to make it transparent to other
 features of the network, to facilitate its interoperation with
 existing networks.
 
-Our contributions include (i)~the design of \OurSys, which relies on a
-link-layer forward error-correction (FEC) scheme to mitigate failing
-links, and (ii)~the FPGA implementation of \OurSys to saturate 10Gbps
+Our contributions include (i)~
+%the design of \OurSys, which relies on
+a link-layer forward error-correction (FEC) scheme to mitigate failing
+links, and (ii)~an FPGA implementation of this scheme that fully utilizes 10-Gbps
 links. Part of our implementation is in
-P4~\cite{Bosshart:2014:PPP:2656877.2656890} over SDNet, and we
-transcended P4's limitation to header processing~\cite{Dang:2017:WPL:3050220.3050231} by
-writing external functions in C for high-level synthesis.
-%They key challenge we encountered was in streaming packets through our
-It is also a challenge to stream packets through our
-external functions, and we believe that our approach could be a
-helpful take-away for other researchers. \amd{...but we currently don't
-  deliver on this.}
-  \lei{fixed words}
+P4~\cite{Bosshart:2014:PPP:2656877.2656890} over SDNet.
+P4's limitation to header processing~\cite{Dang:2017:WPL:3050220.3050231}
+was transcended by writing external functions in C for high-level synthesis.
+The key challenge we encountered was in streaming packets through our
+%It is also a challenge to stream packets through our
+external functions.%, and we believe that our approach could be a
+%helpful take-away for other researchers. \amd{...but we currently don't
+%  deliver on this.}
+%  \lei{fixed words}
 
 The next section describes the background and related work of the problem we
 are solving, before we describe our design~(\S\ref{sec:design}) and

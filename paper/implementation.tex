@@ -43,7 +43,7 @@ Receiving Proxy).
 P4 is not suitable
 for
 %payload processing or
-exploiting the parallellism of the FEC core, so we implemented the core in
+exploiting the parallelism of the FEC core, so we implemented the core in
 hardware-synthesizable C. The code can be compiled and executed on a
 general-purpose CPU, but we can also synthesize the code for an FPGA
 in Vivado HLS.  Guided by pragmas added by the developer, Vivado HLS takes
@@ -62,9 +62,9 @@ and integrate modules together.
 %
 %First, from P4 to SDNet
 %
-%Second, from sdnet to RTL implementaion and C++ high-level simulation
+%Second, from sdnet to RTL implementation and C++ high-level simulation
 %
-%Third, add preipheral blocks with Vivado Design Suit
+%Third, add peripheral blocks with Vivado Design Suit
 %
 Our P4 program carries out packet parsing, header tagging,
 extracting payload for encoder, and
@@ -83,7 +83,7 @@ at a level closer to RTL modules compared to P4.
 
 \fi
 
-%Although P4 is easy to use and works very well in fullfilling its duty by design,
+%Although P4 is easy to use and works very well in fulfilling its duty by design,
 %we did meet several technical challenges in our specific task:
 %
 %1. P4's variables only keep their values within the processing of one packet.
@@ -149,15 +149,16 @@ important part of our implementation, since whole packets must flow
 through it between the P4 environment to the more general logic
 implementing our FEC. 
 \fi
-This interface emerged as a very important part of our implementaion,
+This interface emerged as a very important part of our implementation,
 since whole packets must flow through it between two different levels
 of abstractions.
 We found that SDNet implements an extensible
 pipeline of functional blocks chained by a packet stream, to which we can add our external function. 
-%This allowed us to implement our function as a stream processor, for cut-through behaviour through SDNet.
+%This allowed us to implement our function as a stream processor, for cut-through behavior through SDNet.
 As is shown by Fig.~\ref{fig:sdnet-interface}, this allows us to implement
-our function as a stream processor with cut-through behaviour and glue it
-to the header processor.
+our function as a stream processor with cut-through behavior and glue it
+to the header processor. \hg{This sentence (the glueing part) has become a
+repetition of the last sentence (the chaining part).}
 
 \begin{figure}
   \centering
@@ -227,8 +228,9 @@ again integers in the same range.  \hg{I put this line back in because otherwise
 the mention of the Galois field in the resource requirements comes out of nowhere.
 If space is an issue, we can not mention this and compute resource requirements in
 units of multiplications.}
-Earlier, we used $k$ and $h$ to count packets.  This choice was intentional as
-Figure~\ref{fig:Striping} demonstrates.\lei{I can't see the intention......}
+In \S\ref{sec:design}, we used $k$ and $h$ also to count packets.  This choice was intentional as
+Figure~\ref{fig:Striping} demonstrates.
+%\lei{I can't see the intention......}
 Due to space limitations, we will not discuss RSE in more detail.
 %\amd{somewhere we should be clear x is striped across corresponding bytes
 %  in k packets}
@@ -236,7 +238,7 @@ Due to space limitations, we will not discuss RSE in more detail.
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{Striping.pdf}
-  \caption{\label{fig:Striping} Correspondence beween packet data, messages and codewords.
+  \caption{\label{fig:Striping} Correspondence between packet data, messages and codewords.
   }
 \end{figure}
 
@@ -298,28 +300,26 @@ A similar implementation in Verilog or VHDL requires in the order of hundreds
 of lines.  The {\tt pipeline} pragma directs the tool to construct a
 hardware pipeline that can start executing one invocation of the function
 every clock cycle.  Vivado automatically inserts a suitable number of registers
-to achieve the desired clock period.
-The {\tt Par} and {\tt Gen} arrays are mapped
-on BRAMs by default.  The pipeline would need {\tt MAX\_H} values from {\tt Par}
-per clock cycle although a dual-port BRAM can supply only 2 values.  The
-solution is to divide the data in {\tt Par} over multiple BRAMs that can be
-accessed simultaneously.  We accomplish that with the {\tt ARRAY\_PARTITION}
-pragma.
-\hg{Array\_reshape pragma probably makes more sense.  Still have to test it
-though.}
+to achieve the desired clock period.  The {\tt Par} and {\tt Gen} arrays are mapped
+on BRAMs by default.  The pipeline would need {\tt MAX\_H} values from each
+array per clock cycle although a dual-port BRAM can supply only 2 values.
+A solution is to divide the data over multiple BRAMs that can be
+accessed simultaneously.  We accomplish that for {\tt Gen} with the {\tt ARRAY\_PARTITION}
+pragma.  To {\tt Par}, we applied the {\tt ARRAY\_RESHAPE} pragma to combine
+all array elements into a single wide word.
 \lei{\#Shrink Candidate\#}
 
 \begin{lstlisting}[language=C,basicstyle=\footnotesize,numbers=left,
                    captionpos=b,caption={Matrix-Vector Multiplier},
                    label=Multiplier]
 void Enc(char Dat, char Par[MAX_H], int Pkt, int h) {
-#pragma HLS ARRAY_PARTITION variable=Par complete dim=1
+#pragma HLS ARRAY_RESHAPE variable=Par complete
   static char Gen[MAX_H][MAX_K] = { ... };
 #pragma HLS ARRAY_PARTITION variable=Gen complete dim=0
 #pragma HLS pipeline
   for (int i = 0; i < MAX_H; i++)
-    if (i < h)
-      Par[i] = GF_add(Par[i], GF_mul(Dat[j], Gen[i][Pkt]));
+    Par[i] = i >= h ? Par[i] :
+        GF_add(Par[i], GF_mul(Dat, Gen[i][Pkt]));
 }
 \end{lstlisting}
 
