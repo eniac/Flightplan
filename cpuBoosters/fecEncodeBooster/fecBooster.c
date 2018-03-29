@@ -8,8 +8,6 @@
 int workerId = 0;
 int workerCt = 1;
 
-int SIZE_FEC_TAG = 0;
-
 pcap_t *input_handle = NULL;
 pcap_t *output_handle = NULL;
 
@@ -423,8 +421,6 @@ int main (int argc, char** argv) {
 
 	/* initialize fec codewords */
 	if ((rc = rse_init()) != 0 ) exit(rc);
-
-	SIZE_FEC_TAG = sizeof(fec_header_t);
 
 	while ((opt = getopt(argc, argv, "i:o:w:t:")) != -1)
 	{

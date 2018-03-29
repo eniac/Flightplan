@@ -6,6 +6,7 @@
 #include "rse.h"
 
 #define SIZE_ETHERNET sizeof(struct ether_header)
+#define SIZE_FEC_TAG sizeof(struct fec_header)
 
 #define NUM_DATA_PACKETS 130
 #define NUM_PARITY_PACKETS 3
@@ -15,8 +16,6 @@
 
 extern int workerId;
 extern int workerCt;
-
-extern int SIZE_FEC_TAG;
 
 extern pcap_t *handle; /*PCAP handle*/
 
