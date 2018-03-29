@@ -64,7 +64,7 @@ void my_packet_handler(
 		/* Encoder */
 		encode_block();
 
-		copy_parity_packets_to_pkt_buffer(fecHeader->block_id);
+		copy_parity_packets_to_pkt_buffer_DEPRECATED(fecHeader->block_id);
 #endif // FEC_ENCODE_BOOSTER_BASELINE
 
 		/*Inject all packets in the block back to the network*/

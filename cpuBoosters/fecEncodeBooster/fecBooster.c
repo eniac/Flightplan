@@ -264,7 +264,7 @@ int get_total_packet_size(char* packet) {
 	return totalSize;
 }
 
-int copy_parity_packets_to_pkt_buffer(int blockId) {
+int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 	int startIndexOfParityPacket = 0 + NUM_DATA_PACKETS;
 	int sizeOfParityPackets = fb.plen[startIndexOfParityPacket];
 //(	fec_dbg_printf)("This is inside copy packets \n");
