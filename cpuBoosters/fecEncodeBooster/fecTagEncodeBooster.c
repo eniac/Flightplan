@@ -57,12 +57,19 @@ void my_packet_handler(
 		encode_block();
 
 		copy_parity_packets_to_pkt_buffer_DEPRECATED(fecHeader->block_id);
+// FIXME tag the parity packets
 
 		/*Inject all packets in the block back to the network*/
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++) {
 			char* packetToInject = pkt_buffer[fecHeader->block_id][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
 			forward_frame(packetToInject, outPktLen);
+
+// FIXME how to get size of parity pakcets
+
+// but don't encapsulate ethernet header
+tagged_size = wharf_tag_frame(packet, header->len, &new_packet);
+
 		}
 	}
 	return;
