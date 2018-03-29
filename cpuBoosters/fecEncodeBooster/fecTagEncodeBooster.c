@@ -49,7 +49,7 @@ void my_packet_handler(
 	}
 
 	/*check if the block is ready for processing*/
-	if (is_all_pkts_recieved_for_block(fecHeader->block_id) == true) {
+	if (is_all_data_pkts_recieved_for_block(fecHeader->block_id)) {
 		/*populate the global fec structure for rse encoder and call the encode.*/
 		call_fec_blk_get(fecHeader->block_id);
 

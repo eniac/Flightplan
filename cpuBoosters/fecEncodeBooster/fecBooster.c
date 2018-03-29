@@ -128,6 +128,15 @@ bool is_all_pkts_recieved_for_block(int blockId) {
 	return true;
 }
 
+bool is_all_data_pkts_recieved_for_block(int blockId) {
+	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
+		if (pkt_buffer_filled[blockId][i] == PACKET_ABSENT) {
+			return false;
+		}
+	}
+	return true;
+}
+
 /**
  * @brief      Zeros-out the given block in the buffer.
  *
