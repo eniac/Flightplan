@@ -303,6 +303,18 @@ int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 	}
 }
 
+int copy_parity_packets_to_pkt_buffer(int blockId) {
+	int startIndexOfParityPacket = NUM_DATA_PACKETS;
+	int sizeOfParityPackets = fb.plen[startIndexOfParityPacket];
+	for (int i = startIndexOfParityPacket; i < (startIndexOfParityPacket + NUM_PARITY_PACKETS); i++) {
+		FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(pkt_buffer[blockId][i]);
+		*original_frame_size = sizeOfParityPackets;
+		memcpy(pkt_buffer[blockId][i] + sizeof(FRAME_SIZE_TYPE), fb.pdata[i], sizeOfParityPackets);
+		pkt_buffer_filled[blockId][i] = PACKET_PRESENT;
+	}
+	return sizeof(FRAME_SIZE_TYPE) + sizeOfParityPackets;
+}
+
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet) {
 	struct sniff_ip *ip;              /* The IP header */
 

@@ -40,6 +40,7 @@ void encode_block();
 void decode_block();
 void print_global_fb_block();
 int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId);
+int copy_parity_packets_to_pkt_buffer(int blockId);
 int copy_data_packets_to_pkt_buffer(int blockId);
 int get_total_packet_size(char* packet);
 u_short compute_csum(struct sniff_ip *ip , int len);

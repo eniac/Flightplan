@@ -32,8 +32,9 @@ void my_packet_handler(
 		zeroout_block_in_pkt_buffer(lastBlockId);
 	}
 
-	if (fecHeader->index < NUM_DATA_PACKETS){
+	if (fecHeader->index < NUM_DATA_PACKETS) {
 		forward_frame(new_packet, tagged_size);
+		free(new_packet);
 	}
 
 	/*Update the received pkt in the pkt buffer.*/
@@ -42,8 +43,7 @@ void my_packet_handler(
 		*original_frame_size = fecHeader->size;
 		memcpy(pkt_buffer[fecHeader->block_id][fecHeader->index] + sizeof(FRAME_SIZE_TYPE), packet, header->len);
 		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = PACKET_PRESENT;
-	} 
-	else {
+	} else {
 		fprintf(stderr, "Tagging produced a duplicate index\n");
 		exit(1);
 	}
@@ -51,25 +51,22 @@ void my_packet_handler(
 	/*check if the block is ready for processing*/
 	if (is_all_data_pkts_recieved_for_block(fecHeader->block_id)) {
 		/*populate the global fec structure for rse encoder and call the encode.*/
-		call_fec_blk_get(fecHeader->block_id);
+		call_fec_blk_get(fecHeader->block_id); // FIXME check this
 
 		/* Encoder */
 		encode_block();
 
-		copy_parity_packets_to_pkt_buffer_DEPRECATED(fecHeader->block_id);
-// FIXME tag the parity packets
+		int parity_payload_size = copy_parity_packets_to_pkt_buffer(fecHeader->block_id);
 
 		/*Inject all packets in the block back to the network*/
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++) {
-			char* packetToInject = pkt_buffer[fecHeader->block_id][i];
-			size_t outPktLen = get_total_packet_size(packetToInject);
-			forward_frame(packetToInject, outPktLen);
-
-// FIXME how to get size of parity pakcets
-
-// but don't encapsulate ethernet header
-tagged_size = wharf_tag_frame(packet, header->len, &new_packet);
-
+			tagged_size = wharf_tag_frame((const u_char*)pkt_buffer[fecHeader->block_id][i], parity_payload_size, &new_packet); // We don't encapsulate ethernet header for parity packets
+			struct ether_header *packet_eth_header = (struct ether_header *)packet;
+			struct ether_header *parity_eth_header = (struct ether_header *)pkt_buffer[fecHeader->block_id][i];
+			memcpy(parity_eth_header->ether_dhost, packet_eth_header->ether_dhost, 6);
+			memcpy(parity_eth_header->ether_shost, packet_eth_header->ether_shost, 6);
+			forward_frame(new_packet, tagged_size);
+			free(new_packet);
 		}
 	}
 	return;
