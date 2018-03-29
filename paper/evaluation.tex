@@ -40,9 +40,41 @@ programmable forwarding engines. \lei{TODO: fix cite}
 
 
 \subsubsection{Event-based simulation}
-Figure/Table~\ref{tab:simulation} shows something about the overall benefit of \OurSys from a network-wide perspective, based on an ns-3 event-driven simulation.
-This model has better fidelity than the previous model, but is not run on real hardware. This also means we can simulate larger networks. Here we present data for experiments that are comparable to the setups used in the other evaluations.
-\lei{\#Shrink Candidate\#}
+We customised a fat-tree datacenter topology in ns3~\cite{ns3-dcn} to
+model (i)~a link with loss characteristics as described by Zhuo et
+al.~\cite{Zhuo:2017:UMP:3098822.3098849}; and (ii)~FEC to support
+transport protocols. In this model we experimented with end-to-end
+error correction rather than link-layer, to simulate a more complex
+implementation without incurring the burden of implementing it fully.
+
+Table~\ref{tab:ns3} shows our results for a simulation of a 128-node
+fat-tree network with 10Gbps links where two nodes communicate over
+TCP. We see that end-to-end FEC incurs significant end-to-end
+overhead, making it less appealing than the link-layer design we opted
+for in this paper.
+
+\begin{table}
+% \footnotesize
+\begin{center}
+\small
+\begin{tabular}{c|cc|c}
+\toprule
+ & \multicolumn{2}{|c|}{Retransmitted packets} & \\
+Link loss & no FEC & FEC & FEC Overhead (\%) \\
+\midrule
+$10^{-3}$ & 127 & 0 & 10 \\
+$10^{-4}$ & 20  & 0 & 10 \\
+$10^{-5}$ & 1   & 0 & 10 \\
+\bottomrule
+\end{tabular}
+\caption{TCP retransmission behaviour with FEC, and FEC's overhead.
+  We model sending 5MB at 2Gbps. For FEC we used a block size of 11,
+  consisting of 10 data packets and one parity packet.\FIXME{Update
+  this table with most recent numbers}
+}
+\label{tab:ns3}
+\end{center}
+\end{table}
 
 
 \subsection{Encoder Microbenchmarks}
