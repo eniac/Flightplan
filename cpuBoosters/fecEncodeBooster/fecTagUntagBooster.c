@@ -9,9 +9,8 @@ void my_packet_handler(
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
-	u_char *new_packet = (u_char *)malloc(1500/*FIXME const*/);
-	memcpy(new_packet, packet, header->len);
-	int tagged_size = wharf_tag_frame(new_packet, header->len);
+	u_char *new_packet = NULL;
+	int tagged_size = wharf_tag_frame(new_packet, header->len, &new_packet);
 	int new_size = wharf_strip_frame(new_packet, tagged_size);
 	if (new_size != header->len) {
 		fprintf(stderr, "Frame size changed\n");

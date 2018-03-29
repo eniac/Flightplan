@@ -16,7 +16,7 @@ rsetest: Encoder.c rsetest.c RSE_core_test.c rse.c
 
 # Intended for linking with C++ compiled CPU booster in ../../cpuBoosters/fecEncodeBooster
 rse.o:
-	@g++ $(CFLAGS) -c rse.c
+	@g++ $(CFLAGS) -DHANS_ENCODER -c rse.c
 	@mv rse.o pre_rse.o
 	@g++ $(CFLAGS) -c RSE_core_test.c
 	@g++ $(CFLAGS) -c RSECore.c

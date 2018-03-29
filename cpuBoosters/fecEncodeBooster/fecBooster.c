@@ -360,17 +360,18 @@ static unsigned int class_id = 0;
 static unsigned int block_id = 0;
 static unsigned int frame_index = 0;
 
-int wharf_tag_frame(u_char* packet, int size) {
+int wharf_tag_frame(const u_char* packet, int size, u_char** result) {
   if (size >= FRAME_SIZE_CUTOFF) {
     fprintf(stderr, "Frame too big for tagging (%d)", size);
     exit(1);
   }
-
-  u_char *old_packet = (u_char *)malloc(size);
-  memcpy(old_packet, packet, size);
-  struct ether_header *eth_header = (struct ether_header *)packet;
+  const int extra_header_size = sizeof(struct ether_header) + sizeof(struct fec_header);
+  *result = (u_char *)malloc(size + extra_header_size);
+  memcpy(*result, packet, sizeof(struct ether_header));
+  memcpy(*result + sizeof(struct ether_header) + sizeof(struct fec_header), packet, size);
+  struct ether_header *eth_header = (struct ether_header *)*result;
   eth_header->ether_type=htons(WHARF_ETHERTYPE);
-  struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
+  struct fec_header *tag = (struct fec_header *)(*result + sizeof(struct ether_header));
   tag->class_id = class_id;
   tag->block_id = block_id;
   tag->index = frame_index;
@@ -381,9 +382,7 @@ int wharf_tag_frame(u_char* packet, int size) {
     block_id = (block_id + 1) % MAX_BLOCK;
   }
 
-  memcpy(packet + sizeof(struct ether_header) + sizeof(struct fec_header), old_packet, size);
-  free(old_packet);
-  return sizeof(struct ether_header) + sizeof(struct fec_header) + size;
+  return size + extra_header_size;
 }
 
 int wharf_strip_frame(u_char* packet, int size) {
