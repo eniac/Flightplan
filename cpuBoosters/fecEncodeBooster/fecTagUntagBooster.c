@@ -10,7 +10,7 @@ void my_packet_handler(
     const u_char *packet
 ) {
 	u_char *new_packet = NULL;
-	int tagged_size = wharf_tag_frame(new_packet, header->len, &new_packet);
+	int tagged_size = wharf_tag_frame(packet, header->len, &new_packet);
 	int new_size = wharf_strip_frame(new_packet, tagged_size);
 	if (new_size != header->len) {
 		fprintf(stderr, "Frame size changed\n");
