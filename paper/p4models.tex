@@ -114,7 +114,7 @@ can transmit before receiving an ACK, limiting the transmission rate
 to approximately $cwnd$ * round trip time. TCP increases $cwnd$ linearly 
 with successful packet deliveries, and reduces it exponentially upon 
 packet loss. As Figure~\ref{fig:lossVsWindow} shows, random packet loss 
-at rates higher than around $10^{-5} causes TCP to reduce $cwnd$ significantly, 
+at rates higher than around $10^{-5}$ causes TCP to reduce $cwnd$ significantly, 
 causing the throughput drop in Figure~\ref{fig:lossVsTput}. With FEC, 
 the congestion window remains high as loss rate increases, especially when 
 using high levels of redundancy, e.g., $(K, H) = (5, 5)$. 
