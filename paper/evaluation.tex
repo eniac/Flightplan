@@ -14,20 +14,7 @@ error correction?
 %\item What benefit can \OurSys have to networks at large?
 \end{itemize}
 
-\subsection{Setup}
-\begin{figure}
-  \centering
-  \includegraphics[width=0.3\paperwidth]{exp_topo.pdf}
-  \caption{\label{fig:exp_topo} Testbed topology for benchmarks.}
-\end{figure}
 
-Figure~\ref{fig:exp_topo} depicts the testbed we used to benchmark \OurSys.
-\hg{This setup was not used to test the FPGA, so it probably does not
-belong in a section on its own.}
-The two traffic generation hosts are each connected to different \OurSys
-enabled switches, which are themselves connected by a 10 GbE link. The
-switches are Wedge BF32-100X's with Barefoot Tofino~\cite{tofino} P4 
-programmable forwarding engines. \lei{TODO: fix cite}
 
 % We
 % evaluate three possible deployment models for \OurSys: an FPGA external to
