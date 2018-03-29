@@ -152,13 +152,9 @@ implementing our FEC.
 This interface emerged as a very important part of our implementation,
 since whole packets must flow through it between two different levels
 of abstractions.
-We found that SDNet implements an extensible
-pipeline of functional blocks chained by a packet stream, to which we can add our external function. 
-%This allowed us to implement our function as a stream processor, for cut-through behavior through SDNet.
-As is shown by Fig.~\ref{fig:sdnet-interface}, this allows us to implement
+As is shown by Fig.~\ref{fig:sdnet-interface}, we used SDNet's extensible pipeline to implement
 our function as a stream processor with cut-through behavior and glue it
-to the header processor. \hg{This sentence (the glueing part) has become a
-repetition of the last sentence (the chaining part).}
+to the header processor.
 
 \begin{figure}
   \centering
