@@ -53,12 +53,10 @@ void my_packet_handler(
 		/*populate the global fec structure for rse encoder and call the encode.*/
 		call_fec_blk_get(fecHeader->block_id);
 
-#ifndef FEC_ENCODE_BOOSTER_BASELINE
 		/* Encoder */
 		encode_block();
 
 		copy_parity_packets_to_pkt_buffer(fecHeader->block_id);
-#endif // FEC_ENCODE_BOOSTER_BASELINE
 
 		/*Inject all packets in the block back to the network*/
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++) {
