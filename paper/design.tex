@@ -3,11 +3,11 @@
 %We assume that the underlying network is Ethernet, on which we implemented our
 %prototype.
 
-\OurSys infers failing links and follows a policy on how to process frames
-intended for those links. For all frames that cross failing links, we tag the
-frames and use a \emph{forward error-correction} scheme: we complement frames
-with extra parity frames to help the next hop recover frames that were lost in
-transit.
+\OurSys infers failing links and follows a policy on how to process
+frames that are about to cross failing links. It uses a \emph{forward
+error-correction} scheme to enable the next hop recover frames that
+were lost in transit, by using extra parity frames that are inserted
+into the medium.
 
 In this section we describe \OurSys's policy choices for managing failing
 links, and how the chosen policy is followed in the network.
@@ -16,7 +16,7 @@ links, and how the chosen policy is followed in the network.
 \subsection{Traffic classification}
 \label{sec:traffic-classification}
 \OurSys is configured to have a (usually small) number of traffic classes,
-which partitions the frames arriving at a switch. Encapsulated frames are
+which partitions the frames arriving at a switch. Outbound frames are encapsulated and
 complemented with parity frames, forming \emph{blocks} that are sent across
 the faulty link.
 Each class $c$ is defined by a map $T: c \mapsto (k, h, t)$, where $k$ is the
@@ -28,12 +28,12 @@ The values $(k, h, t)$ influence the latency with which frames belonging to $c$
 cross the switch, as well the likely recovery of frames belonging to $c$. For
 example, for interactive applications we would want to use a small $k$ and $t$.
 
-\lei{Deleted some. Seems to be redundance of 3.3-sending proxy}
-\iffalse
-Parity frames are new frames that are put onto the medium, so by
-increasing $h$ we create more contention for the link, which reduces
-the capacity available for data from applications crossing that link.
-\fi
+%\lei{Deleted some. Seems to be redundance of 3.3-sending proxy}
+%\iffalse
+%Parity frames are new frames that are put onto the medium, so by
+%increasing $h$ we create more contention for the link, which reduces
+%the capacity available for data from applications crossing that link.
+%\fi
 
 \subsection{Link-failure management policy}
 \label{sec:policy}
@@ -82,9 +82,10 @@ the Receiving proxy after ingress.
 \paragraph{\OurSys frame encapsulation}
 Frames sent over faulty links are encapsulated as shown in Fig.~\ref{fig:format}.
 The original frame is fully encapsulated, and the new header consists of the original source and destination addresses, as well as a custom EtherType for \OurSys.
-After the Ethernet header we add a \OurSys tag, the field-sizes of which
-are deployment-specific: the sizes we use in our implementation are specified
-in~\S\ref{sec:implementation}. \FIXME{I believe we are not specifying it}
+After the Ethernet header we add a \OurSys tag.
+%, the field-sizes of which
+%are deployment-specific: the sizes we use in our implementation are specified
+%in~\S\ref{sec:implementation}. \FIXME{I believe we are not specifying it}
 The information in the \OurSys tag is sufficient to distinguish blocks in
 non-bursty loss, as illustrated in Fig.~\ref{fig:example-loss}. If loss is
 bursty then an additional small number of bits can be added to the tag to
@@ -137,7 +138,6 @@ will communicate to higher-layer protocols that congestion is occurring (both
 due to the link capacity being reduced, and because of the extra overhead of
 sending the parity frames), and the end-hosts network stacks can react to this
 congestion as they normally would.
-\lei{\#Shrink Candidate\#}
 
 \begin{algorithm}
 \SetAlgoLined
@@ -162,21 +162,21 @@ drop frame\;
 \paragraph{Receiving proxy.}
 \OurSys-tagged frames are buffered as shown in Fig.~\ref{fig:example-decode},
 and non-parity frames are untagged and forwarded immediately.
-For each $c$, when the buffer is full, or its $t$ (relative to when the first
+For each $c$, if its $t$ (relative to when the first
 frame was buffered) expires, or a frame from a successive block arrives, 
-decoding is triggered. Decoding consists of using the parity frames to
+then decoding is triggered. Decoding consists of using the parity frames to
 reconstruct the lost data frames; if no data frames have been lost then there
 is no more work to be done for this block.
-\amd{I've been assuming a simpler version...as soon as there are enough
-  packets to perform decoding, we do.  Then we discard any subsequent
-  packets that arrive in the block.  No timeout on decode.  On the FPGA
-  where we are designed for full rate when decoding, this doesn't slow
-  anything down.  On a processor that cannot maintain full-rate decoding,
-  not doing decoding could be a performance optimization.}\\
-\lei{I've switched paragraph 1 and 2, 3 and 4. This order follows the listing at the beginning,
-looks more natural to me, and avoids use-before-define. I also lifted the diagrams. It is difficult
-to understand the design from plain text for people unfamiliar with this. Also, there are too many
-details in caption of diagrams.}
+%\amd{I've been assuming a simpler version...as soon as there are enough
+%  packets to perform decoding, we do.  Then we discard any subsequent
+%  packets that arrive in the block.  No timeout on decode.  On the FPGA
+%  where we are designed for full rate when decoding, this doesn't slow
+%  anything down.  On a processor that cannot maintain full-rate decoding,
+%  not doing decoding could be a performance optimization.}\\
+%\lei{I've switched paragraph 1 and 2, 3 and 4. This order follows the listing at the beginning,
+%looks more natural to me, and avoids use-before-define. I also lifted the diagrams. It is difficult
+%to understand the design from plain text for people unfamiliar with this. Also, there are too many
+%details in caption of diagrams.}
 
 %\begin{algorithm}
 %\SetAlgoLined
