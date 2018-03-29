@@ -18,36 +18,31 @@
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{figures/lineRateModel.pdf}
-  \caption{\label{fig:lineRateModel} P4 pipeline layout for modeling faulty links, encoder, and decoder.}
+  \caption{\label{fig:lineRateModel} Topology of the 10 Gb/s testbed 
+  network for TCP benchmarks, with line-rate P4 modeling of FEC functionality and faulty links.}
 \end{figure}
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.3\paperwidth]{figures/p4ModelTopo.pdf}
-  \caption{\label{fig:p4ModelTopo} Testbed topology for TCP benchmarks.}
-\end{figure}
+To measure the effect of faulty links and \OurSys at the application level, we
+developed a P4 pipeline for the Barefoot Tofino that models \OurSys. We
+deployed the model in a simple 10 Gb/s testbed network, as depicted in
+Figure~\ref{fig:p4ModelTopo}, and benchmarked the performance of 
+Iperf in real-time. The P4 pipeline models the behavior of the encoder, 
+decoder, and faulty link, and can be reconfigured with different FEC and 
+packet loss parameters at runtime via the control plane. 
 
-To measure the effect of faulty links and \OurSys at the application level, we 
-deployed line-rate models of \OurSys in a 10 GbE testbed with Barefoot 
-Tofino P4 programmable switches~\cite{tofino}. Figure~\ref{fig:p4ModelTopo} 
-shows the testbed topology. The switches run a P4 pipeline, shown in 
-Figure~\ref{fig:lineRateModel}, that implements layer two forwarding 
-and models the behavior of a lossy link, the FEC encoder, and the FEC decoder. 
-
-
-The \emph{Encoder model} of the pipeline encapsulates each packet egressing on
+The \textbf{\emph encoder model} of the pipeline encapsulates each packet egressing on
 the faulty link with the \OurSys header and inserts blank  parity packets into
 the flow. It tracks per-port block IDs and  packet indices using P4 register
 arrays. To generate parity packets, the  model clones the last data packet in
 each block with the Tofino's multicast engine.
 
-The \emph{Faulty link model} adds a \emph{corruption header} to each packet
+The \textbf{\emph faulty link model} adds a \emph{corruption header} to each packet
 egressing the faulty link. The header indicates whether or not the neighbor
 switch should consider the packet lost. The model selects packets for
 corruption according to a simple binomial distribution implemented with the
 Tofino's random number generator.
 
-Finally, the \emph{decoder model} applies to all packets arriving from a
+Finally, the \textbf{\emph decoder model} applies to all packets arriving from a
 faulty link, before any other forwarding logic. It removes the corruption
 header from each packet and passes non-corrupt packets to the forwarding
 pipeline. The model recirculates corrupt packets until the next block begins,
@@ -58,8 +53,8 @@ counted at least K data plus parity packets  in the block, the model
 headers and forwarding them normally. If recovery fails, the model drops the
 corrupt packets without forwarding.
 
-All experiments on this testbed measure performance of 10 second file
-transfers from the  client to the server, through an encoding switch, faulty
+All experiments we describe below measure performance of 10 second file
+transfers from the client to the server, through an encoding switch, faulty
 link, and decoding switch. We ran 25 trials for each tested configuration of
 K, H,  and loss rate.
 
