@@ -44,7 +44,7 @@ int get_total_packet_size(char* packet);
 u_short compute_csum(struct sniff_ip *ip , int len);
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
-int wharf_tag_frame(u_char* packet, int size);
+int wharf_tag_frame(const u_char* packet, int size, u_char** result);
 int wharf_strip_frame(u_char* packet, int size);
 #define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header))
 
