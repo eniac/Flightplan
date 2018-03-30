@@ -30,7 +30,7 @@ We evaluated \OurSys with microbenchmarks and network simulation.
 
 
 \subsubsection{Event-based simulation}
-We customised a fat-tree datacenter topology in ns-3~\cite{ns3-dcn} to
+We customized a fat-tree datacenter topology in ns-3~\cite{ns3-dcn} to
 model (i)~a link with loss characteristics as described by Zhuo et
 al.~\cite{Zhuo:2017:UMP:3098822.3098849}; and (ii)~FEC to support
 transport protocols. In this model we experimented with end-to-end
@@ -88,37 +88,6 @@ can be further reduced because several arrays were overpartitioned.
 %The timing statistics are measured using ingress and egress timestamps on
 %the switch.
 
-\iffalse
-\begin{table}
-% \footnotesize
-\begin{center}
-\small
-% \resizebox{\linewidth}{!}{
-\begin{tabular}{ l l l l l l l } 
-\toprule
-$(k, h)$ & $(25, 1)$ & $(25, 5)$ & $(25,10)$ & $(50, 1)$ & $(50, 5)$ & $(50, 10)$ \\
-\midrule
-\emph{Software} & & & & & & \\
-\cmidrule{1-1}
-Cycles & & & & & & \\
-Proc. Time (ns) & & & & & & \\
-\midrule
-\emph{FPGA} & & & & & & \\
-\cmidrule{1-1}
-BRAM (18Kb) & 135 (7\%) & 186 (10\%) & 248 (14\%) & 135 (7\%) & 186 (10\%) & 248 (14\%) \\
-DSP & 0 (0\%) & 0 (0\%) & 0 (0\%) & 0 (0\%) & 0 (0\%) & 0 (0\%) \\
-Flip-flop & 52420 (10\%) & 53415 (10\%) & 54497 (10\%) & 52420 (10\%) & 53416 (10\%) & 54496 (10\%) \\
-LUT & 31372 (11\%) & 32439 (12\%) & 33136 (12\%) & 31368 (11\%) & 32479 (12\%) & 33215 (12\%) \\
-Proc. Time (ns) & & & & & & \\
-\bottomrule
-\end{tabular}
-% }
-\caption{Resource requirements for FPGA and CPU implementations of \OurSys with different configurations.}
-\label{tab:microbenchmarks}
-\end{center}
-\end{table}
-\fi
-
 \begin{table}
 % \footnotesize
 \begin{center}
@@ -136,16 +105,16 @@ $(k, h)$ & $(25, 1)$ & $(25, 5)$ & $(25,10)$ & $(50, 1)$ \\
 %\emph{FPGA} & & & & \\
 %\cmidrule{1-1}
 BRAM (18Kb) & 135 (7\%) & 186 (10\%) & 248 (14\%) & 135 (7\%) \\
-DSP & 0 (0\%) & 0 (0\%) & 0 (0\%) & 0 (0\%) \\
 Flip-flop & 52420 (10\%) & 53415 (10\%) & 54497 (10\%) & 52420 (10\%) \\
 LUT & 31372 (11\%) & 32439 (12\%) & 33136 (12\%) & 31368 (11\%) \\
 %Proc. Time (ns) & \FIXME{?} & & & \\
 \bottomrule
 \end{tabular}
 % }
-\caption{Resource and Performance measurement %Comparison
+\caption{Resource requirement %Comparison
 of the FPGA %and CPU
-implementation of \OurSys with different configurations.}
+implementation of \OurSys with different configurations.  Note that BRAMs are local memories,
+and LUTs (lookup tables) typically implement logic.}
 \label{tab:microbenchmarks}
 \end{center}
 \end{table}
