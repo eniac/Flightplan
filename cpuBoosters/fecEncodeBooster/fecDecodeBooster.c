@@ -32,6 +32,7 @@ void decode_and_forward(const int block_id) {
 
 	signal(SIGALRM, SIG_IGN);
 	nothing_to_decode = true;
+	zeroout_block_in_pkt_buffer(block_id);
 }
 
 void sigalrm_handler(int signal) {
