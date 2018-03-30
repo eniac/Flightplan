@@ -38,7 +38,6 @@ void call_fec_blk_get(int blockId);
 void simulate_packet_loss();
 void encode_block();
 void decode_block();
-void print_global_fb_block();
 int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId);
 int copy_parity_packets_to_pkt_buffer(int blockId);
 int copy_data_packets_to_pkt_buffer(int blockId);

@@ -76,7 +76,6 @@ void encode_block() {
 #if 0
 	D0(fec_block_print());
 #endif
-	// print_global_fb_block();
 }
 
 /**
@@ -151,13 +150,6 @@ void zeroout_block_in_pkt_buffer(int blockId) {
 	}
 	return;
 }
-
-void print_global_fb_block() {
-	for (int i = 0; i < fb.block_N; i++) {
-	//(	fec_dbg_printf)("The length of %d packet is %d\n", i, fb.plen[i]);
-	}
-}
-
 
 /*
  * Create Random Data and Blank Parity packets and link to the FEC block (fb)
