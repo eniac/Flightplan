@@ -87,7 +87,7 @@ As Fig.~\ref{fig:example-loss} demonstrates, frames sent over faulty links are t
 \begin{figure}
   \centering
   \includegraphics[width=0.35\paperwidth]{figures/example-loss.pdf}
-  \caption{\label{fig:example-loss}Packet numbering on lossy link.  For low failure
+  \caption{\label{fig:example-loss}Packet numbering on lossy link between two switches.  For low failure
   rates, assigning monotonically increasing frame numbers $n$ that are unique within a
   block is sufficient to distinguish successive blocks.  
   On links with bursty loss behavior, adding
@@ -199,5 +199,5 @@ is no more work to be done for this block.
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{figures/example-decode.pdf}
-  \caption{\label{fig:example-decode}Prior to decoding, each block is mapped to the buffer for its traffic class.}
+  \caption{\label{fig:example-decode}Prior to decoding a block on arrival, each block is mapped to the buffer for its traffic class. A dotted border indicates that a frame has been lost while transiting.}
 \end{figure}
