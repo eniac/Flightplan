@@ -81,31 +81,35 @@ the Receiving proxy after ingress.
 %  channel outgoing frames through the Sending proxy.
 
 \paragraph{\OurSys frame encapsulation}
-Frames sent over faulty links are tagged to allow the receiving switch to distinguish frames processed by \OurSys, and to provide the traffic classification and index of a packet within a block. The tag also includes a block identifier to protect against bursty losses.
-\FIXME{Combine Fig.~\ref{fig:example-loss} and Fig.~\ref{fig:example-loss2}, and reference the combined figure here.}
+As Fig.~\ref{fig:example-loss} demonstrates, frames sent over faulty links are tagged to allow the receiving switch to distinguish frames processed by \OurSys, and to provide the traffic classification and index of a packet within a block. The tag also includes a block identifier to protect against bursty losses.
+%\FIXME{Combine Fig.~\ref{fig:example-loss} and Fig.~\ref{fig:example-loss2}, and reference the combined figure here.}
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.35\paperwidth]{figures/paper-fig-4.pdf}
+  \includegraphics[width=0.35\paperwidth]{figures/example-loss.pdf}
   \caption{\label{fig:example-loss}Packet numbering on lossy link.  For low failure
   rates, assigning monotonically increasing frame numbers $n$ that are unique within a
   block is sufficient to distinguish successive blocks.  
+  On links with bursty loss behavior, adding
+  a block sequence number helps to distinguish packets.
 % The expectation for strictly monotonic frame
 % number $n$ ensures that we can distinguish successive blocks.
   Note that frame
   reordering is not possible because the frames are being sent over the same link,
   and their processing is sequential across that link.}
-  \hg{S1 and S2 are not referring to anything anymore as we removed the first figure.}
+% \hg{S1 and S2 are not referring to anything anymore as we removed the first figure.}
 \end{figure}
 
+\iffalse
 \begin{figure}
   \centering
   \includegraphics[width=0.35\paperwidth]{figures/paper-fig-5.pdf}
   \caption{\label{fig:example-loss2}On links with bursty loss behavior, adding
            a block sequence number helps to distinguish packets.}
 %To mitigate bursty loss, a block sequence number is added.}
-  \hg{S1 and S2 are not referring to anything anymore as we removed the first figure.}
+% \hg{S1 and S2 are not referring to anything anymore as we removed the first figure.}
 \end{figure}
+\fi
 
 \paragraph{Sending proxy.}
 %The pseudo-code is shown in Algorithm~\ref{alg:sending}.
@@ -194,7 +198,7 @@ is no more work to be done for this block.
 %\end{algorithm}
 \begin{figure}
   \centering
-  \includegraphics[width=0.4\paperwidth]{figures/paper-fig-6.pdf}
+  \includegraphics[width=0.4\paperwidth]{figures/example-decode.pdf}
   \caption{\label{fig:example-decode}Prior to decoding, each block is mapped to the buffer for its traffic class.}
   \FIXME{Replace ``S1'' with clipart of a switch for consistency}
 \end{figure}
