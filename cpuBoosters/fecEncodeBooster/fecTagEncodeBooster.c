@@ -34,8 +34,8 @@ void my_packet_handler(
 
 	if (fecHeader->index < NUM_DATA_PACKETS) {
 		forward_frame(new_packet, tagged_size);
-		free(new_packet);
 	}
+	free(new_packet);
 
 	/*Update the received pkt in the pkt buffer.*/
 	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == PACKET_ABSENT) {
@@ -60,7 +60,7 @@ void my_packet_handler(
 
 		/*Inject all packets in the block back to the network*/
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS+NUM_PARITY_PACKETS; i++) {
-			tagged_size = wharf_tag_frame((const u_char*)pkt_buffer[fecHeader->block_id][i], parity_payload_size, &new_packet); // We don't encapsulate ethernet header for parity packets
+			tagged_size = wharf_tag_frame((u_char*)pkt_buffer[fecHeader->block_id][i], parity_payload_size, &new_packet); // We don't encapsulate ethernet header for parity packets
 			struct ether_header *packet_eth_header = (struct ether_header *)packet;
 			struct ether_header *parity_eth_header = (struct ether_header *)pkt_buffer[fecHeader->block_id][i];
 			memcpy(parity_eth_header->ether_dhost, packet_eth_header->ether_dhost, 6);
