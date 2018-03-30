@@ -1,9 +1,6 @@
 \section{Implementation}
 \label{sec:implementation}
 
-\newcommand{\leicom}[1]{{\color{blue}{[\textbf{Lei Comment:} #1]}}}
-\newcommand{\hg}[1]{{\color{green}{[\textbf{Hans Comment:} #1]}}}
-
 \subsection{Overview}
 %To meet the performance requirements of the data center, we implemented \OurSys
 We implemented \OurSys
@@ -43,8 +40,8 @@ Receiving Proxy).
 %was also created with ease of implementation in mind.
 P4 is not suitable
 for
-payload processing or
-exploiting the parallellism of the FEC core, so we implemented the core in
+%payload processing or
+exploiting the parallelism of the FEC core, so we implemented the core in
 hardware-synthesizable C. The code can be compiled and executed on a
 general-purpose CPU, but we can also synthesize the code for an FPGA
 in Vivado HLS.  Guided by pragmas added by the developer, Vivado HLS takes
@@ -58,17 +55,17 @@ post-processing, which encapsulates the payloads in Ethernet packets, before pac
 \label{sec:impl:header-processing}
 We use P4 to implement high-level packet processing logic and
 use Xilinx's P4-SDNet toolchain to translate our P4 program into RTL
-and integrate everything together.
+and integrate modules together.
 %The translation goes through 3 steps:
 %
 %First, from P4 to SDNet
 %
-%Second, from sdnet to RTL implementaion and C++ high-level simulation
+%Second, from sdnet to RTL implementation and C++ high-level simulation
 %
-%Third, add preipheral blocks with Vivado Design Suit
+%Third, add peripheral blocks with Vivado Design Suit
 %
-Our P4 program carries out packet parsing, header tagging as is
-described in~\S\ref{sec:design}, extracting payload for encoder, and
+Our P4 program carries out packet parsing, header tagging,
+extracting payload for encoder, and
 bookkeeping of packet classes.
 
 \iffalse
@@ -84,7 +81,7 @@ at a level closer to RTL modules compared to P4.
 
 \fi
 
-%Although P4 is easy to use and works very well in fullfilling its duty by design,
+%Although P4 is easy to use and works very well in fulfilling its duty by design,
 %we did meet several technical challenges in our specific task:
 %
 %1. P4's variables only keep their values within the processing of one packet.
@@ -134,7 +131,7 @@ at a level closer to RTL modules compared to P4.
 %on a 64-bit wide bus, while keeping the ability to use P4 for parsing and bookkeeping.
 %The modification can be finished with a script in less than 10 lines of code.
 %
-%\leicom{well...... is this too long?}
+%\lei{well...... is this too long?}
 
          
 Since we compute over whole frames -- and not only headers -- we could
@@ -144,17 +141,30 @@ an interface between P4 code and the more general computing we need
 for FEC (described below in~\S\ref{sec:impl:fec-encoder}), which we
 implement in hardware-synthesizable C.
 
+\iffalse
 The interface between P4 and external functions emerged as a very
 important part of our implementation, since whole packets must flow
 through it between the P4 environment to the more general logic
-implementing our FEC. We found that SDNet implements an extensible
-pipeline of functional blocks -- for parsing, deparsing, updating
-state, etc -- to which we can add our external function. This allowed us to implement our function as a stream processor, for cut-through behaviour through SDNet.
+implementing our FEC. 
+\fi
+This interface emerged as a very important part of our implementation,
+since whole packets must flow through it between two different levels
+of abstractions.
+As is shown by Fig.~\ref{fig:sdnet-interface}, we used SDNet's extensible pipeline to implement
+our function as a stream processor with cut-through behavior and glue it
+to the header processor.
 
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{figures/sdnet-interface.png}
-  \caption{\label{fig:sdnet-interface}SDNet bridges P4 header processor and C encoder}
+  \caption{\label{fig:sdnet-interface}Abstraction provided by each layer; grey blocks are translated to the pipeline illustrated in next level.}
+  \hg{I find this diagram confusing.  "SDNet" is not a language as opposed to
+      P4 and C.  In reality, the packets go from P4
+      to a user engine that is written in Verilog.  The user engine
+      is a simple wrapper that in turn forwards the packets to C.}
+  \lei{SDNet IS a language. We can absolutely implement everything P4 does solely in SDNet.}
+  \hg{The language is called PX, not SDNet.  P4 is translated into PX, so packets never
+      go from P4 to PX.  If packets are in P4, they are in PX, and vice versa.}
 \end{figure}
 
 \iffalse
@@ -196,7 +206,7 @@ work-in-progress.
 %to implement the decoder too.
 
 In \OurSys, error correction is performed with a Reed-Solomon erasure (RSE) code~\cite{rse}
-\hg{Note that this reference covers only error correction, not dealing with erasures}.
+%\hg{Note that this reference covers only error correction, not dealing with erasures}.
 % Erasure codes
 %require prior knowledge of which packets data is missing, as opposed to regular
 %error correction codes.  This comes with the benefit of requiring fewer error
@@ -215,12 +225,14 @@ $h$.
 %       as "the RSE algorithm" just to save a couple of words seems a bit ugly.
 What makes RSE complex is that arithmetic operations are performed in a finite (Galois)
 field to ensure that mathematic operations on integers in a finite range yield
-again integers in the same range.  \hg{I put this line back in because otherwise
-the mention of the Galois field in the resource requirements comes out of nowhere.
-If space is an issue, we can not mention this and compute resource requirements in
-units of multiplications.}
-Earlier, we used $k$ and $h$ to count packets.  This choice was intentional as
+again integers in the same range.
+%\hg{I put this line back in because otherwise
+%the mention of the Galois field in the resource requirements comes out of nowhere.
+%If space is an issue, we can not mention this and compute resource requirements in
+%units of multiplications.}
+In \S\ref{sec:design}, we used $k$ and $h$ also to count packets.  This choice was intentional as
 Figure~\ref{fig:Striping} demonstrates.
+%\lei{I can't see the intention......}
 Due to space limitations, we will not discuss RSE in more detail.
 %\amd{somewhere we should be clear x is striped across corresponding bytes
 %  in k packets}
@@ -228,7 +240,7 @@ Due to space limitations, we will not discuss RSE in more detail.
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{Striping.pdf}
-  \caption{\label{fig:Striping} Correspondence beween packet data, messages and codewords.
+  \caption{\label{fig:Striping} Correspondence between packet data, messages and codewords.
   }
 \end{figure}
 
@@ -290,27 +302,26 @@ A similar implementation in Verilog or VHDL requires in the order of hundreds
 of lines.  The {\tt pipeline} pragma directs the tool to construct a
 hardware pipeline that can start executing one invocation of the function
 every clock cycle.  Vivado automatically inserts a suitable number of registers
-to achieve the desired clock period.
-The {\tt Par} and {\tt Gen} arrays are mapped
-on BRAMs by default.  The pipeline would need {\tt MAX\_H} values from {\tt Par}
-per clock cycle although a dual-port BRAM can supply only 2 values.  The
-solution is to divide the data in {\tt Par} over multiple BRAMs that can be
-accessed simultaneously.  We accomplish that with the {\tt ARRAY\_PARTITION}
-pragma.
-\hg{Array\_reshape pragma probably makes more sense.  Still have to test it
-though.}
+to achieve the desired clock period.  The {\tt Par} and {\tt Gen} arrays are mapped
+on BRAMs by default.  The pipeline would need {\tt MAX\_H} values from each
+array per clock cycle although a dual-port BRAM can supply only 2 values.
+A solution is to divide the data over multiple BRAMs that can be
+accessed simultaneously.  We accomplish that for {\tt Gen} with the {\tt ARRAY\_PARTITION}
+pragma.  To {\tt Par}, we applied the {\tt ARRAY\_RESHAPE} pragma to combine
+all array elements into a single wide word.
+%\lei{\#Shrink Candidate\#}
 
 \begin{lstlisting}[language=C,basicstyle=\footnotesize,numbers=left,
                    captionpos=b,caption={Matrix-Vector Multiplier},
                    label=Multiplier]
 void Enc(char Dat, char Par[MAX_H], int Pkt, int h) {
-#pragma HLS ARRAY_PARTITION variable=Par complete dim=1
+#pragma HLS ARRAY_RESHAPE variable=Par complete
   static char Gen[MAX_H][MAX_K] = { ... };
 #pragma HLS ARRAY_PARTITION variable=Gen complete dim=0
 #pragma HLS pipeline
   for (int i = 0; i < MAX_H; i++)
-    if (i < h)
-      Par[i] = GF_add(Par[i], GF_mul(Dat[j], Gen[i][Pkt]));
+    Par[i] = i >= h ? Par[i] :
+        GF_add(Par[i], GF_mul(Dat, Gen[i][Pkt]));
 }
 \end{lstlisting}
 

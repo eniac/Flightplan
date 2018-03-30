@@ -1,3 +1,4 @@
+#include "Configuration.h"
 #include "rse.h"
 
 //#define USE_OLD_GENERATOR
@@ -22,6 +23,13 @@ static fec_sym GF_add(fec_sym X, fec_sym Y)
   return X ^ Y;
 }
 
+/* Substract in Galois Field */
+static fec_sym GF_substract(fec_sym X, fec_sym Y)
+{
+#pragma HLS inline
+  return X ^ Y;
+}
+
 /* Exponentiate in Galois Field */
 static fec_sym GF_exp(fec_sym X)
 {
@@ -40,11 +48,41 @@ static fec_sym GF_log(fec_sym X)
   return Table[X];
 }
 
+static fec_sym GF_slow_multiply(fec_sym X, fec_sym Y)
+{
+  fec_sym Primitive = Get_primitive_polynomial();
+
+  fec_sym Product = 0;
+  while (X > 0 && Y > 0)
+  {
+    if ((Y & 1) != 0)
+      Product ^= X;
+
+    if ((X & (FEC_N >> 1)) != 0)
+      X = (X << 1) ^ Primitive;
+    else
+      X <<= 1;
+
+    Y >>= 1;
+  }
+
+  return Product;
+}
+
 /* Multiply in Galois Field */
 static fec_sym GF_multiply(fec_sym X, fec_sym Y)
 {
 #pragma HLS inline
   return X > 0 && Y > 0 ? GF_exp(Modulo_add(GF_log(X), GF_log(Y))) : 0;
+}
+
+static fec_sym GF_slow_invert(fec_sym X)
+{
+  fec_sym Product = 1;
+  for (int i = 0; i < FEC_N - 2; i++)
+    Product = GF_slow_multiply(Product, X);
+
+  return Product;
 }
 
 /* Reciprocal in Galois Field */
@@ -108,45 +146,43 @@ static void Generate_invert_table(fec_sym Table[FEC_N])
     Table[GF_exp(FEC_N - 1 - GF_log(i))] = i;
 }
 
-static void Generate_generator(fec_sym Generator[FEC_MAX_H][FEC_MAX_N])
+static void Generate_generator(fec_sym Generator[FEC_MAX_H][FEC_MAX_K])
 {
+  fec_sym Matrix[FEC_MAX_H][FEC_MAX_N];
+
   for (int i = 0; i < FEC_MAX_H; i++)
     for (int j = 0; j < FEC_MAX_N; j++)
-#ifdef USE_OLD_GENERATOR
-      Generator[i][j] = GF_exp((i * j) % FEC_N);
-#else
       if (j == 0 || i == 0)
-        Generator[i][j] = 1;
+        Matrix[i][j] = 1;
       else
-        Generator[i][j] = GF_multiply(j + 1, Generator[i - 1][j]);
-#endif
+        Matrix[i][j] = GF_slow_multiply(j + 1, Matrix[i - 1][j]);
 
   for (int k = 0; k < FEC_MAX_H; k++)
   {
     for (int i = 0; i < FEC_MAX_H; i++)
     {
-      fec_sym Value = Generator[i][FEC_MAX_N - 1 - k];
+      fec_sym Value = Matrix[i][FEC_MAX_N - 1 - k];
       if (Value != 0)
       {
-        fec_sym Reciprocal = GF_invert(Value);
+        fec_sym Reciprocal = GF_slow_invert(Value);
         for (int n = FEC_MAX_N - 1; n >= 0; n--)
-          Generator[i][n] = GF_multiply(Generator[i][n], Reciprocal);
+          Matrix[i][n] = GF_slow_multiply(Matrix[i][n], Reciprocal);
       }
     }
 
     for (int i = 0; i < FEC_MAX_H; i++)
-      if (i != k && Generator[i][FEC_MAX_N - 1 - k] != 0)
+      if (i != k && Matrix[i][FEC_MAX_N - 1 - k] != 0)
       {
         for (int j = FEC_MAX_N - 1; j >= 0; j--)
-          Generator[i][j] = GF_add(Generator[i][j], Generator[k][j]);
+          Matrix[i][j] = GF_substract(Matrix[i][j], Matrix[k][j]);
       }
   }
 
-  for (int i = 0; i < FEC_MAX_H - 1; i++)
+  for (int i = 0; i < FEC_MAX_H; i++)
   {
-    fec_sym Reciprocal = GF_invert(Generator[i][FEC_MAX_N - 1 - i]);
-    for (int n = FEC_MAX_N - 1; n >= 0; n--)
-      Generator[i][n] = GF_multiply(Generator[i][n], Reciprocal);
+    fec_sym Reciprocal = GF_slow_invert(Matrix[i][FEC_MAX_N - 1 - i]);
+    for (int j = FEC_MAX_K - 1; j >= 0; j--)
+      Generator[i][j] = GF_slow_multiply(Matrix[i][j], Reciprocal);
   }
 }
 
@@ -163,44 +199,12 @@ static void Generate_generator(fec_sym Generator[FEC_MAX_H][FEC_MAX_N])
  * h |  G G G  X  D  | k  =  P  | h
  *   V  G G G     D  V       P  V
  */
-void Matrix_multiply_HW(fec_sym Data[FEC_MAX_K], fec_sym Parity[FEC_MAX_H], int k, int h)
-{
-#pragma HLS ARRAY_PARTITION variable=Data complete dim=1
-#pragma HLS ARRAY_PARTITION variable=Parity complete dim=1
-
-  static fec_sym Generator[FEC_MAX_H][FEC_MAX_K] = { {76, 103, 149, 51, 248, 170, 97, 54}, {196,
-      162, 35, 228, 235, 41, 35, 47}, {214, 46, 79, 120, 78, 110, 150, 125}, {95, 234, 248, 174, 92,
-      236, 213, 101}};
-#pragma HLS ARRAY_PARTITION variable=Generator complete dim=0
-// Generate_generator(Generator);
-
-  for (int i = 0; i < FEC_MAX_H; i++)
-  {
-    if (i < h)
-    {
-      int Result = 0;
-      for (int j = 0; j < FEC_MAX_K; j++)
-        if (j < k)
-          Result = GF_add(Result, GF_multiply(Data[j], Generator[i][j]));
-      Parity[i] = Result;
-    }
-  }
-}
-
 void Incremental_encode(fec_sym Data, fec_sym Parity[FEC_MAX_H], int Packet_index, int h, int Clear)
 {
 #pragma HLS inline
-#ifdef USE_OLD_GENERATOR
-  static fec_sym Generator[FEC_MAX_H][FEC_MAX_K] = { {76, 103, 149, 51, 248, 170, 97, 54}, {196,
-      162, 35, 228, 235, 41, 35, 47}, {214, 46, 79, 120, 78, 110, 150, 125}, {95, 234, 248, 174, 92,
-      236, 213, 101}};
-#else
-  static fec_sym Generator[FEC_MAX_H][FEC_MAX_K] = { {45, 174, 8, 13, 12, 220, 93, 128}, {154, 88,
-      85, 104, 102, 162, 127, 210}, {104, 134, 120, 92, 84, 75, 183, 245}, {222, 113, 36, 56, 63,
-      52, 148, 166}};
-#endif
+  static fec_sym Generator[FEC_MAX_H][FEC_MAX_K];
 #pragma HLS ARRAY_PARTITION variable=Generator complete dim=0
-// Generate_generator(Generator);
+  Generate_generator(Generator);
 
   for (int i = 0; i < FEC_MAX_H; i++)
     if (i < h)

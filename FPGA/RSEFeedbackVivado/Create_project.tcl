@@ -100,25 +100,18 @@ set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/Sources/Config.vhd"]"\
  "[file normalize "$origin_dir/Sources/RSEFeedback.vhd"]"\
- "[file normalize "$origin_dir/Sources/component.xml"]"\
+ "[file normalize "$origin_dir/Sources/fifo_generator_0.xci"]"\
 ]
-add_files -norecurse -fileset $obj $files
+set imported_files [import_files -fileset sources_1 $files]
 
 # Set 'sources_1' fileset file properties for remote files
-set file "$origin_dir/Sources/Config.vhd"
-set file [file normalize $file]
+set file "Config.vhd"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
 
-set file "$origin_dir/Sources/RSEFeedback.vhd"
-set file [file normalize $file]
+set file "RSEFeedback.vhd"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/Sources/component.xml"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "IP-XACT" -objects $file_obj
 
 
 # Set 'sources_1' fileset file properties for local files
@@ -127,13 +120,6 @@ set_property -name "file_type" -value "IP-XACT" -objects $file_obj
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
 set_property -name "top" -value "RSEFeedback" -objects $obj
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/Sources/fifo_generator_0/fifo_generator_0.xci"]"\
-]
-add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
 # None

@@ -68,7 +68,6 @@ architecture RTL of RSEFeedback is
   signal dup_en              : std_logic;
   signal dup_sel             : std_logic;
   signal feedback_in_TVALID  : std_logic;
-  signal feedback_in_TREADY  : std_logic;
   signal feedback_in_TDATA   : std_logic_vector(63 downto 0);
   signal feedback_in_TKEEP   : std_logic_vector(7 downto 0);
   signal feedback_in_TLAST   : std_logic;
@@ -77,10 +76,9 @@ architecture RTL of RSEFeedback is
   signal feedback_out_TDATA  : std_logic_vector(63 downto 0);
   signal feedback_out_TKEEP  : std_logic_vector(7 downto 0);
   signal feedback_out_TLAST  : std_logic;
-  signal packet_cnt          : std_logic_vector(3 downto 0);
+  signal packet_cnt          : std_logic_vector(FEC_PACKET_INDEX_WIDTH - 1 downto 0);
   signal tmp_rse_out_TVALID  : std_logic;
   signal tmp_rse_out_TLAST   : std_logic;
-  signal tmp_rse_in_TREADY   : std_logic;
   signal enable              : std_logic;
   signal data_read           : std_logic;
   signal start_of_packet     : std_logic;
@@ -90,8 +88,8 @@ architecture RTL of RSEFeedback is
   signal fifo_dout           : std_logic_vector(72 downto 0);
   signal fifo_full           : std_logic;
   signal fifo_empty          : std_logic;
-  signal output_read         : std_logic; -- Data on output of feedback is actually ready by main pipeline
-  signal output_valid        : std_logic; -- Data is waiting at output of feedback (identical to feedback_out_TVALID)
+  signal output_read         : std_logic;
+  signal output_valid        : std_logic;
   signal fifo_cnt            : std_logic_vector(3 downto 0);
   signal first_word          : std_logic;
   signal data_available      : std_logic;
@@ -122,24 +120,22 @@ begin
   end process;
 
   p_dup: process(dup_sel, rse_in_TVALID, rse_in_TDATA, rse_in_TKEEP, rse_in_TLAST,
-                 axis_out_TREADY, feedback_in_TREADY, tmp_rse_in_TREADY)
+                 axis_out_TREADY)
   begin
     if dup_sel = '0' then
       feedback_in_TVALID <= '0';
       feedback_in_TDATA  <= (others => '0');
       feedback_in_TKEEP  <= (others => '0');
       feedback_in_TLAST  <= '0';
-      tmp_rse_in_TREADY  <= axis_out_TREADY;
     else
-      feedback_in_TVALID <= rse_in_TVALID and tmp_rse_in_TREADY;
+      feedback_in_TVALID <= rse_in_TVALID and axis_out_TREADY;
       feedback_in_TDATA  <= rse_in_TDATA;
       feedback_in_TKEEP  <= rse_in_TKEEP;
       feedback_in_TLAST  <= rse_in_TLAST;
-      tmp_rse_in_TREADY  <= axis_out_TREADY and feedback_in_TREADY;
     end if;
   end process;
 
-  axis_out_TVALID <= rse_in_TVALID and tmp_rse_in_TREADY;
+  axis_out_TVALID <= rse_in_TVALID;
   axis_out_TDATA  <= rse_in_TDATA;
   axis_out_TKEEP  <= rse_in_TKEEP;
   axis_out_TLAST  <= rse_in_TLAST;
@@ -159,7 +155,7 @@ begin
     end if;
   end process;
   
-  p_mux_sel: mux_sel <= '0' when unsigned(packet_cnt) < 8 else '1';
+  p_mux_sel: mux_sel <= '0' when unsigned(packet_cnt) < FEC_K else '1';
   
   p_dup_en_reg: process(clk_line_rst, clk_line)
   begin
@@ -176,7 +172,7 @@ begin
   rse_out_TVALID <= tmp_rse_out_TVALID;
   rse_out_TLAST  <= tmp_rse_out_TLAST;
 
-  rse_in_TREADY <= tmp_rse_in_TREADY;
+  rse_in_TREADY <= axis_out_TREADY;
 
   enable <= enable_processing and internal_rst_done;
 
@@ -213,7 +209,6 @@ begin
     
   fifo_din            <= feedback_in_TDATA & feedback_in_TKEEP & feedback_in_TLAST;
   fifo_wr_en          <= feedback_in_TVALID;
-  feedback_in_TREADY  <= not fifo_full;
 
   feedback_out_TDATA  <= fifo_dout(72 downto 9);
   feedback_out_TKEEP  <= fifo_dout(8 downto 1);

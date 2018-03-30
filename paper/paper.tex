@@ -3,6 +3,9 @@
 \newcommand{\FIXME}[1]{{\color{red}{\textbf{FIXME:} #1}}}
 \newcommand{\amdrev}[1]{{\color{blue}{#1}}}
 \newcommand{\amd}[1]{{\color{blue}{[\textbf{AMD Comment:} #1]}}}
+\newcommand{\lei}[1]{{\color{cyan}{[\textbf{Lei Comment:} #1]}}}
+\newcommand{\hg}[1]{{\color{green}{[\textbf{Hans Comment:} #1]}}}
+
 
 
 \usepackage{booktabs} % For formal tables
@@ -25,7 +28,7 @@
 \acmISBN{123-4567-24-567/08/06}
 
 %Conference
-\acmConference[SHORTNAME'17]{ACM Long Conference Name conference}{July 1997}{City, State, Country} 
+\acmConference[NetCompute'18]{ACM SIGCOMM 2018 Workshop on In-Network Computing conference}{August 2018}{Budapest, Hungary} 
 \acmYear{2017}
 \copyrightyear{2017}
 
@@ -119,19 +122,30 @@
 Failing network links are usually disabled, and packets are routed around them
 until the links are repaired. While
 it is often possible
-to utilise some of a failing link's capacity, losing
+to utilize some of a failing link's capacity, losing
 what remains of a link's
 capacity is typically deemed preferable to the erratic effect that unreliable links can
-have on application-level behaviour.
+have on application-level behavior.
+
 We describe a new network function that relies on in-network computing to limit
 the erratic effect of failing network links, to enable the continued use of
-those links until they can be repaired. We argue that such a network function
-can help mitigate rolling failures in datacenter networks, and that our design
-can interoperate with existing network architecture and configuration choices,
-such as for multi-path routing.
+those links until they can be repaired.
+%We argue that such a network function can help mitigate rolling
+%failures in datacenter networks, and that our design can interoperate
+%with existing network architecture and configuration choices, such as
+%for multi-path routing.
 
-We model our design using ns-3, and evaluate our implementation on a physical
-test-bed that includes programmable switches and reconfigurable hardware.
+We explore the design space using ns-3, and evaluate our
+implementation on a physical test-bed that includes programmable
+switches and reconfigurable hardware.
+Our current hardware prototype uses around 10\% of our FPGA's
+resources while operating at \FIXME{30\%} of its maximum clock rate,
+but can almost saturate a 10GbE link.
+\hg{The current frequency of 156.25 MHz is determined by the line rate
+    (=10000/64).  Higher frequencies won't benefit the throughput as the
+    link will be the bottleneck.  This gives the false impression that
+    a higher frequency would be better.  I would rather mention latency
+    or even power consumption.}
 \end{abstract}
 
 %
@@ -186,7 +200,8 @@ test-bed that includes programmable switches and reconfigurable hardware.
 
 \subsection*{Acknowledgements}
 This material is based upon work supported by the Defense Advanced
-Research Projects Agency (DARPA) under Contract No. HR001117C0047.
+Research Projects Agency (DARPA) under Contracts No. HR001117C0047
+and No. HR0011-16-C-0056.
 Xilinx provided tools and IP, including SDNet to support P4 to FPGA
 compilation, the Ethernet MAC, and HLS and physical design mapping
 software. 

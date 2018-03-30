@@ -31,6 +31,11 @@
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/etc"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/."/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSEConfig"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSECode"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/RSECode"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.823732160" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="AESL_TB"/>
@@ -49,6 +54,11 @@
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/etc"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/."/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSEConfig"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSECode"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/RSECode"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.725713863" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="AESL_TB"/>
@@ -80,6 +90,21 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.26828874.274326145" name="RSE_core_test.c" rcbsApplicability="disable" resourcePath="testbench/RSE_core_test.c" toolsToInvoke="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2007208501.1885257537">
+						<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2007208501.1885257537" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2007208501">
+							<option id="gnu.c.compiler.option.preprocessor.def.symbols.195147725" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols"/>
+							<option id="gnu.c.compiler.option.include.paths.1054940291" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/ap_sysc"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/etc"/>
+							</option>
+							<option id="gnu.c.compiler.option.misc.other.2134466011" name="Other flags" superClass="gnu.c.compiler.option.misc.other"/>
+							<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.824181954" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+						</tool>
+					</fileInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.26828874.1448785804" name="Encoder.c" rcbsApplicability="disable" resourcePath="source/Encoder.c" toolsToInvoke="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2007208501.1471760588">
 						<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2007208501.1471760588" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2007208501">
 							<option id="gnu.c.compiler.option.preprocessor.def.symbols.1784213935" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols"/>
@@ -147,6 +172,11 @@
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/etc"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/."/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSEConfig"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSECode"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/RSECode"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1588360540" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -160,6 +190,11 @@
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/etc"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/."/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSEConfig"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/RSECode"/>
+									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/RSECode"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1855284671" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -186,6 +221,21 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.release.742152212.373815059" name="RSE_core_test.c" rcbsApplicability="disable" resourcePath="testbench/RSE_core_test.c" toolsToInvoke="cdt.managedbuild.tool.gnu.c.compiler.exe.release.26146645.1204521403">
+						<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.26146645.1204521403" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release.26146645">
+							<option id="gnu.c.compiler.option.preprocessor.def.symbols.1470011445" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols"/>
+							<option id="gnu.c.compiler.option.include.paths.421655617" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/ap_sysc"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
+								<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/etc"/>
+							</option>
+							<option id="gnu.c.compiler.option.misc.other.1060074084" name="Other flags" superClass="gnu.c.compiler.option.misc.other"/>
+							<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1863966536" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+						</tool>
+					</fileInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.exe.release.742152212.485992269" name="Encoder.c" rcbsApplicability="disable" resourcePath="source/Encoder.c" toolsToInvoke="cdt.managedbuild.tool.gnu.c.compiler.exe.release.26146645.882695717">
 						<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.26146645.882695717" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release.26146645">
 							<option id="gnu.c.compiler.option.preprocessor.def.symbols.1712965364" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols"/>
@@ -243,4 +293,12 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/RSEVivadoHLS"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/RSEVivadoHLS"/>
+		</configuration>
+	</storageModule>
 </cproject>

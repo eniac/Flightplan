@@ -97,7 +97,10 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 
 # Set IP repository paths
 set obj [get_filesets sources_1]
-set_property "ip_repo_paths" "[file normalize "$origin_dir/../RSEP4/Encoder/XilinxSwitch"] [file normalize "$origin_dir/../RSEFeedbackVivado"]" $obj
+set_property "ip_repo_paths" [ list \
+  "[file normalize "$origin_dir/../RSEP4/Encoder/XilinxSwitch"]"\
+  "[file normalize "$origin_dir/../RSEFeedbackVivado"]"\
+  "[file normalize "$origin_dir/../RSEInputBufferVivado"]" ] $obj
 
 # Rebuild user ip_repo's index before adding any source files
 update_ip_catalog -rebuild
@@ -108,11 +111,10 @@ set files [list \
  "[file normalize "$origin_dir/Sources/design_1.bd"]"\
  "[file normalize "$origin_dir/Sources/design_1_wrapper.vhd"]"\
 ]
-add_files -norecurse -fileset $obj $files
+set imported_files [import_files -fileset sources_1 $files]
 
 # Set 'sources_1' fileset file properties for remote files
-set file "$origin_dir/Sources/design_1_wrapper.vhd"
-set file [file normalize $file]
+set file "design_1_wrapper.vhd"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
 
@@ -134,9 +136,8 @@ set obj [get_filesets constrs_1]
 
 # Add/Import constrs file and set constrs file properties
 set file "[file normalize "$origin_dir/Sources/Constraints.xdc"]"
-set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/Sources/Constraints.xdc"
-set file [file normalize $file]
+set imported_files [import_files -fileset $obj $file]
+set file "Constraints.xdc"
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property -name "file_type" -value "XDC" -objects $file_obj
 
