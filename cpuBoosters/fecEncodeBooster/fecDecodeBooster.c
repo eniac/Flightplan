@@ -68,12 +68,15 @@ void my_packet_handler(
 		fecHeader->index, fecHeader->size);
 #endif
 
+// FIXME WIP
+#if 0
 	if (fecHeader->block_id != lastBlockId) {
 		decode_and_forward(fecHeader->block_id);
 		lastBlockId = fecHeader->block_id;
 		alarm(WHARF_DECODE_TIMEOUT);
 		signal(SIGALRM, sigalrm_handler);
 	}
+#endif
 
 	// Forward data packets immediately
 	if (fecHeader->index < NUM_DATA_PACKETS){
@@ -81,6 +84,8 @@ void my_packet_handler(
 		 header->len - WHARF_ORIG_FRAME_OFFSET); // This also strips the Wharf tag.
 	}
 
+// FIXME WIP
+#if 0
 	// Buffer data and parity packets in case need to decode.
 	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == PACKET_ABSENT) {
 		nothing_to_decode = false;
@@ -90,4 +95,5 @@ void my_packet_handler(
 	else {
 		fprintf(stderr, "Not buffering duplicate packet\n");
 	}
+#endif
 }
