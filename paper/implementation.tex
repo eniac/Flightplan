@@ -1,8 +1,6 @@
 \section{Implementation}
 \label{sec:implementation}
 
-\newcommand{\hg}[1]{{\color{green}{[\textbf{Hans Comment:} #1]}}}
-
 \subsection{Overview}
 %To meet the performance requirements of the data center, we implemented \OurSys
 We implemented \OurSys
@@ -220,10 +218,11 @@ $h$.
 %       as "the RSE algorithm" just to save a couple of words seems a bit ugly.
 What makes RSE complex is that arithmetic operations are performed in a finite (Galois)
 field to ensure that mathematic operations on integers in a finite range yield
-again integers in the same range.  \hg{I put this line back in because otherwise
-the mention of the Galois field in the resource requirements comes out of nowhere.
-If space is an issue, we can not mention this and compute resource requirements in
-units of multiplications.}
+again integers in the same range.
+%\hg{I put this line back in because otherwise
+%the mention of the Galois field in the resource requirements comes out of nowhere.
+%If space is an issue, we can not mention this and compute resource requirements in
+%units of multiplications.}
 In \S\ref{sec:design}, we used $k$ and $h$ also to count packets.  This choice was intentional as
 Figure~\ref{fig:Striping} demonstrates.
 %\lei{I can't see the intention......}

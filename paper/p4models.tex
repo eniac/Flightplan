@@ -30,19 +30,19 @@ Iperf in real-time. The P4 pipeline models the behavior of the encoder,
 decoder, and faulty link, and can be reconfigured with different FEC and 
 packet loss parameters at runtime via the control plane. 
 
-The \textbf{\emph encoder model} of the pipeline encapsulates each packet egressing on
+The \textbf{\em encoder model} of the pipeline encapsulates each packet egressing on
 the faulty link with the \OurSys header and inserts blank  parity packets into
 the flow. It tracks per-port block IDs and  packet indices using P4 register
 arrays. To generate parity packets, the  model clones the last data packet in
 each block with the Tofino's multicast engine.
 
-The \textbf{\emph faulty link model} adds a \emph{corruption header} to each packet
+The \textbf{\em faulty link model} adds a \emph{corruption header} to each packet
 egressing the faulty link. The header indicates whether or not the neighbor
 switch should consider the packet lost. The model selects packets for
 corruption according to a simple binomial distribution implemented with the
 Tofino's random number generator.
 
-Finally, the \textbf{\emph decoder model} applies to all packets arriving from a
+Finally, the \textbf{\em decoder model} applies to all packets arriving from a
 faulty link, before any other forwarding logic. It removes the corruption
 header from each packet and passes non-corrupt packets to the forwarding
 pipeline. The model recirculates corrupt packets until the next block begins,

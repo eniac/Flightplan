@@ -4,6 +4,8 @@
 \newcommand{\amdrev}[1]{{\color{blue}{#1}}}
 \newcommand{\amd}[1]{{\color{blue}{[\textbf{AMD Comment:} #1]}}}
 \newcommand{\lei}[1]{{\color{cyan}{[\textbf{Lei Comment:} #1]}}}
+\newcommand{\hg}[1]{{\color{green}{[\textbf{Hans Comment:} #1]}}}
+
 
 
 \usepackage{booktabs} % For formal tables
@@ -139,6 +141,11 @@ switches and reconfigurable hardware.
 Our current hardware prototype uses around 10\% of our FPGA's
 resources while operating at \FIXME{30\%} of its maximum clock rate,
 but can almost saturate a 10GbE link.
+\hg{The current frequency of 156.25 MHz is determined by the line rate
+    (=10000/64).  Higher frequencies won't benefit the throughput as the
+    link will be the bottleneck.  This gives the false impression that
+    a higher frequency would be better.  I would rather mention latency
+    or even power consumption.}
 \end{abstract}
 
 %
