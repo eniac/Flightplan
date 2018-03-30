@@ -24,16 +24,16 @@
 
 To measure the effect of faulty links and \OurSys at the protocol and
 application level, we developed a P4 pipeline for the Barefoot Tofino that
-models \OurSys. We deployed the model in the testbed network shown in
-Figure~\ref{fig:p4ModelTopo} and ran end-to-end Iperf benchmarks on it in
-real-time. The P4 pipeline models the behavior of faulty links and FEC,  and
-can be reconfigured via the control plane at runtime.
+models the behavior of faulty links and FEC in real-time. We deployed  the
+model in the testbed network shown in Figure~\ref{fig:p4ModelTopo} and ran
+end-to-end Iperf benchmarks. The P4 pipeline has three modeling components.
+
 
 % of the encoder,  decoder, and
 % faulty link, and can be reconfigured with different FEC and  packet loss
 % parameters at runtime via the control plane.
 
-The \textbf{encoder model} of the pipeline encapsulates each packet egressing on
+The \textbf{encoder model} in the pipeline encapsulates each packet egressing on
 the faulty link with the \OurSys header and inserts blank  parity packets into
 the flow.
 %It tracks per-port block IDs and  packet indices using P4 register
@@ -47,14 +47,14 @@ corruption according to a simple binomial distribution implemented with the
 Tofino's random number generator.
 
 Finally, the \textbf{decoder model} processes packets ingressing from  the
-faulty link. It removes the corruption and \OurSys headers  and passes non-
+faulty link. It removes the corruption and \OurSys headers and passes non-
 corrupt packets to forwarding. It withholds corrupt packets, using
 recirculation, until the block ends. If it has counted at least K data plus
 parity packets in the block, the model "recovers" all of the corrupt packets
 by allowing them to pass to forwarding; else, the model drops the corrupt
 packets.
 
-All experiments we describe below measure performance of 10 second file
+All benchmarks we describe below measured performance of 10 second file
 transfers from the client to the server, through an encoding switch, faulty
 link, and decoding switch. We ran 25 trials for each tested configuration of
 K, H,  and loss rate.
