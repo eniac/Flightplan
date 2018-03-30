@@ -15,13 +15,6 @@
 % programmable forwarding engines. \lei{TODO: fix cite}
 
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.4\paperwidth]{figures/lineRateModel.pdf}
-  \caption{\label{fig:p4ModelTopo} Topology of the 10 Gb/s testbed 
-  for real-time TCP benchmarks, using P4 to model FEC and faulty links.}
-\end{figure}
-
 To measure the effect of faulty links and \OurSys at the protocol and
 application level, we developed a P4 pipeline for the Barefoot Tofino that
 models the behavior of faulty links and FEC in real-time. We deployed  the
@@ -59,27 +52,6 @@ transfers from the client to the server, through an encoding switch, faulty
 link, and decoding switch. We ran 25 trials for each tested configuration of
 $K$, $H$, and loss rate.
 
-
-\begin{figure*}[!ht]
-\centering
-\begin{minipage}[b]{0.32\linewidth}
-\includegraphics[width=\linewidth]{figures/lossVsTput.pdf}
-\caption{Iperf throughput.}
-\label{fig:lossVsTput}
-\end{minipage}
-\hspace{.05in}
-\begin{minipage}[b]{0.32\linewidth}
-\includegraphics[width=\textwidth]{figures/lossVsWindow.pdf}
-\caption{Iperf TCP window sizes.}
-\label{fig:lossVsWindow}
-\end{minipage}
-\hspace{.05in}
-\begin{minipage}[b]{0.32\linewidth}
-\includegraphics[width=\textwidth]{figures/latency.pdf}
-\caption{Network latency.}
-\label{fig:latency}
-\end{minipage}
-\end{figure*}
 
 % \begin{figure}
 %   \centering

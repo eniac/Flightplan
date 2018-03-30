@@ -1,3 +1,33 @@
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\paperwidth]{figures/lineRateModel.pdf}
+  \caption{\label{fig:p4ModelTopo} Topology of the 10 Gb/s testbed 
+  for real-time TCP benchmarks, using P4 to model FEC and faulty links.}
+\end{figure}
+
+\begin{figure*}[!ht]
+\centering
+\begin{minipage}[b]{0.32\linewidth}
+\includegraphics[width=\linewidth]{figures/lossVsTput.pdf}
+\caption{Iperf throughput.}
+\label{fig:lossVsTput}
+\end{minipage}
+\hspace{.05in}
+\begin{minipage}[b]{0.32\linewidth}
+\includegraphics[width=\textwidth]{figures/lossVsWindow.pdf}
+\caption{Iperf TCP window sizes.}
+\label{fig:lossVsWindow}
+\end{minipage}
+\hspace{.05in}
+\begin{minipage}[b]{0.32\linewidth}
+\includegraphics[width=\textwidth]{figures/latency.pdf}
+\caption{Network latency.}
+\label{fig:latency}
+\end{minipage}
+\end{figure*}
+
+
 \section{Evaluation}
 \label{sec:evaluation}
 % We evaluate \OurSys using different types of traffic to measure its improvement
