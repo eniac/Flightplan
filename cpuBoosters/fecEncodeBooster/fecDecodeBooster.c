@@ -12,7 +12,7 @@ int lastBlockId = 0;
 // Try to decode new packets, and forward them on.
 // FIXME possible race condition if have simultaneous timer expiry and a packet arrival that also triggers the decode.
 void decode_and_forward(const int block_id) {
-	if (nothing_to_decode || is_all_pkts_recieved_for_block(block_id)) {
+	if (nothing_to_decode || is_all_data_pkts_recieved_for_block(block_id)) {
 		return;
 	}
 
