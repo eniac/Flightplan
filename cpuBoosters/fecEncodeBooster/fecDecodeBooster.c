@@ -68,11 +68,6 @@ void my_packet_handler(
 		fecHeader->index, fecHeader->size);
 #endif
 
-	// skip blocks that don't belong to this worker.
-	if ((fecHeader->block_id) % workerCt != workerId){
-		return;
-	}
-
 	if (fecHeader->block_id != lastBlockId) {
 		decode_and_forward(fecHeader->block_id);
 		lastBlockId = fecHeader->block_id;
