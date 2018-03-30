@@ -8,12 +8,12 @@ Encoder/XilinxSwitch/XilinxSwitch_vivado: Encoder
 	cd $(realpath Encoder/XilinxSwitch); \
 	vivado -mode batch -source XilinxSwitch_vivado_packager.tcl
 
-Encoder: Encoder.sdnet Packet.user Tuple.user Packet_feedback_in.axi \
+Encoder: Encoder.sdnet Generate_packets.sh \
          fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec_0_t.v loop_0_t.v \
          vivado_sim.bash vivado_sim_waveform.bash \
          vivado_sim_feedback_waveform.bash XilinxSwitch_feedback_tb.sv
 	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder
-	@cp Packet.user Tuple.user Packet_feedback_in.axi Encoder/XilinxSwitch
+	@cp Generate_packets.sh Encoder/XilinxSwitch
 	@cp fec_0_t.hpp rse.cpp rse.h Encoder/XilinxSwitch/fec_0_t.TB
 	@cp loop_0_t.hpp Encoder/XilinxSwitch/loop_0_t.TB
 	@cp fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL

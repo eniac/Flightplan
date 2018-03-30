@@ -50,7 +50,7 @@ header fec_h
 	bit<FEC_PACKET_INDEX_WIDTH>	packet_index;
 }
 
-header x_h
+header dummy_h
 {
 	bit<1>	dummy;
 }
@@ -58,7 +58,7 @@ header x_h
 struct headers_t {
 	eth_h	eth;
 	fec_h	fec;
-	x_h	x;
+	dummy_h	dummy;
 }
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)  // in bits
@@ -86,7 +86,6 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports)
 {
 	bit<FEC_PACKET_INDEX_WIDTH>	index;
 	bit<FEC_PACKET_INDEX_WIDTH>	max;
-	bit<FEC_OFFSET_WIDTH>		payload_offset;
 	bit<FEC_REG_ADDR_WIDTH>		reg_addr;
 	bit<FEC_OP_WIDTH>		op;
 
@@ -101,14 +100,12 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports)
 			op = FEC_OP_ENCODE_PACKET;
 			reg_addr = 0;
 			max = FEC_K;
-			payload_offset = FEC_ETH_HEADER_SIZE;
 		}
 		else
 		{
 			op = FEC_OP_GET_ENCODED;
 			reg_addr = 1;
 			max = FEC_H;
-			payload_offset = FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE;
 		}
 
 		index = loop(reg_addr, max);
@@ -147,7 +144,7 @@ control Forward(inout headers_t hdr, inout switch_metadata_t ioports)
 
 		hdr.fec.setValid();
 
-		hdr.x.dummy = fec(op, index, payload_offset);
+		hdr.dummy.dummy = fec(op, index);
 
     }
 }
