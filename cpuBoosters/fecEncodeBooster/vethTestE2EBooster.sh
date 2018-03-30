@@ -70,7 +70,7 @@ done
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $DECODER_NAME for worker $WORKER_ID"
-	./$DECODER_NAME -i backVeth4 -o frontVeth4 -w $WORKER_ID -t $NUM_WORKERS &
+	./$DECODER_NAME -i backVeth3 -o frontVeth4 -w $WORKER_ID -t $NUM_WORKERS &
 done
 
 
