@@ -24,7 +24,7 @@
 
 To measure the effect of faulty links and \OurSys at the application level, we
 developed a P4 pipeline for the Barefoot Tofino that models \OurSys. We
-deployed the model in a simple 10 Gb/s testbed network, as depicted in
+deployed the model in the testbed network shown in
 Figure~\ref{fig:p4ModelTopo}, and benchmarked the performance of 
 Iperf in real-time. The P4 pipeline models the behavior of the encoder, 
 decoder, and faulty link, and can be reconfigured with different FEC and 
@@ -32,9 +32,10 @@ packet loss parameters at runtime via the control plane.
 
 The \textbf{\em encoder model} of the pipeline encapsulates each packet egressing on
 the faulty link with the \OurSys header and inserts blank  parity packets into
-the flow. It tracks per-port block IDs and  packet indices using P4 register
-arrays. To generate parity packets, the  model clones the last data packet in
-each block with the Tofino's multicast engine.
+the flow.
+%It tracks per-port block IDs and  packet indices using P4 register
+%arrays. To generate parity packets, the  model clones the last data packet in
+%each block with the Tofino's multicast engine.
 
 The \textbf{\em faulty link model} adds a \emph{corruption header} to each packet
 egressing the faulty link. The header indicates whether or not the neighbor
@@ -45,9 +46,10 @@ Tofino's random number generator.
 Finally, the \textbf{\em decoder model} applies to all packets arriving from a
 faulty link, before any other forwarding logic. It removes the corruption
 header from each packet and passes non-corrupt packets to the forwarding
-pipeline. The model recirculates corrupt packets until the next block begins,
-at which point it decides whether they can be recovered based on the number of
-non- corrupt data and parity packets it has observed in the block. If it
+pipeline.
+%The model recirculates corrupt packets until the next block begins,
+%at which point it decides whether they can be recovered based on the number of
+%non- corrupt data and parity packets it has observed in the block. If it
 counted at least K data plus parity packets  in the block, the model
 "recovers" all of the corrupt packets by simply removing their corruption
 headers and forwarding them normally. If recovery fails, the model drops the
@@ -104,11 +106,14 @@ with loss up to $10^{-1}$ (1 out of every 10 packets dropped). Without
 \OurSys, Iperf's throughput at that loss rate was under 25 Mb/s. 
 
 Figure~\ref{fig:lossVsWindow} shows average congestion window sizes in 
-the trials. Congestion window size ($cwnd$) determines how much data the sender 
-can transmit before receiving an ACK, limiting the transmission rate 
-to approximately $cwnd$ * round trip time. TCP increases $cwnd$ linearly 
-with successful packet deliveries, and reduces it exponentially upon 
-packet loss. As Figure~\ref{fig:lossVsWindow} shows, random packet loss 
+the trials.
+%Congestion window size ($cwnd$) determines how much data the sender 
+%can transmit before receiving an ACK, limiting the transmission rate 
+%to approximately $cwnd$ * round trip time.
+%TCP increases $cwnd$ linearly 
+%with successful packet deliveries, and reduces it exponentially upon 
+%packet loss.
+As Figure~\ref{fig:lossVsWindow} shows, random packet loss 
 at rates higher than around $10^{-5}$ causes TCP to reduce $cwnd$ significantly, 
 causing the throughput drop in Figure~\ref{fig:lossVsTput}. With FEC, 
 the congestion window remains high as loss rate increases, especially when 
@@ -116,13 +121,12 @@ using high levels of redundancy, e.g., $(K, H) = (5, 5)$.
 
 Figure~\ref{fig:latency} shows the in-network latency, i.e., from the  ingress
 pipeline of the encoding switch to the egress pipeline of the  decoding
-switch, in trials with 0 loss. FEC added under 1 MS of average latency in  all
+switch, in trials with no loss. FEC added under 1ms of average latency in  all
 trials. The amount of latency added by FEC was proportional to $H/K$,  because
 the parity packets increased the average length of the egress queue to the
 faulty port  by a factor of approximately $H/K$. The additional latency  also
 explains why $cwnd$ in Figure~\ref{fig:lossVsWindow} increased with ($H/K$),
 as higher latencies require larger window sizes to reach optimal throughput.
-\lei{\#Shrink Candidate\#}
 
 
 
