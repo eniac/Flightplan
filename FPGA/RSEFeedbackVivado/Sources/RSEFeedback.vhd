@@ -92,12 +92,20 @@ architecture RTL of RSEFeedback is
   signal output_valid        : std_logic;
   signal fifo_cnt            : std_logic_vector(3 downto 0);
   signal first_word          : std_logic;
+  signal first_word2         : std_logic;
   signal data_available      : std_logic;
   signal packet_available    : std_logic;
   signal inc_cntr            : std_logic;
   signal dec_cntr            : std_logic;
 
 begin
+
+  -- The following code is hard to debug in opinion because it contains a lot
+  -- of individual signals and registers with vague semantics.  I recommend
+  -- replacing it with two state machines, one on the input and one on the
+  -- output of the FIFO, similar to RSEInputBuffer.  I haven't done this
+  -- refactoring yet because I want to replace the feedback loop with packet
+  -- generation in the external function anyway.
 
   p_mux: process(mux_sel, axis_in_TVALID, rse_out_TREADY, axis_in_TDATA, axis_in_TKEEP, axis_in_TLAST,
                  feedback_out_TVALID, feedback_out_TDATA, feedback_out_TKEEP, feedback_out_TLAST)
@@ -215,7 +223,7 @@ begin
   feedback_out_TLAST  <= fifo_dout(0); 
   feedback_out_TVALID <= output_valid;
   packet_available    <= '0' when unsigned(fifo_cnt) = 0 else '1';
-  data_available      <= packet_available when feedback_out_TLAST = '1' else not fifo_empty;
+  data_available      <= packet_available when first_word2 = '1' else not fifo_empty;
   fifo_rd_en          <= (feedback_out_TREADY or not output_valid) and data_available;
   output_read         <= output_valid and feedback_out_TREADY;
 
@@ -258,5 +266,7 @@ begin
       end if;
     end if;
   end process;
+
+  first_word2 <= feedback_out_TLAST when output_read = '1' else first_word;
 
 end RTL;

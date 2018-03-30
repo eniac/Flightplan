@@ -12,29 +12,26 @@ public:
 
 	// tuple types
 	struct fec_input_t {
-		static const size_t _SIZE = 23;
+		static const size_t _SIZE = 12;
 		_LV<1> stateful_valid;
 		_LV<3> operation;
 		_LV<8> index;
-		_LV<11> payload_offset;
-		fec_input_t& operator=(_LV<23> _x) {
-			stateful_valid = _x.slice(22,22);
-			operation = _x.slice(21,19);
-			index = _x.slice(18,11);
-			payload_offset = _x.slice(10,0);
+		fec_input_t& operator=(_LV<12> _x) {
+			stateful_valid = _x.slice(11,11);
+			operation = _x.slice(10,8);
+			index = _x.slice(7,0);
 			return *this;
 		}
-		_LV<23> get_LV() { return (stateful_valid,operation,index,payload_offset); }
-		operator _LV<23>() { return get_LV(); } 
+		_LV<12> get_LV() { return (stateful_valid,operation,index); }
+		operator _LV<12>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\toperation = " + operation.to_string() + "\n" + "\t\tindex = " + index.to_string() + "\n" + "\t\tpayload_offset = " + payload_offset.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\toperation = " + operation.to_string() + "\n" + "\t\tindex = " + index.to_string() + "\n" + "\t)";
 		}
 		fec_input_t() {} 
-		fec_input_t( _LV<1> _stateful_valid, _LV<3> _operation, _LV<8> _index, _LV<11> _payload_offset) {
+		fec_input_t( _LV<1> _stateful_valid, _LV<3> _operation, _LV<8> _index) {
 			stateful_valid = _stateful_valid;
 			operation = _operation;
 			index = _index;
-			payload_offset = _payload_offset;
 		}
 	};
 	struct fec_output_t {
@@ -133,7 +130,6 @@ public:
 		{
 			unsigned long op = fec_input.operation.to_ulong();
 			unsigned long index = fec_input.index.to_ulong();
-			unsigned long offset = fec_input.payload_offset.to_ulong();
 			fec_sym* p;
 
 			std::cerr<<"packet size = "<<packet_in.size()<<std::endl;
@@ -190,10 +186,9 @@ public:
 
 			if (op & FEC_OP_GET_ENCODED)
 			{
-				std::cout<<"[P4] offset = "<<offset<<std::endl;
 				p = fb.pdata[index];
 				int packet_size = packet_out.size();
-				for (int i = offset/8; i<packet_size; i++)
+				for (int i = (FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE) / 8; i<packet_size; i++)
 				{
 					packet_out.pop_back();
 				}
