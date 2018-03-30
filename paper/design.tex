@@ -101,6 +101,12 @@ tell blocks apart, as shown in Fig.~\ref{fig:example-loss2}.
   classified to a particular Traffic Class and given a transient link-local
   identifier: these are shown as $c$ and $n$ respectively in
   Fig.~\ref{fig:example-loss}.}
+\hg{As the figure with the topology no longer exists, I would remove the top
+    part of this diagram because S1 and S2 have not meaning anymore.  Besides,
+    it was only saying that only faulty links use tagged packets, which seems
+    obvious.  What is mentioned as "original header" should just
+    be the original "EtherType" field only by the way.  I would also indicate in
+    the figure what the \OurSys tag is.}
 \end{figure}
 
 \begin{figure}
@@ -114,6 +120,7 @@ tell blocks apart, as shown in Fig.~\ref{fig:example-loss2}.
   Note that frame
   reordering is not possible because the frames are being sent over the same link,
   and their processing is sequential across that link.}
+  \hg{S1 and S2 are not referring to anything anymore as we removed the first figure.}
 \end{figure}
 
 \begin{figure}
@@ -122,6 +129,7 @@ tell blocks apart, as shown in Fig.~\ref{fig:example-loss2}.
   \caption{\label{fig:example-loss2}On links with bursty loss behavior, adding
            a block sequence number helps to distinguish packets.}
 %To mitigate bursty loss, a block sequence number is added.}
+  \hg{S1 and S2 are not referring to anything anymore as we removed the first figure.}
 \end{figure}
 
 \paragraph{Sending proxy.}
@@ -163,6 +171,15 @@ drop frame\;
 }
 }
 \caption{\label{alg:sending}Sending proxy. If the block's $k$ has been reached, then addToBlock will start the process of generating and sending parity frames. This process is also begun if the block's $k$ has not been reached but $t$ expires.}
+\hg{The bar above "frame" is confusing.
+    Are you proposing to immediately drop a frame if we happen to be sending
+    another frame?  It would be better to put it in a buffer such that we
+    can send it later.  If the channel remains occuppied and the buffer fills
+    up, we can still drop a frame.  The sending of parity frames appears to
+    be somewhere hidden in the algorithm.  The drop policy seems so obvious
+    that I would not even mention it.  Finally, the caption
+    appears to tell a whole algorithm by itself, which makes me wonder why it
+    is not part of the algorithm.}
 \end{algorithm}
 
 \paragraph{Receiving proxy.}
@@ -201,5 +218,7 @@ is no more work to be done for this block.
 \begin{figure}
   \centering
   \includegraphics[width=0.4\paperwidth]{figures/paper-fig-6.pdf}
-  \caption{\label{fig:example-decode}Prior to decoding each block is mapped to the buffer for its traffic class.}
+  \caption{\label{fig:example-decode}Prior to decoding, each block is mapped to the buffer for its traffic class.}
+  \hg{I suppose we also classify according to flow (source-destination pair)?
+      S1 is not referring to anything anymore as we removed the first figure.}
 \end{figure}

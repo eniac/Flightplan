@@ -158,6 +158,10 @@ to the header processor.
   \centering
   \includegraphics[width=0.4\paperwidth]{figures/sdnet-interface.png}
   \caption{\label{fig:sdnet-interface}Abstraction provided by each layer; grey blocks are translated to the pipeline illustrated in next level.}
+  \hg{I find this diagram confusing.  "SDNet" is not a language as opposed to
+      P4 and C.  In reality, the packets go from P4
+      to a user engine that is written in Verilog.  The user engine
+      is a simple wrapper that in turn forwards the packets to C.}
 \end{figure}
 
 \iffalse
