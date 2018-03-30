@@ -73,8 +73,9 @@ void call_fec_blk_get(int blockId) {
 void encode_block() {
 	int rc;
 	if ((rc = rse_code(1)) != 0 )  exit(rc);
-//(	fec_dbg_printf)("\nSending ");
+#if 0
 	D0(fec_block_print());
+#endif
 	// print_global_fb_block();
 }
 
@@ -106,8 +107,9 @@ void simulate_packet_loss() {
 void decode_block() {
 	int rc;
 	if ((rc = rse_code(1)) != 0 )  exit(rc);
-	fprintf(stderr, "\nRecovered ");
+#if 0
 	D0(fec_block_print());
+#endif
 }
 
 /**
