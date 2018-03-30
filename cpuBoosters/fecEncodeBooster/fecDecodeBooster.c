@@ -16,6 +16,8 @@ void decode_and_forward(const int block_id) {
 		return;
 	}
 
+	call_fec_blk_get(block_id); // FIXME check this
+
 	decode_block();
 
 	copy_data_packets_to_pkt_buffer(block_id);
@@ -59,6 +61,11 @@ void my_packet_handler(
 		return;
 	}
 	const struct fec_header *fecHeader = (struct fec_header *)(packet + sizeof(struct ether_header));
+
+#if 0
+	printf("class_id=%d block_id=%d index=%d size=%d\n", fecHeader->class_id, fecHeader->block_id,
+		fecHeader->index, fecHeader->size);
+#endif
 
 	// skip blocks that don't belong to this worker.
 	if ((fecHeader->block_id) % workerCt != workerId){
