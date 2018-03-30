@@ -163,6 +163,8 @@ to the header processor.
       to a user engine that is written in Verilog.  The user engine
       is a simple wrapper that in turn forwards the packets to C.}
   \lei{SDNet IS a language. We can absolutely implement everything P4 does solely in SDNet.}
+  \hg{The language is called PX, not SDNet.  P4 is translated into PX, so packets never
+      go from P4 to PX.  If packets are in P4, they are in PX, and vice versa.}
 \end{figure}
 
 \iffalse
@@ -204,7 +206,7 @@ work-in-progress.
 %to implement the decoder too.
 
 In \OurSys, error correction is performed with a Reed-Solomon erasure (RSE) code~\cite{rse}
-\hg{Note that this reference covers only error correction, not dealing with erasures}.
+%\hg{Note that this reference covers only error correction, not dealing with erasures}.
 % Erasure codes
 %require prior knowledge of which packets data is missing, as opposed to regular
 %error correction codes.  This comes with the benefit of requiring fewer error
@@ -307,7 +309,7 @@ A solution is to divide the data over multiple BRAMs that can be
 accessed simultaneously.  We accomplish that for {\tt Gen} with the {\tt ARRAY\_PARTITION}
 pragma.  To {\tt Par}, we applied the {\tt ARRAY\_RESHAPE} pragma to combine
 all array elements into a single wide word.
-\lei{\#Shrink Candidate\#}
+%\lei{\#Shrink Candidate\#}
 
 \begin{lstlisting}[language=C,basicstyle=\footnotesize,numbers=left,
                    captionpos=b,caption={Matrix-Vector Multiplier},
