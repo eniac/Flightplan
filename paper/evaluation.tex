@@ -1,28 +1,28 @@
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.4\paperwidth]{figures/lineRateModel.pdf}
+  \includegraphics[width=0.40\paperwidth]{figures/lineRateModel.pdf}
   \caption{\label{fig:p4ModelTopo} Topology of the 10 Gb/s testbed 
   for real-time TCP benchmarks, using P4 to model FEC and faulty links.}
 \end{figure}
 
 \begin{figure*}[!ht]
 \centering
-\begin{minipage}[b]{0.32\linewidth}
+\begin{minipage}[b]{0.31\linewidth}
 \includegraphics[width=\linewidth]{figures/lossVsTput.pdf}
 \caption{Iperf throughput.}
 \label{fig:lossVsTput}
 \end{minipage}
 \hspace{.05in}
-\begin{minipage}[b]{0.32\linewidth}
+\begin{minipage}[b]{0.31\linewidth}
 \includegraphics[width=\textwidth]{figures/lossVsWindow.pdf}
 \caption{Iperf TCP window sizes.}
 \label{fig:lossVsWindow}
 \end{minipage}
 \hspace{.05in}
-\begin{minipage}[b]{0.32\linewidth}
+\begin{minipage}[b]{0.31\linewidth}
 \includegraphics[width=\textwidth]{figures/latency.pdf}
-\caption{Network latency.}
+\caption{Latency at error rate=0. Boxes and whiskers show quartile and 1.5*quartile ranges.}
 \label{fig:latency}
 \end{minipage}
 \end{figure*}
@@ -33,7 +33,7 @@
 % We evaluate \OurSys using different types of traffic to measure its improvement
 % to application-level behavior in the presence of lossy links.
 
-We evaluated \OurSys with microbenchmarks and network simulation.
+We evaluated \OurSys with microbenchmarks and simulation.
 % to answer these questions:
 %\begin{itemize}
 
@@ -52,9 +52,9 @@ We evaluated \OurSys with microbenchmarks and network simulation.
 % the switch; a software implementation running on the switch CPU; and an ASIC  
 % implementation integrated into the switch forwarding engine. 
 
-\subsection{\OurSys models}
+\subsection{\OurSys Models}
 
-\subsubsection{Line Rate P4 Model.} 
+\subsubsection{Line Rate P4 Model} 
 \input{p4models}
 
 
@@ -102,11 +102,15 @@ Considering the overhead from other parts of the system, we believe the link is 
 to being saturated, which is our basic assumption in evaluations.
 \fi
 
-As a contrast, we also evaluated a CPU implementation, which was not
-optimized for performance, and intended as a reference
-implementation. Under the same deployment, the throughput measured is
-227Mbps on a single core, and 1399Mbps using all 8 physical cores of
+For comparison, we also evaluated a reference CPU implementation, not 
+optimized for performance. In the same deployment, its throughput 
+measured 227Mbps on a single core, and 1399Mbps using all 8 physical cores of
 our Xeon E5-2450L running at 1.8 GHz.
+
+% As a contrast, we also evaluated a CPU implementation, which was not
+% optimized for performance, and intended as a reference
+% implementation. Under the same deployment, the throughput measured is
+
 
 
 \subsection{FPGA resource consumption}
