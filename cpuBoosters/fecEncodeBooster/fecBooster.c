@@ -264,20 +264,22 @@ int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 //(	fec_dbg_printf)("This is inside copy packets \n");
 	/*For each parity packet*/
 	for (int i = startIndexOfParityPacket; i < (startIndexOfParityPacket + NUM_PARITY_PACKETS); i++) {
+
 		char* packet = pkt_buffer[blockId][i];
 
 		/*We need to account for the newly added tag after the ethernet heaader.*/
 		const struct sniff_ip *ip;              /* The IP header */
 
 		/* compute ip header offset */
-		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
+		/*Skip the ether header, wharf header, old ether_type*/
+		ip = (struct sniff_ip*)(packet + WHARF_ORIG_FRAME_OFFSET); 
 		int sizeIP = IP_HL(ip) * 4;
 		if (sizeIP < 20) {
 		//(	fec_dbg_printf)("size0\n");
 			return -1;
 		}
 
-		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
+		int totalHeaderSize =  WHARF_ORIG_FRAME_OFFSET + sizeIP;
 
 		/*update the parity packet in the pkt buffer.*/
 		// char* parityPacket = (char *) malloc(totalMallocSize);
@@ -313,7 +315,7 @@ void modify_IP_headers_for_parity_packets(int payloadSize, char* packet) {
 	struct sniff_ip *ip;              /* The IP header */
 
 	/* compute ip header offset */
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
+	ip = (struct sniff_ip*)(packet + WHARF_ORIG_FRAME_OFFSET);
 	int sizeIP = IP_HL(ip) * 4;
 	if (sizeIP < 20) {
 	//(	fec_dbg_printf)("size0\n");
