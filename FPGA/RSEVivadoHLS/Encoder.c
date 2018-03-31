@@ -38,8 +38,13 @@ static fec_sym GF_exp(fec_sym X)
 #ifdef IN_SOFTWARE
   static int Initialized = 0;
   if (!Initialized)
-#endif
+  {
+    Generate_exp_table(Table);
+    Initialized = 1;
+  }
+#else
   Generate_exp_table(Table);
+#endif
   return Table[X];
 }
 
@@ -51,8 +56,13 @@ static fec_sym GF_log(fec_sym X)
 #ifdef IN_SOFTWARE
   static int Initialized = 0;
   if (!Initialized)
-#endif
+  {
+    Generate_log_table(Table);
+    Initialized = 1;
+  }
+#else
   Generate_log_table(Table);
+#endif
   return Table[X];
 }
 
@@ -101,8 +111,13 @@ static fec_sym GF_invert(fec_sym X)
 #ifdef IN_SOFTWARE
   static int Initialized = 0;
   if (!Initialized)
-#endif
+  {
+    Generate_invert_table(Table);
+    Initialized = 1;
+  }
+#else
   Generate_invert_table(Table);
+#endif
   return Table[X];
 }
 
@@ -219,8 +234,13 @@ void Incremental_encode(fec_sym Data, fec_sym Parity[FEC_MAX_H], int Packet_inde
 #ifdef IN_SOFTWARE
   static int Initialized = 0;
   if (!Initialized)
-#endif
+  {
+    Generate_generator(Generator);
+    Initialized = 1;
+  }
+#else
   Generate_generator(Generator);
+#endif
 
   for (int i = 0; i < FEC_MAX_H; i++)
     if (i < h)
