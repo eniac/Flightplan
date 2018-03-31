@@ -97,18 +97,34 @@ $(k, h) = (5, 5)$.
 Figure~\ref{fig:latency} shows end-to-end network latency. Latency increased
 with $h/k$ because of the dynamics between the FEC model and TCP. The TCP
 source under-estimated its contribution to congestion because it was unaware
-of parity packet drops relating to its flow. This caused high average queue
-depths in the egress to the faulty link, e.g., up to 1 MB for $(5,5)$, which
-increased latency. A solution that requires no modification to TCP is rate
-limiting entry to the encoder based on the effective capacity of the faulty
-link, given $h$, $k$ and the loss rate. This would drop data packets before
-parity packet generation to ensure that TCP senders are aware of  all drops
-relating to their flows. We tested our hypothesis by repeating the $(5, 5)$
-trials with the sending host limited to 4.5 Gb/s, just under effective
-capacity. The average latency was 41 $\mu$s, within the same range as latency
-in the no FEC trials. We plan to integrate rate limiting into the next
-versions of \OurSys and the P4 models, using the metering features of P4 and
-the Tofino.
+of congestion related drops of parity packets in its flow. This caused high
+average queue depths in the egress to the faulty link, e.g., up to 1 MB for
+$(5,5)$, which increased latency. A solution that requires no modification to
+TCP is rate limiting entry to the encoder based on the effective capacity of
+the faulty link, given $h$, $k$ and the loss rate. This would drop data
+packets before parity packet generation to ensure that TCP senders are aware
+of  all drops relating to their flows. We tested our hypothesis by repeating
+the $(5, 5)$ trials with the sending host limited to 4.5 Gb/s, just under
+effective capacity. The average latency was 41 $\mu$s, within the same range
+as latency in the no FEC trials. We plan to integrate rate limiting into the
+next versions of \OurSys and the P4 models, using the metering features of P4
+and the Tofino.
+
+% Figure~\ref{fig:latency} shows end-to-end network latency. Latency increased
+% with $h/k$ because of the dynamics between the FEC model and TCP. The TCP
+% source under-estimated its contribution to congestion because it was unaware
+% of parity packet drops relating to its flow. This caused high average queue
+% depths in the egress to the faulty link, e.g., up to 1 MB for $(5,5)$, which
+% increased latency. A solution that requires no modification to TCP is rate
+% limiting entry to the encoder based on the effective capacity of the faulty
+% link, given $h$, $k$ and the loss rate. This would drop data packets before
+% parity packet generation to ensure that TCP senders are aware of  all drops
+% relating to their flows. We tested our hypothesis by repeating the $(5, 5)$
+% trials with the sending host limited to 4.5 Gb/s, just under effective
+% capacity. The average latency was 41 $\mu$s, within the same range as latency
+% in the no FEC trials. We plan to integrate rate limiting into the next
+% versions of \OurSys and the P4 models, using the metering features of P4 and
+% the Tofino.
 
 % As Figure~\ref{fig:latency} shows, the model suggests that FEC may add
 % latency. The root cause lies in the dynamics between the FEC model and TCP.
