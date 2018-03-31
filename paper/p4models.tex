@@ -17,40 +17,42 @@
 
 To measure the effect of faulty links and \OurSys at the protocol and
 application level, we developed a P4 pipeline for the Barefoot Tofino that
-models the behavior of faulty links and FEC in real-time. We deployed  the
-model in the testbed network shown in Figure~\ref{fig:p4ModelTopo} and ran
-end-to-end Iperf benchmarks. The P4 pipeline has three modeling components.
+models the behavior of faulty links and FEC in real-time.
+Figure~\ref{fig:p4ModelTopo} illustrates the pipeline.
+
 
 
 % of the encoder,  decoder, and
 % faulty link, and can be reconfigured with different FEC and  packet loss
 % parameters at runtime via the control plane.
 
-The \textbf{encoder model} in the pipeline encapsulates each packet egressing on
-the faulty link with the \OurSys header and inserts blank  parity packets into
-the flow.
+The \textbf{encoder model} adds the \OurSys header to packets egressing on
+the faulty link and generates blank parity packets. 
+
 %It tracks per-port block IDs and  packet indices using P4 register
 %arrays. To generate parity packets, the  model clones the last data packet in
 %each block with the Tofino's multicast engine.
 
 The \textbf{faulty link model} adds a \emph{corruption header} to each packet
-egressing the faulty link. The header indicates whether or not the neighbor
-switch should consider the packet lost. The model selects packets for
-corruption according to a simple binomial distribution implemented with the
-Tofino's random number generator.
+egressing the faulty link, indicating whether the next switch should
+consider the packet lost. It uses the Tofino's  random number generator to
+select packets for loss according to a binomial  distribution.
 
-Finally, the \textbf{decoder model} processes packets ingressing from  the
-faulty link. It removes the corruption and \OurSys headers and passes non-
-corrupt packets to forwarding. It withholds corrupt packets, using
-recirculation, until the block ends. If it has counted at least $K$ data plus
-parity packets in the block, the model "recovers" all of the corrupt packets
-by allowing them to pass to forwarding; else, the model drops the corrupt
-packets.
 
-All benchmarks we describe below measured performance of 10 second file
-transfers from the client to the server, through an encoding switch, faulty
-link, and decoding switch. We ran 25 trials for each tested configuration of
-$K$, $H$, and loss rate.
+Finally, the \textbf{decoder model} processes packets ingressing from the
+faulty link. It removes added headers and passes non- corrupt packets to
+forwarding. It withholds corrupt packets, using recirculation, until the block
+ends. If it has counted at least $K$ data plus parity packets in the block,
+the model "recovers" the corrupt packets by allowing them to pass to
+forwarding; else, the model drops them.
+
+We deployed the model in the testbed network shown in
+Figure~\ref{fig:p4ModelTopo} and ran 10 second TCP file transfers from
+the client to the server using Iperf with different settings for $k$, $h$, and
+loss rate. 
+
+%We ran 25 trials for each configuration.
+
 
 
 % \begin{figure}
@@ -92,14 +94,68 @@ Figure~\ref{fig:lossVsTput}. With FEC, $cwnd$ remains high as
 loss rate increases, especially when using high levels of redundancy, e.g.,
 $(k, h) = (5, 5)$.
 
-Figure~\ref{fig:latency} shows the in-network latency, i.e., from the  ingress
-pipeline of the encoding switch to the egress pipeline of the  decoding
-switch, in trials with no loss. FEC added under 1ms of average latency in  all
-trials. Latency was proportional to $h/k$, because the parity packets
-increased the average length of the egress queue to the faulty port by
-approximately that factor. TCP adjusts to higher latency  by increasing
-$cwnd$, which explains why $cwnd$ increases with ($h/k$) in
-Figure~\ref{fig:lossVsWindow}.
+Figure~\ref{fig:latency} shows end-to-end network latency. Latency increased
+with $h/k$ because of the dynamics between the FEC model and TCP. The TCP
+source under-estimated its contribution to congestion because it was unaware
+of congestion related drops of parity packets. This caused high average queue
+depths in the egress to the faulty link, e.g., up to 1 MB for $(5,5)$, and
+therefore high latency. A solution that requires no modification to TCP is
+rate limiting entry to the encoder based on the effective capacity of the
+faulty link, given $h$, $k$ and the loss rate. This would drop data packets
+before parity packet generation to ensure that TCP senders are aware of  all
+drops relating to their flows. We tested our hypothesis by repeating the $(5,
+5)$ trials with the sending host limited to 4.5 Gb/s, just under effective
+capacity. The average latency was 41 $\mu$s, within the same range as latency
+in the no FEC trials. We plan to integrate rate limiting into the next
+versions of \OurSys and the P4 models, using the metering features of P4 and
+the Tofino.
+
+% Figure~\ref{fig:latency} shows end-to-end network latency. Latency increased
+% with $h/k$ because of the dynamics between the FEC model and TCP. The TCP
+% source under-estimated its contribution to congestion because it was unaware
+% of parity packet drops relating to its flow. This caused high average queue
+% depths in the egress to the faulty link, e.g., up to 1 MB for $(5,5)$, which
+% increased latency. A solution that requires no modification to TCP is rate
+% limiting entry to the encoder based on the effective capacity of the faulty
+% link, given $h$, $k$ and the loss rate. This would drop data packets before
+% parity packet generation to ensure that TCP senders are aware of  all drops
+% relating to their flows. We tested our hypothesis by repeating the $(5, 5)$
+% trials with the sending host limited to 4.5 Gb/s, just under effective
+% capacity. The average latency was 41 $\mu$s, within the same range as latency
+% in the no FEC trials. We plan to integrate rate limiting into the next
+% versions of \OurSys and the P4 models, using the metering features of P4 and
+% the Tofino.
+
+% As Figure~\ref{fig:latency} shows, the model suggests that FEC may add
+% latency. The root cause lies in the dynamics between the FEC model and TCP.
+% The TCP source under-estimated its contribution to congestion because it was
+% unaware of parity packet drops relating to its flow. This caused congestion in
+% the egress to the faulty link, e.g., with queue depths of up to 1 MB for
+% $(5,5)$, which increased latency. A solution that requires no modification to
+% TCP is rate limiting entry to the encoder based on the effective capacity of
+% the faulty link, given $h$, $k$ and the loss rate. This would ensure that the
+% TCP sender was aware of all drops related to its flow so it could correctly
+% estimate its contribution to congestion. We tested our hypothesis by repeating
+% the $(5, 5)$ trials with the sending host limited to 4.5 Gb/s, just under
+% effective capacity. The average latency was only 41 $\mu$s, within the same
+% range as latency in the no FEC trials. We plan to integrate rate limiting into
+% the next versions of \OurSys and the P4 models, using the metering features of
+% P4 and the Tofino.
+
+% , support rate limiting in their
+% % traffic  managers that can be dynamically adjusted at runtime.
+
+
+
+
+% in-network latency, i.e., from the  ingress
+% pipeline of the encoding switch to the egress pipeline of the  decoding
+% switch, in trials with no loss. FEC added under 1ms of average latency in  all
+% trials. Latency was proportional to $h/k$, because the parity packets
+% increased the average length of the egress queue to the faulty port by
+% approximately that factor. TCP adjusts to higher latency  by increasing
+% $cwnd$, which explains why $cwnd$ increases with ($h/k$) in
+% Figure~\ref{fig:lossVsWindow}.
 
 
 
