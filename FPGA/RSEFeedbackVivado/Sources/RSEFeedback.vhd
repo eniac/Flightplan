@@ -212,8 +212,9 @@ begin
             if last_feedback_packet = '1' then
               next_input_state <= input_state_data_start;
             elsif fifo_has_packet_delay(fifo_has_packet_delay'left) = '1' then
-              fifo_rd_en       <= '1';
-              next_input_state <= input_state_feedback_start;
+              fifo_rd_en          <= '1';
+              dec_fifo_packet_cnt <= '1';
+              next_input_state    <= input_state_feedback_start;
             else
               next_input_state <= input_state_feedback_wait;
             end if;
