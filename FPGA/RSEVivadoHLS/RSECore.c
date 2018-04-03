@@ -13,6 +13,12 @@ typedef uint64_t uint64;
 
 #include "Encoder.h"
 
+#define HEADER_SIZE ((FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE) / 8)
+#define LENGTH_SIZE (FEC_PACKET_LENGTH_SIZE / 8)
+
+#define LENGTH_OFFSET ((FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE) / 8)
+#define PAYLOAD_OFFSET (LENGTH_OFFSET + (FEC_PACKET_LENGTH_SIZE) / 8)
+
 #define CONCATENATE_INTERNAL(x, y) x ## y
 #define CONCATENATE(x, y) CONCATENATE_INTERNAL(x, y)
 
@@ -40,6 +46,137 @@ typedef struct
 } packet_interface;
 
 static fec_sym Parity_buffer[FEC_MAX_PACKET_SIZE][FEC_MAX_H];
+static fec_sym Packet_length_parity[FEC_PACKET_LENGTH_SIZE / 8][FEC_MAX_H];
+
+static unsigned Maximum_packet_length;
+
+static void Ignore_packet(packet_interface * Data, packet_interface Parity[FEC_MAX_PACKET_SIZE])
+{
+#pragma HLS inline
+
+  unsigned Word_offset = 0;
+  unsigned End = 0;
+  do
+  {
+#pragma HLS LOOP_TRIPCOUNT min=8 max=190
+#pragma HLS pipeline
+
+    packet_interface Input = Data[Word_offset];
+    End = Input.End_of_frame;
+    Parity[Word_offset++] = Input;
+  }
+  while (!End);
+}
+
+static void Encode_packet(tuple_interface Tuple, packet_interface * Data,
+    packet_interface Parity[FEC_MAX_PACKET_SIZE])
+{
+#pragma HLS inline
+
+  if (Tuple.Operation & FEC_OP_START_ENCODER)
+    Maximum_packet_length = 0;
+
+  unsigned Word_offset = 0;
+  unsigned End = 0;
+  unsigned Packet_length = 0;
+  do
+  {
+#pragma HLS DEPENDENCE variable=Parity_buffer inter false
+#pragma HLS LOOP_TRIPCOUNT min=8 max=190
+#pragma HLS pipeline
+
+    packet_interface Input = Data[Word_offset];
+    packet_interface Output = Input;
+
+    End = Input.End_of_frame;
+
+    unsigned Offset = 8 * Word_offset;
+    for (unsigned Byte_offset = 0; Byte_offset < 8; Byte_offset++)
+    {
+      if (Byte_offset < Input.Count)
+      {
+        int Initialize = (Tuple.Operation & FEC_OP_START_ENCODER)
+            || Offset >= Maximum_packet_length;
+        fec_sym Symbol = (Input.Data >> (8 * Byte_offset)) & 0xFF;
+        Incremental_encode(Symbol, Parity_buffer[Offset], Tuple.Index,
+        FEC_MAX_H, Initialize);
+      }
+      Offset++;
+    }
+
+    Parity[Word_offset++] = Output;
+
+    Packet_length += Input.Count;
+  }
+  while (!End);
+
+  if (Packet_length > Maximum_packet_length)
+    Maximum_packet_length = Packet_length;
+
+  for (unsigned Offset = 0; Offset < FEC_PACKET_LENGTH_SIZE / 8; Offset++)
+  {
+#pragma HLS pipeline
+    fec_sym Symbol = (Packet_length >> (8 * Offset)) & 0xFF;
+    Incremental_encode(Symbol, Packet_length_parity[Offset], Tuple.Index,
+    FEC_MAX_H, Tuple.Operation & FEC_OP_START_ENCODER);
+  }
+}
+
+void Output_parity_packets(tuple_interface Tuple, packet_interface * Data,
+    packet_interface Parity[FEC_MAX_PACKET_SIZE])
+{
+#pragma HLS inline
+
+  unsigned Word_offset = 0;
+  unsigned Input_finished = 0;
+  unsigned End = 0;
+  do
+  {
+#pragma HLS LOOP_TRIPCOUNT min=8 max=190
+#pragma HLS pipeline
+
+    const packet_interface Empty = {0, 0, 0, 1, 0};
+
+    packet_interface Input = Input_finished ? Empty : Data[Word_offset];
+
+    Input_finished = Input.End_of_frame;
+
+    unsigned Packet_length = Maximum_packet_length + HEADER_SIZE + LENGTH_SIZE;
+    End = Word_offset == Packet_length / 8;
+
+    packet_interface Output;
+    Output.Data = 0;
+    unsigned Offset = 8 * Word_offset;
+    for (unsigned Byte_offset = 0; Byte_offset < 8; Byte_offset++)
+    {
+      uint8 Input_byte = 0;
+      if (Offset < LENGTH_OFFSET)
+      {
+        Input_byte = Input.Data >> (8 * Byte_offset);
+      }
+      else if (Offset < PAYLOAD_OFFSET)
+    {
+        unsigned Length_offset = Offset - LENGTH_OFFSET;
+        Input_byte = Packet_length_parity[Length_offset][Tuple.Index - FEC_MAX_K];
+    }
+    else if (Offset < Packet_length)
+    {
+      unsigned Payload_offset = Offset - PAYLOAD_OFFSET;
+    Input_byte = Parity_buffer[Payload_offset][Tuple.Index - FEC_MAX_K];
+    }
+      Output.Data |= (uint64) Input_byte << (8 * Byte_offset);
+      Offset++;
+    }
+
+    Output.Start_of_frame = Word_offset == 0;
+    Output.End_of_frame = End;
+    Output.Count = End ? Packet_length % 8 : 8;
+    Output.Error = Input.Error;
+
+    Parity[Word_offset++] = Output;
+  }
+  while (!End);
+}
 
 void RSE_core(tuple_interface Tuple, packet_interface * Data,
     packet_interface Parity[FEC_MAX_PACKET_SIZE])
@@ -59,107 +196,12 @@ void RSE_core(tuple_interface Tuple, packet_interface * Data,
 #pragma HLS ARRAY_PARTITION variable=Parity_buffer complete dim=2
 //#pragma HLS ARRAY_RESHAPE variable=Parity_buffer cyclic factor=4 dim=2
 
+#pragma HLS ARRAY_PARTITION variable=Packet_length_parity complete dim=0
+
   if (!Tuple.Valid)
-  {
-    unsigned Word_offset = 0;
-    unsigned End = 0;
-    do
-    {
-#pragma HLS LOOP_TRIPCOUNT min=8 max=190
-#pragma HLS pipeline
-
-      packet_interface Input = Data[Word_offset];
-      End = Input.End_of_frame;
-      Parity[Word_offset++] = Input;
-    }
-    while (!End);
-  }
+    Ignore_packet(Data, Parity);
   else if (Tuple.Operation & FEC_OP_ENCODE_PACKET)
-  {
-    unsigned Word_offset = 0;
-    unsigned End = 0;
-    do
-    {
-#pragma HLS DEPENDENCE variable=Parity_buffer inter false
-#pragma HLS LOOP_TRIPCOUNT min=8 max=190
-#pragma HLS pipeline
-
-      packet_interface Input = Data[Word_offset];
-      packet_interface Output = Input;
-
-      End = Input.End_of_frame;
-
-      unsigned Offset = 8 * Word_offset;
-      for (unsigned Byte_offset = 0; Byte_offset < 8; Byte_offset++)
-      {
-        if (Byte_offset < Input.Count)
-        {
-          fec_sym Symbol = (Input.Data >> 8 * (7 - Byte_offset)) & 0xFF;
-          Incremental_encode(Symbol, Parity_buffer[Offset], Tuple.Index,
-          FEC_MAX_H, Tuple.Operation & FEC_OP_START_ENCODER);
-        }
-        Offset++;
-      }
-
-      Parity[Word_offset++] = Output;
-    }
-    while (!End);
-  }
+    Encode_packet(Tuple, Data, Parity);
   else if (Tuple.Operation & FEC_OP_GET_ENCODED)
-  {
-    unsigned Word_offset = 0;
-    unsigned Input_finished = 0;
-    unsigned End = 0;
-    unsigned New_packet_length = FEC_ETH_HEADER_SIZE / 8;
-    do
-    {
-#pragma HLS LOOP_TRIPCOUNT min=8 max=190
-#pragma HLS pipeline
-
-      // I applied a couple of tricks to get the clock period down to 3 ns.
-      // The loop exit condition (End) took several cycles to compute
-      // originally.  Because of that, the initiation interval was 3 instead of
-      // 1.  I found out that if-statements had a bad effect on the latency, so
-      // I replaced them with conditional expressions.  I would have expected
-      // the tool to do if-conversion if needed, but apparently that did not
-      // happen.  This change was not enough, so I broke the computation apart
-      // by calculating the packet length a cycle earlier.  That did the trick.
-
-      const packet_interface Empty = {0, 0, 0, 1, 0};
-
-      unsigned Packet_length = New_packet_length;
-
-      packet_interface Input = Input_finished ? Empty : Data[Word_offset];
-      New_packet_length += Input_finished ? 0 : Input.Count;
-
-      packet_interface Output = Input;
-
-      Input_finished = Input.End_of_frame;
-
-      End = (Word_offset == (Packet_length / 8));
-
-      Output.Data = 0;
-      unsigned Offset = 8 * Word_offset;
-      for (unsigned Byte_offset = 0; Byte_offset < 8; Byte_offset++)
-      {
-        Output.Data <<= 8;
-        if (8 * Offset < FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE)
-          Output.Data |= (Input.Data >> 8 * Byte_offset) & 0xFF;
-        else if (Offset < Packet_length)
-        {
-          int Payload_offset = Offset - (FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE) / 8;
-          Output.Data |= Parity_buffer[Payload_offset][Tuple.Index - FEC_MAX_K] & 0xFF;
-        }
-        Offset++;
-      }
-
-      Output.Start_of_frame = Word_offset == 0;
-      Output.End_of_frame = End;
-      Output.Count = End ? Packet_length % 8 : 8;
-      Output.Error = Input.Error;
-
-      Parity[Word_offset++] = Output;
-    }
-    while (!End);
-  }
+    Output_parity_packets(Tuple, Data, Parity);
 }
