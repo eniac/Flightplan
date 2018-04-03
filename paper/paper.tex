@@ -29,8 +29,8 @@
 
 %Conference
 \acmConference[NetCompute'18]{ACM SIGCOMM 2018 Workshop on In-Network Computing conference}{August 2018}{Budapest, Hungary} 
-\acmYear{2017}
-\copyrightyear{2017}
+\acmYear{2018}
+\copyrightyear{2018}
 
 \acmPrice{15.00}
 
@@ -138,14 +138,14 @@ those links until they can be repaired.
 We explore the design space using ns-3, and evaluate our
 implementation on a physical test-bed that includes programmable
 switches and reconfigurable hardware.
-Our current hardware prototype uses around 10\% of our FPGA's
-resources while operating at \FIXME{30\%} of its maximum clock rate,
-but can almost saturate a 10GbE link.
-\hg{The current frequency of 156.25 MHz is determined by the line rate
-    (=10000/64).  Higher frequencies won't benefit the throughput as the
-    link will be the bottleneck.  This gives the false impression that
-    a higher frequency would be better.  I would rather mention latency
-    or even power consumption.}
+Our current hardware prototype can almost saturate a 10GbE link while using
+around 10\% of our FPGA's resources.
+% while operating at \FIXME{30\%} of its maximum clock rate,
+%\hg{The current frequency of 156.25 MHz is determined by the line rate
+%    (=10000/64).  Higher frequencies won't benefit the throughput as the
+%    link will be the bottleneck.  This gives the false impression that
+%    a higher frequency would be better.  I would rather mention latency
+%    or even power consumption.}
 \end{abstract}
 
 %
@@ -155,38 +155,32 @@ but can almost saturate a 10GbE link.
 %
 \begin{CCSXML}
 <ccs2012>
- <concept>
-  <concept_id>10010520.10010553.10010562</concept_id>
-  <concept_desc>Computer systems organization~Embedded systems</concept_desc>
-  <concept_significance>500</concept_significance>
- </concept>
- <concept>
-  <concept_id>10010520.10010575.10010755</concept_id>
-  <concept_desc>Computer systems organization~Redundancy</concept_desc>
-  <concept_significance>300</concept_significance>
- </concept>
- <concept>
-  <concept_id>10010520.10010553.10010554</concept_id>
-  <concept_desc>Computer systems organization~Robotics</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
- <concept>
-  <concept_id>10003033.10003083.10003095</concept_id>
-  <concept_desc>Networks~Network reliability</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
-</ccs2012>  
+<concept>
+<concept_id>10003033.10003099.10003102</concept_id>
+<concept_desc>Networks~Programmable networks</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003033.10003083.10003095.10010752</concept_id>
+<concept_desc>Networks~Error detection and error correction</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+<concept>
+<concept_id>10003033.10003106.10003110</concept_id>
+<concept_desc>Networks~Data center networks</concept_desc>
+<concept_significance>100</concept_significance>
+</concept>
+</ccs2012>
 \end{CCSXML}
 
-\ccsdesc[500]{Computer systems organization~Embedded systems}
-\ccsdesc[300]{Computer systems organization~Redundancy}
-\ccsdesc{Computer systems organization~Robotics}
-\ccsdesc[100]{Networks~Network reliability}
+\ccsdesc[500]{Networks~Programmable networks}
+\ccsdesc[300]{Networks~Error detection and error correction}
+\ccsdesc[100]{Networks~Data center networks}
 
 % We no longer use \terms command
 %\terms{Theory}
 
-\keywords{ACM proceedings}
+\keywords{P4, FPGA, In-Network Computing, Fault Mitigation}
 
 
 \maketitle

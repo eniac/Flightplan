@@ -21,7 +21,7 @@
    (from 0 to FEC_MAX_N-1). The last element in the array must be FEC_MAX_N,
    marking the end of erasure list. For example, to erasure the second (index = 1)
    and fifth (index = 4) packets, the list would be: {1,4, FEC_MAX_N} */
-int Default_erase_list[FEC_MAX_N] = {10, FEC_MAX_N};
+int Default_erase_list[FEC_MAX_N] = {1, 4, FEC_MAX_N};
 
 /***************************************************************************/
 /* Options                                                                 */

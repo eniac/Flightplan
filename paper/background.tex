@@ -15,7 +15,7 @@ and our design is based on properties of the medium: we concentrate on wireline
 rates) and they are not shared (i.e., point-to-point).
 Instead of using an ARQ scheme as in X.25 and 802.11, we use forward
 error-correction (FEC).
-This simplifies our design, obviating the need for windows and this
+This simplifies our design, obviating the need for retransmission windows and this
 diminishes the memory needed for in-flight data since the sender will
 not attempt to resend a frame.
 
@@ -40,11 +40,13 @@ topologies~\cite{clos_bstj1953},
 which are used in datacenters~\cite{Singh:2016:JRD:2991470.2975159}.
 We believe that our design could be useful in mitigating faulty links in a Clos
 topology due to the large number links it uses when compared to a
-hierarchical topology~\cite{Al-Fares:2008:SCD:1402946.1402967}, which makes exposes it more to link-related faults.
+hierarchical topology~\cite{Al-Fares:2008:SCD:1402946.1402967}, which 
+%makes  -- AMD don't want "makes exposes" -- pick one...
+exposes it more to link-related faults.
 
 Centralized approaches have been described in the literature to mitigate
 faulty links in a WAN~\cite{traffic-engineering-with-forward-fault-correction}
 and datacenters~\cite{Zhuo:2017:UMP:3098822.3098849}. In comparison our approach
 is not centralized, and takes place in the network: a switch can activate
-FEC with adjacent switches over faulty links, until the links are replaced or
+FEC with adjacent switches over faulty links until the links are replaced or
 repaired.

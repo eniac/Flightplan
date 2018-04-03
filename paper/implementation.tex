@@ -156,15 +156,8 @@ to the header processor.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.4\paperwidth]{figures/sdnet-interface.png}
+  \includegraphics[width=0.4\paperwidth]{figures/sdnet-interface.pdf}
   \caption{\label{fig:sdnet-interface}Abstraction provided by each layer; grey blocks are translated to the pipeline illustrated in next level.}
-  \hg{I find this diagram confusing.  "SDNet" is not a language as opposed to
-      P4 and C.  In reality, the packets go from P4
-      to a user engine that is written in Verilog.  The user engine
-      is a simple wrapper that in turn forwards the packets to C.}
-  \lei{SDNet IS a language. We can absolutely implement everything P4 does solely in SDNet.}
-  \hg{The language is called PX, not SDNet.  P4 is translated into PX, so packets never
-      go from P4 to PX.  If packets are in P4, they are in PX, and vice versa.}
 \end{figure}
 
 \iffalse
@@ -205,7 +198,7 @@ work-in-progress.
 %The current implementation is limited to packet encoding, but our intention is
 %to implement the decoder too.
 
-In \OurSys, error correction is performed with a Reed-Solomon erasure (RSE) code~\cite{rse}
+In \OurSys, error correction is performed with a Reed-Solomon erasure (RSE) code~\cite{rse}.
 %\hg{Note that this reference covers only error correction, not dealing with erasures}.
 % Erasure codes
 %require prior knowledge of which packets data is missing, as opposed to regular

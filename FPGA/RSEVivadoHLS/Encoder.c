@@ -35,7 +35,16 @@ static fec_sym GF_exp(fec_sym X)
 {
 #pragma HLS inline
   static fec_sym Table[FEC_N];
+#ifdef IN_SOFTWARE
+  static int Initialized = 0;
+  if (!Initialized)
+  {
+    Generate_exp_table(Table);
+    Initialized = 1;
+  }
+#else
   Generate_exp_table(Table);
+#endif
   return Table[X];
 }
 
@@ -44,7 +53,16 @@ static fec_sym GF_log(fec_sym X)
 {
 #pragma HLS inline
   static fec_sym Table[FEC_N];
+#ifdef IN_SOFTWARE
+  static int Initialized = 0;
+  if (!Initialized)
+  {
+    Generate_log_table(Table);
+    Initialized = 1;
+  }
+#else
   Generate_log_table(Table);
+#endif
   return Table[X];
 }
 
@@ -90,7 +108,16 @@ static fec_sym GF_invert(fec_sym X)
 {
 #pragma HLS inline
   static fec_sym Table[FEC_N];
+#ifdef IN_SOFTWARE
+  static int Initialized = 0;
+  if (!Initialized)
+  {
+    Generate_invert_table(Table);
+    Initialized = 1;
+  }
+#else
   Generate_invert_table(Table);
+#endif
   return Table[X];
 }
 
@@ -204,7 +231,16 @@ void Incremental_encode(fec_sym Data, fec_sym Parity[FEC_MAX_H], int Packet_inde
 #pragma HLS inline
   static fec_sym Generator[FEC_MAX_H][FEC_MAX_K];
 #pragma HLS ARRAY_PARTITION variable=Generator complete dim=0
+#ifdef IN_SOFTWARE
+  static int Initialized = 0;
+  if (!Initialized)
+  {
+    Generate_generator(Generator);
+    Initialized = 1;
+  }
+#else
   Generate_generator(Generator);
+#endif
 
   for (int i = 0; i < FEC_MAX_H; i++)
     if (i < h)

@@ -5,17 +5,16 @@ network performance and programmability easier: one can increasingly
 afford both.
 This has enabled research into hardware implementations of various
 applications that were previously confined to software for
-programmability, or to expensive and inflexible ASICs for performance.
+programmability or to expensive and inflexible ASICs for performance.
 
 Most prior research in this area has adapted \emph{existing}
 applications to run in hardware at line rate.
 Example applications include
 key-value stores~\cite{Li:2017:KHI:3132747.3132756},
-%network testing~\cite{Shahbaz:2013:AOS:2537857.2537880},
-and
-network stacks~\cite{Istvan:2016:CBI:2930611.2930639}.
-%consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
-%regex matching on payloads~\cite{Woods:2010:CED:1920841.1920926},
+network testing~\cite{Shahbaz:2013:AOS:2537857.2537880},
+network stacks~\cite{Istvan:2016:CBI:2930611.2930639},
+consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
+and regex matching on payloads~\cite{Woods:2010:CED:1920841.1920926}.
 %and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
 
 In this paper we describe \OurSys, which to our knowledge is the first application
@@ -43,12 +42,12 @@ design using ns-3.
 especially helpful in mitigating failing links in datacenters, which has
 previously been studied by Zhuo et al.~\cite{Zhuo:2017:UMP:3098822.3098849}.
 Datacenter networks are ever more expansive and their architecture involves a
-large number of links to attain a larger bisection bandwidth. Their
+large number of links to attain a larger bisection bandwidth~\cite{Singh:2016:JRD:2991470.2975159}. Their
 performance is critical to many widely-used applications, including those
 running on private and public clouds. Faulty  links have a significant impact
 on these applications, as Figure~\ref{fig:timeVsTput}  illustrates. The
 current practice of polling and disabling links from the edge of the network
-reacts slowly, and adds more contention over non-failing links. \OurSys can help
+reacts slowly and adds more contention over non-failing links. \OurSys can help
 make such networks more resilient to failing links, with minimal configuration
 overhead.
 
