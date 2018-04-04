@@ -5,6 +5,8 @@ Tool for generating packets for RTL simulation of FEC booster
 
 import argparse
 import dpkt
+import random
+import re
 import struct
 
 def main():
@@ -12,9 +14,12 @@ def main():
   Main packet generator function
   """
   parser = argparse.ArgumentParser()
-  parser.add_argument('filename', action = 'store', help = 'Output file')
-  parser.add_argument('-t', dest = 'filetype', action = 'store', default = 'text',
-                      choices = ['text', 'pcap', 'axi'], help = 'Output file type')
+  parser.add_argument('-t', dest = 'textFilename', action = 'store',
+                      help = 'Output text file')
+  parser.add_argument('-p', dest = 'pcapFilename', action = 'store',
+                      help = 'Output PCAP file')
+  parser.add_argument('-a', dest = 'axiFilename', action = 'store',
+                      help = 'Output AXI file')
   parser.add_argument('-k', dest = 'k', action = 'store', default = 8,
                       type = int, help = 'Untagged data packets per block (k)')
   parser.add_argument('-f', dest = 'h', action = 'store', default = 4,
@@ -22,8 +27,8 @@ def main():
   parser.add_argument('-b', dest = 'blockCount', action = 'store', default = 3,
                       type = int, help = 'Number of blocks')
   parser.add_argument('-l', dest = 'payloadLength', action = 'store',
-                      default = 1024, type = int,
-                      help = 'Payload length in bytes')
+                      default = 1024, help = 'Payload length in bytes.  ' \
+                      'Specify a range (e.g., 512-1024) for random values.')
   args = parser.parse_args()
 
   packets = []
@@ -35,12 +40,12 @@ def main():
       packets.append(generateParityPacket(packetIndex = i, k = args.k,
                                           payloadLength = args.payloadLength))
 
-  if args.filetype == 'pcap':
-    outputPCAPFile(args.filename, packets)
-  if args.filetype == 'text':
-    outputTextFile(args.filename, packets)
-  if args.filetype == 'axi':
-    outputAXIFile(args.filename, packets)
+  if args.pcapFilename != None:
+    outputPCAPFile(args.pcapFilename, packets)
+  if args.textFilename != None:
+    outputTextFile(args.textFilename, packets)
+  if args.axiFilename != None:
+    outputAXIFile(args.axiFilename, packets)
 
 def generateDataPacket(addrDst = '000000000000'.decode('hex'),
                        addrSrc = '000000000000'.decode('hex'),
@@ -48,8 +53,9 @@ def generateDataPacket(addrDst = '000000000000'.decode('hex'),
   """
   Generate a single data packet without tag.
   """
+  length = pickPayloadLength(payloadLength)
   payloadByte = (str(packetIndex + 1) * 2).decode("hex")
-  payload = payloadByte * payloadLength;
+  payload = payloadByte * length;
   return dpkt.ethernet.Ethernet(dst = addrDst, src = addrSrc, type = 0,
                                 data = payload)
 
@@ -61,9 +67,10 @@ def generateParityPacket(addrDst = '000000000000'.decode('hex'),
   Generate a single parity packet with tag, identical to packets produced by
   the feedback loop.
   """
+  length = pickPayloadLength(payloadLength)
   tag = struct.pack("!H", packetIndex)
   payloadByte = (str(packetIndex + 1) * 2).decode("hex")
-  payload = tag + payloadByte * payloadLength;
+  payload = tag + payloadByte * length;
   return dpkt.ethernet.Ethernet(dst = addrDst, src = addrSrc, type = 0x8000,
                                 data = payload)
 
@@ -115,7 +122,21 @@ def outputAXIFile(filename, packets):
         end = 1 if len(data) == 0 else 0
         mask = 0xFF >> (8 - len(word) / 2)
         word = word + "0" * (16 - len(word))
-        textFile.write(str(end) + ' ' + '{:02x}'.format(mask) + ' ' + word[::-1] + '\n')
+        line = str(end) + ' ' + '{:02x}'.format(mask) + ' ' + word[::-1] + '\n'
+        textFile.write(line)
+
+def pickPayloadLength(length):
+  """
+  Choose a payload length based on the command line argument.
+  """
+  result = re.match(r'(\S+)-(\S+)', length)
+  if result != None:
+    start = int(result.group(1))
+    end = int(result.group(2))
+    length = random.randint(start, end)
+  else:
+    length = int(length)
+  return length
 
 if __name__ == '__main__':
   main()

@@ -97,7 +97,7 @@ static void Encode_packet(tuple_interface Tuple, packet_interface * Data,
       {
         int Initialize = (Tuple.Operation & FEC_OP_START_ENCODER)
             || Offset >= Maximum_packet_length;
-        fec_sym Symbol = (Input.Data >> (8 * Byte_offset)) & 0xFF;
+        fec_sym Symbol = (Input.Data >> 8 * (7 - Byte_offset)) & 0xFF;
         Incremental_encode(Symbol, Parity_buffer[Offset], Tuple.Index,
         FEC_MAX_H, Initialize);
       }
@@ -142,7 +142,7 @@ void Output_parity_packets(tuple_interface Tuple, packet_interface * Data,
     Input_finished = Input.End_of_frame;
 
     unsigned Packet_length = Maximum_packet_length + HEADER_SIZE + LENGTH_SIZE;
-    End = Word_offset == Packet_length / 8;
+    End = Word_offset == (Packet_length - 1) / 8;
 
     packet_interface Output;
     Output.Data = 0;
@@ -155,22 +155,25 @@ void Output_parity_packets(tuple_interface Tuple, packet_interface * Data,
         Input_byte = Input.Data >> (8 * Byte_offset);
       }
       else if (Offset < PAYLOAD_OFFSET)
-    {
+      {
         unsigned Length_offset = Offset - LENGTH_OFFSET;
         Input_byte = Packet_length_parity[Length_offset][Tuple.Index - FEC_MAX_K];
-    }
-    else if (Offset < Packet_length)
-    {
-      unsigned Payload_offset = Offset - PAYLOAD_OFFSET;
-    Input_byte = Parity_buffer[Payload_offset][Tuple.Index - FEC_MAX_K];
-    }
-      Output.Data |= (uint64) Input_byte << (8 * Byte_offset);
+      }
+      else if (Offset < Packet_length)
+      {
+        unsigned Payload_offset = Offset - PAYLOAD_OFFSET;
+        Input_byte = Parity_buffer[Payload_offset][Tuple.Index - FEC_MAX_K];
+      }
+
+      Output.Data <<= 8;
+      Output.Data |= Input_byte;
       Offset++;
     }
 
     Output.Start_of_frame = Word_offset == 0;
     Output.End_of_frame = End;
-    Output.Count = End ? Packet_length % 8 : 8;
+    unsigned Remainder = Packet_length % 8;
+    Output.Count = End && Remainder != 0 ? Remainder : 8;
     Output.Error = Input.Error;
 
     Parity[Word_offset++] = Output;

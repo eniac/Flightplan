@@ -6,6 +6,8 @@
 
 namespace SDNET {
 
+#define BUFFER_SIZE (FEC_MAX_PACKET_SIZE + FEC_PACKET_LENGTH_SIZE / 8)
+
 //######################################################
 class fec_0_t { // UserEngine
 public:
@@ -92,17 +94,11 @@ public:
 	fec_input_t fec_input;
 	fec_output_t fec_output;
 
-
-	// TODO: ***************************
-	// TODO: *** USER ENGINE MEMBERS ***
-	// TODO: ***************************
+	int maximum_packet_size;
 
 	// engine ctor
 	fec_0_t(std::string _n, std::string _filename = "") : _name(_n) {
 
-		// TODO: **********************************
-		// TODO: *** USER ENGINE INITIALIZATION ***
-		// TODO: **********************************
 	  	int ret = rse_init();
 		std::cout<< "[P4] rse init result: "<<ret<<std::endl;      
 	}
@@ -123,9 +119,6 @@ public:
 		fec_output = 0;
 		std::cout << "	fec_output = " << fec_output.to_string() << std::endl;
 
-		// TODO: *********************************
-		// TODO: *** USER ENGINE FUNCTIONALITY ***
-		// TODO: *********************************
 		if (fec_input.stateful_valid.to_ulong() == 1)
 		{
 			unsigned long op = fec_input.operation.to_ulong();
@@ -147,11 +140,15 @@ public:
 						delete fb.pdata[i];
 						fb.pdata[i] = nullptr;
 					}
-					fb.pdata[i] = new fec_sym[1600];
+					fb.pdata[i] = new fec_sym[BUFFER_SIZE];
+					for (int j = 0; j < BUFFER_SIZE; j++)
+						fb.pdata[i][j] = 0;
 				}
 
-				fb.block_C = 1600;
+				fb.block_C = BUFFER_SIZE;
 				fb.block_N = FEC_K+FEC_H;
+
+				maximum_packet_size = 0;
 			}
 
 			if (op & FEC_OP_ENCODE_PACKET)
@@ -170,11 +167,12 @@ public:
 				fb.pstat[index] = FEC_FLAG_KNOWN;
 				std::cout<< "[P4] Encoder: stored a packet at position " << index<<std::endl;
 
+				if (packet_in.size() > maximum_packet_size)
+					maximum_packet_size = packet_in.size();
 
 				fec_sym y = FEC_K + index;                                  /* FEC block index */
 				fec_sym z = FEC_MAX_N - index - 1;             /* Codeword index */
 				fb.cbi[y] = z;
-				fb.plen[y] = fb.block_C;
 				fb.pstat[y] = FEC_FLAG_WANTED;
 
 				if (index == FEC_K-1)
@@ -192,7 +190,11 @@ public:
 				{
 					packet_out.pop_back();
 				}
-				for (int i = 0; i<packet_size - 2; i++)
+				for (int i = FEC_MAX_PACKET_SIZE; i < BUFFER_SIZE; i++)
+                                {
+					packet_out.push_back(p[i]);
+                                }
+				for (int i = 0; i<maximum_packet_size; i++)
 				{
 					packet_out.push_back(p[i]);
 				}
