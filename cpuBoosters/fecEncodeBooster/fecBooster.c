@@ -57,8 +57,8 @@ void call_fec_blk_get(int blockId) {
 
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	fec_sym p[FEC_MAX_N][FEC_MAX_COLS];   /* storage for packets in FEC block (fb) */
-	fec_sym k = NUM_DATA_PACKETS; /*TODO: change to macro*/
-	fec_sym h = NUM_PARITY_PACKETS; /*TODO: change to macro*/
+	fec_sym k = NUM_DATA_PACKETS;
+	fec_sym h = NUM_PARITY_PACKETS;
 	fec_sym o = 0;
 	fec_sym c = 2;
 	fec_sym s = 3;
@@ -158,8 +158,7 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 	// fprintf(stderr, "At the top of fec_blk_get\n");
 	fec_sym i, y, z;
 	int maxPacketLength = 0;
-	fb.block_N = k + h; /*TODO: replace this with a macro later.*/
-
+	fb.block_N = k + h; 
 	/* Put C random symbols into each of the K data packets */
 	for (i = 0; i < k; i++) {
 		if (i >= FEC_MAX_K) {
@@ -377,23 +376,41 @@ static unsigned int class_id = 0;
 static unsigned int block_id = 0;
 static unsigned int frame_index = 0;
 
+
+/**
+ * @brief      Encapsulate the packet with new header.
+ *  		   so the new resulting packet looks like NEW_ETH_HEADER | WHARF_TAG | oldPacket 
+ * 
+ * @return     resulting size of the newly encapsulated packet.
+ */
 int wharf_tag_frame(const u_char* packet, int size, u_char** result) {
   if (size >= FRAME_SIZE_CUTOFF) {
     fprintf(stderr, "Frame too big for tagging (%d)", size);
     exit(1);
   }
+
+  /* make space for the new header to be added */
   const int extra_header_size = sizeof(struct ether_header) + sizeof(struct fec_header);
   *result = (u_char *)malloc(size + extra_header_size);
+
+  /* Copy over the etherHeader from the original packet */
   memcpy(*result, packet, sizeof(struct ether_header));
+
+  /* Copy over the original packet as is.*/
   memcpy(*result + sizeof(struct ether_header) + sizeof(struct fec_header), packet, size);
+
+  /* Replace the ether_type in the new ether header with wharf_ethertype*/
   struct ether_header *eth_header = (struct ether_header *)*result;
   eth_header->ether_type=htons(WHARF_ETHERTYPE);
+
+  /* Populate the wharf tag with the block_id, packet_id, class, & packetsize*/
   struct fec_header *tag = (struct fec_header *)(*result + sizeof(struct ether_header));
   tag->class_id = class_id;
   tag->block_id = block_id;
   tag->index = frame_index;
   tag->size = size;
 
+  /* update the block_id and packet_id */
   frame_index = (frame_index + 1) % NUM_DATA_PACKETS;
   if (0 == frame_index) {
     block_id = (block_id + 1) % MAX_BLOCK;
@@ -402,12 +419,16 @@ int wharf_tag_frame(const u_char* packet, int size, u_char** result) {
   return size + extra_header_size;
 }
 
+/*Removes the added wharf & new ether tag and returns the original packet*/
 int wharf_strip_frame(u_char* packet, int size) {
   struct ether_header *eth_header = (struct ether_header *)packet;
+  /*If not a wharf encoded packet*/
   if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
     fprintf(stderr, "Cannot strip non-Wharf frame");
     exit(1);
   }
+
+  /*extract the original size and copy in place*/
   struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
   if (tag->index >= NUM_DATA_PACKETS) {
     fprintf(stderr, "Cannot strip non-data Wharf frame");
