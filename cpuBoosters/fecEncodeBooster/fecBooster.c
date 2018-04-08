@@ -152,6 +152,17 @@ void zeroout_block_in_pkt_buffer(int blockId) {
 }
 
 /*
+ * Returns the size of original packet + sizeof(FRAME_SIZE_TYPE) 
+ */
+int updated_get_payload_length_for_pkt (u_char* packet){
+
+	FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(packet);
+	int payloadLength = *original_frame_size + sizeof(FRAME_SIZE_TYPE);
+
+	return payloadLength;
+}
+
+/*
  * Create Random Data and Blank Parity packets and link to the FEC block (fb)
  */
 void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
@@ -159,17 +170,22 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 	fec_sym i, y, z;
 	int maxPacketLength = 0;
 	fb.block_N = k + h; 
-	/* Put C random symbols into each of the K data packets */
+	
+	/* copy the K data packets from packet buffer */
 	for (i = 0; i < k; i++) {
 		if (i >= FEC_MAX_K) {
 			fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
 			exit (33);
 		}
 
-		fec_sym* payloadStart = (fec_sym*) get_payload_start_for_packet(pkt_buffer[blockId][i]);
-		int payloadLength = get_payload_length_for_pkt(pkt_buffer[blockId][i]);
+		// fec_sym* payloadStart = (fec_sym*) get_payload_start_for_packet(pkt_buffer[blockId][i]);
+		// int payloadLength = get_payload_length_for_pkt(pkt_buffer[blockId][i]);
 
-		fb.pdata[i] = payloadStart;
+		fec_sym* payloadStart = (fec_sym*) pkt_buffer[blockId][i];
+
+		int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
+
+		fb.pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
 		fb.cbi[i] = i;
 		fb.plen[i] = payloadLength;
 
@@ -192,7 +208,6 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 			exit (34);
 		}
 		y = k + i;                                  /* FEC block index */
-	//(	fec_dbg_printf)(" The payloadlength for %d is %d\n", y, get_payload_length_for_pkt(pkt_buffer[blockId][y]));
 		z = FEC_MAX_N - o - i - 1;             /* Codeword index */
 		fb.pdata[y] = p[y];
 		fb.cbi[y] = z;
@@ -232,7 +247,6 @@ int get_payload_length_for_pkt(char* packet) {
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
 	int sizeIP = IP_HL(ip) * 4;
 	if (sizeIP < 20) {
-	//(	fec_dbg_printf)("size0\n");
 		return -1;
 	}
 
@@ -271,14 +285,14 @@ int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 
 		/* compute ip header offset */
 		/*Skip the ether header, wharf header, old ether_type*/
-		ip = (struct sniff_ip*)(packet + WHARF_ORIG_FRAME_OFFSET); 
+		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG); 
 		int sizeIP = IP_HL(ip) * 4;
 		if (sizeIP < 20) {
 		//(	fec_dbg_printf)("size0\n");
 			return -1;
 		}
 
-		int totalHeaderSize =  WHARF_ORIG_FRAME_OFFSET + sizeIP;
+		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
 
 		/*update the parity packet in the pkt buffer.*/
 		// char* parityPacket = (char *) malloc(totalMallocSize);
@@ -301,9 +315,12 @@ int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 int copy_parity_packets_to_pkt_buffer(int blockId) {
 	int startIndexOfParityPacket = NUM_DATA_PACKETS;
 	int sizeOfParityPackets = fb.plen[startIndexOfParityPacket];
+
 	for (int i = startIndexOfParityPacket; i < (startIndexOfParityPacket + NUM_PARITY_PACKETS); i++) {
+		/*FIXME: Not sure if we need to this here.*/
 		FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(pkt_buffer[blockId][i]);
 		*original_frame_size = sizeOfParityPackets;
+
 		memcpy(pkt_buffer[blockId][i] + sizeof(FRAME_SIZE_TYPE), fb.pdata[i], sizeOfParityPackets);
 		pkt_buffer_filled[blockId][i] = PACKET_PRESENT;
 	}
@@ -314,7 +331,7 @@ void modify_IP_headers_for_parity_packets(int payloadSize, char* packet) {
 	struct sniff_ip *ip;              /* The IP header */
 
 	/* compute ip header offset */
-	ip = (struct sniff_ip*)(packet + WHARF_ORIG_FRAME_OFFSET);
+	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
 	int sizeIP = IP_HL(ip) * 4;
 	if (sizeIP < 20) {
 	//(	fec_dbg_printf)("size0\n");
@@ -411,7 +428,7 @@ int wharf_tag_frame(const u_char* packet, int size, u_char** result) {
   tag->size = size;
 
   /* update the block_id and packet_id */
-  frame_index = (frame_index + 1) % NUM_DATA_PACKETS;
+  frame_index = (frame_index + 1) % (NUM_DATA_PACKETS + NUM_PARITY_PACKETS);
   if (0 == frame_index) {
     block_id = (block_id + 1) % MAX_BLOCK;
   }
