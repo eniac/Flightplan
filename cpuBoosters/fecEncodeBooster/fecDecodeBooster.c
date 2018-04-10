@@ -63,14 +63,13 @@ void my_packet_handler(
 	}
 	const struct fec_header *fecHeader = (struct fec_header *)(packet + sizeof(struct ether_header));
 
-#if 0
+#if WHARF_DEBUGGING
 	printf("class_id=%d block_id=%d index=%d size=%d\n", fecHeader->class_id, fecHeader->block_id,
 		fecHeader->index, fecHeader->size);
 #endif
 
 // FIXME WIP
 // #if 0
-	fprintf(stderr, "blockID: %d, packetID: %d\n", fecHeader->block_id, fecHeader->index);
 	if (fecHeader->block_id != lastBlockId) {
 		decode_and_forward(fecHeader->block_id);
 		lastBlockId = fecHeader->block_id;
