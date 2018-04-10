@@ -66,7 +66,7 @@ void my_packet_handler(
 	if (is_all_data_pkts_recieved_for_block(currBlockID)) {
 
 		/* Populate the global fec structure for rse encoder and call the encode */
-		call_fec_blk_get(currBlockID); // FIXME check this
+		call_fec_blk_get(currBlockID);
 
 		/* Encoder */
 		encode_block();
