@@ -94,7 +94,7 @@ void my_packet_handler(
 		pkt_buffer_filled[fecHeader->block_id][fecHeader->index] = PACKET_PRESENT;
 	}
 	else {
-		// fprintf(stderr, "Not buffering duplicate packet\n");
+		fprintf(stderr, "Not buffering duplicate packet\n");
 	}
 // #endif
 }
