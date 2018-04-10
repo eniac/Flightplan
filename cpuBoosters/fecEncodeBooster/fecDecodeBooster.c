@@ -16,7 +16,7 @@ void decode_and_forward(const int block_id) {
 		return;
 	}
 
-	call_fec_blk_get(block_id); // FIXME check this
+	call_fec_blk_get(block_id);
 
 	decode_block();
 
