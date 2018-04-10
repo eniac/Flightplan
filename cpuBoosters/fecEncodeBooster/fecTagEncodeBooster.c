@@ -40,7 +40,7 @@ void my_packet_handler(
 		zeroout_block_in_pkt_buffer(lastBlockId);
 	}
 
-	/* Forward data packets and also buffer simulaneously(Needed for encoder) */
+	/* Forward data packet now, then buffer it below (Needed for encoder) */
 	if (fecHeader->index < NUM_DATA_PACKETS) {
 		forward_frame(new_packet, tagged_size);
 	}
