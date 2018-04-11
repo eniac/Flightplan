@@ -43,7 +43,7 @@ void decode_and_forward(const int block_id) {
 	}
 
 #if WHARF_DEBUGGING
-	printf("num_recovered_packets=%d\n", num_recovered_packets);
+	printf("num_recovered_packets=%d\n", num_recovered_packets); // FIXME this is always printing the total number of data packets in the block.
 #endif // WHARF_DEBUGGING
 
 	reset_decoder (block_id);
