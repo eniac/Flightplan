@@ -29,13 +29,22 @@ void decode_and_forward(const int block_id) {
 
 	copy_data_packets_to_pkt_buffer(block_id);
 
+#if WHARF_DEBUGGING
+	int num_recovered_packets = 0;
+#endif // WHARF_DEBUGGING
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
 		if (pkt_buffer_filled[block_id][i] == PACKET_RECOVERED) {
+			num_recovered_packets += 1;
+
 			char* packetToInject = pkt_buffer[block_id][i];
 			size_t outPktLen = get_total_packet_size(packetToInject);
 			forward_frame(packetToInject, outPktLen);
 		}
 	}
+
+#if WHARF_DEBUGGING
+	printf("num_recovered_packets=%d\n", num_recovered_packets);
+#endif // WHARF_DEBUGGING
 
 	reset_decoder (block_id);
 }
@@ -71,7 +80,7 @@ void my_packet_handler(
 #if WHARF_DEBUGGING
 	printf("class_id=%d block_id=%d index=%d size=%d\n", fecHeader->class_id, fecHeader->block_id,
 		fecHeader->index, fecHeader->size);
-#endif
+#endif // WHARF_DEBUGGING
 
 	if (fecHeader->block_id != lastBlockId) {
 		decode_and_forward(fecHeader->block_id);
