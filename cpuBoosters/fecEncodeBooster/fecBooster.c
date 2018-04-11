@@ -53,8 +53,6 @@ void free_pkt_buffer() {
  */
 void call_fec_blk_get(int blockId) {
 
-	int rc;
-
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	fec_sym p[FEC_MAX_N][FEC_MAX_COLS];   /* storage for packets in FEC block (fb) */
 	fec_sym k = NUM_DATA_PACKETS;
@@ -177,11 +175,6 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 			fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
 			exit (33);
 		}
-
-		// fec_sym* payloadStart = (fec_sym*) get_payload_start_for_packet(pkt_buffer[blockId][i]);
-		// int payloadLength = get_payload_length_for_pkt(pkt_buffer[blockId][i]);
-
-		fec_sym* payloadStart = (fec_sym*) pkt_buffer[blockId][i];
 
 		int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
 
@@ -310,6 +303,7 @@ int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 		// // Set filled.
 		// pkt_buffer_filled[blockId][i] = PACKET_PRESENT;
 	}
+	return 0;
 }
 
 int copy_parity_packets_to_pkt_buffer(int blockId) {
@@ -349,7 +343,6 @@ void modify_IP_headers_for_parity_packets(int payloadSize, char* packet) {
 /* Computes the checksum of the IP header. */
 u_short compute_csum(struct sniff_ip *ipHeader , int len) {
 	long sum = 0;  /* assume 32 bit long, 16 bit short */
-	int i = 0;
 	unsigned short* ip = (unsigned short*) ipHeader;
 	while (len > 1) {
 		sum += *ip;
@@ -536,7 +529,7 @@ int main (int argc, char** argv) {
 	free_pkt_buffer();
 }
 
-int copy_data_packets_to_pkt_buffer(int blockId) {
+void copy_data_packets_to_pkt_buffer(int blockId) {
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
 		if (PACKET_PRESENT != pkt_buffer_filled[blockId][i]) {
 			const FRAME_SIZE_TYPE original_frame_size = (FRAME_SIZE_TYPE)(*pkt_buffer[blockId][i]);
