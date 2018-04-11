@@ -17,12 +17,12 @@
 extern int workerId;
 extern int workerCt;
 
-extern pcap_t *handle; /*PCAP handle*/
+extern pcap_t *handle;
 
 extern int cnt;
 
-extern char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
-extern int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
+extern char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS];
+extern int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS];
 
 extern int Default_erase_list[FEC_MAX_N];
 
@@ -47,7 +47,7 @@ void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
 int wharf_tag_frame(const u_char* packet, int size, u_char** result);
 int wharf_strip_frame(u_char* packet, int size);
-#define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header)) /* etherHeader + wharfHeader*/
+#define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header))
 
 void print_hex_memory(void *mem, int len);
 void forward_frame(const void * packet, int len);
