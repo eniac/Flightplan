@@ -83,7 +83,7 @@ void my_packet_handler(
 #endif // WHARF_DEBUGGING
 
 	if (fecHeader->block_id != lastBlockId) {
-		decode_and_forward(fecHeader->block_id);
+		decode_and_forward(lastBlockId);
 		lastBlockId = fecHeader->block_id;
 		alarm(WHARF_DECODE_TIMEOUT);
 		signal(SIGALRM, sigalrm_handler);
