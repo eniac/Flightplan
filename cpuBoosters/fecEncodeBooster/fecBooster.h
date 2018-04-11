@@ -60,5 +60,5 @@ void free_pkt_buffer();
 #define PACKET_PRESENT 1
 #define PACKET_RECOVERED 2
 
-// FIXME lower WHARF_DECODE_TIMEOUT when alarm-handling is improved wrt re-entrancy.
-#define WHARF_DECODE_TIMEOUT 10
+// WHARF_DECODE_TIMEOUT==0 means we're not using the timeout, otherwise it's the seconds before a block is timed out.
+#define WHARF_DECODE_TIMEOUT 0

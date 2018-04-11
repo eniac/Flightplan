@@ -10,7 +10,9 @@ bool nothing_to_decode = true; // This is true when the buffer doesn't contain a
 int lastBlockId = 0;
 
 inline void reset_decoder (const int block_id) {
+#if WHARF_DECODE_TIMEOUT != 0
 	signal(SIGALRM, SIG_IGN);
+#endif // WHARF_DECODE_TIMEOUT != 0
 	nothing_to_decode = true;
 	zeroout_block_in_pkt_buffer(block_id);
 }
@@ -49,14 +51,16 @@ void decode_and_forward(const int block_id) {
 	reset_decoder (block_id);
 }
 
+#if WHARF_DECODE_TIMEOUT != 0
 void sigalrm_handler(int signal) {
 	if (signal != SIGALRM) {
 		fprintf(stderr, "Unexpected signal: %d\n", signal);
 		exit(1);
 	}
 
-	decode_and_forward(lastBlockId);
+	decode_and_forward(lastBlockId); // FIXME ensure the function is reentrant
 }
+#endif // WHARF_DECODE_TIMEOUT != 0
 
 /**
  * @brief      packet handler function for pcap
@@ -85,8 +89,10 @@ void my_packet_handler(
 	if (fecHeader->block_id != lastBlockId) {
 		decode_and_forward(lastBlockId);
 		lastBlockId = fecHeader->block_id;
+#if WHARF_DECODE_TIMEOUT != 0
 		alarm(WHARF_DECODE_TIMEOUT);
 		signal(SIGALRM, sigalrm_handler);
+#endif // WHARF_DECODE_TIMEOUT != 0
 	}
 
 	// Forward data packets immediately
