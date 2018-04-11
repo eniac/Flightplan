@@ -5,9 +5,11 @@ DECODER_NAME=fecDecodeBooster
 BOOSTER_NAME="${ENCODER_NAME}_${DECODER_NAME}"
 INPUT_PCAP=$1
 OUTPUT_PCAP=$(dirname "$INPUT_PCAP")/$BOOSTER_NAME/"_veth_"$(basename "$INPUT_PCAP")
+ENCODED_OUTPUT_PCAP=$(dirname "$INPUT_PCAP")/$BOOSTER_NAME/"_veth_Encoded_"$(basename "$INPUT_PCAP")
 echo "testing booster $BOOSTER_NAME with veth pairs."
 echo "input pcap: $INPUT_PCAP"
 echo "output pcap: $OUTPUT_PCAP"
+echo "encoded output pcap: $ENCODED_OUTPUT_PCAP"
 
 if ! [ $(id -u) = 0 ]; then
    echo "The script need to be run as root." >&2
@@ -76,9 +78,11 @@ done
 
 sleep 1
 # start tcpdump to collect the packets that come back into the network from the device.
-echo "starting tcpdump... OUTPUT_PCAP=$OUTPUT_PCAP"
+echo "starting tcpdump... OUTPUT_PCAP=$OUTPUT_PCAP and ENCODED_OUTPUT_PCAP=$ENCODED_OUTPUT_PCAP"
 rm $OUTPUT_PCAP
 tcpdump -Q in -i backVeth4 -w $OUTPUT_PCAP &
+rm $ENCODED_OUTPUT_PCAP
+tcpdump -Q in -i backVeth2 -w $ENCODED_OUTPUT_PCAP &
 sleep 1
 
 # start tcpreplay to send input from the network to the device (at 1k pps).
@@ -88,6 +92,7 @@ sleep 1
 
 # cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
+chown $real_user:$real_user $ENCODED_OUTPUT_PCAP
 killall tcpdump
 killall $ENCODER_NAME
 killall $FORWARD_NAME
