@@ -529,7 +529,7 @@ void copy_data_packets_to_pkt_buffer(int blockId) {
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
 		if (PACKET_PRESENT != pkt_buffer_filled[blockId][i]) {
 			const FRAME_SIZE_TYPE original_frame_size = (FRAME_SIZE_TYPE)(*pkt_buffer[blockId][i]);
-			memcpy(pkt_buffer[blockId][i] + sizeof(FRAME_SIZE_TYPE), fb.pdata[i], original_frame_size);
+			memcpy(pkt_buffer[blockId][i], fb.pdata[i] + sizeof(FRAME_SIZE_TYPE), original_frame_size);
 			pkt_buffer_filled[blockId][i] = PACKET_RECOVERED;
 		}
 	}
