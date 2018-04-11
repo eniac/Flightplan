@@ -59,4 +59,5 @@ void free_pkt_buffer();
 #define PACKET_PRESENT 1
 #define PACKET_RECOVERED 2
 
-#define WHARF_DECODE_TIMEOUT 1
+// FIXME lower WHARF_DECODE_TIMEOUT when alarm-handling is improved wrt re-entrancy.
+#define WHARF_DECODE_TIMEOUT 10
