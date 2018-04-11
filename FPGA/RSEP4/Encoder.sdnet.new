@@ -1,0 +1,296 @@
+
+struct switch_metadata_t {
+  ingress_port : 4,
+  egress_port : 4 }
+struct eth_h {
+  isValid : 1,
+  dst : 48,
+  src : 48,
+  type : 16 }
+struct fec_h {
+  isValid : 1,
+  traffic_class : 3,
+  block_index : 5,
+  packet_index : 8,
+  original_type : 16 }
+struct headers_t {
+  eth : eth_h,
+  fec : fec_h }
+class ioports_t::Tuple(inout) {
+  struct {
+    ingress_port : 4,
+    egress_port : 4 } }
+class Parser_t::ParsingEngine(12144,2,start) {
+  class hdr_t::Tuple(out) {
+    struct {
+      eth : eth_h,
+      fec : fec_h } }
+  class Parser_extracts_t::Tuple(out) {
+    struct {
+      size : 32 } }
+  hdr_t hdr;
+  Parser_extracts_t Parser_extracts;
+  class start::Section(1) {
+    struct {
+      dst_0 : 48,
+      src_0 : 48,
+      type_0 : 16 }
+    method update = {
+      hdr.eth.isValid = 1,
+      hdr.eth.dst = dst_0,
+      hdr.eth.src = src_0,
+      hdr.eth.type = type_0,
+      Parser_extracts.size = (Parser_extracts.size + 112) }
+    method move_to_section = accept;
+    method increment_offset = 112; }
+  class accept::Section(2) {
+    method move_to_section = done(0);
+    method increment_offset = 0; }
+  class reject::Section {
+    method move_to_section = done(0);
+    method increment_offset = 0; } }
+class Update_lvl_t::TupleEngine(1,setup) {
+  class Update_fl_t::Tuple(out) {
+    struct {
+      k_1 : 8,
+      h_1 : 8 } }
+  class hdr_t_0::Tuple(inout) {
+    struct {
+      eth : eth_h,
+      fec : fec_h } }
+  class ioports_t::Tuple(inout) {
+    struct {
+      ingress_port : 4,
+      egress_port : 4 } }
+  class local_state_t::Tuple(out) {
+    struct {
+      id : 16 } }
+  Update_fl_t Update_fl;
+  hdr_t_0 hdr;
+  ioports_t ioports;
+  local_state_t local_state;
+  class setup::Section(1) {
+    method move_to_section = done(0);
+    method increment_offset = 0; } }
+class Update_lvl_0_t::TupleEngine(5,condition_sec_0) {
+  class Update_fl_t::Tuple(inout) {
+    struct {
+      k_1 : 8,
+      h_1 : 8 } }
+  class hdr_t_0::Tuple(inout) {
+    struct {
+      eth : eth_h,
+      fec : fec_h } }
+  class ioports_t::Tuple(inout) {
+    struct {
+      ingress_port : 4,
+      egress_port : 4 } }
+  class local_state_t::Tuple(inout) {
+    struct {
+      id : 16 } }
+  class fec_input_t::Tuple(out) {
+    struct {
+      stateful_valid : 1,
+      k : 8,
+      h : 8 } }
+  Update_fl_t Update_fl;
+  hdr_t_0 hdr;
+  ioports_t ioports;
+  local_state_t local_state;
+  fec_input_t fec_input;
+  class act_0_sec::Section(3) {
+    method update = {
+      hdr.fec.traffic_class = 1,
+      Update_fl.k_1 = 50,
+      Update_fl.h_1 = 1 }
+    method move_to_section = act_2_sec;
+    method increment_offset = 0; }
+  class act_1_sec::Section(3) {
+    method update = {
+      hdr.fec.traffic_class = 2,
+      Update_fl.k_1 = 50,
+      Update_fl.h_1 = 5 }
+    method move_to_section = act_2_sec;
+    method increment_offset = 0; }
+  class act_2_sec::Section(4) {
+    method update = {
+      hdr.fec.original_type = hdr.eth.type,
+      hdr.fec.block_index = 0,
+      hdr.fec.isValid = 1,
+      hdr.eth.type = 2076,
+      fec_input.stateful_valid = 1,
+      fec_input.k = Update_fl.k_1,
+      fec_input.h = Update_fl.h_1,
+      local_state.id = 7 }
+    method move_to_section = local_end;
+    method increment_offset = 0; }
+  class act_sec::Section(2) {
+    method update = {
+      hdr.fec.traffic_class = 0,
+      Update_fl.k_1 = 5,
+      Update_fl.h_1 = 1 }
+    method move_to_section = act_2_sec;
+    method increment_offset = 0; }
+  class condition_sec::Section(2) {
+    method move_to_section = if (((hdr.eth.src & 3) == 1)) act_0_sec else act_1_sec;
+    method increment_offset = 0; }
+  class condition_sec_0::Section(1) {
+    method move_to_section = if (((hdr.eth.src & 3) == 0)) act_sec else condition_sec;
+    method increment_offset = 0; }
+  class local_end::Section(5) {
+    method move_to_section = done(0);
+    method increment_offset = 0; } }
+class fec_0_t::UserEngine(100, 0) {
+  Packet_input packet_in;
+  Packet_output packet_out;
+  class Update_fl_t::Tuple(inout) {
+    struct {
+      k_1 : 8,
+      h_1 : 8 } }
+  class hdr_t_0::Tuple(inout) {
+    struct {
+      eth : eth_h,
+      fec : fec_h } }
+  class ioports_t::Tuple(inout) {
+    struct {
+      ingress_port : 4,
+      egress_port : 4 } }
+  class local_state_t::Tuple(inout) {
+    struct {
+      id : 16 } }
+  class Parser_extracts_t::Tuple(inout) {
+    struct {
+      size : 32 } }
+  Update_fl_t Update_fl;
+  hdr_t_0 hdr;
+  ioports_t ioports;
+  local_state_t local_state;
+  Parser_extracts_t Parser_extracts;
+  class fec_input_t::Tuple(in) {
+    struct {
+      stateful_valid : 1,
+      k : 8,
+      h : 8 } }
+  fec_input_t fec_input;
+  class fec_output_t::Tuple(out) {
+    struct {
+      packet_index : 8 } }
+  fec_output_t fec_output; }
+class Update_lvl_1_t::TupleEngine(3,local_start) {
+  class Update_fl_t::Tuple(in) {
+    struct {
+      k_1 : 8,
+      h_1 : 8 } }
+  class hdr_t_0::Tuple(inout) {
+    struct {
+      eth : eth_h,
+      fec : fec_h } }
+  class ioports_t::Tuple(inout) {
+    struct {
+      ingress_port : 4,
+      egress_port : 4 } }
+  class local_state_t::Tuple(in) {
+    struct {
+      id : 16 } }
+  class fec_output_t::Tuple(in) {
+    struct {
+      packet_index : 8 } }
+  Update_fl_t Update_fl;
+  hdr_t_0 hdr;
+  ioports_t ioports;
+  local_state_t local_state;
+  fec_output_t fec_output;
+  class fec_sec::Section(2) {
+    method update = {
+      hdr.fec.packet_index = fec_output.packet_index }
+    method move_to_section = sink;
+    method increment_offset = 0; }
+  class local_start::Section(1) {
+    map transition {
+      (7, fec_sec),
+      done(0) }
+    method move_to_section = transition(local_state.id);
+    method increment_offset = 0; }
+  class sink::Section(3) {
+    method move_to_section = done(0);
+    method increment_offset = 0; } }
+class Deparser_t::EditingEngine(12144,4,extract_headers_sec) {
+  class hdr_t_1::Tuple(in) {
+    struct {
+      eth : eth_h,
+      fec : fec_h } }
+  class Deparser_extracts_t::Tuple(in) {
+    struct {
+      size : 32 } }
+  hdr_t_1 hdr;
+  Deparser_extracts_t Deparser_extracts;
+  class act_3_sec::Section(2) {
+    method move_to_section = emit_1;
+    method increment_offset = 0; }
+  class emit_0::Section(4) {
+    struct {
+      traffic_class : 3,
+      block_index : 5,
+      packet_index : 8,
+      original_type : 16 }
+    method insert = if (hdr.fec.isValid) 32 else 0;
+    method update = {
+      traffic_class = hdr.fec.traffic_class,
+      block_index = hdr.fec.block_index,
+      packet_index = hdr.fec.packet_index,
+      original_type = hdr.fec.original_type }
+    method move_to_section = done(0);
+    method increment_offset = 0; }
+  class emit_1::Section(3) {
+    struct {
+      dst : 48,
+      src : 48,
+      type : 16 }
+    method insert = if (hdr.eth.isValid) 112 else 0;
+    method update = {
+      dst = hdr.eth.dst,
+      src = hdr.eth.src,
+      type = hdr.eth.type }
+    method move_to_section = emit_0;
+    method increment_offset = 0; }
+  class extract_headers_sec::Section(1) {
+    method remove = Deparser_extracts.size;
+    method move_to_section = act_3_sec;
+    method increment_offset = 0; } }
+class Packet_input::Packet(in) {}
+class Packet_output::Packet(out) {}
+class XilinxSwitch::System {
+  ioports_t ioports;
+  Parser_t Parser;
+  Update_lvl_t Update_lvl;
+  Update_lvl_0_t Update_lvl_0;
+  fec_0_t fec_0;
+  Update_lvl_1_t Update_lvl_1;
+  Deparser_t Deparser;
+  Packet_input packet_in;
+  Packet_output packet_out;
+  method connect = {
+    Update_lvl_0.Update_fl = Update_lvl.Update_fl,
+    Update_lvl_0.hdr = Update_lvl.hdr,
+    Update_lvl_0.ioports = Update_lvl.ioports,
+    Update_lvl_0.local_state = Update_lvl.local_state,
+    Update_lvl_1.Update_fl = fec_0.Update_fl,
+    Update_lvl_1.hdr = fec_0.hdr,
+    Update_lvl_1.ioports = fec_0.ioports,
+    Update_lvl_1.local_state = fec_0.local_state,
+    fec_0.fec_input = Update_lvl_0.fec_input,
+    fec_0.Update_fl = Update_lvl_0.Update_fl,
+    fec_0.hdr = Update_lvl_0.hdr,
+    fec_0.ioports = Update_lvl_0.ioports,
+    fec_0.local_state = Update_lvl_0.local_state,
+    Update_lvl_1.fec_output = fec_0.fec_output,
+    Update_lvl.hdr = Parser.hdr,
+    Deparser.hdr = Update_lvl_1.hdr,
+    Update_lvl.ioports = ioports,
+    ioports = Update_lvl_1.ioports,
+    Parser.packet_in = packet_in,
+    fec_0.packet_in = Parser.packet_out,
+    Deparser.packet_in = fec_0.packet_out,
+    packet_out = Deparser.packet_out,
+    fec_0.Parser_extracts = Parser.Parser_extracts,
+    Deparser.Deparser_extracts = fec_0.Parser_extracts } }

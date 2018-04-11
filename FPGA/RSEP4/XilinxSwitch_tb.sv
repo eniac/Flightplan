@@ -33,7 +33,7 @@
 
 `timescale 1 ps / 1 ps
 
-module XilinxSwitch_feedback_tb;
+module XilinxSwitch_tb;
 
 
 reg clk_line /* undriven */ ;
@@ -53,16 +53,6 @@ wire [7:0] packet_out_packet_out_TKEEP ;
 wire [0:0] packet_out_packet_out_TLAST ;
 wire [0:0] tuple_out_ioports_VALID ;
 wire [7:0] tuple_out_ioports_DATA ;
-wire [0:0] rse_out_TVALID ;
-wire [0:0] rse_out_TREADY ;
-wire [63:0] rse_out_TDATA ;
-wire [7:0] rse_out_TKEEP ;
-wire [0:0] rse_out_TLAST ;
-wire [0:0] rse_in_TVALID ;
-wire [0:0] rse_in_TREADY ;
-wire [63:0] rse_in_TDATA ;
-wire [7:0] rse_in_TKEEP ;
-wire [0:0] rse_in_TLAST ;
 wire [0:0] internal_rst_done /* unused */ ;
 reg fw_done /* undriven */ ;
 reg stim_file /* undriven */ ;
@@ -80,57 +70,24 @@ reg firstPacketOut ;
 XilinxSwitch
 XilinxSwitch_i
 (
-	.packet_in_packet_in_TVALID	( rse_in_TVALID ),
-	.packet_in_packet_in_TREADY	( rse_in_TREADY ),
-	.packet_in_packet_in_TDATA	( rse_in_TDATA ),
-	.packet_in_packet_in_TKEEP	( rse_in_TKEEP ),
-	.packet_in_packet_in_TLAST	( rse_in_TLAST ),
+	.packet_in_packet_in_TVALID	( packet_in_packet_in_TVALID ),
+	.packet_in_packet_in_TREADY	( packet_in_packet_in_TREADY ),
+	.packet_in_packet_in_TDATA	( packet_in_packet_in_TDATA ),
+	.packet_in_packet_in_TKEEP	( packet_in_packet_in_TKEEP ),
+	.packet_in_packet_in_TLAST	( packet_in_packet_in_TLAST ),
 	.tuple_in_ioports_VALID	( tuple_in_ioports_VALID ),
 	.tuple_in_ioports_DATA	( tuple_in_ioports_DATA ),
 	.enable_processing   	( enable_processing ),
-	.packet_out_packet_out_TVALID	( rse_out_TVALID ),
-	.packet_out_packet_out_TREADY	( rse_out_TREADY ),
-	.packet_out_packet_out_TDATA	( rse_out_TDATA ),
-	.packet_out_packet_out_TKEEP	( rse_out_TKEEP ),
-	.packet_out_packet_out_TLAST	( rse_out_TLAST ),
+	.packet_out_packet_out_TVALID	( packet_out_packet_out_TVALID ),
+	.packet_out_packet_out_TREADY	( packet_out_packet_out_TREADY ),
+	.packet_out_packet_out_TDATA	( packet_out_packet_out_TDATA ),
+	.packet_out_packet_out_TKEEP	( packet_out_packet_out_TKEEP ),
+	.packet_out_packet_out_TLAST	( packet_out_packet_out_TLAST ),
 	.tuple_out_ioports_VALID	( tuple_out_ioports_VALID ),
 	.tuple_out_ioports_DATA	( tuple_out_ioports_DATA ),
 	.clk_line_rst        	( clk_line_rst ),
 	.clk_line            	( clk_line ),
 	.internal_rst_done   	( internal_rst_done )
-);
-
-RSEFeedback
-RSEFeedback_i
-(
-	.clk_line            	( clk_line ),
-	.clk_line_rst        	( clk_line_rst ),
-	.enable_processing   	( enable_processing ),
-	.internal_rst_done   	( internal_rst_done ),
-	.axis_in_TVALID		( packet_in_packet_in_TVALID ),
-	.axis_in_TREADY		( packet_in_packet_in_TREADY ),
-	.axis_in_TDATA		( packet_in_packet_in_TDATA ),
-	.axis_in_TKEEP		( packet_in_packet_in_TKEEP ),
-	.axis_in_TLAST		( packet_in_packet_in_TLAST ),
-	.rse_in_TVALID		( rse_out_TVALID ),
-	.rse_in_TREADY		( rse_out_TREADY ),
-	.rse_in_TDATA		( rse_out_TDATA ),
-	.rse_in_TKEEP		( rse_out_TKEEP ),
-	.rse_in_TLAST		( rse_out_TLAST ),
-	.tuple_in_VALID		( tuple_out_ioports_VALID ),
-	.tuple_in_DATA		( tuple_out_ioports_DATA ),
-	.axis_out_TVALID	( packet_out_packet_out_TVALID ),
-	.axis_out_TREADY	( packet_out_packet_out_TREADY ),
-	.axis_out_TDATA		( packet_out_packet_out_TDATA ),
-	.axis_out_TKEEP		( packet_out_packet_out_TKEEP ),
-	.axis_out_TLAST		( packet_out_packet_out_TLAST ),
-	.rse_out_TVALID		( rse_in_TVALID ),
-	.rse_out_TREADY		( rse_in_TREADY ),
-	.rse_out_TDATA		( rse_in_TDATA ),
-	.rse_out_TKEEP		( rse_in_TKEEP ),
-	.rse_out_TLAST		( rse_in_TLAST ),
-	.tuple_out_VALID	( tuple_in_ioports_VALID ),
-	.tuple_out_DATA		( tuple_in_ioports_DATA )
 );
 
 always @( posedge clk_line ) begin
@@ -139,16 +96,16 @@ end
 
 assign enable_processing = 1'd1 ;
 
-TB_System_feedback_Stim
-TB_System_feedback_Stim_i
+TB_System_Stim
+TB_System_Stim_i
 (
-	.tuple_in_ioports    	( ),
+	.tuple_in_ioports    	( tuple_in_ioports_DATA ),
 	.clk_n               	( clk_line ),
 	.rst                 	( clk_line_rst ),
 	.fw_done             	( fw_done ),
 	.file_done           	( stim_file ),
 	.stim_eof            	( stim_eof ),
-	.tuple_in_valid      	( ),
+	.tuple_in_valid      	( tuple_in_valid ),
 	.packet_in_packet_in_TREADY	( packet_in_packet_in_TREADY ),
 	.packet_in_packet_in_TVALID	( packet_in_packet_in_TVALID ),
 	.packet_in_packet_in_TLAST	( packet_in_packet_in_TLAST ),
@@ -161,11 +118,11 @@ assign tuple_in_ioports_VALID = tuple_in_valid ;
 Check
 TB_System_Check_i
 (
-	.packet_out_tready   	( rse_out_TREADY ),
-	.packet_out_tvalid   	( rse_out_TVALID ),
-	.packet_out_tlast    	( rse_out_TLAST ),
-	.packet_out_tkeep    	( rse_out_TKEEP ),
-	.packet_out_tdata    	( rse_out_TDATA ),
+	.packet_out_tready   	( packet_out_packet_out_TREADY ),
+	.packet_out_tvalid   	( packet_out_packet_out_TVALID ),
+	.packet_out_tlast    	( packet_out_packet_out_TLAST ),
+	.packet_out_tkeep    	( packet_out_packet_out_TKEEP ),
+	.packet_out_tdata    	( packet_out_packet_out_TDATA ),
 	.tuple_out_ioports   	( tuple_out_ioports_DATA ),
 	.clk_n               	( clk_line ),
 	.rst                 	( clk_line_rst ),
@@ -266,7 +223,7 @@ import "DPI-C" context function void XilinxSwitch_DPI(
 
 
 
- initial begin
+initial begin
     if ($value$plusargs("PKT=%s", packet_file)) begin end
     if ($value$plusargs("TUP=%s",  tuple_file)) begin end
     XilinxSwitch_DPI(packet_file, 0, tuple_file, 1, 64, 1);
@@ -284,6 +241,6 @@ end
 endmodule
 
 // machine-generated file - do NOT modify by hand !
-// File created on 2018/02/07 17:05:27
+// File created on 2018/04/06 14:40:32
 // by Barista HDL generation library, version TRUNK @ 1007984
 

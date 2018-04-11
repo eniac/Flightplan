@@ -8,7 +8,7 @@ rm -rf xsim.dir
 
 set -euo pipefail
 set -x
-find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv % || true; } 
+find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv -i fec_0_t.HDL % || true; } 
 find -name "*.vhd" | { xargs -I % ${XILINX_VIVADO}/bin/xvhdl % || true; }
 mkdir -p xsim.dir/xsc
 find -name "*.c" | xargs ${XILINX_VIVADO}/bin/xsc -mt off -v 1

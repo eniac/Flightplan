@@ -9,30 +9,28 @@ Encoder/XilinxSwitch/XilinxSwitch_vivado: Encoder
 	vivado -mode batch -source XilinxSwitch_vivado_packager.tcl
 
 Encoder: Encoder.sdnet Generate_packets.sh \
-         fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec_0_t.v loop_0_t.v \
-         vivado_sim.bash vivado_sim_waveform.bash \
-         vivado_sim_feedback_waveform.bash XilinxSwitch_feedback_tb.sv
+         fec_0_t.hpp rse.cpp rse.h fec_0_t.v \
+         vivado_sim.bash vivado_sim_waveform.bash
+	@rm -fr Encoder
 	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder
-	@cp Generate_packets.sh Encoder/XilinxSwitch
-	@cp fec_0_t.hpp rse.cpp rse.h Encoder/XilinxSwitch/fec_0_t.TB
-	@cp loop_0_t.hpp Encoder/XilinxSwitch/loop_0_t.TB
-	@cp fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL
-	@cp loop_0_t.v Encoder/XilinxSwitch/loop_0_t.HDL
-	@mkdir -p Encoder/XilinxSwitch/Feedback
-	@cp ../RSEFeedbackVivado/Sources/RSEFeedback.vhd Encoder/XilinxSwitch/Feedback
-	@cp ../RSEFeedbackVivado/Sources/Config.vhd Encoder/XilinxSwitch/Feedback/Config.vhd
-	@cp ../RSEFeedbackVivado/RSEFeedbackVivado/RSEFeedbackVivado.srcs/sources_1/ip/fifo_generator_0/sim/fifo_generator_0.v Encoder/XilinxSwitch/Feedback
-	@cp XilinxSwitch_feedback_tb.sv TB_System_feedback_Stim.v Encoder/XilinxSwitch/Testbench
+	@ln -s ../../Generate_packets.sh Encoder/XilinxSwitch/Generate_packets.sh
+	@ln -s ../../../fec_0_t.hpp Encoder/XilinxSwitch/fec_0_t.TB/fec_0_t.hpp
+	@ln -s ../../../rse.cpp Encoder/XilinxSwitch/fec_0_t.TB/rse.cpp
+	@ln -s ../../../rse.h Encoder/XilinxSwitch/fec_0_t.TB/rse.h
+	@ln -sf ../../../XilinxSwitch.hpp Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
+	@ln -sf ../../../XilinxSwitch.cpp Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
+	@ln -s ../../../fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL/fec_0_t.v
 	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
-	@cp vivado_sim*.bash Encoder/XilinxSwitch
-	@cp compile.bash Encoder/XilinxSwitch/XilinxSwitch.TB
+	@ln -sf ../../vivado_sim.bash Encoder/XilinxSwitch/vivado_sim.bash
+	@ln -sf ../../vivado_sim_waveform.bash Encoder/XilinxSwitch/vivado_sim_waveform.bash
+	@ln -sf ../../../compile.bash Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
+	@ln -sf ../../../XilinxSwitch_tb.v Encoder/XilinxSwitch/Testbench/XilinxSwitch_tb.v
 # Convert configuration file to Verilog.
-	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/loop_0_t.HDL/Configuration.v
-	@cp Encoder/XilinxSwitch/loop_0_t.HDL/Configuration.v Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
+	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
 # Fix backpressure.
 	@FILE=$$(mktemp) && ./Patch_backpressure.pl > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
 # Fix timing bug in testbench.
-	@cp TB_System_Stim.v Encoder/XilinxSwitch/Testbench
+	@ln -sf ../../../TB_System_Stim.v Encoder/XilinxSwitch/Testbench/TB_System_Stim.v
 # Set the correct target FPGA.
 	@sed -i 's:xcvu095-ffva2104-2-e:xczu9eg-ffvb1156-2-i:' Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
 

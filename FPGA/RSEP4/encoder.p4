@@ -26,12 +26,13 @@
 //   All rights reserved.                                                   //
 //----------------------------------------------------------------------------
 
-/*[TODO]
-	- length info after encoded pkt
-*/
-
 #include "xilinx.p4"
-#include "extern.p4"
+
+#include "Configuration.h"
+
+@Xilinx_MaxLatency(100)
+extern void fec(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
+    out bit<FEC_PACKET_INDEX_WIDTH> packet_index);
 
 typedef bit<48> MacAddress;
 
@@ -39,117 +40,68 @@ header eth_h
 {
 	MacAddress	dst;
 	MacAddress	src;
-	bit<1>		encoded;
-	bit<15>		type;
+	bit<16>		type;
 }
 
 header fec_h
 {
-	bit<1>				parity;
+	bit<FEC_TRAFFIC_CLASS_WIDTH>	traffic_class;
 	bit<FEC_BLOCK_INDEX_WIDTH>	block_index;
 	bit<FEC_PACKET_INDEX_WIDTH>	packet_index;
-}
-
-header dummy_h
-{
-	bit<1>	dummy;
+	bit<16>				original_type;
 }
 
 struct headers_t {
 	eth_h	eth;
 	fec_h	fec;
-	dummy_h	dummy;
 }
 
-@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)  // in bits
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser Parser(packet_in pkt, out headers_t hdr)
 {
 	state start
 	{
 		pkt.extract(hdr.eth);
-		transition select(hdr.eth.encoded)
-		{
-			0       : accept;
-			1       : parse_fec;
-			default : accept;
-	        }
-	}
-
-	state parse_fec
-	{
-		pkt.extract(hdr.fec);
 	        transition accept;
-	}
+        }
 }
 
-control Forward(inout headers_t hdr, inout switch_metadata_t ioports)
+control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 {
-	bit<FEC_PACKET_INDEX_WIDTH>	index;
-	bit<FEC_PACKET_INDEX_WIDTH>	max;
-	bit<FEC_REG_ADDR_WIDTH>		reg_addr;
-	bit<FEC_OP_WIDTH>		op;
+	bit<FEC_K_WIDTH>		k;
+	bit<FEC_K_WIDTH>		h;
 
 	apply
 	{
-		op = 0;
-		reg_addr = 0;
-		max = 0;
-
-		if (hdr.eth.encoded == 0)
+		if ((hdr.eth.src & 3) == 0)
 		{
-			op = FEC_OP_ENCODE_PACKET;
-			reg_addr = 0;
-			max = FEC_K;
+			hdr.fec.traffic_class = 0;
+			k = 5;
+			h = 1;
+		}
+		else if ((hdr.eth.src & 3) == 1)
+		{
+			hdr.fec.traffic_class = 1;
+			k = 50;
+			h = 1;
 		}
 		else
 		{
-			op = FEC_OP_GET_ENCODED;
-			reg_addr = 1;
-			max = FEC_H;
+			hdr.fec.traffic_class = 2;
+			k = 50;
+			h = 5;
 		}
 
-		index = loop(reg_addr, max);
-
+		hdr.fec.original_type = hdr.eth.type;
 		hdr.fec.block_index = 0;
-		hdr.fec.packet_index = (bit<FEC_PACKET_INDEX_WIDTH>) index;
-
-		if (hdr.eth.encoded == 0)
-		{
-			/* Encode */
-
-			if (index == 0)
-			{
-				op = op | FEC_OP_START_ENCODER;
-			}
-			
-			hdr.fec.parity = 0;
-			hdr.eth.encoded = 1;
-		}
-		else 
-		{
-			/* send encoded */
-			index = index + FEC_K;
-
-			hdr.fec.parity = 1;
-		}
-
-		if (index < FEC_H)
-		{
-			ioports.egress_port = FEC_DUPLICATE_OUTPUT_PORT;
-		}
-		else
-		{
-			ioports.egress_port = FEC_REGULAR_OUTPUT_PORT;
-		}
-
 		hdr.fec.setValid();
+		hdr.eth.type = 0x81C;
 
-		hdr.dummy.dummy = fec(op, index);
-
-    }
+		fec(k, h, hdr.fec.packet_index);
+	}
 }
 
-@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)  // in bits
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control Deparser(in headers_t hdr, packet_out pkt) {
 	apply
 	{
@@ -158,5 +110,5 @@ control Deparser(in headers_t hdr, packet_out pkt) {
 	}
 }
 
-XilinxSwitch(Parser(), Forward(), Deparser()) main;
+XilinxSwitch(Parser(), Update(), Deparser()) main;
 
