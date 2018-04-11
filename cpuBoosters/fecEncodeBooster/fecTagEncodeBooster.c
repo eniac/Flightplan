@@ -24,8 +24,9 @@ void my_packet_handler(
 	}
 
 	u_char *new_packet = NULL;
-	/*Add a wharf and new ether tag to the original packet. Preprocessing step */
-	int tagged_size = wharf_tag_frame(packet, header->len, &new_packet);
+	enum traffic_class tclass = one; // FIXME const -- use traffic classification
+
+	int tagged_size = wharf_tag_frame(tclass, packet, header->len, &new_packet);
 
 	const struct fec_header *fecHeader = (struct fec_header *) (new_packet + SIZE_ETHERNET);
 
@@ -75,7 +76,7 @@ void my_packet_handler(
 
 		/* Inject all parity packets in the block to the network */
 		for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; i++) {
-			tagged_size = wharf_tag_frame((u_char*)pkt_buffer[currBlockID][i], parity_payload_size, &new_packet); // We don't encapsulate ethernet header for parity packets
+			tagged_size = wharf_tag_frame(tclass, (u_char*)pkt_buffer[currBlockID][i], parity_payload_size, &new_packet); // We don't encapsulate ethernet header for parity packets
 			struct ether_header *packet_eth_header = (struct ether_header *)packet;
 			struct ether_header *parity_eth_header = (struct ether_header *)new_packet;
 			

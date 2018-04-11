@@ -10,8 +10,9 @@ void my_packet_handler(
     const u_char *packet
 ) {
 	u_char *new_packet = NULL;
-	int tagged_size = wharf_tag_frame(packet, header->len, &new_packet);
-	int new_size = wharf_strip_frame(new_packet, tagged_size);
+	enum traffic_class tclass = one;
+	int tagged_size = wharf_tag_frame(tclass, packet, header->len, &new_packet);
+	int new_size = wharf_strip_frame(&tclass, new_packet, tagged_size);
 	if ((unsigned)new_size != header->len) {
 		fprintf(stderr, "Frame size changed\n");
 		exit(1);

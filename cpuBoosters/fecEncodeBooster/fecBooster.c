@@ -382,7 +382,6 @@ void print_hex_memory(void *mem, int len) {
   printf("\n");
 }
 
-static unsigned int class_id = 0;
 static unsigned int block_id = 0;
 static unsigned int frame_index = 0;
 
@@ -393,7 +392,7 @@ static unsigned int frame_index = 0;
  * 
  * @return     resulting size of the newly encapsulated packet.
  */
-int wharf_tag_frame(const u_char* packet, int size, u_char** result) {
+int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result) {
   if (size >= FRAME_SIZE_CUTOFF) {
     fprintf(stderr, "Frame too big for tagging (%d)", size);
     exit(1);
@@ -415,7 +414,7 @@ int wharf_tag_frame(const u_char* packet, int size, u_char** result) {
 
   /* Populate the wharf tag with the block_id, packet_id, class, & packetsize*/
   struct fec_header *tag = (struct fec_header *)(*result + sizeof(struct ether_header));
-  tag->class_id = class_id;
+  tag->class_id = (int)tclass;
   tag->block_id = block_id;
   tag->index = frame_index;
   tag->size = size;
@@ -430,7 +429,7 @@ int wharf_tag_frame(const u_char* packet, int size, u_char** result) {
 }
 
 /*Removes the added wharf & new ether tag and returns the original packet*/
-int wharf_strip_frame(u_char* packet, int size) {
+int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size) {
   struct ether_header *eth_header = (struct ether_header *)packet;
   /*If not a wharf encoded packet*/
   if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
@@ -444,6 +443,7 @@ int wharf_strip_frame(u_char* packet, int size) {
     fprintf(stderr, "Cannot strip non-data Wharf frame");
     exit(1);
   }
+  *tclass = (enum traffic_class)tag->class_id;
   const int original_size = tag->size;
   const int offset = sizeof(struct ether_header) + sizeof(struct fec_header);
   for (int i = 0; i < original_size; i++) {
