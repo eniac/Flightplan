@@ -9,10 +9,17 @@
 bool nothing_to_decode = true; // This is true when the buffer doesn't contain any packets for decoding.
 int lastBlockId = 0;
 
+inline void reset_decoder (const int block_id) {
+	signal(SIGALRM, SIG_IGN);
+	nothing_to_decode = true;
+	zeroout_block_in_pkt_buffer(block_id);
+}
+
 // Try to decode new packets, and forward them on.
 // FIXME possible race condition if have simultaneous timer expiry and a packet arrival that also triggers the decode.
 void decode_and_forward(const int block_id) {
 	if (nothing_to_decode || is_all_data_pkts_recieved_for_block(block_id)) {
+		reset_decoder (block_id);
 		return;
 	}
 
@@ -30,9 +37,7 @@ void decode_and_forward(const int block_id) {
 		}
 	}
 
-	signal(SIGALRM, SIG_IGN);
-	nothing_to_decode = true;
-	zeroout_block_in_pkt_buffer(block_id);
+	reset_decoder (block_id);
 }
 
 void sigalrm_handler(int signal) {
