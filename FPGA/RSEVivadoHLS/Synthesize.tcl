@@ -12,6 +12,6 @@ add_files ../RSECore.c -cflags "-std=c99"
 add_files ../rse.h
 open_solution "solution1"
 set_part {xczu9eg-ffvb1156-1-i-es1} -tool vivado
-create_clock -period 3 -name default
+create_clock -period 6.4 -name default
 csynth_design
 

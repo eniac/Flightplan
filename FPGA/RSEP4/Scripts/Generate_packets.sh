@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-PACKET_COUNT=16
-PAYLOAD_LENGTH=1024
+PACKET_COUNT=100
+PAYLOAD_LENGTH=1500
 
 GENERATOR=../../../Utilities/PacketGenerator/PacketGenerator.py
 
