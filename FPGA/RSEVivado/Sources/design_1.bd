@@ -220,19 +220,12 @@
         </spirit:configurableElementValues>
       </spirit:componentInstance>
       <spirit:componentInstance>
-        <spirit:instanceName>RSEFeedbackVivado_0</spirit:instanceName>
-        <spirit:componentRef spirit:library="user" spirit:name="RSEFeedbackVivado" spirit:vendor="upenn.edu" spirit:version="1.0"/>
-        <spirit:configurableElementValues>
-          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_RSEFeedbackVivado_0_0</spirit:configurableElementValue>
-        </spirit:configurableElementValues>
-      </spirit:componentInstance>
-      <spirit:componentInstance>
         <spirit:instanceName>system_ila_0</spirit:instanceName>
         <spirit:componentRef spirit:library="ip" spirit:name="system_ila" spirit:vendor="xilinx.com" spirit:version="1.0"/>
         <spirit:configurableElementValues>
           <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_system_ila_0_0</spirit:configurableElementValue>
-          <spirit:configurableElementValue spirit:referenceId="C_SLOT">3</spirit:configurableElementValue>
-          <spirit:configurableElementValue spirit:referenceId="C_NUM_MONITOR_SLOTS">4</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="C_SLOT">0</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="C_NUM_MONITOR_SLOTS">3</spirit:configurableElementValue>
           <spirit:configurableElementValue spirit:referenceId="C_SLOT_0_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
           <spirit:configurableElementValue spirit:referenceId="C_SLOT_1_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
           <spirit:configurableElementValue spirit:referenceId="C_SLOT_2_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
@@ -246,43 +239,20 @@
           <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_RSEInputBufferVivado_0_0</spirit:configurableElementValue>
         </spirit:configurableElementValues>
       </spirit:componentInstance>
+      <spirit:componentInstance>
+        <spirit:instanceName>TupleGeneratorVivado_0</spirit:instanceName>
+        <spirit:componentRef spirit:library="user" spirit:name="TupleGeneratorVivado" spirit:vendor="upenn.edu" spirit:version="1.0"/>
+        <spirit:configurableElementValues>
+          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_TupleGeneratorVivado_0_0</spirit:configurableElementValue>
+        </spirit:configurableElementValues>
+      </spirit:componentInstance>
     </spirit:componentInstances>
     <spirit:interconnections>
-      <spirit:interconnection>
-        <spirit:name>RSEFeedbackVivado_0_rse_out</spirit:name>
-        <spirit:activeInterface spirit:busRef="rse_out" spirit:componentRef="RSEFeedbackVivado_0"/>
-        <spirit:activeInterface spirit:busRef="packet_in_packet_in" spirit:componentRef="XilinxSwitch_0"/>
-      </spirit:interconnection>
-      <spirit:monitorInterconnection>
-        <spirit:name>RSEFeedbackVivado_0_rse_out</spirit:name>
-        <spirit:monitoredActiveInterface spirit:busRef="rse_out" spirit:componentRef="RSEFeedbackVivado_0"/>
-        <spirit:monitorInterface spirit:busRef="SLOT_2_AXIS" spirit:componentRef="system_ila_0"/>
-      </spirit:monitorInterconnection>
       <spirit:interconnection>
         <spirit:name>S00_AXIS_1</spirit:name>
         <spirit:activeInterface spirit:busRef="S00_AXIS" spirit:componentRef="axis_interconnect_0"/>
         <spirit:activeInterface spirit:busRef="axis_rx_0" spirit:componentRef="xxv_ethernet_0"/>
       </spirit:interconnection>
-      <spirit:interconnection>
-        <spirit:name>S00_AXIS_2</spirit:name>
-        <spirit:activeInterface spirit:busRef="axis_out" spirit:componentRef="RSEFeedbackVivado_0"/>
-        <spirit:activeInterface spirit:busRef="S00_AXIS" spirit:componentRef="axis_interconnect_1"/>
-      </spirit:interconnection>
-      <spirit:monitorInterconnection>
-        <spirit:name>S00_AXIS_2</spirit:name>
-        <spirit:monitoredActiveInterface spirit:busRef="axis_out" spirit:componentRef="RSEFeedbackVivado_0"/>
-        <spirit:monitorInterface spirit:busRef="SLOT_3_AXIS" spirit:componentRef="system_ila_0"/>
-      </spirit:monitorInterconnection>
-      <spirit:interconnection>
-        <spirit:name>XilinxSwitch_0_packet_out_packet_out</spirit:name>
-        <spirit:activeInterface spirit:busRef="rse_in" spirit:componentRef="RSEFeedbackVivado_0"/>
-        <spirit:activeInterface spirit:busRef="packet_out_packet_out" spirit:componentRef="XilinxSwitch_0"/>
-      </spirit:interconnection>
-      <spirit:monitorInterconnection>
-        <spirit:name>XilinxSwitch_0_packet_out_packet_out</spirit:name>
-        <spirit:monitoredActiveInterface spirit:busRef="rse_in" spirit:componentRef="RSEFeedbackVivado_0"/>
-        <spirit:monitorInterface spirit:busRef="SLOT_1_AXIS" spirit:componentRef="system_ila_0"/>
-      </spirit:monitorInterconnection>
       <spirit:interconnection>
         <spirit:name>axi_interconnect_0_M00_AXI</spirit:name>
         <spirit:activeInterface spirit:busRef="M00_AXI" spirit:componentRef="axi_interconnect_0"/>
@@ -295,7 +265,7 @@
       </spirit:interconnection>
       <spirit:monitorInterconnection>
         <spirit:name>axis_interconnect_0_M00_AXIS</spirit:name>
-        <spirit:monitoredActiveInterface spirit:busRef="M00_AXIS" spirit:componentRef="axis_interconnect_0"/>
+        <spirit:monitoredActiveInterface spirit:busRef="axis_in" spirit:componentRef="RSEInputBufferVivado_0"/>
         <spirit:monitorInterface spirit:busRef="SLOT_0_AXIS" spirit:componentRef="system_ila_0"/>
       </spirit:monitorInterconnection>
       <spirit:interconnection>
@@ -311,8 +281,24 @@
       <spirit:interconnection>
         <spirit:name>RSEInputBufferVivado_0_axis_out</spirit:name>
         <spirit:activeInterface spirit:busRef="axis_out" spirit:componentRef="RSEInputBufferVivado_0"/>
-        <spirit:activeInterface spirit:busRef="axis_in" spirit:componentRef="RSEFeedbackVivado_0"/>
+        <spirit:activeInterface spirit:busRef="packet_in_packet_in" spirit:componentRef="XilinxSwitch_0"/>
       </spirit:interconnection>
+      <spirit:monitorInterconnection>
+        <spirit:name>RSEInputBufferVivado_0_axis_out</spirit:name>
+        <spirit:monitoredActiveInterface spirit:busRef="axis_out" spirit:componentRef="RSEInputBufferVivado_0"/>
+        <spirit:monitorInterface spirit:busRef="SLOT_1_AXIS" spirit:componentRef="system_ila_0"/>
+        <spirit:monitorInterface spirit:busRef="packet_in_packet_in" spirit:componentRef="TupleGeneratorVivado_0"/>
+      </spirit:monitorInterconnection>
+      <spirit:interconnection>
+        <spirit:name>XilinxSwitch_0_packet_out_packet_out</spirit:name>
+        <spirit:activeInterface spirit:busRef="packet_out_packet_out" spirit:componentRef="XilinxSwitch_0"/>
+        <spirit:activeInterface spirit:busRef="S00_AXIS" spirit:componentRef="axis_interconnect_1"/>
+      </spirit:interconnection>
+      <spirit:monitorInterconnection>
+        <spirit:name>XilinxSwitch_0_packet_out_packet_out</spirit:name>
+        <spirit:monitoredActiveInterface spirit:busRef="packet_out_packet_out" spirit:componentRef="XilinxSwitch_0"/>
+        <spirit:monitorInterface spirit:busRef="SLOT_2_AXIS" spirit:componentRef="system_ila_0"/>
+      </spirit:monitorInterconnection>
     </spirit:interconnections>
     <spirit:adHocConnections>
       <spirit:adHocConnection>
@@ -331,30 +317,10 @@
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="M00_AXIS_ARESETN"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
-        <spirit:name>RSEFeedbackVivado_1_tuple_out_DATA</spirit:name>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="tuple_out_DATA"/>
-        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="tuple_in_ioports_DATA"/>
-      </spirit:adHocConnection>
-      <spirit:adHocConnection>
-        <spirit:name>RSEFeedbackVivado_1_tuple_out_VALID</spirit:name>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="tuple_out_VALID"/>
-        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="tuple_in_ioports_VALID"/>
-      </spirit:adHocConnection>
-      <spirit:adHocConnection>
         <spirit:name>XilinxSwitch_0_internal_rst_done</spirit:name>
         <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="internal_rst_done"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="internal_rst_done"/>
         <spirit:internalPortReference spirit:componentRef="RSEInputBufferVivado_0" spirit:portRef="internal_rst_done"/>
-      </spirit:adHocConnection>
-      <spirit:adHocConnection>
-        <spirit:name>XilinxSwitch_0_tuple_out_ioports_DATA</spirit:name>
-        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="tuple_out_ioports_DATA"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="tuple_in_DATA"/>
-      </spirit:adHocConnection>
-      <spirit:adHocConnection>
-        <spirit:name>XilinxSwitch_0_tuple_out_ioports_VALID</spirit:name>
-        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="tuple_out_ioports_VALID"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="tuple_in_VALID"/>
+        <spirit:internalPortReference spirit:componentRef="TupleGeneratorVivado_0" spirit:portRef="internal_rst_done"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>proc_sys_reset_0_peripheral_aresetn</spirit:name>
@@ -384,8 +350,8 @@
         <spirit:name>proc_sys_reset_2_peripheral_reset</spirit:name>
         <spirit:internalPortReference spirit:componentRef="proc_sys_reset_2" spirit:portRef="peripheral_reset"/>
         <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="clk_line_rst"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line_rst"/>
         <spirit:internalPortReference spirit:componentRef="RSEInputBufferVivado_0" spirit:portRef="clk_line_rst"/>
+        <spirit:internalPortReference spirit:componentRef="TupleGeneratorVivado_0" spirit:portRef="clk_line_rst"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>util_vector_logic_0_Res</spirit:name>
@@ -421,8 +387,8 @@
         <spirit:name>xlconstant_3_dout</spirit:name>
         <spirit:internalPortReference spirit:componentRef="zynq_ultra_ps_e_0" spirit:portRef="emio_gpio_o"/>
         <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="enable_processing"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="enable_processing"/>
         <spirit:internalPortReference spirit:componentRef="RSEInputBufferVivado_0" spirit:portRef="enable_processing"/>
+        <spirit:internalPortReference spirit:componentRef="TupleGeneratorVivado_0" spirit:portRef="enable_processing"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>xxv_ethernet_0_rx_clk_out_0</spirit:name>
@@ -431,14 +397,14 @@
         <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="clk_line"/>
         <spirit:internalPortReference spirit:componentRef="proc_sys_reset_1" spirit:portRef="slowest_sync_clk"/>
         <spirit:internalPortReference spirit:componentRef="proc_sys_reset_2" spirit:portRef="slowest_sync_clk"/>
-        <spirit:internalPortReference spirit:componentRef="RSEFeedbackVivado_0" spirit:portRef="clk_line"/>
         <spirit:internalPortReference spirit:componentRef="system_ila_0" spirit:portRef="clk"/>
+        <spirit:internalPortReference spirit:componentRef="RSEInputBufferVivado_0" spirit:portRef="clk_line"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="S00_AXIS_ACLK"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="ACLK"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_0" spirit:portRef="M00_AXIS_ACLK"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="ACLK"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="S00_AXIS_ACLK"/>
-        <spirit:internalPortReference spirit:componentRef="RSEInputBufferVivado_0" spirit:portRef="clk_line"/>
+        <spirit:internalPortReference spirit:componentRef="TupleGeneratorVivado_0" spirit:portRef="clk_line"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>xxv_ethernet_0_user_rx_reset_0</spirit:name>
@@ -477,6 +443,16 @@
         <spirit:name>proc_sys_reset_2_peripheral_aresetn</spirit:name>
         <spirit:internalPortReference spirit:componentRef="proc_sys_reset_2" spirit:portRef="peripheral_aresetn"/>
         <spirit:internalPortReference spirit:componentRef="system_ila_0" spirit:portRef="resetn"/>
+      </spirit:adHocConnection>
+      <spirit:adHocConnection>
+        <spirit:name>TupleGeneratorVivado_0_tuple_in_unused_VALID</spirit:name>
+        <spirit:internalPortReference spirit:componentRef="TupleGeneratorVivado_0" spirit:portRef="tuple_in_unused_VALID"/>
+        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="tuple_in_ioports_VALID"/>
+      </spirit:adHocConnection>
+      <spirit:adHocConnection>
+        <spirit:name>TupleGeneratorVivado_0_tuple_in_unused_DATA</spirit:name>
+        <spirit:internalPortReference spirit:componentRef="TupleGeneratorVivado_0" spirit:portRef="tuple_in_unused_DATA"/>
+        <spirit:internalPortReference spirit:componentRef="XilinxSwitch_0" spirit:portRef="tuple_in_ioports_DATA"/>
       </spirit:adHocConnection>
     </spirit:adHocConnections>
     <spirit:hierConnections>

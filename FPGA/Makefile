@@ -1,20 +1,20 @@
-.PHONY: All RSE RSEVivado RSEP4 RSEVivadoHLS RSEFeedbackVivado RSEInputBufferVivado clean
+.PHONY: All RSE RSEVivado RSEP4 RSEVivadoHLS TupleGeneratorVivado RSEInputBufferVivado clean
 
 All: RSE
 
 RSE: RSEVivado
 
-RSEVivado: RSEP4 RSEInputBufferVivado
+RSEVivado: RSEP4 RSEInputBufferVivado TupleGeneratorVivado
 	cd RSEVivado && make
 
-RSEP4: RSEVivadoHLS RSEFeedbackVivado
+RSEP4: RSEVivadoHLS
 	cd RSEP4 && make
-
-RSEFeedbackVivado:
-	cd RSEFeedbackVivado && make
 
 RSEInputBufferVivado:
 	cd RSEInputBufferVivado && make
+
+TupleGeneratorVivado:
+	cd TupleGeneratorVivado && make
 
 RSEVivadoHLS:
 	cd RSEVivadoHLS && make
@@ -23,6 +23,6 @@ clean:
 	cd RSEVivado && make clean
 	cd RSEVivadoHLS && make clean
 	cd RSEP4 && make clean
-	cd RSEFeedbackVivado && make clean
+	cd TupleGeneratorVivado && make clean
 	cd RSEInputBufferVivado && make clean
 

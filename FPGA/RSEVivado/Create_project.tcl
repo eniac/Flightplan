@@ -99,7 +99,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 set obj [get_filesets sources_1]
 set_property "ip_repo_paths" [ list \
   "[file normalize "$origin_dir/../RSEP4/Encoder/XilinxSwitch"]"\
-  "[file normalize "$origin_dir/../RSEFeedbackVivado"]"\
+  "[file normalize "$origin_dir/../TupleGeneratorVivado"]"\
   "[file normalize "$origin_dir/../RSEInputBufferVivado"]" ] $obj
 
 # Rebuild user ip_repo's index before adding any source files

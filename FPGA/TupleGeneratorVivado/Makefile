@@ -1,8 +1,15 @@
-All: TupleGeneratorVivado
+.PHONY: All Create_project Build_project clean
 
-TupleGeneratorVivado: Sources/TupleGenerator.vhd Sources/component.xml
+All: Create_project Build_project
+
+Create_project: TupleGeneratorVivado
+
+Build_project: TupleGeneratorVivado
+	vivado -mode batch -source Build_project.tcl
+
+TupleGeneratorVivado: Sources/TupleGenerator.vhd
 	vivado -mode batch -source Create_project.tcl
 
 clean:
-	rm -fr TupleGeneratorVivado vivado.jou vivado.log Sources/ip Sources/ui
+	rm -fr TupleGeneratorVivado *.jou *.log
 
