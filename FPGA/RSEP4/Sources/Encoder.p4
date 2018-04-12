@@ -30,7 +30,8 @@
 
 #include "Configuration.h"
 
-@Xilinx_MaxLatency(100)
+// We need at least space for one packet or the encoder will deadlock.
+@Xilinx_MaxLatency(200)
 extern void fec(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
     out bit<FEC_PACKET_INDEX_WIDTH> packet_index);
 

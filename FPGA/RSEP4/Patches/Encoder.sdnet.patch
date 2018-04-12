@@ -3,7 +3,7 @@
 @@ -141,6 +141,31 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
- class fec_0_t::UserEngine(100, 0) {
+ class fec_0_t::UserEngine(200, 0) {
 +  Packet_input packet_in;
 +  Packet_output packet_out;
 +  class Update_fl_t::Tuple(inout) {
