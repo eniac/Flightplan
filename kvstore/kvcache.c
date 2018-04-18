@@ -1,11 +1,19 @@
+#include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <pcap.h>
+#include <stdbool.h>
 
 #include "memcache_forwarder.h"
 
 pcap_t *client_handle = NULL;
 pcap_t *server_handle = NULL;
+
+pthread_t client_tid;
+pthread_t server_tid;
 
 void forward_client_frame(const void *packet, int len) {
 	if (server_handle != NULL) {
@@ -66,7 +74,20 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	pcap_loop(client_interface, 0, memcache_forwarder, NULL);
+	/* Spawn 2 threads : client thread and server thread */
+	int ret_val;
+	ret_val = pthread_create(&client_tid, NULL, client_thread, NULL);
+	if (ret_val < 0) {
+		perror("Client thread creation failed");
+		exit(1);
+	}
+
+	ret_val = pthread_create(&server_tid, NULL, server_thread, NULL);
+	if (ret_val < 0) {
+		perror("Server thread creation failed");
+		exit(1);
+	}
+
+	while (true);
+	return 0;
 }
-
-
