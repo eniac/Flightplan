@@ -15,18 +15,6 @@ pcap_t *server_handle = NULL;
 pthread_t client_tid;
 pthread_t server_tid;
 
-void forward_client_frame(const void *packet, int len) {
-	if (server_handle != NULL) {
-		pcap_inject(server_handle, packet, len);
-	}
-}
-
-void forward_server_frame(const void *packet, int len) {
-	if (client_handle != NULL) {
-		pcap_inject(server_handle, packet, len);
-	}
-}
-
 int main (int argc, char **argv) {
 	char *client_interface = NULL;
 	char *server_interface = NULL;
