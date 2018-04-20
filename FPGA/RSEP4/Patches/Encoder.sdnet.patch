@@ -1,5 +1,5 @@
---- Encoder.sdnet.original	2018-04-12 10:44:30.661397371 -0400
-+++ Encoder.sdnet	2018-04-12 10:42:15.497373953 -0400
+--- Encoder.sdnet.original	2018-04-17 14:40:16.440995389 -0400
++++ Encoder.sdnet	2018-04-16 17:39:26.448502427 -0400
 @@ -141,6 +141,31 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }

@@ -138,34 +138,34 @@ wire packet_out_packet_out_VAL ;
 wire [63:0] packet_out_packet_out_DAT ;
 wire [3:0] packet_out_packet_out_CNT ;
 wire packet_out_packet_out_ERR ;
-wire tuple_out_control_VALID ;
-reg [21:0] tuple_out_control_DATA ;
-wire tuple_out_Update_fl_VALID ;
-reg [15:0] tuple_out_Update_fl_DATA ;
-wire tuple_out_hdr_VALID ;
-reg [145:0] tuple_out_hdr_DATA ;
-wire tuple_out_ioports_VALID ;
-reg [7:0] tuple_out_ioports_DATA ;
-wire tuple_out_local_state_VALID ;
-reg [15:0] tuple_out_local_state_DATA ;
-wire tuple_out_Parser_extracts_VALID ;
-reg [31:0] tuple_out_Parser_extracts_DATA ;
+reg tuple_out_control_VALID ;
+wire [21:0] tuple_out_control_DATA ;
+reg tuple_out_Update_fl_VALID ;
+wire [15:0] tuple_out_Update_fl_DATA ;
+reg tuple_out_hdr_VALID ;
+wire [145:0] tuple_out_hdr_DATA ;
+reg tuple_out_ioports_VALID ;
+wire [7:0] tuple_out_ioports_DATA ;
+reg tuple_out_local_state_VALID ;
+wire [15:0] tuple_out_local_state_DATA ;
+reg tuple_out_Parser_extracts_VALID ;
+wire [31:0] tuple_out_Parser_extracts_DATA ;
 wire tuple_out_fec_output_VALID ;
 wire [`FEC_PACKET_INDEX_WIDTH - 1:0] tuple_out_fec_output_DATA ;
 
 wire tuple_fifo_wr_en;
 reg tuple_fifo_rd_en;
-wire [`FEC_K_WIDTH + `FEC_H_WIDTH:0] tuple_fifo_din;
-wire [`FEC_K_WIDTH + `FEC_H_WIDTH:0] tuple_fifo_dout;
+wire [`FEC_K_WIDTH + `FEC_H_WIDTH + 240:0] tuple_fifo_din;
+wire [`FEC_K_WIDTH + `FEC_H_WIDTH + 240:0] tuple_fifo_dout;
 wire tuple_fifo_empty;
 wire tuple_fifo_almost_full;
 
-wire data_fifo_wr_en;
-wire data_fifo_rd_en;
-wire [70:0] data_fifo_din;
-wire [70:0] data_fifo_dout;
-wire data_fifo_empty;
-wire data_fifo_almost_full;
+wire packet_fifo_wr_en;
+wire packet_fifo_rd_en;
+wire [70:0] packet_fifo_din;
+wire [70:0] packet_fifo_dout;
+wire packet_fifo_empty;
+wire packet_fifo_almost_full;
 
 wire core_start;
 wire core_done;
@@ -195,7 +195,7 @@ wire [`FEC_PACKET_INDEX_WIDTH - 1:0] packet_index;
 `define STATE_WAIT_FOR_DONE   3
 `define STATE_GENERATE_PACKET 4
 
-defparam tuple_fifo.WRITE_DATA_WIDTH = `FEC_K_WIDTH + `FEC_H_WIDTH + 1; 
+defparam tuple_fifo.WRITE_DATA_WIDTH = `FEC_K_WIDTH + `FEC_H_WIDTH + 241; 
 defparam tuple_fifo.FIFO_WRITE_DEPTH = 512; 
 defparam tuple_fifo.PROG_FULL_THRESH = 287; 
 defparam tuple_fifo.PROG_EMPTY_THRESH = 287; 
@@ -229,27 +229,27 @@ xpm_fifo_sync tuple_fifo (
 	.rst(rst) 
 ); 
 
-defparam data_fifo.WRITE_DATA_WIDTH = 71; 
-defparam data_fifo.FIFO_WRITE_DEPTH = 512; 
-defparam data_fifo.PROG_FULL_THRESH = 287; 
-defparam data_fifo.PROG_EMPTY_THRESH = 287; 
-defparam data_fifo.READ_MODE = "fwft"; 
-defparam data_fifo.WR_DATA_COUNT_WIDTH = 9; 
-defparam data_fifo.RD_DATA_COUNT_WIDTH = 9; 
-defparam data_fifo.DOUT_RESET_VALUE = "0"; 
-defparam data_fifo.FIFO_MEMORY_TYPE = "bram"; 
+defparam packet_fifo.WRITE_DATA_WIDTH = 71; 
+defparam packet_fifo.FIFO_WRITE_DEPTH = 512; 
+defparam packet_fifo.PROG_FULL_THRESH = 287; 
+defparam packet_fifo.PROG_EMPTY_THRESH = 287; 
+defparam packet_fifo.READ_MODE = "fwft"; 
+defparam packet_fifo.WR_DATA_COUNT_WIDTH = 9; 
+defparam packet_fifo.RD_DATA_COUNT_WIDTH = 9; 
+defparam packet_fifo.DOUT_RESET_VALUE = "0"; 
+defparam packet_fifo.FIFO_MEMORY_TYPE = "bram"; 
 
-xpm_fifo_sync data_fifo (
-	.wr_en(data_fifo_wr_en),
-	.din(data_fifo_din),
-	.rd_en(data_fifo_rd_en),
+xpm_fifo_sync packet_fifo (
+	.wr_en(packet_fifo_wr_en),
+	.din(packet_fifo_din),
+	.rd_en(packet_fifo_rd_en),
 	.sleep(1'b0),
 	.injectsbiterr(),
 	.injectdbiterr(),
 	.prog_empty(), 
-	.dout(data_fifo_dout), 
-	.empty(data_fifo_empty), 
-	.prog_full(data_fifo_almost_full), 
+	.dout(packet_fifo_dout), 
+	.empty(packet_fifo_empty), 
+	.prog_full(packet_fifo_almost_full), 
 	.full(), 
 	.rd_data_count(), 
 	.wr_data_count(), 
@@ -286,17 +286,26 @@ RSE_core core
 assign packet_in_packet_in_RDY = packet_out_packet_out_RDY;
 
 assign tuple_fifo_wr_en = tuple_in_fec_input_VALID;
-assign tuple_fifo_din = tuple_in_fec_input_DATA;
+assign tuple_fifo_din = {tuple_in_fec_input_DATA, tuple_in_control_DATA,
+                         tuple_in_Update_fl_DATA, tuple_in_hdr_DATA,
+                         tuple_in_ioports_DATA, tuple_in_local_state_DATA,
+                         tuple_in_Parser_extracts_DATA};
+assign packet_fifo_wr_en = packet_in_packet_in_VAL;
+assign packet_fifo_din = {packet_in_packet_in_SOF, packet_in_packet_in_EOF, packet_in_packet_in_DAT,
+                          packet_in_packet_in_CNT, packet_in_packet_in_ERR};
+assign packet_fifo_rd_en = core_input_packet_read;
 
-assign data_fifo_wr_en = packet_in_packet_in_VAL;
-assign data_fifo_din = {packet_in_packet_in_SOF, packet_in_packet_in_EOF, packet_in_packet_in_DAT,
-                        packet_in_packet_in_CNT, packet_in_packet_in_ERR};
-assign data_fifo_rd_en = core_input_packet_read;
+assign tuple_out_control_DATA         = tuple_fifo_dout[239:218];
+assign tuple_out_Update_fl_DATA       = tuple_fifo_dout[217:202];
+assign tuple_out_hdr_DATA             = tuple_fifo_dout[201:56];
+assign tuple_out_ioports_DATA         = tuple_fifo_dout[55:48];
+assign tuple_out_local_state_DATA     = tuple_fifo_dout[47:32];
+assign tuple_out_Parser_extracts_DATA = tuple_fifo_dout[31:0];
 
 assign core_start = 1;
-assign core_input_tuple = tuple_fifo_dout;
-assign core_input_packet_dout = data_fifo_dout;
-assign core_input_packet_empty_n = ~data_fifo_empty;
+assign core_input_tuple = tuple_fifo_dout[240 + `FEC_K_WIDTH + `FEC_H_WIDTH:240];
+assign core_input_packet_dout = packet_fifo_dout;
+assign core_input_packet_empty_n = ~packet_fifo_empty;
 assign core_output_packet_ap_ack = ~backpressure_in;
 
 assign k = core_input_tuple[`FEC_K_WIDTH + `FEC_H_WIDTH - 1:`FEC_H_WIDTH];
@@ -314,21 +323,33 @@ end
 
 always @(state, tuple_fifo_empty, core_done, packet_index, k, h,
          core_output_tuple_ap_vld) begin
-	tuple_fifo_rd_en <= 0;
-	core_input_tuple_ap_vld <= 0;
-	next_state <= state;
+	tuple_fifo_rd_en                <= 0;
+	core_input_tuple_ap_vld         <= 0;
+	tuple_out_control_VALID         <= 0;
+	tuple_out_Update_fl_VALID       <= 0;
+	tuple_out_hdr_VALID             <= 0;
+	tuple_out_ioports_VALID         <= 0;
+	tuple_out_local_state_VALID     <= 0;
+	tuple_out_Parser_extracts_VALID <= 0;
+	next_state                      <= state;
 
 	case ( state )
 		`STATE_IDLE : begin
 			if ( !tuple_fifo_empty ) begin
-				tuple_fifo_rd_en <= 1;
-				next_state <= `STATE_OUTPUT_TUPLE;
+				tuple_fifo_rd_en  <= 1;
+				next_state        <= `STATE_OUTPUT_TUPLE;
 			end
 		end
 
 		`STATE_OUTPUT_TUPLE : begin
-			core_input_tuple_ap_vld <= 1;
-			next_state <= `STATE_WAIT_FOR_OUTPUT;
+			core_input_tuple_ap_vld         <= 1;
+			tuple_out_control_VALID         <= 1;
+			tuple_out_Update_fl_VALID       <= 1;
+			tuple_out_hdr_VALID             <= 1;
+			tuple_out_ioports_VALID         <= 1;
+			tuple_out_local_state_VALID     <= 1;
+			tuple_out_Parser_extracts_VALID <= 1;
+			next_state                      <= `STATE_WAIT_FOR_OUTPUT;
 		end
 
 		`STATE_WAIT_FOR_OUTPUT : begin
@@ -356,7 +377,7 @@ always @(state, tuple_fifo_empty, core_done, packet_index, k, h,
 	endcase
 end
 
-assign backpressure_out = tuple_fifo_almost_full | data_fifo_almost_full;
+assign backpressure_out = tuple_fifo_almost_full | packet_fifo_almost_full;
 
 assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_out_DAT,
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = core_output_packet;
@@ -364,44 +385,6 @@ assign packet_out_packet_out_VAL = core_output_packet_ap_vld & ~backpressure_in;
 
 assign tuple_out_fec_output_VALID = core_output_tuple_ap_vld;
 assign tuple_out_fec_output_DATA = core_output_tuple;
-
-always @( posedge clk_line ) begin
-	if ( rst ) begin
-		tuple_out_control_DATA <= 0;
-		tuple_out_Update_fl_DATA <= 0;
-		tuple_out_hdr_DATA <= 0;
-		tuple_out_ioports_DATA <= 0;
-		tuple_out_local_state_DATA <= 0;
-		tuple_out_Parser_extracts_DATA <= 0;
-	end
-	else  begin
-		if ( tuple_in_control_VALID ) begin
-			tuple_out_control_DATA <= tuple_in_control_DATA;
-		end
-		if ( tuple_in_Update_fl_VALID ) begin
-			tuple_out_Update_fl_DATA <= tuple_in_Update_fl_DATA;
-		end
-		if ( tuple_in_hdr_VALID ) begin
-			tuple_out_hdr_DATA <= tuple_in_hdr_DATA;
-		end
-		if ( tuple_in_ioports_VALID ) begin
-			tuple_out_ioports_DATA <= tuple_in_ioports_DATA;
-		end
-		if ( tuple_in_local_state_VALID ) begin
-			tuple_out_local_state_DATA <= tuple_in_local_state_DATA;
-		end
-		if ( tuple_in_Parser_extracts_VALID ) begin
-			tuple_out_Parser_extracts_DATA <= tuple_in_Parser_extracts_DATA;
-		end
-	end
-end
-
-assign tuple_out_control_VALID = core_output_tuple_ap_vld;
-assign tuple_out_Update_fl_VALID = core_output_tuple_ap_vld;
-assign tuple_out_hdr_VALID = core_output_tuple_ap_vld;
-assign tuple_out_ioports_VALID = core_output_tuple_ap_vld;
-assign tuple_out_local_state_VALID = core_output_tuple_ap_vld;
-assign tuple_out_Parser_extracts_VALID = core_output_tuple_ap_vld;
 
 endmodule
 
