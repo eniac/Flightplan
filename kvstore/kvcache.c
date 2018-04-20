@@ -13,7 +13,6 @@ pcap_t *client_handle = NULL;
 pcap_t *server_handle = NULL;
 
 pthread_t client_tid;
-pthread_t server_tid;
 
 int main (int argc, char **argv) {
 	char *client_interface = NULL;
@@ -62,7 +61,6 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	/* Spawn 2 threads : client thread and server thread */
 	int ret_val;
 	ret_val = pthread_create(&client_tid, NULL, client_thread, NULL);
 	if (ret_val < 0) {
@@ -70,12 +68,6 @@ int main (int argc, char **argv) {
 		exit(1);
 	}
 
-	ret_val = pthread_create(&server_tid, NULL, server_thread, NULL);
-	if (ret_val < 0) {
-		perror("Server thread creation failed");
-		exit(1);
-	}
-
-	while (true);
+	server_thread((void *)NULL);
 	return 0;
 }
