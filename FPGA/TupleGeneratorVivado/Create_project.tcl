@@ -15,21 +15,6 @@
 #   run results please launch the synthesis/implementation runs as needed.
 #
 #*****************************************************************************************
-# NOTE: In order to use this script for source control purposes, please make sure that the
-#       following files are added to the source control system:-
-#
-# 1. This project restoration tcl script (Create_project.tcl) that was generated.
-#
-# 2. The following source(s) files that were local or imported into the original project.
-#    (Please see the '$orig_proj_dir' and '$origin_dir' variable setting below at the start of the script)
-#
-#    "/home/gyzuh/University/DComp/Repository/P4Boosters/TupleGenerator/TupleGenerator.srcs/sources_1/imports/new/TupleGenerator.vhd"
-#
-# 3. The following remote source files that were added to the original project:-
-#
-#    "/home/gyzuh/University/DComp/Repository/P4Boosters/TupleGenerator/TupleGenerator.srcs/sources_1/imports/new/component.xml"
-#
-#*****************************************************************************************
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir "."
@@ -109,36 +94,21 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
 
-# Set IP repository paths
-set obj [get_filesets sources_1]
-#set_property "ip_repo_paths" "[file normalize "$origin_dir/../TupleGeneratorVivado/TupleGeneratorVivado.srcs/sources_1/imports/new"]" $obj
-
-# Rebuild user ip_repo's index before adding any source files
-update_ip_catalog -rebuild
-
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/Sources/TupleGenerator.vhd"]"\
- "[file normalize "$origin_dir/Sources/component.xml"]"\
 ]
-add_files -norecurse -fileset $obj $files
+set imported_files [import_files -fileset sources_1 $files]
 
 # Set 'sources_1' fileset file properties for remote files
-set file "$origin_dir/Sources/TupleGenerator.vhd"
-set file [file normalize $file]
+set file "TupleGenerator.vhd"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/Sources/component.xml"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "IP-XACT" -objects $file_obj
 
 
 # Set 'sources_1' fileset file properties for local files
 # None
-
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]

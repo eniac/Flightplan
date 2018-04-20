@@ -18,60 +18,33 @@ def main():
                       help = 'Output text file')
   parser.add_argument('-p', dest = 'pcapFilename', action = 'store',
                       help = 'Output PCAP file')
-  parser.add_argument('-a', dest = 'axiFilename', action = 'store',
-                      help = 'Output AXI file')
-  parser.add_argument('-k', dest = 'k', action = 'store', default = 8,
-                      type = int, help = 'Untagged data packets per block (k)')
-  parser.add_argument('-f', dest = 'h', action = 'store', default = 4,
-                      type = int, help = 'Tagged feedback packets per block (h)')
-  parser.add_argument('-b', dest = 'blockCount', action = 'store', default = 3,
-                      type = int, help = 'Number of blocks')
+  parser.add_argument('-n', dest = 'packetCount', action = 'store', default = 100,
+                      type = int, help = 'Number of packets')
   parser.add_argument('-l', dest = 'payloadLength', action = 'store',
-                      default = 1024, help = 'Payload length in bytes.  ' \
+                      default = '1024', help = 'Payload length in bytes.  ' \
                       'Specify a range (e.g., 512-1024) for random values.')
   args = parser.parse_args()
 
   packets = []
-  for j in range(0, args.blockCount):
-    for i in range(0, args.k):
-      packets.append(generateDataPacket(packetIndex = i,
-                                        payloadLength = args.payloadLength))
-    for i in range(0, args.h):
-      packets.append(generateParityPacket(packetIndex = i, k = args.k,
-                                          payloadLength = args.payloadLength))
+  for i in range(0, args.packetCount):
+    packets.append(generatePacket(packetIndex = i,
+                                  payloadLength = args.payloadLength))
 
   if args.pcapFilename != None:
     outputPCAPFile(args.pcapFilename, packets)
   if args.textFilename != None:
     outputTextFile(args.textFilename, packets)
-  if args.axiFilename != None:
-    outputAXIFile(args.axiFilename, packets)
 
-def generateDataPacket(addrDst = '000000000000'.decode('hex'),
-                       addrSrc = '000000000000'.decode('hex'),
-                       payloadLength = 1024, packetIndex = 0):
+def generatePacket(addrDst = '000000000000'.decode('hex'),
+                   addrSrc = '000000000000'.decode('hex'),
+                   payloadLength = 1024, packetIndex = 0):
   """
   Generate a single data packet without tag.
   """
   length = pickPayloadLength(payloadLength)
-  payloadByte = (str(packetIndex + 1) * 2).decode("hex")
+  payloadByte = (str(packetIndex % 9 + 1) * 2).decode("hex")
   payload = payloadByte * length;
   return dpkt.ethernet.Ethernet(dst = addrDst, src = addrSrc, type = 0,
-                                data = payload)
-
-def generateParityPacket(addrDst = '000000000000'.decode('hex'),
-                         addrSrc = '000000000000'.decode('hex'),
-                         payloadLength = 1024, packetIndex = 0,
-                         k = 8):
-  """
-  Generate a single parity packet with tag, identical to packets produced by
-  the feedback loop.
-  """
-  length = pickPayloadLength(payloadLength)
-  tag = struct.pack("!H", packetIndex)
-  payloadByte = (str(packetIndex + 1) * 2).decode("hex")
-  payload = tag + payloadByte * length;
-  return dpkt.ethernet.Ethernet(dst = addrDst, src = addrSrc, type = 0x8000,
                                 data = payload)
 
 def outputPCAPFile(filename, packets):
@@ -108,22 +81,6 @@ def outputTextFile(filename, packets):
   with open(filename, "wt") as textFile:
     for packet in packets:
       textFile.write(str(packet).encode('hex') + ';\n')
-
-def outputAXIFile(filename, packets):
-  """
-  Output packets to an AXI file.
-  """
-  with open(filename, "wt") as textFile:
-    for packet in packets:
-      data = str(packet).encode('hex')
-      while len(data) > 0:
-        word = data[:16]
-        data = data[16:]
-        end = 1 if len(data) == 0 else 0
-        mask = 0xFF >> (8 - len(word) / 2)
-        word = word + "0" * (16 - len(word))
-        line = str(end) + ' ' + '{:02x}'.format(mask) + ' ' + word[::-1] + '\n'
-        textFile.write(line)
 
 def pickPayloadLength(length):
   """
