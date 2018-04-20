@@ -15,7 +15,7 @@ entity TupleGenerator is
     packet_in_packet_in_TKEEP  : in  std_logic_vector(7 downto 0);
     packet_in_packet_in_TLAST  : in  std_logic;
     tuple_in_unused_VALID      : out std_logic;
-    tuple_in_unused_DATA       : out std_logic
+    tuple_in_unused_DATA       : out std_logic_vector(7 downto 0)
   );
 end TupleGenerator;
 
@@ -40,6 +40,6 @@ begin
   end process;
 
   tuple_in_unused_VALID <= update and start_of_packet;
-  tuple_in_unused_DATA <= '0';  
+  tuple_in_unused_DATA <= (others => '0');  
 
 end RTL;

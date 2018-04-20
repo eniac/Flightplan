@@ -1,0 +1,238 @@
+Encoder/XilinxSwitch/vivado_sim.bash
+--- Encoder.original/XilinxSwitch/vivado_sim.bash	2018-04-17 14:40:33.296941979 -0400
++++ Encoder/XilinxSwitch/vivado_sim.bash	2018-04-16 17:39:43.548531145 -0400
+@@ -1,4 +1,5 @@
+ #!/bin/bash
++[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
+ 
+ PATH=${XILINX_VIVADO}/bin:${XILINX_VIVADO}/tps/lnx64/gcc-6.2.0/bin:${XILINX_VIVADO}/tps/lnx64/binutils-2.26/bin:$PATH 
+ 
+@@ -8,10 +9,12 @@
+ set -euo pipefail
+ set -x
+ find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv % || true; } 
++find -name "*.vhd" | { xargs -I % ${XILINX_VIVADO}/bin/xvhdl % || true; }
+ mkdir -p xsim.dir/xsc
+ find -name "*.c" | xargs ${XILINX_VIVADO}/bin/xsc -mt off -v 1
+-g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./fec_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
+-g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./fec_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
+-g++ -std=gnu++11 -Wa,-W  -O -fPIC  -m64  -shared  -o xsim.dir/xsc/dpi.so xsim.dir/xsc/*.o ${XILINX_VIVADO}/lib/lnx64.o/librdi_simulator_kernel.so -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -c -fPIC -I ../../../RSEConfig -o xsim.dir/xsc/rse.o fec_0_t.TB/rse.cpp
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/ -I ../../../RSEConfig -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -std=gnu++11 -Wa,-W  -O -fPIC  -m64  -shared  -o xsim.dir/xsc/dpi.so xsim.dir/xsc/*.o ${XILINX_VIVADO}/lib/lnx64.o/librdi_simulator_kernel.so -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
+ ${XILINX_VIVADO}/bin/xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb  
+ ${XILINX_VIVADO}/bin/xsim --runall XilinxSwitch_tb    
+Encoder/XilinxSwitch/vivado_sim_waveform.bash
+--- Encoder.original/XilinxSwitch/vivado_sim_waveform.bash	2018-04-17 14:40:33.296941979 -0400
++++ Encoder/XilinxSwitch/vivado_sim_waveform.bash	2018-04-16 17:39:43.548531145 -0400
+@@ -1,4 +1,5 @@
+ #!/bin/bash
++[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
+ 
+ PATH=${XILINX_VIVADO}/bin:${XILINX_VIVADO}/tps/lnx64/gcc-6.2.0/bin:${XILINX_VIVADO}/tps/lnx64/binutils-2.26/bin:$PATH 
+ 
+@@ -7,11 +8,13 @@
+ 
+ set -euo pipefail
+ set -x
+-find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv % || true; } 
++find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv -i fec_0_t.HDL % || true; } 
++find -name "*.vhd" | { xargs -I % ${XILINX_VIVADO}/bin/xvhdl % || true; }
+ mkdir -p xsim.dir/xsc
+ find -name "*.c" | xargs ${XILINX_VIVADO}/bin/xsc -mt off -v 1
+-g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./fec_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
+-g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./fec_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
+-g++ -std=gnu++11 -m64 -Wa,-W  -O -fPIC  -m64  -shared  -o xsim.dir/xsc/dpi.so xsim.dir/xsc/*.o ${XILINX_VIVADO}/lib/lnx64.o/librdi_simulator_kernel.so -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -c -fPIC -I ../../../RSEConfig -o xsim.dir/xsc/rse.o fec_0_t.TB/rse.cpp
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/ -I ../../../RSEConfig -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -std=gnu++11 -m64 -Wa,-W  -O -fPIC  -m64  -shared  -o xsim.dir/xsc/dpi.so xsim.dir/xsc/*.o ${XILINX_VIVADO}/lib/lnx64.o/librdi_simulator_kernel.so -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
+ ${XILINX_VIVADO}/bin/xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb -s XilinxSwitch_tb_sim 
+ ${XILINX_VIVADO}/bin/xsim XilinxSwitch_tb_sim -gui -wdb work.XilinxSwitch_tb_tb.wdb  
+Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
+--- Encoder.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-04-17 14:40:33.872940154 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-04-16 17:39:43.548531145 -0400
+@@ -1,4 +1,5 @@
+ #!/bin/bash
+ set -euo pipefail
+ set -x
+-g++ -I. -std=c++11 $(find .. -name '*.cpp') -o XilinxSwitch -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1
++g++ -g -O0 -I. -I ../../../../RSEConfig -std=c++11 $(find .. -name '*.cpp') -o XilinxSwitch -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1
++
+Encoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
+--- Encoder.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-04-17 14:40:33.296941979 -0400
++++ Encoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-04-16 17:39:43.548531145 -0400
+@@ -47,7 +47,7 @@
+ wire [7:0] tuple_in_ioports_DATA ;
+ wire [0:0] enable_processing ;
+ wire [0:0] packet_out_packet_out_TVALID ;
+-wire [0:0] packet_out_packet_out_TREADY ;
++reg [0:0] packet_out_packet_out_TREADY ;
+ wire [63:0] packet_out_packet_out_TDATA ;
+ wire [7:0] packet_out_packet_out_TKEEP ;
+ wire [0:0] packet_out_packet_out_TLAST ;
+@@ -90,7 +90,9 @@
+ 	.internal_rst_done   	( internal_rst_done )
+ );
+ 
+-assign packet_out_packet_out_TREADY = 1'd1 ;
++always @( posedge clk_line ) begin
++	packet_out_packet_out_TREADY <= $urandom % 2;
++end
+ 
+ assign enable_processing = 1'd1 ;
+ 
+@@ -224,7 +226,7 @@
+ initial begin
+     if ($value$plusargs("PKT=%s", packet_file)) begin end
+     if ($value$plusargs("TUP=%s",  tuple_file)) begin end
+-    XilinxSwitch_DPI(packet_file, 0, tuple_file, 1, 64, 1);
++//    XilinxSwitch_DPI(packet_file, 0, tuple_file, 1, 64, 1);
+     fw_done = 0;
+     stim_file = 1;
+     check_file = 1;
+Encoder/XilinxSwitch/Testbench/TB_System_Stim.v
+--- Encoder.original/XilinxSwitch/Testbench/TB_System_Stim.v	2018-04-17 14:40:33.296941979 -0400
++++ Encoder/XilinxSwitch/Testbench/TB_System_Stim.v	2018-04-17 14:39:53.801067128 -0400
+@@ -71,6 +71,10 @@
+ reg [7:0] packet_in_packet_in_TKEEP ;
+ reg [63:0] packet_in_packet_in_TDATA ;
+ reg SOP ;
++reg temp_last ;
++reg [7:0] temp_keep ;
++reg [63:0] temp_data ;
++reg [31:0] cycles;
+ 
+ always @( posedge file_done ) begin
+ 	fd_pkt <= $fopen("Packet_in.axi", "r") ;
+@@ -86,29 +90,45 @@
+ 		packet_in_packet_in_TKEEP <= 0 ;
+ 		packet_in_packet_in_TVALID <= 0 ;
+ 		packet_in_packet_in_TDATA <= 0 ;
++		cycles <= 0;
+ 	end
+ 	else  begin
+ 		if ( ( ( packet_in_packet_in_TREADY && fw_done ) && ~stim_eof ) ) begin
+-			if ( ( 32'h3 != $fscanf(fd_pkt, "%x %x %x", packet_in_packet_in_TLAST, packet_in_packet_in_TKEEP, packet_in_packet_in_TDATA) ) ) begin
+-				stim_eof <= 1 ;
+-				$display("[%0t]  INFO: finished packet stimulus file", $time);
++			if ( cycles == 0 ) begin
++				if ( ( 32'h3 != $fscanf(fd_pkt, "%x %x %x", temp_last, temp_keep, temp_data) ) ) begin
++					stim_eof <= 1 ;
++					$display("[%0t]  INFO: finished packet stimulus file", $time);
++					packet_in_packet_in_TLAST <= 0 ;
++					packet_in_packet_in_TKEEP <= 0 ;
++					packet_in_packet_in_TVALID <= 0 ;
++					packet_in_packet_in_TDATA <= 0 ;
++				end
++				else  begin
++					packet_in_packet_in_TLAST <= temp_last ;
++					packet_in_packet_in_TKEEP <= temp_keep ;
++					packet_in_packet_in_TDATA <= temp_data ;
++					packet_in_packet_in_TVALID <= 1 ;
++					if ( SOP ) begin
++						tuple_in_valid <= 1 ;
++						if ( ( 32'h1 != $fscanf(fd_tup, "%x ", tuple_in_ioports) ) ) begin
++							tuple_in_ioports <= 0 ;
++							$display("[%0t] ERROR: error when reading tuple stimulus file", $time);
++							$finish(1);
++						end
++					end
++					SOP <= packet_in_packet_in_TLAST ;
++					if ( packet_in_packet_in_TLAST ) begin
++						cycles <= 0;
++					end
++				end
++			end
++			else  begin
++				cycles <= cycles - 1;
+ 				packet_in_packet_in_TLAST <= 0 ;
+ 				packet_in_packet_in_TKEEP <= 0 ;
+ 				packet_in_packet_in_TVALID <= 0 ;
+ 				packet_in_packet_in_TDATA <= 0 ;
+ 			end
+-			else  begin
+-				packet_in_packet_in_TVALID <= 1 ;
+-				if ( SOP ) begin
+-					tuple_in_valid <= 1 ;
+-					if ( ( 32'h1 != $fscanf(fd_tup, "%x ", tuple_in_ioports) ) ) begin
+-						tuple_in_ioports <= 0 ;
+-						$display("[%0t] ERROR: error when reading tuple stimulus file", $time);
+-						$finish(1);
+-					end
+-				end
+-				SOP <= packet_in_packet_in_TLAST ;
+-			end
+ 		end
+ 	end
+ end
+Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
+--- Encoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-04-17 14:40:33.380941713 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-04-16 17:39:43.548531145 -0400
+@@ -68,7 +68,7 @@
+ 		Deparser("Deparser") { }
+ 
+ 	// system function
+-	void operator()() {
++	bool operator()() {
+ 		std::cout << "===================================================================" << std::endl;
+ 		std::cout << "Entering system " << _name << std::endl;
+ 		// input packet
+@@ -105,7 +105,7 @@
+ 		fec_0.control = 0;
+ 		fec_0.control.error = Parser.control.error.any() || Parser.control.done.none() || Parser.control.section.any();
+ 		fec_0.Parser_extracts = Parser.Parser_extracts;
+-		fec_0();
++		bool repeat = fec_0();
+ 
+ 		Update_lvl_1.Update_fl = fec_0.Update_fl;
+ 		Update_lvl_1.hdr = fec_0.hdr;
+@@ -133,6 +133,8 @@
+ 		std::cout << packet_out;
+ 		std::cout << "Exiting system " << _name << std::endl;
+ 		std::cout << "===================================================================" << std::endl;
++		
++		return repeat;
+ 	}
+ };
+ //######################################################
+Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
+--- Encoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-04-17 14:40:33.384941700 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-04-16 17:39:43.548531145 -0400
+@@ -98,14 +98,18 @@
+ 			// format input and inout tuples
+ 			_tuple_in_stream << ((_LV<8>)_DUT.ioports).to_hex() << ' ';
+ 			_tuple_in_stream << std::endl;
+-			// eval engine
+-			_DUT();
+-			// format packet
+-			WritePcapPacket(_packet_out_pcap,  _DUT.packet_out);
+-			busFormatPacket(_packet_out_bus,   _DUT.packet_out, _bus_width, _packet_out_format);
+-			// format output and inout tuples
+-			_tuple_out_stream << ((_LV<8>)_DUT.ioports).to_hex() << ' ';
+-			_tuple_out_stream << std::endl;
++			bool repeat;
++			do
++			{
++  			  // eval engine
++			  repeat = _DUT();
++			  // format packet
++			  WritePcapPacket(_packet_out_pcap,  _DUT.packet_out);
++			  busFormatPacket(_packet_out_bus,   _DUT.packet_out, _bus_width, _packet_out_format);
++			  // format output and inout tuples
++			  _tuple_out_stream << ((_LV<8>)_DUT.ioports).to_hex() << ' ';
++			  _tuple_out_stream << std::endl;
++			} while (repeat);
+ 		} // for _p
+ 		// close files
+ 		_packet_in_pcap.close();
+Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
+--- Encoder.original/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-04-17 14:40:33.092942626 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-04-16 17:39:43.548531145 -0400
+@@ -1,4 +1,4 @@
+-create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xcvu095-ffva2104-2-e
++create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xczu9eg-ffvb1156-2-i
+ add_files -scan_for_includes ./
+ import_files -force
+ update_compile_order -fileset sources_1
