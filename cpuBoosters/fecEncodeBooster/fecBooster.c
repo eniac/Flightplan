@@ -215,6 +215,82 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 	}
 }
 
+/* Called by the decoder to fill the FEC structure with the available data and parity packets, and mark the missing packets as WANTED*/
+void call_fec_blk_put(int blockId) {
+	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+	fec_sym p[FEC_MAX_N][FEC_MAX_COLS];   /* storage for packets in FEC block (fb) */
+	fec_sym k = NUM_DATA_PACKETS;
+	fec_sym h = NUM_PARITY_PACKETS;
+	fec_sym o = 0;
+	fec_sym c = 2;
+	fec_sym s = 3;
+	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+	fec_blk_put(p, k, h, c, s, o, blockId);
+}
+
+void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
+	fec_sym i, y, z;
+	int maxPacketLength = 0;
+	fb.block_N = k + h;
+
+	/* copy the K data packets from packet buffer */
+	for (i = 0; i < k; i++) {
+		/*Only if the data packet is present in packet buffer, add it to the fb struct*/
+		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
+			if (i >= FEC_MAX_K) {
+				fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
+				exit (33);
+			}
+
+			int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
+
+			fb.pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
+			fb.cbi[i] = i;
+			fb.plen[i] = payloadLength;
+
+			/*  Keep track of maximum packet length to set the block_C field of FEC structure    */
+			if (payloadLength > maxPacketLength) {
+				maxPacketLength = payloadLength;
+			}
+			fb.pstat[i] = FEC_FLAG_KNOWN;
+		} else {
+			/*If the data packet is not present, then mark the packet state as WANTED*/
+			fb.pstat[i] = FEC_FLAG_WANTED;
+		}
+	}
+	fb.block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
+
+
+	/*Now populate the recieved parity packets into the packet buffer*/
+	for (i = 0; i < h; i++) {
+		/*If the parity packet is present, then update it in the packet buffer*/
+		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
+
+			if (i >= FEC_MAX_H) {
+				fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
+				exit(34);
+			}
+			y = k + i;                             /* FEC block index */
+			z = FEC_MAX_N - o - i - 1;             /* Codeword index */ /*TODO: Need to verify these values if the decoder does not work*/
+			fb.pdata[y] = (fec_sym *) pkt_buffer[blockId][i];
+			fb.cbi[y] = z; /*TODO: Need to verify these values if the decoder does not work*/
+			fb.plen[y] = fb.block_C; /*TODO: Need to verify these values if the decoder does not work*/
+			fb.pstat[y] = FEC_FLAG_KNOWN;
+
+		} else { /*If the parity packet is missing*/
+			/*Since it is parity packet we can set the status of non-recieved packets to IGNORE*/
+			fb.pstat[i] = FEC_FLAG_IGNORE;
+		}
+	}
+
+	/* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
+	if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
+		fb.plen[k - 1] -= 1;
+		p[k - 1][0] -= 1;
+	}
+}
+
 unsigned char* get_payload_start_for_packet(char* packet) {
 	/*We need to account for the newly added tag after the ethernet heaader.*/
 	const struct sniff_ip *ip;              /* The IP header */
@@ -435,10 +511,6 @@ int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size) {
 
   /*extract the original size and copy in place*/
   struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
-  if (tag->index >= NUM_DATA_PACKETS) {
-    fprintf(stderr, "Cannot strip non-data Wharf frame");
-    exit(1);
-  }
   *tclass = (enum traffic_class)tag->class_id;
   const int original_size = tag->size;
   const int offset = sizeof(struct ether_header) + sizeof(struct fec_header);
@@ -520,7 +592,6 @@ int main (int argc, char** argv) {
 	}
 
 	pcap_loop(input_handle, 0, my_packet_handler, NULL);
-
 
 	free_pkt_buffer();
 }
