@@ -52,6 +52,11 @@
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Decoder.cpp</location>
 		</link>
 		<link>
+			<name>source/Decoder.h</name>
+			<type>1</type>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Decoder.h</location>
+		</link>
+		<link>
 			<name>testbench/Testbench.cpp</name>
 			<type>1</type>
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Testbench.cpp</location>

@@ -1,14 +1,12 @@
-#include "Configuration.h"
+#include "Decoder.h"
 
 #include <hls_stream.h>
-#include <ap_int.h>
 
 #define HEADER_SIZE ((FEC_ETH_HEADER_SIZE + FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH) / 8)
 #define WORDS_PER_PACKET ((FEC_MAX_PACKET_SIZE + 7) / 8)
 #define BYTES_PER_PACKET_WIDTH (11)
 #define WORDS_PER_PACKET_WIDTH (BYTES_PER_PACKET_WIDTH - 3)
 #define TRAFFIC_CLASS_COUNT (1 << FEC_TRAFFIC_CLASS_WIDTH)
-#define AXI_BUS_WIDTH (64)
 #define BYTES_PER_WORD (AXI_BUS_WIDTH / 8)
 
 enum command
@@ -23,35 +21,6 @@ typedef ap_uint<FEC_K_WIDTH> k_type;
 typedef ap_uint<WORDS_PER_PACKET_WIDTH> words_per_packet;
 typedef ap_uint<BYTES_PER_PACKET_WIDTH> bytes_per_packet;
 typedef ap_uint<AXI_BUS_WIDTH> data_word;
-
-typedef struct
-{
-    // Note the reverse order with respect to parameter order in external function
-    // declaration.
-    packet_index Packet_index;
-    block_index Block_index;
-    traffic_class Traffic_class;
-    k_type k;
-    ap_uint<1> Valid;
-} input_tuple;
-
-typedef struct
-{
-    // Note the reverse order with respect to parameter order in external function
-    // declaration.
-    ap_uint<1> Dummy;
-} output_tuple;
-
-typedef struct
-{
-    // Note the reverse order with respect to parameter order in external function
-    // declaration.
-    ap_uint<1> Error;
-    ap_uint<4> Count;
-    data_word Data;
-    ap_uint<1> End_of_frame;
-    ap_uint<1> Start_of_frame;
-} packet_interface;
 
 typedef struct
 {
@@ -142,30 +111,49 @@ static void Collect_packets(traffic_class Traffic_class, block_index Block_index
   words_per_packet Packet_offset = 0;
   data_word Previous_word = 0;
   bytes_per_packet Packet_length = 0;
+  packet_interface Input;
   do
   {
 #pragma HLS LOOP_TRIPCOUNT min=8 max=190
 #pragma HLS pipeline
-    packet_interface Input = Packet_input[Packet_offset++];
+    Input = Packet_input[Packet_offset];
 
     End = Input.End_of_frame;
 
-    data_word Data = Previous_word << (8 - (HEADER_SIZE % 8));
-    Data |= Input.Data >> (HEADER_SIZE % 8);
+    data_word Data;
+    if (HEADER_SIZE % 8 == 0)
+      Data = Input.Data;
+    else
+    {
+      Data = Previous_word << (8 * (HEADER_SIZE % 8));
+      Data |= Input.Data >> (8 * (8 - HEADER_SIZE % 8));
+    }
 
-    if (Packet_offset >= HEADER_SIZE / 8 && !Drop)
+    if (Packet_offset > HEADER_SIZE / 8 && !Drop)
       Data_FIFOs[Traffic_class].write(Data);
 
     Packet_length += Input.Count;
+    Packet_offset++;
 
     Previous_word = Input.Data;
   }
   while (!End);
 
-  packet_info Info;
-  Info.Data_packet = Data_packet;
-  Info.Bytes_per_packet = Packet_length;
-  Packet_info_FIFOs[Traffic_class].write(Info);
+  if (HEADER_SIZE % 8 > 0 && Input.Count > HEADER_SIZE % 8 && !Drop)
+  {
+    data_word Data = Previous_word << (8 * (HEADER_SIZE % 8));
+    Data_FIFOs[Traffic_class].write(Data);
+  }
+
+  Packet_length -= HEADER_SIZE;
+
+  if (!Drop)
+  {
+    packet_info Info;
+    Info.Data_packet = Data_packet;
+    Info.Bytes_per_packet = Packet_length;
+    Packet_info_FIFOs[Traffic_class].write(Info);
+  }
 
   if (!New_block)
   {
@@ -210,7 +198,9 @@ static void Reorder_packets(traffic_class Traffic_class,
     for (packet_index Packet = 0; Packet < Packet_count; Packet++)
     {
       packet_info Info = Packet_info_FIFOs[Traffic_class].read();
-      for (words_per_packet Offset = 0; Offset < Info.Bytes_per_packet; Offset++)
+      words_per_packet Words_per_packet = (Info.Bytes_per_packet + BYTES_PER_WORD - 1)
+          / BYTES_PER_WORD;
+      for (words_per_packet Offset = 0; Offset < Words_per_packet; Offset++)
       {
         data_word Input = Input_FIFOs[Traffic_class].read();
         if (Info.Data_packet)
@@ -230,8 +220,8 @@ static void Decode_packets(data_word Input_buffer[FEC_MAX_K][WORDS_PER_PACKET], 
       for (words_per_packet Offset = 0; Offset < Packet_length; Offset++)
       {
         data_word Input[FEC_MAX_K];
-        for (int Packet = 0; Packet < k; Packet++)
-          Input[Packet] = Input_buffer[Packet][Offset];
+        for (int Packet_2 = 0; Packet_2 < k; Packet_2++)
+          Input[Packet_2] = Input_buffer[Packet_2][Offset];
 
         Output_data.write(Decode_word(Input, Packet));
       }
@@ -240,7 +230,8 @@ static void Decode_packets(data_word Input_buffer[FEC_MAX_K][WORDS_PER_PACKET], 
 static void Output_packets(hls::stream<data_word> & Decoded_data_FIFO,
     hls::stream<data_word> & Raw_data_FIFO, hls::stream<bytes_per_packet> & Packet_length_FIFO,
     packet_index Packet_count, command Command, k_type k,
-    packet_interface Packet_output[FEC_MAX_K * (FEC_MAX_PACKET_SIZE + 7) / 8])
+    packet_interface Packet_output[FEC_MAX_K * (FEC_MAX_PACKET_SIZE + 7) / 8],
+    k_type & Packets_output)
 {
   if (Command == COMMAND_DECODE)
   {
@@ -259,11 +250,14 @@ static void Output_packets(hls::stream<data_word> & Decoded_data_FIFO,
         Output.Data = Decoded_data_FIFO.read();
         Output.Start_of_frame = Offset == 0;
         Output.End_of_frame = End;
-        Output.Count = End ? (ap_uint<4> ) (Bytes_per_packet % 8) : (ap_uint<4> ) 8;
+        Output.Count = Bytes_per_packet % 8;
+        if (!End || Output.Count == 0)
+          Output.Count = 8;
         Output.Error = 0;
         Packet_output[Output_offset++] = Output;
       }
     }
+    Packets_output = k;
   }
   else if (Command == COMMAND_OUTPUT_DATA)
   {
@@ -279,11 +273,14 @@ static void Output_packets(hls::stream<data_word> & Decoded_data_FIFO,
         Output.Data = Raw_data_FIFO.read();
         Output.Start_of_frame = Offset == 0;
         Output.End_of_frame = End;
-        Output.Count = End ? (ap_uint<4> ) (Bytes_per_packet % 8) : (ap_uint<4> ) 8;
+        Output.Count = Bytes_per_packet % 8;
+        if (!End || Output.Count == 0)
+          Output.Count = 8;
         Output.Error = 0;
         Packet_output[Output_offset++] = Output;
       }
     }
+    Packets_output = Packet_count;
   }
 }
 
@@ -291,13 +288,12 @@ void Decode(input_tuple Tuple_input, output_tuple * Tuple_output,
     packet_interface Packet_input[FEC_MAX_K * WORDS_PER_PACKET],
     packet_interface Packet_output[FEC_MAX_K * WORDS_PER_PACKET])
 {
-#pragma HLS INTERFACE ap_ctrl_chain port=return
 #pragma HLS INTERFACE ap_hs port=Packet_input
 #pragma HLS INTERFACE ap_hs port=Packet_output
 
   data_word Ping_pong_buffer[FEC_MAX_K][WORDS_PER_PACKET];
-  hls::stream<data_word> Data_streams[TRAFFIC_CLASS_COUNT];
-  hls::stream<packet_info> Packet_info_streams[TRAFFIC_CLASS_COUNT];
+  static hls::stream<data_word> Data_streams[TRAFFIC_CLASS_COUNT];
+  static hls::stream<packet_info> Packet_info_streams[TRAFFIC_CLASS_COUNT];
   hls::stream<data_word> Raw_data_stream;
   hls::stream<bytes_per_packet> Packet_length_stream;
   hls::stream<data_word> Decoded_data_stream;
@@ -314,5 +310,5 @@ void Decode(input_tuple Tuple_input, output_tuple * Tuple_output,
       Packet_length);
   Decode_packets(Ping_pong_buffer, Command, Tuple_input.k, Packet_length, Decoded_data_stream);
   Output_packets(Decoded_data_stream, Raw_data_stream, Packet_length_stream, Packet_count, Command,
-      Tuple_input.k, Packet_output);
+      Tuple_input.k, Packet_output, Tuple_output->Packet_count);
 }

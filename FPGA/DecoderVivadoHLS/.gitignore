@@ -5,3 +5,6 @@ solution*/*.tcl
 *.log
 solution*/syn
 Batch
+*.axi
+Test
+
