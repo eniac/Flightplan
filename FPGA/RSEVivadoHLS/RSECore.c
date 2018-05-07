@@ -1,161 +1,227 @@
 #include <stdint.h>
+
 #ifndef IN_SOFTWARE
 #include <ap_cint.h>
 #else
-typedef unsigned long uint1;
-typedef unsigned long uint3;
-typedef unsigned long uint4;
-typedef unsigned long uint11;
-typedef unsigned long uint8;
-typedef unsigned long uint64;
+typedef uint8_t uint1;
+typedef uint8_t uint3;
+typedef uint8_t uint4;
+typedef uint8_t uint8;
+typedef uint16_t uint11;
+typedef uint64_t uint64;
 #endif
 
 #include "Encoder.h"
 
-#define PAYLOAD_SIZE (8192)
+#define HEADER_SIZE (FEC_ETH_HEADER_SIZE / 8)
+#define LENGTH_SIZE (FEC_PACKET_LENGTH_WIDTH / 8)
 
-#define INPUT_PACKET_SIZE (FEC_ETH_HEADER_SIZE + PAYLOAD_SIZE)
-#define FEEDBACK_PACKET_SIZE (INPUT_PACKET_SIZE + FEC_HEADER_SIZE)
-#define OUTPUT_PACKET_SIZE (FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE + INPUT_PACKET_SIZE)
-#define BYTES_PER_INPUT_PACKET ((INPUT_PACKET_SIZE + 8 - 1) / 8)
-#define BYTES_PER_FEEDBACK_PACKET ((FEEDBACK_PACKET_SIZE + 8 - 1) / 8)
-#define BYTES_PER_OUTPUT_PACKET ((OUTPUT_PACKET_SIZE + 8 - 1) / 8)
-#define WORDS_PER_OUTPUT_PACKET ((OUTPUT_PACKET_SIZE + 64 - 1) / 64)
+#define LENGTH_OFFSET (HEADER_SIZE)
+#define PAYLOAD_OFFSET (LENGTH_OFFSET + LENGTH_SIZE)
 
 #define CONCATENATE_INTERNAL(x, y) x ## y
 #define CONCATENATE(x, y) CONCATENATE_INTERNAL(x, y)
 
-typedef CONCATENATE(uint, FEC_OFFSET_WIDTH)       offset_type;
 typedef CONCATENATE(uint, FEC_PACKET_INDEX_WIDTH) index_type;
-typedef CONCATENATE(uint, FEC_OP_WIDTH)           operation_type;
+typedef CONCATENATE(uint, FEC_K_WIDTH) k_type;
+typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
+
+#define STR(x) #x
+#define PRAGMA(x) _Pragma(STR(x))
 
 typedef struct
 {
-  offset_type    Offset;
-  index_type     Index;
-  operation_type Operation;
-  uint1          Valid;
-} tuple_interface;
+  // Note the reverse order with respect to parameter order in external function
+  // declaration.
+  h_type h;
+  k_type k;
+  uint1 Valid;
+} input_tuple;
 
 typedef struct
 {
-  uint1  Error;
-  uint4  Count;
+  // Note the reverse order with respect to parameter order in external function
+  // declaration.
+  index_type Packet_index;
+} output_tuple;
+
+typedef struct
+{
+  // Note the reverse order with respect to parameter order in external function
+  // declaration.
+  uint1 Error;
+  uint4 Count;
   uint64 Data;
-  uint1  End_of_frame;
-  uint1  Start_of_frame;
+  uint1 End_of_frame;
+  uint1 Start_of_frame;
 } packet_interface;
 
-static fec_sym parity_buffer[BYTES_PER_INPUT_PACKET][FEC_MAX_H];
+static fec_sym Header[HEADER_SIZE];
 
-void Matrix_multiply_HW(fec_sym Data[FEC_MAX_K], fec_sym Parity[FEC_MAX_H], int k, int h);
+static fec_sym Parity_buffer[FEC_MAX_PACKET_SIZE][FEC_MAX_H];
+static fec_sym Packet_length_parity[FEC_PACKET_LENGTH_WIDTH / 8][FEC_MAX_H];
 
-void RSE_core(tuple_interface Tuple, packet_interface * Data,
-    packet_interface Parity[WORDS_PER_OUTPUT_PACKET])
+static index_type Packet_index;
+
+static unsigned Maximum_packet_length;
+
+static void Ignore_packet(packet_interface * Input_packet,
+    packet_interface Output_packet[(FEC_MAX_PACKET_SIZE + 7) / 8])
 {
-#pragma HLS DATA_PACK variable=Tuple
-#pragma HLS DATA_PACK variable=Data
-#pragma HLS DATA_PACK variable=Parity
-#pragma HLS INTERFACE ap_vld port=Tuple
-#pragma HLS INTERFACE ap_fifo port=Data
-#pragma HLS INTERFACE ap_hs port=Parity
+#pragma HLS inline
 
-#pragma HLS ARRAY_PARTITION variable=parity_buffer cyclic factor=8 dim=1
-#pragma HLS ARRAY_PARTITION variable=parity_buffer complete dim=2
-
-  if (Tuple.Valid == 0)
+  unsigned Word_offset = 0;
+  unsigned End = 0;
+  do
   {
-    int i = 0;
-    while (1)
-    {
-      Parity[i].Data = Data[i].Data;
-      Parity[i].End_of_frame = Data[i].End_of_frame;
-      Parity[i].Start_of_frame = Data[i].Start_of_frame;
-      Parity[i].Count = Data[i].Count;
-      Parity[i].Error = Data[i].Error;
-
-      if (Data[i].End_of_frame)
-        break;
-
-      i++;
-    }
-  }
-  else if (Tuple.Operation & FEC_OP_ENCODE_PACKET)
-  {
-    int i = 0;
-    while (1)
-    {
-#pragma HLS DEPENDENCE variable=parity_buffer inter false
+#pragma HLS LOOP_TRIPCOUNT min=8 max=190
 #pragma HLS pipeline
-      /*
-       * The loop over j should not be necessary, but if I remove it and use an unroll pragma instead,
-       * the synthesis tool finds false dependencies between different elements of parity_buffer.  I
-       * suspect that the compiler tries to save loads and stores by combining loads/stores to adjacent
-       * elements.  If I set an HLS dependency pragma to resolve it, the tool fails because it perceives
-       * the dependencies as real dependencies.  By separating the loops, we do not flag the new
-       * dependencies caused by unrolling as false dependencies.
-       */
-      uint64 Word = Data[i].Data;
-      for (int j = 0; j < 8; j++)
+
+    packet_interface Input = Input_packet[Word_offset];
+    End = Input.End_of_frame;
+    Output_packet[Word_offset++] = Input;
+  }
+  while (!End);
+}
+
+static void Encode_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
+    packet_interface * Input_packet, packet_interface Output_packet[(FEC_MAX_PACKET_SIZE + 7) / 8])
+{
+#pragma HLS inline
+
+  if (Packet_index == 0)
+    Maximum_packet_length = 0;
+
+  unsigned Word_offset = 0;
+  unsigned End = 0;
+  unsigned Packet_length = 0;
+  do
+  {
+#pragma HLS DEPENDENCE variable=Parity_buffer inter false
+#pragma HLS LOOP_TRIPCOUNT min=8 max=190
+#pragma HLS pipeline
+
+    packet_interface Input = Input_packet[Word_offset];
+    packet_interface Output = Input;
+
+    End = Input.End_of_frame;
+
+    unsigned Offset = 8 * Word_offset;
+    for (unsigned Byte_offset = 0; Byte_offset < 8; Byte_offset++)
+    {
+      if (Offset < HEADER_SIZE)
+        Header[Offset] = (Input.Data >> 8 * (7 - Byte_offset)) & 0xFF;
+
+      if (Byte_offset < Input.Count)
       {
-        if (8 * i + j < BYTES_PER_INPUT_PACKET)
-        {
-          fec_sym Symbol = (Word >> 8 * (7 - j)) & 0xFF;
-          Incremental_encode(Symbol, parity_buffer[8 * i + j], Tuple.Index, FEC_MAX_H,
-              Tuple.Operation & FEC_OP_START_ENCODER);
-        }
+        int Initialize = (Packet_index == 0) || Offset >= Maximum_packet_length;
+        fec_sym Symbol = (Input.Data >> 8 * (7 - Byte_offset)) & 0xFF;
+        Incremental_encode(Symbol, Parity_buffer[Offset], Packet_index, Input_tuple.h, Initialize);
+      }
+      Offset++;
+    }
+
+    Output_packet[Word_offset++] = Output;
+
+    Packet_length += Input.Count;
+  }
+  while (!End);
+
+  if (Packet_length > Maximum_packet_length)
+    Maximum_packet_length = Packet_length;
+
+  for (unsigned Offset = 0; Offset < FEC_PACKET_LENGTH_WIDTH / 8; Offset++)
+  {
+#pragma HLS pipeline
+    fec_sym Symbol = (Packet_length >> (8 * Offset)) & 0xFF;
+    Incremental_encode(Symbol, Packet_length_parity[Offset], Packet_index, Input_tuple.h,
+        Packet_index == 0);
+  }
+
+  Output_tuple->Packet_index = Packet_index;
+
+  Packet_index++;
+}
+
+void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
+    packet_interface Output_packet[(FEC_MAX_PACKET_SIZE + 7) / 8])
+{
+#pragma HLS inline
+
+  unsigned Word_offset = 0;
+  unsigned Input_finished = 0;
+  unsigned End = 0;
+  do
+  {
+#pragma HLS LOOP_TRIPCOUNT min=8 max=190
+#pragma HLS pipeline
+
+    const packet_interface Empty = {0, 0, 0, 1, 0};
+
+    unsigned Packet_length = Maximum_packet_length + HEADER_SIZE + LENGTH_SIZE;
+    End = Word_offset == (Packet_length - 1) / 8;
+
+    packet_interface Output;
+    Output.Data = 0;
+    unsigned Offset = 8 * Word_offset;
+    for (unsigned Byte_offset = 0; Byte_offset < 8; Byte_offset++)
+    {
+      uint8 Input_byte = 0;
+      if (Offset < LENGTH_OFFSET)
+        Input_byte = Header[Offset];
+      else if (Offset < PAYLOAD_OFFSET)
+      {
+        unsigned Length_offset = Offset - LENGTH_OFFSET;
+        Input_byte = Packet_length_parity[Length_offset][Packet_index - Input_tuple.k];
+      }
+      else if (Offset < Packet_length)
+      {
+        unsigned Payload_offset = Offset - PAYLOAD_OFFSET;
+        Input_byte = Parity_buffer[Payload_offset][Packet_index - Input_tuple.k];
       }
 
-      Parity[i].Data = Data[i].Data;
-      Parity[i].End_of_frame = Data[i].End_of_frame;
-      Parity[i].Start_of_frame = Data[i].Start_of_frame;
-      Parity[i].Count = Data[i].Count;
-      Parity[i].Error = Data[i].Error;
-
-      if (Data[i].End_of_frame)
-        break;
-
-      i++;
+      Output.Data <<= 8;
+      Output.Data |= Input_byte;
+      Offset++;
     }
+
+    Output.Start_of_frame = Word_offset == 0;
+    Output.End_of_frame = End;
+    unsigned Remainder = Packet_length % 8;
+    Output.Count = End && Remainder != 0 ? Remainder : 8;
+    Output.Error = 0;
+
+    Output_packet[Word_offset++] = Output;
   }
+  while (!End);
+
+  Output_tuple->Packet_index = Packet_index;
+
+  Packet_index++;
+  if (Packet_index == Input_tuple.k + Input_tuple.h)
+    Packet_index = 0;
+}
+
+void RSE_core(input_tuple Input_tuple, output_tuple * Output_tuple, packet_interface * Input_packet,
+    packet_interface Output_packet[(FEC_MAX_PACKET_SIZE + 7) / 8])
+{
+#pragma HLS DATA_PACK variable=Input_tuple
+#pragma HLS DATA_PACK variable=Input_packet
+#pragma HLS DATA_PACK variable=Output_packet
+#pragma HLS INTERFACE ap_vld port=Input_tuple
+#pragma HLS INTERFACE ap_vld port=Output_tuple
+#pragma HLS INTERFACE ap_fifo port=Input_packet
+#pragma HLS INTERFACE ap_hs port=Output_packet
+
+#pragma HLS ARRAY_PARTITION variable=Header cyclic factor=8
+#pragma HLS ARRAY_PARTITION variable=Parity_buffer cyclic factor=8 dim=1
+#pragma HLS ARRAY_PARTITION variable=Parity_buffer complete dim=2
+#pragma HLS ARRAY_PARTITION variable=Packet_length_parity complete dim=0
+
+  if (!Input_tuple.Valid)
+    Ignore_packet(Input_packet, Output_packet);
+  else if (Packet_index < Input_tuple.k)
+    Encode_packet(Input_tuple, Output_tuple, Input_packet, Output_packet);
   else
-  {
-    int Input_finished = 0;
-    for (int i = 0; i < WORDS_PER_OUTPUT_PACKET; i++)
-    {
-#pragma HLS DEPENDENCE variable=parity_buffer inter false
-#pragma HLS pipeline
-
-      packet_interface Input;
-      uint64 Header_word = 0;
-      if (!Input_finished)
-        Input = Data[i];
-
-      Header_word = Input.Data;
-      Input_finished = Input.End_of_frame;
-
-      uint64 Output_word = 0;
-      for (int j = 0; j < 8; j++)
-      {
-        Output_word <<= 8;
-        if (64 * i + 8 * j < FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE)
-        {
-          Output_word |= (Header_word >> 8 * j) & 0xFF;
-        }
-        else if (8 * i + j < BYTES_PER_OUTPUT_PACKET)
-        {
-          int Position = 8 * i + j - (FEC_ETH_HEADER_SIZE + FEC_HEADER_SIZE + 7) / 8;
-          Output_word |= parity_buffer[Position][Tuple.Index - FEC_MAX_K] & 0xFF;
-        }
-      }
-
-      int Last_word = (i == WORDS_PER_OUTPUT_PACKET - 1);
-
-      Parity[i].Data = Output_word;
-      Parity[i].Start_of_frame = (i == 0);
-      Parity[i].End_of_frame = Last_word;
-      Parity[i].Count = Last_word ? 8 - (8 * WORDS_PER_OUTPUT_PACKET - BYTES_PER_OUTPUT_PACKET) : 8;
-      Parity[i].Error = 0;
-    }
-  }
+    Output_parity_packet(Input_tuple, Output_tuple, Output_packet);
 }

@@ -8,38 +8,31 @@ Encoder/XilinxSwitch/XilinxSwitch_vivado: Encoder
 	cd $(realpath Encoder/XilinxSwitch); \
 	vivado -mode batch -source XilinxSwitch_vivado_packager.tcl
 
-Encoder: Encoder.sdnet Packet.user Tuple.user Packet_feedback_in.axi \
-         fec_0_t.hpp rse.cpp rse.h loop_0_t.hpp fec_0_t.v loop_0_t.v \
-         vivado_sim.bash vivado_sim_waveform.bash \
-         vivado_sim_feedback_waveform.bash XilinxSwitch_feedback_tb.sv
+Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl \
+         Sources/fec_0_t.hpp Sources/rse.cpp Sources/rse.h Sources/fec_0_t.v
+	@rm -fr Encoder
 	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder
-	@cp Packet.user Tuple.user Packet_feedback_in.axi Encoder/XilinxSwitch
-	@cp fec_0_t.hpp rse.cpp rse.h Encoder/XilinxSwitch/fec_0_t.TB
-	@cp loop_0_t.hpp Encoder/XilinxSwitch/loop_0_t.TB
-	@cp fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL
-	@cp loop_0_t.v Encoder/XilinxSwitch/loop_0_t.HDL
-	@mkdir -p Encoder/XilinxSwitch/Feedback
-	@cp ../RSEFeedbackVivado/Sources/RSEFeedback.vhd Encoder/XilinxSwitch/Feedback
-	@cp ../RSEFeedbackVivado/Sources/Config.vhd Encoder/XilinxSwitch/Feedback/Config.vhd
-	@cp ../RSEFeedbackVivado/RSEFeedbackVivado/RSEFeedbackVivado.srcs/sources_1/ip/fifo_generator_0/sim/fifo_generator_0.v Encoder/XilinxSwitch/Feedback
-	@cp XilinxSwitch_feedback_tb.sv TB_System_feedback_Stim.v Encoder/XilinxSwitch/Testbench
+	@ln -s ../../Scripts/Generate_packets.sh Encoder/XilinxSwitch/Generate_packets.sh
+	@ln -s ../../../Sources/fec_0_t.hpp Encoder/XilinxSwitch/fec_0_t.TB/fec_0_t.hpp
+	@ln -s ../../../Sources/rse.cpp Encoder/XilinxSwitch/fec_0_t.TB/rse.cpp
+	@ln -s ../../../Sources/rse.h Encoder/XilinxSwitch/fec_0_t.TB/rse.h
+	@ln -s ../../../Sources/fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL/fec_0_t.v
 	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
-	@cp vivado_sim*.bash Encoder/XilinxSwitch
-	@cp compile.bash Encoder/XilinxSwitch/XilinxSwitch.TB
+	patch -p0 < Patches/Encoder.patch
 # Convert configuration file to Verilog.
-	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/loop_0_t.HDL/Configuration.v
-	@cp Encoder/XilinxSwitch/loop_0_t.HDL/Configuration.v Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
+	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
 # Fix backpressure.
-	@FILE=$$(mktemp) && ./Patch_backpressure.pl > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
-# Fix timing bug in testbench.
-	@cp TB_System_Stim.v Encoder/XilinxSwitch/Testbench
-# Set the correct target FPGA.
-	@sed -i 's:xcvu095-ffva2104-2-e:xczu9eg-ffvb1156-2-i:' Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
+	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
 
-Encoder.sdnet: encoder.p4
-	p4c-sdnet -I ../RSEVivadoHLS encoder.p4 -o Encoder.sdnet
-	./sdnet_patch.sh
+Encoder.sdnet: Sources/Encoder.p4
+	p4c-sdnet -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet
+	patch Encoder.sdnet Patches/Encoder.sdnet.patch
 
 clean:
 	rm -fr Encoder.sdnet Encoder
+
+Update_patches:
+	p4c-sdnet -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet.original
+	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder.original
+	Scripts/Create_patches.bash
 

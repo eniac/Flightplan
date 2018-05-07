@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="Configuration.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Configuration.h"/>
+    <originFiles name="Decoder.cpp" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Decoder.cpp"/>
+    <originFiles name="Decoder.h" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Decoder.h"/>
+  </source>
+  <testbench>
+    <originFiles name="Testbench.cpp" path="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Testbench.cpp"/>
+  </testbench>
+</autopilotfilemapping:AutoPilotFileMapping>

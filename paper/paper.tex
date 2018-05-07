@@ -4,6 +4,8 @@
 \newcommand{\amdrev}[1]{{\color{blue}{#1}}}
 \newcommand{\amd}[1]{{\color{blue}{[\textbf{AMD Comment:} #1]}}}
 \newcommand{\lei}[1]{{\color{cyan}{[\textbf{Lei Comment:} #1]}}}
+\newcommand{\hg}[1]{{\color{green}{[\textbf{Hans Comment:} #1]}}}
+
 
 
 \usepackage{booktabs} % For formal tables
@@ -26,9 +28,9 @@
 \acmISBN{123-4567-24-567/08/06}
 
 %Conference
-\acmConference[SHORTNAME'17]{ACM Long Conference Name conference}{July 1997}{City, State, Country} 
-\acmYear{2017}
-\copyrightyear{2017}
+\acmConference[NetCompute'18]{ACM SIGCOMM 2018 Workshop on In-Network Computing conference}{August 2018}{Budapest, Hungary} 
+\acmYear{2018}
+\copyrightyear{2018}
 
 \acmPrice{15.00}
 
@@ -117,24 +119,33 @@
 \renewcommand{\shortauthors}{H. Giesen et al.}
 
 \begin{abstract}
-\lei{\#Shrink Candidate\# We can make author list more compact to save space}
-
 Failing network links are usually disabled, and packets are routed around them
 until the links are repaired. While
 it is often possible
-to utilise some of a failing link's capacity, losing
+to utilize some of a failing link's capacity, losing
 what remains of a link's
 capacity is typically deemed preferable to the erratic effect that unreliable links can
-have on application-level behaviour.
+have on application-level behavior.
+
 We describe a new network function that relies on in-network computing to limit
 the erratic effect of failing network links, to enable the continued use of
-those links until they can be repaired. We argue that such a network function
-can help mitigate rolling failures in datacenter networks, and that our design
-can interoperate with existing network architecture and configuration choices,
-such as for multi-path routing.
+those links until they can be repaired.
+%We argue that such a network function can help mitigate rolling
+%failures in datacenter networks, and that our design can interoperate
+%with existing network architecture and configuration choices, such as
+%for multi-path routing.
 
-We model our design using ns-3, and evaluate our implementation on a physical
-test-bed that includes programmable switches and reconfigurable hardware.
+We explore the design space using ns-3, and evaluate our
+implementation on a physical test-bed that includes programmable
+switches and reconfigurable hardware.
+Our current hardware prototype can almost saturate a 10GbE link while using
+around 10\% of our FPGA's resources.
+% while operating at \FIXME{30\%} of its maximum clock rate,
+%\hg{The current frequency of 156.25 MHz is determined by the line rate
+%    (=10000/64).  Higher frequencies won't benefit the throughput as the
+%    link will be the bottleneck.  This gives the false impression that
+%    a higher frequency would be better.  I would rather mention latency
+%    or even power consumption.}
 \end{abstract}
 
 %
@@ -144,38 +155,32 @@ test-bed that includes programmable switches and reconfigurable hardware.
 %
 \begin{CCSXML}
 <ccs2012>
- <concept>
-  <concept_id>10010520.10010553.10010562</concept_id>
-  <concept_desc>Computer systems organization~Embedded systems</concept_desc>
-  <concept_significance>500</concept_significance>
- </concept>
- <concept>
-  <concept_id>10010520.10010575.10010755</concept_id>
-  <concept_desc>Computer systems organization~Redundancy</concept_desc>
-  <concept_significance>300</concept_significance>
- </concept>
- <concept>
-  <concept_id>10010520.10010553.10010554</concept_id>
-  <concept_desc>Computer systems organization~Robotics</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
- <concept>
-  <concept_id>10003033.10003083.10003095</concept_id>
-  <concept_desc>Networks~Network reliability</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
-</ccs2012>  
+<concept>
+<concept_id>10003033.10003099.10003102</concept_id>
+<concept_desc>Networks~Programmable networks</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003033.10003083.10003095.10010752</concept_id>
+<concept_desc>Networks~Error detection and error correction</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+<concept>
+<concept_id>10003033.10003106.10003110</concept_id>
+<concept_desc>Networks~Data center networks</concept_desc>
+<concept_significance>100</concept_significance>
+</concept>
+</ccs2012>
 \end{CCSXML}
 
-\ccsdesc[500]{Computer systems organization~Embedded systems}
-\ccsdesc[300]{Computer systems organization~Redundancy}
-\ccsdesc{Computer systems organization~Robotics}
-\ccsdesc[100]{Networks~Network reliability}
+\ccsdesc[500]{Networks~Programmable networks}
+\ccsdesc[300]{Networks~Error detection and error correction}
+\ccsdesc[100]{Networks~Data center networks}
 
 % We no longer use \terms command
 %\terms{Theory}
 
-\keywords{ACM proceedings}
+\keywords{P4, FPGA, In-Network Computing, Fault Mitigation}
 
 
 \maketitle
@@ -189,7 +194,8 @@ test-bed that includes programmable switches and reconfigurable hardware.
 
 \subsection*{Acknowledgements}
 This material is based upon work supported by the Defense Advanced
-Research Projects Agency (DARPA) under Contract No. HR001117C0047.
+Research Projects Agency (DARPA) under Contracts No. HR001117C0047
+and No. HR0011-16-C-0056.
 Xilinx provided tools and IP, including SDNet to support P4 to FPGA
 compilation, the Ethernet MAC, and HLS and physical design mapping
 software. 

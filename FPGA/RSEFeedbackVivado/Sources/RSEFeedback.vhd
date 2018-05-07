@@ -63,134 +63,38 @@ architecture RTL of RSEFeedback is
     );
   end component;
 
-  signal mux_sel             : std_logic;
-  signal dup_en_reg          : std_logic;
-  signal dup_en              : std_logic;
-  signal dup_sel             : std_logic;
-  signal feedback_in_TVALID  : std_logic;
-  signal feedback_in_TDATA   : std_logic_vector(63 downto 0);
-  signal feedback_in_TKEEP   : std_logic_vector(7 downto 0);
-  signal feedback_in_TLAST   : std_logic;
-  signal feedback_out_TVALID : std_logic;
-  signal feedback_out_TREADY : std_logic;
-  signal feedback_out_TDATA  : std_logic_vector(63 downto 0);
-  signal feedback_out_TKEEP  : std_logic_vector(7 downto 0);
-  signal feedback_out_TLAST  : std_logic;
-  signal packet_cnt          : std_logic_vector(FEC_PACKET_INDEX_WIDTH - 1 downto 0);
-  signal tmp_rse_out_TVALID  : std_logic;
-  signal tmp_rse_out_TLAST   : std_logic;
-  signal enable              : std_logic;
-  signal data_read           : std_logic;
-  signal start_of_packet     : std_logic;
-  signal fifo_din            : std_logic_vector(72 downto 0);
-  signal fifo_wr_en          : std_logic;
-  signal fifo_rd_en          : std_logic;
-  signal fifo_dout           : std_logic_vector(72 downto 0);
-  signal fifo_full           : std_logic;
-  signal fifo_empty          : std_logic;
-  signal output_read         : std_logic;
-  signal output_valid        : std_logic;
-  signal fifo_cnt            : std_logic_vector(3 downto 0);
-  signal first_word          : std_logic;
-  signal data_available      : std_logic;
-  signal packet_available    : std_logic;
-  signal inc_cntr            : std_logic;
-  signal dec_cntr            : std_logic;
+  type input_state_type  is (input_state_data_start, input_state_data,
+                             input_state_feedback_wait,
+                             input_state_feedback_start, input_state_feedback);
+  type output_state_type is (output_state_check, output_state_data,
+                             output_state_duplicate);
+
+  signal enable                : std_logic;
+  signal fifo_din              : std_logic_vector(72 downto 0);
+  signal fifo_wr_en            : std_logic;
+  signal fifo_rd_en            : std_logic;
+  signal fifo_dout             : std_logic_vector(72 downto 0);
+  signal fifo_full             : std_logic;
+  signal fifo_empty            : std_logic;
+  signal mux_sel               : std_logic;
+  signal input_state           : input_state_type;
+  signal next_input_state      : input_state_type;
+  signal output_state          : output_state_type;
+  signal next_output_state     : output_state_type;
+  signal inc_input_packet_cnt  : std_logic;
+  signal input_packet_cnt      : std_logic_vector(FEC_PACKET_INDEX_WIDTH - 1 downto 0);
+  signal dec_fifo_packet_cnt   : std_logic;
+  signal inc_fifo_packet_cnt   : std_logic;
+  signal last_data_packet      : std_logic;
+  signal last_feedback_packet  : std_logic;
+  signal fifo_packet_cnt       : std_logic_vector(3 downto 0);
+  signal fifo_has_packet       : std_logic;
+  signal fifo_has_packet_delay : std_logic_vector(2 downto 0);
+  signal output_duplicate      : std_logic;
 
 begin
 
-  p_mux: process(mux_sel, axis_in_TVALID, rse_out_TREADY, axis_in_TDATA, axis_in_TKEEP, axis_in_TLAST,
-                 feedback_out_TVALID, feedback_out_TDATA, feedback_out_TKEEP, feedback_out_TLAST)
-  begin
-    if mux_sel = '0' then
-      tmp_rse_out_TVALID  <= axis_in_TVALID;
-      axis_in_TREADY      <= rse_out_TREADY;
-      feedback_out_TREADY <= '0';
-      rse_out_TDATA       <= axis_in_TDATA;
-      rse_out_TKEEP       <= axis_in_TKEEP;
-      tmp_rse_out_TLAST   <= axis_in_TLAST;
-    else
-      tmp_rse_out_TVALID  <= feedback_out_TVALID;
-      axis_in_TREADY      <= '0';
-      feedback_out_TREADY <= rse_out_TREADY;
-      rse_out_TDATA       <= feedback_out_TDATA;
-      rse_out_TKEEP       <= feedback_out_TKEEP;
-      tmp_rse_out_TLAST   <= feedback_out_TLAST;
-    end if;
-  end process;
-
-  p_dup: process(dup_sel, rse_in_TVALID, rse_in_TDATA, rse_in_TKEEP, rse_in_TLAST,
-                 axis_out_TREADY)
-  begin
-    if dup_sel = '0' then
-      feedback_in_TVALID <= '0';
-      feedback_in_TDATA  <= (others => '0');
-      feedback_in_TKEEP  <= (others => '0');
-      feedback_in_TLAST  <= '0';
-    else
-      feedback_in_TVALID <= rse_in_TVALID and axis_out_TREADY;
-      feedback_in_TDATA  <= rse_in_TDATA;
-      feedback_in_TKEEP  <= rse_in_TKEEP;
-      feedback_in_TLAST  <= rse_in_TLAST;
-    end if;
-  end process;
-
-  axis_out_TVALID <= rse_in_TVALID;
-  axis_out_TDATA  <= rse_in_TDATA;
-  axis_out_TKEEP  <= rse_in_TKEEP;
-  axis_out_TLAST  <= rse_in_TLAST;
-
-  p_packet_cnt: process(clk_line_rst, clk_line)
-  begin
-    if clk_line_rst = '1' then
-      packet_cnt <= (others => '0');
-    elsif rising_edge(clk_line) then
-      if enable = '1' and tmp_rse_out_TLAST = '1' and tmp_rse_out_TVALID = '1' and rse_out_TREADY = '1' then
-        if unsigned(packet_cnt) + 1 < FEC_K + FEC_H then
-          packet_cnt <= std_logic_vector(unsigned(packet_cnt) + 1);
-        else
-          packet_cnt <= (others => '0');
-        end if;
-      end if;
-    end if;
-  end process;
-  
-  p_mux_sel: mux_sel <= '0' when unsigned(packet_cnt) < FEC_K else '1';
-  
-  p_dup_en_reg: process(clk_line_rst, clk_line)
-  begin
-    if clk_line_rst = '1' then
-      dup_en_reg <= '0';
-    elsif rising_edge(clk_line) then
-      dup_en_reg <= dup_sel;
-    end if;
-  end process;  
-
-  dup_en <= '1' when unsigned(tuple_in_DATA(3 downto 0)) = 1 else '0';
-  dup_sel <= dup_en when tuple_in_VALID = '1' else dup_en_reg;
-
-  rse_out_TVALID <= tmp_rse_out_TVALID;
-  rse_out_TLAST  <= tmp_rse_out_TLAST;
-
-  rse_in_TREADY <= axis_out_TREADY;
-
   enable <= enable_processing and internal_rst_done;
-
-  data_read <= rse_out_TREADY and tmp_rse_out_TVALID;
-
-  p_start: process(clk_line_rst, clk_line)
-  begin
-    if clk_line_rst = '1' then
-      start_of_packet <= '1';
-    elsif rising_edge(clk_line) then
-      if data_read = '1' then
-        start_of_packet <= tmp_rse_out_TLAST;
-      end if;
-    end if;
-  end process;
-
-  tuple_out_VALID <= data_read and start_of_packet;
-  tuple_out_DATA  <= x"40" when mux_sel = '0' else x"30";
 
   fifo : fifo_generator_0
     port map
@@ -206,57 +110,217 @@ begin
       wr_rst_busy => open,
       rd_rst_busy => open
     );
-    
-  fifo_din            <= feedback_in_TDATA & feedback_in_TKEEP & feedback_in_TLAST;
-  fifo_wr_en          <= feedback_in_TVALID;
 
-  feedback_out_TDATA  <= fifo_dout(72 downto 9);
-  feedback_out_TKEEP  <= fifo_dout(8 downto 1);
-  feedback_out_TLAST  <= fifo_dout(0); 
-  feedback_out_TVALID <= output_valid;
-  packet_available    <= '0' when unsigned(fifo_cnt) = 0 else '1';
-  data_available      <= packet_available when feedback_out_TLAST = '1' else not fifo_empty;
-  fifo_rd_en          <= (feedback_out_TREADY or not output_valid) and data_available;
-  output_read         <= output_valid and feedback_out_TREADY;
+  fifo_din <= rse_in_TDATA & rse_in_TKEEP & rse_in_TLAST;
 
-  p_output_valid: process(clk_line_rst, clk_line)
+  p_mux: process(mux_sel, axis_in_TDATA, axis_in_TKEEP, axis_in_TLAST,
+                 rse_out_TREADY, fifo_dout)
   begin
-    if clk_line_rst = '1' then
-      output_valid <= '0';
-    elsif rising_edge(clk_line) then
-      if fifo_rd_en = '1' then
-        output_valid <= '1';
-      elsif feedback_out_TREADY = '1' and data_available = '0' then
-        output_valid <= '0';
+    if mux_sel = '0' then
+      rse_out_TDATA  <= axis_in_TDATA;
+      rse_out_TKEEP  <= axis_in_TKEEP;
+      rse_out_TLAST  <= axis_in_TLAST;
+      axis_in_TREADY <= rse_out_TREADY;
+    else
+      rse_out_TDATA  <= fifo_dout(72 downto 9);
+      rse_out_TKEEP  <= fifo_dout(8 downto 1);
+      rse_out_TLAST  <= fifo_dout(0);
+      axis_in_TREADY <= '0';
+    end if;
+  end process;
+
+  axis_out_TDATA  <= rse_in_TDATA;
+  axis_out_TVALID <= rse_in_TVALID;
+  axis_out_TKEEP  <= rse_in_TKEEP;
+  axis_out_TLAST  <= rse_in_TLAST;
+  rse_in_TREADY   <= axis_out_TREADY;
+
+  tuple_out_DATA  <= x"40" when mux_sel = '0' else x"30";
+
+  p_input_fsm_sync: process(clk_line)
+  begin
+    if rising_edge(clk_line) then
+      if clk_line_rst = '1' then
+        input_state <= input_state_data_start;
+      elsif enable = '1' then
+        input_state <= next_input_state;
+      end if;
+    end if;
+  end process;
+  
+  p_input_fsm_async: process(input_state, axis_in_TVALID, rse_out_TREADY,
+                             axis_in_TLAST, last_data_packet,
+                             fifo_has_packet_delay, fifo_dout, enable)
+  begin
+    rse_out_TVALID       <= '0';
+    mux_sel              <= '0';
+    inc_input_packet_cnt <= '0';
+    fifo_rd_en           <= '0';
+    dec_fifo_packet_cnt  <= '0';
+    tuple_out_VALID      <= '0';
+    next_input_state     <= input_state;
+
+    case input_state is
+
+      when input_state_data_start =>
+        rse_out_TVALID        <= axis_in_TVALID;
+        tuple_out_VALID       <= enable;
+        next_input_state      <= input_state_data;
+
+      when input_state_data =>
+        rse_out_TVALID <= axis_in_TVALID;
+        if axis_in_TVALID = '1' and rse_out_TREADY = '1' and axis_in_TLAST = '1' then
+          inc_input_packet_cnt  <= '1';
+          if last_data_packet = '1' then
+            if fifo_has_packet_delay(fifo_has_packet_delay'left) = '1' then
+              fifo_rd_en          <= '1';
+              dec_fifo_packet_cnt <= '1';
+              next_input_state    <= input_state_feedback_start;
+            else
+              next_input_state    <= input_state_feedback_wait;
+            end if;
+          else
+            tuple_out_VALID       <= '1';
+          end if;
+        end if;
+
+      when input_state_feedback_wait =>
+        mux_sel               <= '1';
+        if fifo_has_packet_delay(fifo_has_packet_delay'left) = '1' then
+          fifo_rd_en          <= '1';
+          dec_fifo_packet_cnt <= '1';
+          next_input_state    <= input_state_feedback_start;
+        end if;
+
+      when input_state_feedback_start =>
+        rse_out_TVALID        <= '1';
+        mux_sel               <= '1';
+        tuple_out_VALID       <= '1';
+        if rse_out_TREADY = '1' then
+          fifo_rd_en <= '1';
+        end if;
+        next_input_state      <= input_state_feedback;
+
+      when input_state_feedback =>
+        rse_out_TVALID        <= '1';
+        mux_sel               <= '1';
+        if rse_out_TREADY = '1' then
+          if fifo_dout(0) = '0' then
+            fifo_rd_en <= '1';
+          else
+            inc_input_packet_cnt  <= '1';
+            if last_feedback_packet = '1' then
+              next_input_state <= input_state_data_start;
+            elsif fifo_has_packet_delay(fifo_has_packet_delay'left) = '1' then
+              fifo_rd_en          <= '1';
+              dec_fifo_packet_cnt <= '1';
+              next_input_state    <= input_state_feedback_start;
+            else
+              next_input_state <= input_state_feedback_wait;
+            end if;
+          end if;
+        end if;
+
+    end case;
+  end process;
+
+  p_input_packet_cnt: process(clk_line_rst, clk_line)
+  begin
+    if rising_edge(clk_line) then
+      if clk_line_rst = '1' then
+        input_packet_cnt <= (others => '0');
+      elsif enable = '1' and inc_input_packet_cnt = '1' then
+        if last_feedback_packet = '0' then
+          input_packet_cnt <= std_logic_vector(unsigned(input_packet_cnt) + 1);
+        else
+          input_packet_cnt <= (others => '0');
+        end if;
       end if;
     end if;
   end process;
 
-  inc_cntr <= fifo_wr_en and feedback_in_TLAST;
-  dec_cntr <= first_word and output_read;
+  last_data_packet     <= '1' when unsigned(input_packet_cnt) = FEC_K - 1 else '0';
+  last_feedback_packet <= '1' when unsigned(input_packet_cnt) = FEC_K + FEC_H - 1 else '0';
 
-  p_fifo_cnt: process(clk_line_rst, clk_line)
+  p_output_fsm_sync: process(clk_line)
   begin
-    if clk_line_rst = '1' then
-      fifo_cnt <= (others => '0');
-    elsif rising_edge(clk_line) then
-      if inc_cntr = '1' and dec_cntr = '0' then
-        fifo_cnt <= std_logic_vector(unsigned(fifo_cnt) + 1);
-      elsif dec_cntr = '1' and inc_cntr = '0' then
-        fifo_cnt <= std_logic_vector(unsigned(fifo_cnt) - 1);
+    if rising_edge(clk_line) then
+      if clk_line_rst = '1' then
+        output_state <= output_state_check;
+      elsif enable = '1' then
+        output_state <= next_output_state;
+      end if;
+    end if;
+  end process;
+  
+  p_output_fsm_async: process(output_state, tuple_in_VALID, output_duplicate,
+                              rse_in_TVALID, axis_out_TREADY, rse_in_TLAST)
+  begin
+    fifo_wr_en          <= '0';
+    inc_fifo_packet_cnt <= '0';
+    next_output_state   <= output_state;
+
+    case output_state is
+
+      when output_state_check =>
+        if tuple_in_VALID = '1' then
+          if output_duplicate = '0' then
+            next_output_state <= output_state_data;
+          else
+            if rse_in_TVALID = '1' and axis_out_TREADY = '1' then
+              fifo_wr_en <= '1';
+            end if;
+            next_output_state <= output_state_duplicate;
+          end if;
+        end if;
+
+      when output_state_data =>
+        if rse_in_TVALID = '1' and axis_out_TREADY = '1' then
+          if rse_in_TLAST = '1' then
+            next_output_state <= output_state_check;
+          end if;
+        end if;
+
+      when output_state_duplicate =>
+        if rse_in_TVALID = '1' and axis_out_TREADY = '1' then
+          fifo_wr_en <= '1';
+          if rse_in_TLAST = '1' then
+            inc_fifo_packet_cnt <= '1';
+            next_output_state <= output_state_check;
+          end if;
+        end if;
+ 
+    end case;
+  end process;
+
+  p_fifo_packet_cnt: process(clk_line_rst, clk_line)
+  begin
+    if rising_edge(clk_line) then
+      if clk_line_rst = '1' then
+        fifo_packet_cnt <= (others => '0');
+      elsif enable = '1' then
+        if inc_fifo_packet_cnt = '1' and dec_fifo_packet_cnt = '0' then
+          fifo_packet_cnt <= std_logic_vector(unsigned(fifo_packet_cnt) + 1);
+        elsif dec_fifo_packet_cnt = '1' and inc_fifo_packet_cnt = '0' then
+          fifo_packet_cnt <= std_logic_vector(unsigned(fifo_packet_cnt) - 1);
+        end if;
       end if;
     end if;
   end process;
 
-  p_first_word: process(clk_line_rst, clk_line)
+  fifo_has_packet <= '0' when unsigned(fifo_packet_cnt) = 0 else '1';
+
+  p_fifo_has_packet_delay: process(clk_line_rst, clk_line)
   begin
-    if clk_line_rst = '1' then
-      first_word <= '1';
-    elsif rising_edge(clk_line) then
-      if output_read = '1' then
-        first_word <= feedback_out_TLAST;
+    if rising_edge(clk_line) then
+      if clk_line_rst = '1' then
+        fifo_has_packet_delay <= (others => '0');
+      elsif enable = '1' then
+        fifo_has_packet_delay <= fifo_has_packet_delay(fifo_has_packet_delay'left - 1 downto 0) & fifo_has_packet;
       end if;
     end if;
   end process;
+
+  output_duplicate <= '0' when unsigned(tuple_in_DATA(3 downto 0)) = 0 else '1';
 
 end RTL;
