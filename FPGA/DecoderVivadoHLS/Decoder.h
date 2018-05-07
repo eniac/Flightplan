@@ -5,13 +5,16 @@
 
 #include <ap_int.h>
 
-#define WORDS_PER_PACKET ((FEC_MAX_PACKET_SIZE + 7) / 8)
+#define DIVIDE_AND_ROUND_UP(Dividend, Divisor) ((Dividend + Divisor - 1) / Divisor)
+
+#define WORDS_PER_PACKET (DIVIDE_AND_ROUND_UP(FEC_MAX_PACKET_SIZE, 8))
+#define BYTES_PER_WORD (FEC_AXI_BUS_WIDTH / 8)
 
 typedef ap_uint<FEC_TRAFFIC_CLASS_WIDTH> traffic_class;
 typedef ap_uint<FEC_BLOCK_INDEX_WIDTH> block_index;
 typedef ap_uint<FEC_PACKET_INDEX_WIDTH> packet_index;
 typedef ap_uint<FEC_K_WIDTH> k_type;
-typedef ap_uint<AXI_BUS_WIDTH> data_word;
+typedef ap_uint<FEC_AXI_BUS_WIDTH> data_word;
 
 typedef struct
 {
@@ -43,7 +46,7 @@ typedef struct
 } packet_interface;
 
 void Decode(input_tuple Tuple_input, output_tuple * Tuple_output,
-    packet_interface Packet_input[FEC_MAX_K * WORDS_PER_PACKET],
+    const packet_interface Packet_input[FEC_MAX_K * WORDS_PER_PACKET],
     packet_interface Packet_output[FEC_MAX_K * WORDS_PER_PACKET]);
 
 #endif
