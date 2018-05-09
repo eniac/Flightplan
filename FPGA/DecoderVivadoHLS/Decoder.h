@@ -3,6 +3,7 @@
 
 #include "Configuration.h"
 
+#include <cstddef>
 #include <ap_int.h>
 
 #define DIVIDE_AND_ROUND_UP(Dividend, Divisor) ((Dividend + Divisor - 1) / Divisor)

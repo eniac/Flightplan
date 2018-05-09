@@ -3,6 +3,8 @@
 
 #include "sdnet_lib.hpp"
 
+#include "Decoder.h"
+
 namespace SDNET {
 
 //######################################################
@@ -251,8 +253,11 @@ public:
 	Decoder_input_t Decoder_input;
 	Decoder_output_t Decoder_output;
 
+	Packet Packets[FEC_MAX_K];
+	int Packet_count;
+
 	// engine ctor
-	Decoder_0_t(std::string _n, std::string _filename = "") : _name(_n) {
+	Decoder_0_t(std::string _n, std::string _filename = "") : _name(_n), Packet_count(0) {
 	}
 
 	// engine function
@@ -276,50 +281,60 @@ public:
 		Decoder_output = 0;
 		std::cout << "	Decoder_output = " << Decoder_output.to_string() << std::endl;
 
-                input_tuple Tuple_input;
-                Tuple_input.k = Decoder_input.k.to_ulong();
-                Tuple_input.Traffic_class = Decoder_input.traffic_class.to_ulong();
-                Tuple_input.Block_index = Decoder_input.block_index.to_ulong();
-                Tuple_input.Packet_index = Decoder_input.packet_index.to_ulong();
+		if (Packet_count == 0) {
+		        input_tuple Tuple_input;
+		        Tuple_input.k = Decoder_input.k.to_ulong();
+		        Tuple_input.Traffic_class = Decoder_input.traffic_class.to_ulong();
+		        Tuple_input.Block_index = Decoder_input.block_index.to_ulong();
+		        Tuple_input.Packet_index = Decoder_input.packet_index.to_ulong();
 
-		output_tuple Tuple_output;
+			output_tuple Tuple_output;
 
-		packet_interface Packet_input[WORDS_PER_PACKET];
-		unsigned Words_per_packet = DIVIDE_AND_ROUND_UP(packet_in.size(), BYTES_PER_WORD);
-		for (int i = 0; i < Words_per_packet; i++)
-		{
-			ap_uint<FEC_AXI_BUS_WIDTH> Word = 0;
-			for (int j = 0; j < BYTES_PER_WORD; j++)
-				Word = (Word << 8) | packet_in[BYTES_PER_WORD * i + j];
-			bool End = i == Words_per_packet - 1;
-			Packet_input[i].Data = Word;
-			Packet_input[i].Start_of_frame = i == 0;
-			Packet_input[i].End_of_frame = End;
-			Packet_input[i].Count = packet_in.size() % BYTES_PER_WORD;
-			if (Packet_input[i].Count == 0 || !End)
-				Packet_input[i].Count = 8;
-			Packet_input[i].Error = 0;			
+			packet_interface Packet_input[WORDS_PER_PACKET];
+			unsigned Words_per_packet = DIVIDE_AND_ROUND_UP(packet_in.size(), BYTES_PER_WORD);
+			for (int i = 0; i < Words_per_packet; i++) {
+				ap_uint<FEC_AXI_BUS_WIDTH> Word = 0;
+				for (int j = 0; j < BYTES_PER_WORD; j++)
+					Word = (Word << 8) | packet_in[BYTES_PER_WORD * i + j];
+				bool End = i == Words_per_packet - 1;
+				Packet_input[i].Data = Word;
+				Packet_input[i].Start_of_frame = i == 0;
+				Packet_input[i].End_of_frame = End;
+				Packet_input[i].Count = packet_in.size() % BYTES_PER_WORD;
+				if (Packet_input[i].Count == 0 || !End)
+					Packet_input[i].Count = 8;
+				Packet_input[i].Error = 0;			
+			}
+
+			packet_interface Packet_output[FEC_MAX_K * WORDS_PER_PACKET];
+
+			Decode(Tuple_input, &Tuple_output, Packet_input, Packet_output);
+
+			unsigned Offset = 0;
+			for (int i = 0; i < Tuple_output.Packet_count; i++) {
+				Packets[i].clear();
+				bool End = false;
+				while (!End) {
+					for (int j = 0; j < Packet_output[Offset].Count; j++) {
+						char Byte = (Packet_output[Offset].Data >> (8 * (BYTES_PER_WORD - j - 1))) & 0xFF;
+						Packets[i].push_back(Byte);
+					}
+					End = Packet_output[Offset].End_of_frame == 1;
+					Offset++;
+				}
+			}
+
+			Packet_count = Tuple_output.Packet_count;
 		}
 
-		packet_interface Packet_output[FEC_MAX_K * WORDS_PER_PACKET];
-
-		Decode(Tuple_input, Tuple_output, Packet_input, Packet_output);
-
-		packet_out.clear();
-		unsigned Offset = 0;
-		for (int i = 0; i < Tuple_output.Packet_count; i++)
-		{
-			bool End = false;
-			while (!End)
-			{
-				for (int j = 0; j < BYTES_PER_WORD; j++)
-				{
-					char Byte = (Packet_output[Offset].Data >> (8 * (BYTES_PER_WORD - j))) & 0xFF;
-					Packet_output.push_back(Byte);
-				}
-				End = Packet_output[Offset].End_of_frame == 1;
-				Offset++;
-			}
+		Decoder_output.packet_count = Packet_count;
+		if (Packet_count == 0)
+			packet_out = Packet();
+		else {
+			packet_out = Packets[0];
+			for (int i = 1; i < Packet_count; i++)
+				Packets[i - 1] = Packets[i];
+			Packet_count--;
 		}
 
 		// inout and output tuples:

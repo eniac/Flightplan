@@ -1,5 +1,8 @@
 #!/bin/bash -e
-FILES=""
+FILES="Decoder/XilinxSwitch/vivado_sim.bash \
+       Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash \
+       Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp \
+       Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp"
 
 function Restore_decoder
 {
