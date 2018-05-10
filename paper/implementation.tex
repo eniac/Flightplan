@@ -49,7 +49,7 @@ advantage of parallelism in the code to
 achieve  high performance.
 
 The encoded or decoded output of the FEC core feeds into the header
-post-processing, which encapsulates the payloads in Ethernet packets, before packets are returned to the network.
+post-processing, which encapsulates the payloads in Ethernet frames, before packets are returned to the network.
 
 \subsection{Header processing}
 \label{sec:impl:header-processing}
@@ -65,8 +65,8 @@ and integrate modules together.
 %Third, add peripheral blocks with Vivado Design Suit
 %
 Our P4 program carries out packet parsing, header tagging,
-extracting payload for encoder, and
-bookkeeping of packet classes.
+payload extraction for the encoder, and
+book-keeping of packet classes.
 
 \iffalse
 
@@ -135,11 +135,10 @@ at a level closer to RTL modules compared to P4.
 
          
 Since we compute over whole frames -- and not only headers -- we could
-not write our entire system in P4. In the header processing part of
-our system, which is implemented in P4, we therefore sought to develop
-an interface between P4 code and the more general computing we need
-for FEC (described below in~\S\ref{sec:impl:fec-encoder}), which we
-implement in hardware-synthesizable C.
+not write our entire system in P4. We wrote the header processing part of our
+system in P4, and called out from the P4 code to carry out the more general
+computing we need for FEC (described below in~\S\ref{sec:impl:fec-encoder}),
+which we implemented in hardware-synthesizable C.
 
 \iffalse
 The interface between P4 and external functions emerged as a very
@@ -147,7 +146,7 @@ important part of our implementation, since whole packets must flow
 through it between the P4 environment to the more general logic
 implementing our FEC. 
 \fi
-This interface emerged as a very important part of our implementation,
+This crossing from P4 to more general logic emerged as a very important part of our implementation,
 since whole packets must flow through it between two different levels
 of abstractions.
 As is shown by Fig.~\ref{fig:sdnet-interface}, we used SDNet's extensible pipeline to implement
@@ -217,7 +216,7 @@ $h$.
 %       bytes if we ignore $m$ as a variable, but describing an instance of the algorithm
 %       as "the RSE algorithm" just to save a couple of words seems a bit ugly.
 What makes RSE complex is that arithmetic operations are performed in a finite (Galois)
-field to ensure that mathematic operations on integers in a finite range yield
+field to ensure that mathematical operations on integers in a finite range yield
 again integers in the same range.
 %\hg{I put this line back in because otherwise
 %the mention of the Galois field in the resource requirements comes out of nowhere.
@@ -249,10 +248,10 @@ Due to space limitations, we will not discuss RSE in more detail.
 %For 8-bit symbols -- corresponding to bytes -- 8 matrix-vector multiplier instances running at
 %line rate would suffice to sustain the throughput of the Ethernet MAC.
 The encoder could be implemented to work in two ways:
-non-incrementally on a group of packets, or incrementally as each
+non-incrementally on a block of packets, or incrementally as each
 packet arrives. The non-incremental approach is more straightforward,
 but incurs high latency and storage requirements, since  encoding
-cannot start until all packets in a group have been received.
+cannot start until all packets in a block have been received.
 
 We opted for the incremental approach, which exploits the associativity of addition to
 rearrange the terms of the sums that form the matrix-vector multiplication.
