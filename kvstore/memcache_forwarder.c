@@ -9,6 +9,7 @@
 #include "memcache_forwarder.h"
 
 void forward_to_server(const void *packet, int len) {
+	printf("Forwarding packet to server..\n");
 	if (server_handle != NULL) {
 		pcap_inject(server_handle, packet, len);
 	}	
@@ -22,14 +23,11 @@ void forward_to_client(const void *packet, int len) {
 
 void client_cache_lookup(u_char *args, const struct pcap_pkthdr *header,
 		const u_char *packet) {
-	//Cache lookup here
 	forward_to_server(packet, header->len);
 }
 
 void server_response_forward(u_char *args, const struct pcap_pkthdr *header,
 		const u_char *packet) {
-
-	//Fill cache here
 	forward_to_client(packet, header->len);
 }
 
