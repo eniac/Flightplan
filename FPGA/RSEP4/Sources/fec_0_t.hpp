@@ -4,6 +4,9 @@
 #include "sdnet_lib.hpp"
 #include "rse.h"
 
+// NOTE we only work with a single block of Vencore's fbk buffer in our prototype
+#define FB_INDEX 0
+
 namespace SDNET {
 
 #define BUFFER_SIZE (FEC_MAX_PACKET_SIZE + FEC_PACKET_LENGTH_WIDTH / 8)
@@ -288,49 +291,49 @@ public:
 
 				for (int i = 0; i < k + h; i++)
 				{
-					if (fb.pdata[i] != nullptr)
+					if (fbk[FB_INDEX].pdata[i] != nullptr)
 					{
-						delete fb.pdata[i];
-						fb.pdata[i] = nullptr;
+						delete fbk[FB_INDEX].pdata[i];
+						fbk[FB_INDEX].pdata[i] = nullptr;
 					}
 
-					fb.pdata[i] = new fec_sym[BUFFER_SIZE];
+					fbk[FB_INDEX].pdata[i] = new fec_sym[BUFFER_SIZE];
 					for (int j = 0; j < BUFFER_SIZE; j++)
-						fb.pdata[i][j] = 0;
+						fbk[FB_INDEX].pdata[i][j] = 0;
 				}
 
-				fb.block_C = BUFFER_SIZE;
-				fb.block_N = k + h;
+				fbk[FB_INDEX].block_C = BUFFER_SIZE;
+				fbk[FB_INDEX].block_N = k + h;
 
 				maximum_packet_size = 0;
 			}
 
 			if (packet_index < k)
 			{
-				fec_sym * packet = fb.pdata[packet_index];
+				fec_sym * packet = fbk[FB_INDEX].pdata[packet_index];
 				for (int i = 0; i<packet_in.size(); i++)
 					packet[i] = (fec_sym) packet_in[i];
 
-				fb.cbi[packet_index] = packet_index;
-				fb.plen[packet_index] = packet_in.size();
-				fb.pstat[packet_index] = FEC_FLAG_KNOWN;
+				fbk[FB_INDEX].cbi[packet_index] = packet_index;
+				fbk[FB_INDEX].plen[packet_index] = packet_in.size();
+				fbk[FB_INDEX].pstat[packet_index] = FEC_FLAG_KNOWN;
 
 				if (packet_in.size() > maximum_packet_size)
 					maximum_packet_size = packet_in.size();
 
-				fb.cbi[k + packet_index] = FEC_MAX_N - packet_index - 1;
-				fb.pstat[k + packet_index] = FEC_FLAG_WANTED;
+				fbk[FB_INDEX].cbi[k + packet_index] = FEC_MAX_N - packet_index - 1;
+				fbk[FB_INDEX].pstat[k + packet_index] = FEC_FLAG_WANTED;
 
 				if (packet_index == k - 1)
 				{
-					rse_code(1);
+					rse_code(FB_INDEX, 'e');
 
-					fec_block_print();
+					fec_block_print(FB_INDEX);
 				}
 			}
 			else
 			{
-				fec_sym * packet = fb.pdata[packet_index];
+				fec_sym * packet = fbk[FB_INDEX].pdata[packet_index];
 				packet_out.resize(FEC_ETH_HEADER_SIZE / 8);
 				for (int i = FEC_MAX_PACKET_SIZE; i < BUFFER_SIZE; i++)
 					packet_out.push_back(packet[i]);
