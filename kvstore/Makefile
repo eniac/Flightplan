@@ -1,11 +1,11 @@
 CC=gcc
-CFLAGS=-Wall -g -lm -lpcap -lpthread
+CFLAGS=-g -lm -lpcap -lpthread
 TARGET=cache
 MAIN=kvcache.c
 
 all: $(TARGET)
 
-$(TARGET): memcache_forwarder.o
+$(TARGET): memcache_forwarder.o memcache_parser.o
 	$(CC) $(CFLAGS) $(MAIN) $^ -o $@
 
 %.o: %.c %.h

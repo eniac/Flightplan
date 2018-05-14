@@ -48,7 +48,7 @@ bool cas_cache_entry(char *key, char *old_value, char *new_value) {
 
 cache_entry *get_cache_entry(char *key) {
 
-	cache_entry *entry;
+	cache_entry *entry = NULL;
 	HASH_FIND_STR(key_value_cache, key, entry);
 	return entry;
 }
