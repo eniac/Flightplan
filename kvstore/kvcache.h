@@ -1,8 +1,8 @@
-#include <pcap.h>
-#include "uthash.h"
-
 #ifndef KVCACHE_H
 #define KVCACHE_H
+
+#include <pcap.h>
+#include "uthash.h"
 
 typedef struct cache_entry {
 
