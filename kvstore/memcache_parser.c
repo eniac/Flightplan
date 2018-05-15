@@ -107,12 +107,12 @@ int ascii_tokenize_command(char *str, char *end, char **vec, int size) {
 	return num_elem;
 }
 
-void process_get_command(char **tokens, int ntokens) {
+bool process_get_command(bool mute, char **tokens, int ntokens) {
 
 	char *key = tokens[1];
 	cache_entry *kv_entry = get_cache_entry(key);
 	if (kv_entry == NULL) {
-		// Forward request to memcached
+		return false;
 	} else {
 		char *value = kv_entry->value;
 		// Send value back to client
@@ -120,24 +120,24 @@ void process_get_command(char **tokens, int ntokens) {
 	}
 }
 
-void process_set_command(char **tokens, int ntokens) {
+bool process_set_command(bool mute, char **tokens, int ntokens) {
 
 
 }
 
-void process_delete_command(char **tokens, int ntokens) {
+bool process_delete_command(bool mute, char **tokens, int ntokens) {
 
 	char *key = tokens[1];
 	if (!delete_cache_entry(key)) {
-		// Forward request to memcached
+		return false;
 	} else {
 		// Send DELETED to client
 	}
 }
 
-void parse_memcache_request(char *request_string, int length) {
+bool parse_memcache_request(char *request_string, int length) {
 
-	bool mute = true;
+	bool ret_val, mute = true;
 	int command_code = ascii_to_command(request_string, length);
 
 	char *tokens[10];
@@ -154,18 +154,20 @@ void parse_memcache_request(char *request_string, int length) {
 	switch(command_code) {
 
 		case GET_CMD:
-			process_get_command(tokens, ntokens);
+			ret_val = process_get_command(mute, tokens, ntokens);
 			break;
 
 		case SET_CMD:
-			process_set_command(tokens, ntokens);
+			ret_val = process_set_command(mute, tokens, ntokens);
 			break;
 
 		case DELETE_CMD:
-			process_delete_command(tokens, ntokens);
+			ret_val = process_delete_command(mute, tokens, ntokens);
 			break;
 
 		default:
 			abort();
 	}
+
+	return ret_val;
 }

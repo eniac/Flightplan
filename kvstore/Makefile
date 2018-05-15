@@ -6,10 +6,10 @@ MAIN=kvcache.c
 all: $(TARGET)
 
 $(TARGET): memcache_forwarder.o memcache_parser.o
-	$(CC) $(CFLAGS) $(MAIN) $^ -o $@
+	$(CC) $(MAIN) $^ -o $@ $(CFLAGS)
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $< -o $@ $(CFLAGS)
 
 .PHONY: clean
 
