@@ -258,6 +258,8 @@ void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 		} else {
 			/*If the data packet is not present, then mark the packet state as WANTED*/
+			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
+			fbk[FB_INDEX].cbi[i] = i;
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_WANTED;
 		}
 	}
