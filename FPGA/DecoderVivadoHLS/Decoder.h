@@ -4,6 +4,7 @@
 #include "Configuration.h"
 
 #include <cstddef>
+#include <hls_stream.h>
 #include <ap_int.h>
 
 #define DIVIDE_AND_ROUND_UP(Dividend, Divisor) ((Dividend + Divisor - 1) / Divisor)
@@ -25,8 +26,25 @@ typedef struct
 
 typedef struct
 {
-    ap_uint<FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH + FEC_PACKET_INDEX_WIDTH + 16> FEC;
-    ap_uint<FEC_ETH_HEADER_SIZE> Eth;
+    ap_uint<FEC_ETHER_TYPE_WIDTH> Type;
+    ap_uint<48> Src;
+    ap_uint<48> Dst;
+    ap_uint<1> Is_valid;
+} tuple_eth;
+
+typedef struct
+{
+    traffic_class Traffic_class;
+    block_index Block_index;
+    packet_index Packet_index;
+    ap_uint<FEC_ETHER_TYPE_WIDTH> Original_type;
+    ap_uint<1> Is_valid;
+} tuple_fec;
+
+typedef struct
+{
+    tuple_fec FEC;
+    tuple_eth Eth;
 } tuple_hdr;
 
 typedef struct
@@ -51,7 +69,7 @@ typedef struct
     block_index Block_index;
     traffic_class Traffic_class;
     k_type k;
-    ap_uint<1> Valid;
+    ap_uint<1> Stateful_valid;
 } tuple_Decoder_input;
 
 typedef struct
@@ -81,8 +99,6 @@ typedef struct
 
 typedef struct
 {
-    // Note the reverse order with respect to parameter order in external function
-    // declaration.
     ap_uint<1> Error;
     ap_uint<4> Count;
     data_word Data;
@@ -90,8 +106,7 @@ typedef struct
     ap_uint<1> Start_of_frame;
 } packet_interface;
 
-void Decode(input_tuples Tuple_input, output_tuples Tuple_output[FEC_MAX_K],
-    const packet_interface Packet_input[WORDS_PER_PACKET],
-    packet_interface Packet_output[FEC_MAX_K * WORDS_PER_PACKET]);
+void Decode(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple_output,
+    hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output);
 
 #endif

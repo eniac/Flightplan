@@ -254,6 +254,7 @@ public:
 	Decoder_output_t Decoder_output;
 
 	Packet Packets[FEC_MAX_K];
+	output_tuples Tuples[FEC_MAX_K];
 	int Packet_count;
 
 	// engine ctor
@@ -282,49 +283,72 @@ public:
 		std::cout << "	Decoder_output = " << Decoder_output.to_string() << std::endl;
 
 		if (Packet_count == 0) {
-		        input_tuple Tuple_input;
-		        Tuple_input.k = Decoder_input.k.to_ulong();
-		        Tuple_input.Traffic_class = Decoder_input.traffic_class.to_ulong();
-		        Tuple_input.Block_index = Decoder_input.block_index.to_ulong();
-		        Tuple_input.Packet_index = Decoder_input.packet_index.to_ulong();
+			input_tuples Tuple_input;
+			Tuple_input.Decoder_input.Stateful_valid = Decoder_input.stateful_valid.to_ulong();
+			Tuple_input.Decoder_input.k = Decoder_input.k.to_ulong();
+			Tuple_input.Decoder_input.Traffic_class = Decoder_input.traffic_class.to_ulong();
+			Tuple_input.Decoder_input.Block_index = Decoder_input.block_index.to_ulong();
+			Tuple_input.Decoder_input.Packet_index = Decoder_input.packet_index.to_ulong();
+			Tuple_input.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
+			Tuple_input.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
+			Tuple_input.Hdr.Eth.Src = hdr.eth.src.to_ulong();
+			Tuple_input.Hdr.Eth.Type = hdr.eth.type.to_ulong();
+			Tuple_input.Hdr.FEC.Is_valid = hdr.fec.isValid.to_ulong();
+			Tuple_input.Hdr.FEC.Traffic_class = hdr.fec.traffic_class.to_ulong();
+			Tuple_input.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
+			Tuple_input.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
+			Tuple_input.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
+			Tuple_input.Update_fl.Packet_count = Update_fl.packet_count_1.to_ulong();
+			Tuple_input.Update_fl.k = Update_fl.k_1.to_ulong();
+			Tuple_input.Ioports.Egress_port = ioports.egress_port.to_ulong();
+			Tuple_input.Ioports.Ingress_port = ioports.ingress_port.to_ulong();
+			Tuple_input.Local_state.Id = local_state.id.to_ulong();
+			Tuple_input.Parser_extracts.Size = Parser_extracts.size.to_ulong();
 
-			output_tuple Tuple_output;
-
-			packet_interface Packet_input[WORDS_PER_PACKET];
+			hls::stream<packet_interface> Packet_input;
 			unsigned Words_per_packet = DIVIDE_AND_ROUND_UP(packet_in.size(), BYTES_PER_WORD);
 			for (int i = 0; i < Words_per_packet; i++) {
 				ap_uint<FEC_AXI_BUS_WIDTH> Word = 0;
 				for (int j = 0; j < BYTES_PER_WORD; j++)
-					Word = (Word << 8) | packet_in[BYTES_PER_WORD * i + j];
+				{
+					Word <<= 8;
+					unsigned Offset = BYTES_PER_WORD * i + j;
+					if (Offset < packet_in.size())
+						Word |= packet_in[Offset];
+				}
 				bool End = i == Words_per_packet - 1;
-				Packet_input[i].Data = Word;
-				Packet_input[i].Start_of_frame = i == 0;
-				Packet_input[i].End_of_frame = End;
-				Packet_input[i].Count = packet_in.size() % BYTES_PER_WORD;
-				if (Packet_input[i].Count == 0 || !End)
-					Packet_input[i].Count = 8;
-				Packet_input[i].Error = 0;			
+				packet_interface Input;
+				Input.Data = Word;
+				Input.Start_of_frame = i == 0;
+				Input.End_of_frame = End;
+				Input.Count = packet_in.size() % BYTES_PER_WORD;
+				if (Input.Count == 0 || !End)
+					Input.Count = 8;
+				Input.Error = 0;
+				Packet_input.write(Input);
 			}
 
-			packet_interface Packet_output[FEC_MAX_K * WORDS_PER_PACKET];
+			hls::stream<output_tuples> Tuple_output;
+			hls::stream<packet_interface> Packet_output;
 
-			Decode(Tuple_input, &Tuple_output, Packet_input, Packet_output);
+			Decode(Tuple_input, Tuple_output, Packet_input, Packet_output);
 
-			unsigned Offset = 0;
-			for (int i = 0; i < Tuple_output.Packet_count; i++) {
+			Packet_count = 0;
+			while (!Tuple_output.empty())
+				Tuples[Packet_count++] = Tuple_output.read();
+
+			for (int i = 0; i < Packet_count; i++) {
 				Packets[i].clear();
 				bool End = false;
 				while (!End) {
-					for (int j = 0; j < Packet_output[Offset].Count; j++) {
-						char Byte = (Packet_output[Offset].Data >> (8 * (BYTES_PER_WORD - j - 1))) & 0xFF;
+					packet_interface Output = Packet_output.read();
+					for (int j = 0; j < Output.Count; j++) {
+						char Byte = (Output.Data >> (8 * (BYTES_PER_WORD - j - 1))) & 0xFF;
 						Packets[i].push_back(Byte);
 					}
-					End = Packet_output[Offset].End_of_frame == 1;
-					Offset++;
+					End = Output.End_of_frame == 1;
 				}
 			}
-
-			Packet_count = Tuple_output.Packet_count;
 		}
 
 		Decoder_output.packet_count = Packet_count;
@@ -332,8 +356,28 @@ public:
 			packet_out = Packet();
 		else {
 			packet_out = Packets[0];
+			
+			hdr.eth.isValid = Tuples[0].Hdr.Eth.Is_valid.to_uint();
+			hdr.eth.dst = Tuples[0].Hdr.Eth.Dst.to_uint();
+			hdr.eth.src = Tuples[0].Hdr.Eth.Src.to_uint();
+			hdr.eth.type = Tuples[0].Hdr.Eth.Type.to_uint();
+			hdr.fec.isValid = Tuples[0].Hdr.FEC.Is_valid.to_uint();
+			hdr.fec.traffic_class = Tuples[0].Hdr.FEC.Traffic_class.to_uint();
+			hdr.fec.block_index = Tuples[0].Hdr.FEC.Block_index.to_uint();
+			hdr.fec.packet_index = Tuples[0].Hdr.FEC.Packet_index.to_uint();
+			hdr.fec.original_type = Tuples[0].Hdr.FEC.Original_type.to_uint();
+			Update_fl.packet_count_1 = Tuples[0].Update_fl.Packet_count.to_uint();
+			Update_fl.k_1 = Tuples[0].Update_fl.k.to_uint();
+			ioports.egress_port = Tuples[0].Ioports.Egress_port.to_uint();
+			ioports.ingress_port = Tuples[0].Ioports.Ingress_port.to_uint();
+			local_state.id = Tuples[0].Local_state.Id.to_uint();
+			Parser_extracts.size = Tuples[0].Parser_extracts.Size.to_uint();
+			
 			for (int i = 1; i < Packet_count; i++)
+			{
 				Packets[i - 1] = Packets[i];
+				Tuples[i - 1] = Tuples[i];
+			}
 			Packet_count--;
 		}
 

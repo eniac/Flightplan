@@ -41,9 +41,9 @@ typedef bit<48> MacAddress;
 
 header eth_h
 {
-	MacAddress	dst;
-	MacAddress	src;
-	bit<16>		type;
+	MacAddress			dst;
+	MacAddress			src;
+	bit<FEC_ETHER_TYPE_WIDTH>	type;
 }
 
 header fec_h
@@ -51,7 +51,7 @@ header fec_h
 	bit<FEC_TRAFFIC_CLASS_WIDTH>	traffic_class;
 	bit<FEC_BLOCK_INDEX_WIDTH>	block_index;
 	bit<FEC_PACKET_INDEX_WIDTH>	packet_index;
-	bit<16>				original_type;
+	bit<FEC_ETHER_TYPE_WIDTH>	original_type;
 }
 
 struct headers_t {
