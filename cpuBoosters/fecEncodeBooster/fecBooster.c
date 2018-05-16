@@ -259,7 +259,6 @@ void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 		} else {
 			/*If the data packet is not present, then mark the packet state as WANTED*/
 			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
-			fbk[FB_INDEX].cbi[i] = i;
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_WANTED;
 		}
 	}
@@ -268,23 +267,23 @@ void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 
 	/*Now populate the recieved parity packets into the packet buffer*/
 	for (i = 0; i < h; i++) {
+        y = k + i;                             /* FEC block index */
 		/*If the parity packet is present, then update it in the packet buffer*/
-		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
+		if (pkt_buffer_filled[blockId][y] == PACKET_PRESENT) {
 
 			if (i >= FEC_MAX_H) {
 				fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
 				exit(34);
 			}
-			y = k + i;                             /* FEC block index */
 			z = FEC_MAX_N - o - i - 1;             /* Codeword index */ /*TODO: Need to verify these values if the decoder does not work*/
-			fbk[FB_INDEX].pdata[y] = (fec_sym *) pkt_buffer[blockId][i];
+			fbk[FB_INDEX].pdata[y] = (fec_sym *) pkt_buffer[blockId][y];
 			fbk[FB_INDEX].cbi[y] = z; /*TODO: Need to verify these values if the decoder does not work*/
 			fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C; /*TODO: Need to verify these values if the decoder does not work*/
 			fbk[FB_INDEX].pstat[y] = FEC_FLAG_KNOWN;
 
 		} else { /*If the parity packet is missing*/
 			/*Since it is parity packet we can set the status of non-recieved packets to IGNORE*/
-			fbk[FB_INDEX].pstat[i] = FEC_FLAG_IGNORE;
+			fbk[FB_INDEX].pstat[y] = FEC_FLAG_IGNORE;
 		}
 	}
 
