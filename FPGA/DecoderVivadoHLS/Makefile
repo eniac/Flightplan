@@ -1,8 +1,9 @@
-All: Test
+All: DecoderVivadoHLS
 
-Test: Testbench.cpp Decoder.cpp Decoder.h
-	g++ -g -O0 -I ${SDSOC_ROOT}/include -I ${SDSOC_ROOT}/Vivado_HLS/include Testbench.cpp Decoder.cpp -o Test
+DecoderVivadoHLS: Decoder.cpp Decoder.h Configuration.h
+	@mkdir -p Batch
+	cd Batch && vivado_hls ../Synthesize.tcl
 
-Clean:
-	rm -f Test
+clean:
+	rm -fr Batch
 

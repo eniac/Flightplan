@@ -65,6 +65,11 @@ typedef struct
 
 typedef struct
 {
+    ap_uint<23> Control;
+} tuple_control;
+
+typedef struct
+{
     packet_index Packet_index;
     block_index Block_index;
     traffic_class Traffic_class;
@@ -74,6 +79,7 @@ typedef struct
 
 typedef struct
 {
+    tuple_control Control;
     tuple_Update_fl Update_fl;
     tuple_hdr Hdr;
     tuple_ioports Ioports;
@@ -89,6 +95,7 @@ typedef struct
 
 typedef struct
 {
+    tuple_control Control;
     tuple_Update_fl Update_fl;
     tuple_hdr Hdr;
     tuple_ioports Ioports;
@@ -106,7 +113,7 @@ typedef struct
     ap_uint<1> Start_of_frame;
 } packet_interface;
 
-void Decode(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple_output,
+void Decode(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> & Tuple_output,
     hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output);
 
 #endif

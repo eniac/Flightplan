@@ -392,6 +392,7 @@ static void Output_packets(input_tuples Tuple_input, hls::stream<output_tuples> 
     Tuples.Local_state = Tuple_input.Local_state;
     Tuples.Parser_extracts = Tuple_input.Parser_extracts;
     Tuples.Update_fl = Tuple_input.Update_fl;
+    Tuples.Control = Tuple_input.Control;
     Tuple_output.write(Tuples);
   }
 }
@@ -484,24 +485,26 @@ void Forward_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple
   Tuples.Local_state = Tuple_input.Local_state;
   Tuples.Parser_extracts = Tuple_input.Parser_extracts;
   Tuples.Update_fl = Tuple_input.Update_fl;
+  Tuples.Control = Tuple_input.Control;
   Tuple_output.write(Tuples);
 }
 
-void Decode(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple_output,
+void Decode(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> & Tuple_output,
     hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output)
 {
 #pragma HLS DATA_PACK variable=Tuple_input
 #pragma HLS DATA_PACK variable=Tuple_output
 #pragma HLS DATA_PACK variable=Packet_input
 #pragma HLS DATA_PACK variable=Packet_output
-#pragma HLS INTERFACE ap_vld port=Tuple_input
+#pragma HLS INTERFACE ap_fifo port=Tuple_input
 #pragma HLS INTERFACE ap_hs port=Tuple_output
 #pragma HLS INTERFACE ap_fifo port=Packet_input
 #pragma HLS INTERFACE ap_hs port=Packet_output
 
-  tuple_Decoder_input Decoder_input = Tuple_input.Decoder_input;
-  if (Tuple_input.Decoder_input.Stateful_valid)
-    Process_packet(Tuple_input, Tuple_output, Packet_input, Packet_output);
+  input_tuples Tuples = Tuple_input.read();
+  tuple_Decoder_input Decoder_input = Tuples.Decoder_input;
+  if (Tuples.Decoder_input.Stateful_valid)
+    Process_packet(Tuples, Tuple_output, Packet_input, Packet_output);
   else
-    Forward_packet(Tuple_input, Tuple_output, Packet_input, Packet_output);
+    Forward_packet(Tuples, Tuple_output, Packet_input, Packet_output);
 }

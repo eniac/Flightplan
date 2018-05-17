@@ -283,27 +283,30 @@ public:
 		std::cout << "	Decoder_output = " << Decoder_output.to_string() << std::endl;
 
 		if (Packet_count == 0) {
-			input_tuples Tuple_input;
-			Tuple_input.Decoder_input.Stateful_valid = Decoder_input.stateful_valid.to_ulong();
-			Tuple_input.Decoder_input.k = Decoder_input.k.to_ulong();
-			Tuple_input.Decoder_input.Traffic_class = Decoder_input.traffic_class.to_ulong();
-			Tuple_input.Decoder_input.Block_index = Decoder_input.block_index.to_ulong();
-			Tuple_input.Decoder_input.Packet_index = Decoder_input.packet_index.to_ulong();
-			Tuple_input.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
-			Tuple_input.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
-			Tuple_input.Hdr.Eth.Src = hdr.eth.src.to_ulong();
-			Tuple_input.Hdr.Eth.Type = hdr.eth.type.to_ulong();
-			Tuple_input.Hdr.FEC.Is_valid = hdr.fec.isValid.to_ulong();
-			Tuple_input.Hdr.FEC.Traffic_class = hdr.fec.traffic_class.to_ulong();
-			Tuple_input.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
-			Tuple_input.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
-			Tuple_input.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
-			Tuple_input.Update_fl.Packet_count = Update_fl.packet_count_1.to_ulong();
-			Tuple_input.Update_fl.k = Update_fl.k_1.to_ulong();
-			Tuple_input.Ioports.Egress_port = ioports.egress_port.to_ulong();
-			Tuple_input.Ioports.Ingress_port = ioports.ingress_port.to_ulong();
-			Tuple_input.Local_state.Id = local_state.id.to_ulong();
-			Tuple_input.Parser_extracts.Size = Parser_extracts.size.to_ulong();
+			hls::stream<input_tuples> Tuple_input;
+
+			input_tuples Tuple;
+			Tuple.Decoder_input.Stateful_valid = Decoder_input.stateful_valid.to_ulong();
+			Tuple.Decoder_input.k = Decoder_input.k.to_ulong();
+			Tuple.Decoder_input.Traffic_class = Decoder_input.traffic_class.to_ulong();
+			Tuple.Decoder_input.Block_index = Decoder_input.block_index.to_ulong();
+			Tuple.Decoder_input.Packet_index = Decoder_input.packet_index.to_ulong();
+			Tuple.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
+			Tuple.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
+			Tuple.Hdr.Eth.Src = hdr.eth.src.to_ulong();
+			Tuple.Hdr.Eth.Type = hdr.eth.type.to_ulong();
+			Tuple.Hdr.FEC.Is_valid = hdr.fec.isValid.to_ulong();
+			Tuple.Hdr.FEC.Traffic_class = hdr.fec.traffic_class.to_ulong();
+			Tuple.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
+			Tuple.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
+			Tuple.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
+			Tuple.Update_fl.Packet_count = Update_fl.packet_count_1.to_ulong();
+			Tuple.Update_fl.k = Update_fl.k_1.to_ulong();
+			Tuple.Ioports.Egress_port = ioports.egress_port.to_ulong();
+			Tuple.Ioports.Ingress_port = ioports.ingress_port.to_ulong();
+			Tuple.Local_state.Id = local_state.id.to_ulong();
+			Tuple.Parser_extracts.Size = Parser_extracts.size.to_ulong();
+			Tuple_input.write(Tuple);
 
 			hls::stream<packet_interface> Packet_input;
 			unsigned Words_per_packet = DIVIDE_AND_ROUND_UP(packet_in.size(), BYTES_PER_WORD);
