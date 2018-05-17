@@ -13,4 +13,4 @@ cd XilinxSwitch.TB
 ./compile.bash
 cd ..
 XilinxSwitch.TB/XilinxSwitch
-./vivado_sim_waveform.bash
+./vivado_sim.bash
