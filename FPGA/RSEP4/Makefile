@@ -1,38 +1,38 @@
 .PHONY: All Simulation clean
 
-All: Encoder/XilinxSwitch/XilinxSwitch_vivado
+All: Wharf/XilinxSwitch/XilinxSwitch_vivado
 
-Simulation: Encoder
+Simulation: Wharf
 
-Encoder/XilinxSwitch/XilinxSwitch_vivado: Encoder
-	cd $(realpath Encoder/XilinxSwitch); \
+Wharf/XilinxSwitch/XilinxSwitch_vivado: Wharf
+	cd $(realpath Wharf/XilinxSwitch); \
 	vivado -mode batch -source XilinxSwitch_vivado_packager.tcl
 
-Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl \
+Wharf: Wharf.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl \
          Sources/fec_0_t.hpp Sources/rse.cpp Sources/rse.h Sources/fec_0_t.v
-	@rm -fr Encoder
-	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder
-	@ln -s ../../Scripts/Generate_packets.sh Encoder/XilinxSwitch/Generate_packets.sh
-	@ln -s ../../../Sources/fec_0_t.hpp Encoder/XilinxSwitch/fec_0_t.TB/fec_0_t.hpp
-	@ln -s ../../../Sources/rse.cpp Encoder/XilinxSwitch/fec_0_t.TB/rse.cpp
-	@ln -s ../../../Sources/rse.h Encoder/XilinxSwitch/fec_0_t.TB/rse.h
-	@ln -s ../../../Sources/fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL/fec_0_t.v
-	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
+	@rm -fr Wharf
+	sdnet Wharf.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Wharf
+	@ln -s ../../Scripts/Generate_packets.sh Wharf/XilinxSwitch/Generate_packets.sh
+	@ln -s ../../../Sources/fec_0_t.hpp Wharf/XilinxSwitch/fec_0_t.TB/fec_0_t.hpp
+	@ln -s ../../../Sources/rse.cpp Wharf/XilinxSwitch/fec_0_t.TB/rse.cpp
+	@ln -s ../../../Sources/rse.h Wharf/XilinxSwitch/fec_0_t.TB/rse.h
+	@ln -s ../../../Sources/fec_0_t.v Wharf/XilinxSwitch/fec_0_t.HDL/fec_0_t.v
+	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Wharf/XilinxSwitch/fec_0_t.HDL
 	patch -p0 < Patches/Encoder.patch
 # Convert configuration file to Verilog.
-	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
+	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Wharf/XilinxSwitch/fec_0_t.HDL/Configuration.v
 # Fix backpressure.
-	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
+	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl > $${FILE} && mv $${FILE} Wharf/XilinxSwitch/XilinxSwitch.v
 
-Encoder.sdnet: Sources/Encoder.p4
-	p4c-sdnet -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet
-	patch Encoder.sdnet Patches/Encoder.sdnet.patch
+Wharf.sdnet: Sources/Wharf.p4
+	p4c-sdnet -I ../RSEVivadoHLS Sources/Wharf.p4 -o Wharf.sdnet
+	patch Wharf.sdnet Patches/Encoder.sdnet.patch
 
 clean:
-	rm -fr Encoder.sdnet Encoder
+	rm -fr Wharf.sdnet Wharf
 
 Update_patches:
-	p4c-sdnet -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet.original
-	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder.original
+	p4c-sdnet -I ../RSEVivadoHLS Sources/Wharf.p4 -o Wharf.sdnet.original
+	sdnet Wharf.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Wharf.original
 	Scripts/Create_patches.bash
 

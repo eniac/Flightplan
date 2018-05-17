@@ -5,7 +5,7 @@
 use strict;
 use warnings;
 
-my $File_name = "Encoder/XilinxSwitch/XilinxSwitch.v";
+my $File_name = "Wharf/XilinxSwitch/XilinxSwitch.v";
 
 open(my $Input_file, '<', $File_name)
   or die 'Could not open "$File_name".';

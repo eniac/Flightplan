@@ -1,5 +1,5 @@
---- Encoder.sdnet.original	2018-05-03 12:18:58.308517707 -0400
-+++ Encoder.sdnet	2018-05-03 12:12:43.295084351 -0400
+--- Wharf.sdnet.original	2018-05-03 12:18:58.308517707 -0400
++++ Wharf.sdnet	2018-05-03 12:12:43.295084351 -0400
 @@ -141,6 +141,31 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
