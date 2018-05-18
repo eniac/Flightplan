@@ -77,7 +77,7 @@ over a lossy link with little sacrifice to latency came at a steep
 end-to-end overhead of 20\%, since a parity packet was added for each
 5 data packets.
 Experiments using QUIC suggested that the gains of end-to-end FEC did not
-outweigh the bandwidth overhead, and adversely affected video
+outweigh the bandwidth overhead (even if $h=1$) and adverse affects on video
 traffic~\cite[\S7.3]{Langley:2017:QTP:3098822.3098842}.
 The approach described in this paper only adds
 overhead on lossy links, rather than across paths that contain a
