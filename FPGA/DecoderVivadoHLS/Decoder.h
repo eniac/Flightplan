@@ -34,10 +34,10 @@ typedef struct
 
 typedef struct
 {
-    traffic_class Traffic_class;
-    block_index Block_index;
-    packet_index Packet_index;
     ap_uint<FEC_ETHER_TYPE_WIDTH> Original_type;
+    packet_index Packet_index;
+    block_index Block_index;
+    traffic_class Traffic_class;
     ap_uint<1> Is_valid;
 } tuple_fec;
 

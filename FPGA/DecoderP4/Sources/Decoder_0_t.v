@@ -198,7 +198,7 @@ wire dec_packet_output_v_ap_vld;
 wire dec_packet_output_v_ap_ack;
 
 wire tuple_fifo_wr_en;
-reg tuple_fifo_rd_en;
+wire tuple_fifo_rd_en;
 wire [`INPUT_TUPLES_WIDTH - 1:0] tuple_fifo_din;
 wire [`INPUT_TUPLES_WIDTH - 1:0] tuple_fifo_dout;
 wire tuple_fifo_empty;
@@ -281,6 +281,7 @@ assign tuple_fifo_wr_en = tuple_in_Decoder_input_VALID;
 assign tuple_fifo_din = {tuple_in_Decoder_input_DATA, tuple_in_Parser_extracts_DATA,
                          tuple_in_local_state_DATA, tuple_in_ioports_DATA,
                          tuple_in_hdr_DATA, tuple_in_Update_fl_DATA, tuple_in_control_DATA};
+assign tuple_fifo_rd_en = dec_tuple_input_v_read;
 
 defparam packet_fifo.WRITE_DATA_WIDTH = `FEC_AXI_BUS_WIDTH + 7; 
 defparam packet_fifo.FIFO_WRITE_DEPTH = 512; 
@@ -321,19 +322,19 @@ assign packet_fifo_din = {packet_in_packet_in_SOF, packet_in_packet_in_EOF, pack
                           packet_in_packet_in_CNT, packet_in_packet_in_ERR};
 assign packet_fifo_rd_en = dec_packet_input_v_read;
 
-assign packet_in_packet_in_RDY = packet_fifo_almost_full;
+assign packet_in_packet_in_RDY = ~packet_fifo_almost_full;
 
 assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_out_DAT,
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = dec_packet_output_v;
 assign packet_out_packet_out_VAL = dec_packet_output_v_ap_vld;
 
-assign tuple_out_Decoder_output_DATA  = tuple_fifo_dout[`TUPLE_DECODER_OUTPUT_END:`TUPLE_DECODER_OUTPUT_START];
-assign tuple_out_Parser_extracts_DATA = tuple_fifo_dout[`TUPLE_PARSER_EXTRACTS_END:`TUPLE_PARSER_EXTRACTS_START];
-assign tuple_out_local_state_DATA     = tuple_fifo_dout[`TUPLE_LOCAL_STATE_END:`TUPLE_LOCAL_STATE_START];
-assign tuple_out_ioports_DATA         = tuple_fifo_dout[`TUPLE_IOPORTS_END:`TUPLE_IOPORTS_START];
-assign tuple_out_hdr_DATA             = tuple_fifo_dout[`TUPLE_HDR_END:`TUPLE_HDR_START];
-assign tuple_out_Update_fl_DATA       = tuple_fifo_dout[`TUPLE_UPDATE_FL_END:`TUPLE_UPDATE_FL_START];
-assign tuple_out_control_DATA         = tuple_fifo_dout[`TUPLE_CONTROL_END:`TUPLE_CONTROL_START];
+assign tuple_out_Decoder_output_DATA  = dec_tuple_output_v[`TUPLE_DECODER_OUTPUT_END:`TUPLE_DECODER_OUTPUT_START];
+assign tuple_out_Parser_extracts_DATA = dec_tuple_output_v[`TUPLE_PARSER_EXTRACTS_END:`TUPLE_PARSER_EXTRACTS_START];
+assign tuple_out_local_state_DATA     = dec_tuple_output_v[`TUPLE_LOCAL_STATE_END:`TUPLE_LOCAL_STATE_START];
+assign tuple_out_ioports_DATA         = dec_tuple_output_v[`TUPLE_IOPORTS_END:`TUPLE_IOPORTS_START];
+assign tuple_out_hdr_DATA             = dec_tuple_output_v[`TUPLE_HDR_END:`TUPLE_HDR_START];
+assign tuple_out_Update_fl_DATA       = dec_tuple_output_v[`TUPLE_UPDATE_FL_END:`TUPLE_UPDATE_FL_START];
+assign tuple_out_control_DATA         = dec_tuple_output_v[`TUPLE_CONTROL_END:`TUPLE_CONTROL_START];
 
 assign tuple_out_Decoder_output_VALID  = dec_tuple_output_v_ap_vld;
 assign tuple_out_Parser_extracts_VALID = dec_tuple_output_v_ap_vld;
