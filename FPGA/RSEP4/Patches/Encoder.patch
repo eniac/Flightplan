@@ -1,6 +1,6 @@
 Wharf/XilinxSwitch/vivado_sim.bash
---- Wharf.original/XilinxSwitch/vivado_sim.bash	2018-05-17 16:09:39.112464601 -0400
-+++ Wharf/XilinxSwitch/vivado_sim.bash	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/vivado_sim.bash	2018-05-03 12:19:06.356359461 -0400
++++ Wharf/XilinxSwitch/vivado_sim.bash	2018-05-03 12:16:16.064199647 -0400
 @@ -1,14 +1,19 @@
  #!/bin/bash
 +[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
@@ -29,8 +29,8 @@ Wharf/XilinxSwitch/vivado_sim.bash
 +${XILINX_VIVADO}/bin/xsim --runall XilinxSwitch_tb
 +
 Wharf/XilinxSwitch/vivado_sim_waveform.bash
---- Wharf.original/XilinxSwitch/vivado_sim_waveform.bash	2018-05-17 16:09:39.112464601 -0400
-+++ Wharf/XilinxSwitch/vivado_sim_waveform.bash	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/vivado_sim_waveform.bash	2018-05-03 12:19:06.356359461 -0400
++++ Wharf/XilinxSwitch/vivado_sim_waveform.bash	2018-05-03 12:13:23.391086698 -0400
 @@ -1,14 +1,19 @@
  #!/bin/bash
 +[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
@@ -59,8 +59,8 @@ Wharf/XilinxSwitch/vivado_sim_waveform.bash
 +${XILINX_VIVADO}/bin/xsim XilinxSwitch_tb_sim -gui -wdb work.XilinxSwitch_tb_tb.wdb  
 +
 Wharf/XilinxSwitch/XilinxSwitch.TB/compile.bash
---- Wharf.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-05-17 16:09:39.244465382 -0400
-+++ Wharf/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-05-03 12:19:06.448357664 -0400
++++ Wharf/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-05-03 12:12:51.059084805 -0400
 @@ -1,4 +1,5 @@
  #!/bin/bash
  set -euo pipefail
@@ -69,8 +69,8 @@ Wharf/XilinxSwitch/XilinxSwitch.TB/compile.bash
 +g++ -g -O0 -I. -I ../../../../RSEConfig -std=c++11 $(find .. -name '*.cpp') -o XilinxSwitch -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1
 +
 Wharf/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
---- Wharf.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-05-17 16:09:39.108464577 -0400
-+++ Wharf/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-05-03 12:19:06.352359539 -0400
++++ Wharf/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-05-03 12:12:51.059084805 -0400
 @@ -47,7 +47,7 @@
  wire [7:0] tuple_in_ioports_DATA ;
  wire [0:0] enable_processing ;
@@ -101,8 +101,8 @@ Wharf/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
      stim_file = 1;
      check_file = 1;
 Wharf/XilinxSwitch/Testbench/TB_System_Stim.v
---- Wharf.original/XilinxSwitch/Testbench/TB_System_Stim.v	2018-05-17 16:09:39.112464601 -0400
-+++ Wharf/XilinxSwitch/Testbench/TB_System_Stim.v	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/Testbench/TB_System_Stim.v	2018-05-03 12:19:06.352359539 -0400
++++ Wharf/XilinxSwitch/Testbench/TB_System_Stim.v	2018-05-03 12:12:51.059084805 -0400
 @@ -71,6 +71,10 @@
  reg [7:0] packet_in_packet_in_TKEEP ;
  reg [63:0] packet_in_packet_in_TDATA ;
@@ -176,8 +176,8 @@ Wharf/XilinxSwitch/Testbench/TB_System_Stim.v
  	end
  end
 Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
---- Wharf.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-05-17 16:09:39.236465335 -0400
-+++ Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-05-03 12:19:06.424358133 -0400
++++ Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-05-03 12:12:51.059084805 -0400
 @@ -68,7 +68,7 @@
  		Deparser("Deparser") { }
  
@@ -206,8 +206,8 @@ Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
  };
  //######################################################
 Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
---- Wharf.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-05-17 16:09:39.240465358 -0400
-+++ Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-05-03 12:19:06.424358133 -0400
++++ Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-05-03 12:12:51.059084805 -0400
 @@ -98,14 +98,18 @@
  			// format input and inout tuples
  			_tuple_in_stream << ((_LV<8>)_DUT.ioports).to_hex() << ' ';
@@ -236,8 +236,8 @@ Wharf/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
  		// close files
  		_packet_in_pcap.close();
 Wharf/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
---- Wharf.original/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-05-17 16:09:39.072464364 -0400
-+++ Wharf/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-05-17 14:31:27.156036110 -0400
+--- Wharf.original/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-05-03 12:19:06.300360555 -0400
++++ Wharf/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-05-03 12:12:51.063084806 -0400
 @@ -1,4 +1,4 @@
 -create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xcvu095-ffva2104-2-e
 +create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xczu9eg-ffvb1156-2-i
