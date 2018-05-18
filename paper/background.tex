@@ -23,7 +23,10 @@ Our link-layer FEC complements the physical-layer FEC that is used in
 high-capacity Ethernet links: the physical-layer FEC helps the link sustain a
 given capacity over longer distances, whereas our FEC is intended to mitigate
 errors that do not arise because of challenging environmental factors; rather
-the errors arise because of physical damage to the link or failing transceivers~\cite{Zhuo:2017:UMP:3098822.3098849}.
+the errors arise because of physical damage to the link or failing
+transceivers~\cite{Zhuo:2017:UMP:3098822.3098849}.
+Note that changing the PHY-layer FEC would deviate from the Ethernet standard,
+leading to loss of interoparability with COTS hardware.
 
 Our approach also complements higher-layer reliability measures, as provided by
 TCP for example.  TCP provides end-to-end reliability, whereas we concentrate
