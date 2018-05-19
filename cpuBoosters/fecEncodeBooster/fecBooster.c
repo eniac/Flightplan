@@ -214,7 +214,6 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 /* Called by the decoder to fill the FEC structure with the available data and parity packets, and mark the missing packets as WANTED*/
 void call_fec_blk_put(int blockId) {
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	fec_sym p[FEC_MAX_N][FEC_MAX_COLS];   /* storage for packets in FEC block (fb) */
 	fec_sym k = NUM_DATA_PACKETS;
 	fec_sym h = NUM_PARITY_PACKETS;
 	fec_sym o = 0;
@@ -222,10 +221,10 @@ void call_fec_blk_put(int blockId) {
 	fec_sym s = 3;
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-	fec_blk_put(p, k, h, c, s, o, blockId);
+	fec_blk_put(k, h, c, s, o, blockId);
 }
 
-void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
+void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
 	fec_sym i, y, z;
 	int maxPacketLength = 0;
 	fbk[FB_INDEX].block_N = k + h;
