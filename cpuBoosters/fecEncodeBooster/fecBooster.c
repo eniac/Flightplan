@@ -596,7 +596,7 @@ int main (int argc, char** argv) {
 	free_pkt_buffer();
 }
 
-void copy_data_packets_to_pkt_buffer(int blockId) {
+void copy_data_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
 		if (PACKET_PRESENT != pkt_buffer_filled[blockId][i]) {
 			const FRAME_SIZE_TYPE original_frame_size = (FRAME_SIZE_TYPE)(*pkt_buffer[blockId][i]);
