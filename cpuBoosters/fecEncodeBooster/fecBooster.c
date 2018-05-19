@@ -209,12 +209,6 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 		fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
 		fbk[FB_INDEX].pstat[y] = FEC_FLAG_WANTED;
 	}
-
-	/* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
-	if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
-		fbk[FB_INDEX].plen[k - 1] -= 1;
-		p[k - 1][0] -= 1;
-	}
 }
 
 /* Called by the decoder to fill the FEC structure with the available data and parity packets, and mark the missing packets as WANTED*/
@@ -287,11 +281,6 @@ void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 		}
 	}
 
-	/* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
-	if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
-		fbk[FB_INDEX].plen[k - 1] -= 1;
-		p[k - 1][0] -= 1;
-	}
 }
 
 unsigned char* get_payload_start_for_packet(char* packet) {
