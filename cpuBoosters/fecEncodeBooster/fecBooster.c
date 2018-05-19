@@ -254,8 +254,11 @@ void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) 
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 		} else {
 			/*If the data packet is not present, then mark the packet state as WANTED*/
-			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_WANTED;
+            /* RSE must have a memory location into which it can write the generated packet.
+             * We pass it the pkt_buffer pointer, so in this case it generates the packet
+             * directly into the pkt_buffer */
+			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
 		}
 	}
 	fbk[FB_INDEX].block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
