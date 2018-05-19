@@ -20,6 +20,10 @@ char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pk
 
 int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
 
+/* storage for parity packets in fbk.pdata.
+ * fbk.pdata is array of pointers, and must point to allocated memory */
+static fec_sym parity_buffer[FEC_MAX_H][FEC_MAX_COLS];
+
 int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
 
 /**
@@ -57,7 +61,6 @@ void free_pkt_buffer() {
 void call_fec_blk_get(int blockId) {
 
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	fec_sym p[FEC_MAX_N][FEC_MAX_COLS];   /* storage for packets in FEC block (fb) */
 	fec_sym k = NUM_DATA_PACKETS;
 	fec_sym h = NUM_PARITY_PACKETS;
 	fec_sym o = 0;
@@ -65,7 +68,7 @@ void call_fec_blk_get(int blockId) {
 	fec_sym s = 3;
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-	fec_blk_get(p, k, h, c, s, o, blockId);
+	fec_blk_get(parity_buffer, k, h, c, s, o, blockId);
 }
 
 /**
@@ -204,7 +207,7 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 		}
 		y = k + i;                                  /* FEC block index */
 		z = FEC_MAX_N - o - i - 1;             /* Codeword index */
-		fbk[FB_INDEX].pdata[y] = p[y];
+		fbk[FB_INDEX].pdata[y] = p[i];
 		fbk[FB_INDEX].cbi[y] = z;
 		fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
 		fbk[FB_INDEX].pstat[y] = FEC_FLAG_WANTED;
