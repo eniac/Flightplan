@@ -23,6 +23,8 @@ def main():
   parser.add_argument('-l', dest = 'payloadLength', action = 'store',
                       default = '1024', help = 'Payload length in bytes.  ' \
                       'Specify a range (e.g., 512-1024) for random values.')
+  parser.add_argument('-s', dest = 'randomSeed', action = 'store',
+                      default = '1', help = 'Seed for the PRNG.')
   args = parser.parse_args()
 
   packets = []
@@ -34,6 +36,7 @@ def main():
     outputPCAPFile(args.pcapFilename, packets)
   if args.textFilename != None:
     outputTextFile(args.textFilename, packets)
+  random.seed(int(args.randomSeed))
 
 def generatePacket(addrDst = '000000000000'.decode('hex'),
                    addrSrc = '000000000000'.decode('hex'),
