@@ -55,7 +55,7 @@ header ipv4_h {
 struct headers_t {
 	eth_h	eth;
 	fec_h	fec;
-#if 0
+
   ipv4_h     ipv4;
 
   tlv_t                lldp_tlv_chassis_id;
@@ -64,7 +64,6 @@ struct headers_t {
   prefix_tlv_t         lldp_prefix;
   activate_fec_tlv_t lldp_activate_fec;
   tlv_t                lldp_tlv_end;
-#endif
 }
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)

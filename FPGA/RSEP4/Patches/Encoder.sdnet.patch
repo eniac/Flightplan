@@ -1,6 +1,6 @@
---- Wharf.sdnet.original	2018-05-03 12:18:58.308517707 -0400
-+++ Wharf.sdnet	2018-05-03 12:12:43.295084351 -0400
-@@ -141,6 +141,31 @@
+--- Wharf.sdnet.original	2018-05-17 16:09:29.208405995 -0400
++++ Wharf.sdnet	2018-05-17 14:31:17.799978847 -0400
+@@ -195,6 +195,38 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
  class fec_0_t::UserEngine(200, 0) {
@@ -13,7 +13,14 @@
 +  class hdr_t_0::Tuple(inout) {
 +    struct {
 +      eth : eth_h,
-+      fec : fec_h } }
++      fec : fec_h,
++      ipv4 : ipv4_h,
++      lldp_tlv_chassis_id : tlv_t,
++      lldp_tlv_port_id : tlv_t,
++      lldp_tlv_ttl_id : tlv_t,
++      lldp_prefix : prefix_tlv_t,
++      lldp_activate_fec : activate_fec_tlv_t,
++      lldp_tlv_end : tlv_t } }
 +  class ioports_t::Tuple(inout) {
 +    struct {
 +      ingress_port : 4,
@@ -32,7 +39,7 @@
    class fec_input_t::Tuple(in) {
      struct {
        stateful_valid : 1,
-@@ -249,17 +274,23 @@
+@@ -317,17 +349,23 @@
      Update_lvl_0.hdr = Update_lvl.hdr,
      Update_lvl_0.ioports = Update_lvl.ioports,
      Update_lvl_0.local_state = Update_lvl.local_state,
