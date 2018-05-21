@@ -361,8 +361,8 @@ public:
 			packet_out = Packets[0];
 			
 			hdr.eth.isValid = Tuples[0].Hdr.Eth.Is_valid.to_uint();
-			hdr.eth.dst = Tuples[0].Hdr.Eth.Dst.to_uint();
-			hdr.eth.src = Tuples[0].Hdr.Eth.Src.to_uint();
+			hdr.eth.dst = Tuples[0].Hdr.Eth.Dst.to_uint64();
+			hdr.eth.src = Tuples[0].Hdr.Eth.Src.to_uint64();
 			hdr.eth.type = Tuples[0].Hdr.Eth.Type.to_uint();
 			hdr.fec.isValid = Tuples[0].Hdr.FEC.Is_valid.to_uint();
 			hdr.fec.traffic_class = Tuples[0].Hdr.FEC.Traffic_class.to_uint();
