@@ -1,5 +1,5 @@
---- Decoder.sdnet.original	2018-05-09 16:30:54.826553094 -0400
-+++ Decoder.sdnet	2018-05-09 16:30:06.886363096 -0400
+--- Decoder.sdnet.original	2018-05-17 17:11:51.420905795 -0400
++++ Decoder.sdnet	2018-05-17 12:48:49.678883281 -0400
 @@ -154,6 +154,31 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
