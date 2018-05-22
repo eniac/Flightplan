@@ -13,7 +13,10 @@ Decoder: Decoder.sdnet Scripts/Patch_backpressure.pl
 	sdnet Decoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Decoder
 	@ln -s ../../../../RSEConfig/Configuration.h Decoder/XilinxSwitch/Decoder_0_t.TB/Configuration.h
 	@ln -s ../../../Sources/Decoder_0_t.hpp Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder_0_t.hpp
-	@cp ../DecoderVivadoHLS/Decoder.cpp ../DecoderVivadoHLS/Decoder.h Decoder/XilinxSwitch/Decoder_0_t.TB
+	@ln -s ../../../../DecoderVivadoHLS/Decoder.h Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder.h
+	@ln -s ../../../../DecoderVivadoHLS/Decoder.cpp Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder.cpp
+	@ln -s ../../../Sources/Decoder_0_t.v Decoder/XilinxSwitch/Decoder_0_t.HDL/Decoder_0_t.v
+#	@for FILE in ../DecoderVivadoHLS/Batch/DecoderVivadoHLS/solution1/syn/vhdl/*.vhd; do ln -s ../../../$$FILE Decoder/XilinxSwitch/Decoder_0_t.HDL/$$(basename $$FILE); done
 	@cp Input/Packet.user Decoder/XilinxSwitch/Packet.user
 #	@ln -s ../../Scripts/Generate_packets.sh Decoder/XilinxSwitch/Generate_packets.sh
 #	@ln -s ../../../Sources/fec_0_t.hpp Decoder/XilinxSwitch/fec_0_t.TB/fec_0_t.hpp
@@ -25,7 +28,7 @@ Decoder: Decoder.sdnet Scripts/Patch_backpressure.pl
 # Convert configuration file to Verilog.
 	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Decoder/XilinxSwitch/Decoder_0_t.HDL/Configuration.v
 # Fix backpressure.
-	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl > $${FILE} && mv $${FILE} Decoder/XilinxSwitch/XilinxSwitch.v
+#	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl > $${FILE} && mv $${FILE} Decoder/XilinxSwitch/XilinxSwitch.v
 
 Decoder.sdnet: Sources/Decoder.p4
 	p4c-sdnet -I ../RSEVivadoHLS Sources/Decoder.p4 -o Decoder.sdnet

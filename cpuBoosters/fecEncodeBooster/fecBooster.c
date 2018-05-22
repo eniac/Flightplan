@@ -5,6 +5,9 @@
 #include "fecBooster.h"
 #include "wharf_pcap.h"
 
+// NOTE we only work with a single block because of how we interface with the rse_code function.
+#define FB_INDEX 0
+
 int workerId = 0;
 int workerCt = 1;
 
@@ -73,9 +76,9 @@ void call_fec_blk_get(int blockId) {
  */
 void encode_block() {
 	int rc;
-	if ((rc = rse_code(1)) != 0 )  exit(rc);
+	if ((rc = rse_code(FB_INDEX, 'e')) != 0 )  exit(rc);
 //(	fec_dbg_printf)("\nSending ");
-	D0(fec_block_print());
+	D0(fec_block_print(FB_INDEX));
 	// print_global_fb_block();
 }
 
@@ -96,9 +99,9 @@ void simulate_packet_loss() {
 	e_list[i] = list_done; /* put list_done marker at end of input */
 
 	/* Erasure Channel */
-	fec_block_delete(e_list);
+	fec_block_delete(FB_INDEX, e_list);
 	fprintf(stderr, "\nReceived ");
-	D0(fec_block_print());
+	D0(fec_block_print(FB_INDEX));
 }
 
 /**
@@ -106,9 +109,9 @@ void simulate_packet_loss() {
  */
 void decode_block() {
 	int rc;
-	if ((rc = rse_code(1)) != 0 )  exit(rc);
+	if ((rc = rse_code(FB_INDEX, 'd')) != 0 )  exit(rc);
 	fprintf(stderr, "\nRecovered ");
-	D0(fec_block_print());
+	D0(fec_block_print(FB_INDEX));
 }
 
 /**
@@ -143,7 +146,7 @@ void zeroout_block_in_pkt_buffer(int blockId) {
 }
 
 void print_global_fb_block() {
-	for (int i = 0; i < fb.block_N; i++) {
+	for (int i = 0; i < fbk[FB_INDEX].block_N; i++) {
 	//(	fec_dbg_printf)("The length of %d packet is %d\n", i, fb.plen[i]);
 	}
 }
@@ -156,7 +159,7 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 	// fprintf(stderr, "At the top of fec_blk_get\n");
 	fec_sym i, y, z;
 	int maxPacketLength = 0;
-	fb.block_N = k + h; /*TODO: replace this with a macro later.*/
+	fbk[FB_INDEX].block_N = k + h; /*TODO: replace this with a macro later.*/
 
 	/* Put C random symbols into each of the K data packets */
 	for (i = 0; i < k; i++) {
@@ -168,20 +171,20 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 		fec_sym* payloadStart = (fec_sym*) get_payload_start_for_packet(pkt_buffer[blockId][i]);
 		int payloadLength = get_payload_length_for_pkt(pkt_buffer[blockId][i]);
 
-		fb.pdata[i] = payloadStart;
-		fb.cbi[i] = i;
-		fb.plen[i] = payloadLength;
+		fbk[FB_INDEX].pdata[i] = payloadStart;
+		fbk[FB_INDEX].cbi[i] = i;
+		fbk[FB_INDEX].plen[i] = payloadLength;
 
 		/*  Keep track of maximum packet length to set the block_C field of FEC structure    */
 		if (payloadLength > maxPacketLength) {
 			maxPacketLength = payloadLength;
 		}
-		fb.pstat[i] = FEC_FLAG_KNOWN;
+		fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
 	}
 
 
-	fb.block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
+	fbk[FB_INDEX].block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
 
 
 	/* Leave H Parity packets empty */
@@ -193,15 +196,15 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 		y = k + i;                                  /* FEC block index */
 	//(	fec_dbg_printf)(" The payloadlength for %d is %d\n", y, get_payload_length_for_pkt(pkt_buffer[blockId][y]));
 		z = FEC_MAX_N - o - i - 1;             /* Codeword index */
-		fb.pdata[y] = p[y];
-		fb.cbi[y] = z;
-		fb.plen[y] = fb.block_C;
-		fb.pstat[y] = FEC_FLAG_WANTED;
+		fbk[FB_INDEX].pdata[y] = p[y];
+		fbk[FB_INDEX].cbi[y] = z;
+		fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
+		fbk[FB_INDEX].pstat[y] = FEC_FLAG_WANTED;
 	}
 
 	/* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
 	if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
-		fb.plen[k - 1] -= 1;
+		fbk[FB_INDEX].plen[k - 1] -= 1;
 		p[k - 1][0] -= 1;
 	}
 }
@@ -268,7 +271,7 @@ int get_total_packet_size(char* packet) {
 
 int copy_parity_packets_to_pkt_buffer(int blockId) {
 	int startIndexOfParityPacket = 0 + NUM_DATA_PACKETS;
-	int sizeOfParityPackets = fb.plen[startIndexOfParityPacket];
+	int sizeOfParityPackets = fbk[FB_INDEX].plen[startIndexOfParityPacket];
 //(	fec_dbg_printf)("This is inside copy packets \n");
 	/*For each parity packet*/
 	for (int i = startIndexOfParityPacket; i < (startIndexOfParityPacket + NUM_PARITY_PACKETS); i++) {
@@ -308,7 +311,7 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		memcpy(pkt_buffer[blockId][i], packet, totalHeaderSize);
 
 		/*Copy payload from the global fec struct*/
-		memcpy(pkt_buffer[blockId][i] + totalHeaderSize, fb.pdata[i], sizeOfParityPackets);
+		memcpy(pkt_buffer[blockId][i] + totalHeaderSize, fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
 
 		/*Update the the payload lenght and checksum*/
 		modify_IP_headers_for_parity_packets(sizeOfParityPackets, pkt_buffer[blockId][i]);
