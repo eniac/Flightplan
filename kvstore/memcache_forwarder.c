@@ -7,6 +7,7 @@
 
 #include "kvcache.h"
 #include "memcache_forwarder.h"
+#include "memcache_parser.h"
 
 void forward_to_server(const void *packet, int len) {
 	printf("Forwarding packet to server..\n");
@@ -23,11 +24,18 @@ void forward_to_client(const void *packet, int len) {
 
 void client_cache_lookup(u_char *args, const struct pcap_pkthdr *header,
 		const u_char *packet) {
-	forward_to_server(packet, header->len);
+
+	if (!parse_memcache_request((char *)packet, header->len)) {
+		forward_to_server(packet, header->len);
+	} else {
+		// Inject response to client
+	}
 }
 
 void server_response_forward(u_char *args, const struct pcap_pkthdr *header,
 		const u_char *packet) {
+
+	// TODO: Parse response and add to local cache before forwarding
 	forward_to_client(packet, header->len);
 }
 

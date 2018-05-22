@@ -17,7 +17,7 @@ cache_entry *key_value_cache = NULL;
 
 void set_cache_entry(char *key, char *value) {
 
-	cache_entry *entry;
+	cache_entry *entry = NULL;
 
 	HASH_FIND_STR(key_value_cache, key, entry);
  	if (entry == NULL) {
@@ -30,7 +30,7 @@ void set_cache_entry(char *key, char *value) {
 
 bool cas_cache_entry(char *key, char *old_value, char *new_value) {
 
-	cache_entry *entry;
+	cache_entry *entry = NULL;
 
 	HASH_FIND_STR(key_value_cache, key, entry);
 	if (entry == NULL) {
@@ -55,7 +55,7 @@ cache_entry *get_cache_entry(char *key) {
 
 bool delete_cache_entry(char *key) {
 
-	cache_entry *entry;
+	cache_entry *entry = NULL;
 
 	HASH_FIND_STR(key_value_cache, key, entry);
 	if (entry == NULL) {

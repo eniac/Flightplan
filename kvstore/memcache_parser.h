@@ -21,4 +21,6 @@ enum ascii_cmd {
   UNKNOWN_CMD
 };
 
+bool parse_memcache_request(char *, int);
+
 #endif

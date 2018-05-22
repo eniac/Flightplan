@@ -37,11 +37,6 @@
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/.apc/.tb</location>
 		</link>
 		<link>
-			<name>.reference/Decoder.pragma.1.cpp</name>
-			<type>1</type>
-			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/solution1/.autopilot/db/Decoder.pragma.1.cpp</location>
-		</link>
-		<link>
 			<name>solution1/constraints</name>
 			<type>2</type>
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/solution1/.tcls</location>

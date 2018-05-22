@@ -28,6 +28,8 @@
 #define FEC_ETHER_TYPE_WIDTH 16
 // Width in bits of packet length (including reserved bits)
 #define FEC_PACKET_LENGTH_WIDTH 16
+// Width in bits of AXI bus
+#define FEC_AXI_BUS_WIDTH (64)
 
 // Length in bits of Ethernet header
 #define FEC_ETH_HEADER_SIZE (112)
