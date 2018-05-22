@@ -68,7 +68,7 @@ parser Parser(packet_in pkt, out headers_t hdr)
 	state start
 	{
 		pkt.extract(hdr.eth);
-		transition select(hdr.ethernet.type) {
+		transition select(hdr.eth.type) {
 			ETHERTYPE_IPV4  : parse_ipv4;
 			default : accept;
 		}
@@ -76,7 +76,7 @@ parser Parser(packet_in pkt, out headers_t hdr)
 
 	state parse_ipv4 {
 		pkt.extract(hdr.ipv4);
-		transition select(hdr.ipv4.proto) {
+		transition select(hdr.ipv4.protocol) {
 			PROTOCOL_UDP : parse_udp;
 			default : accept;
 		}
