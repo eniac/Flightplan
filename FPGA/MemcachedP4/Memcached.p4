@@ -1,7 +1,6 @@
 @Xilinx_MaxLatency(200)
 extern void memcached(out bit<1> forward);
 
-#if 0
 control CheckCache(inout headers_t hdr, inout switch_metadata_t ioports)
 {
 	apply {
@@ -13,4 +12,3 @@ control CheckCache(inout headers_t hdr, inout switch_metadata_t ioports)
 		}
 	}
 }
-#endif
