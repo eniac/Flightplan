@@ -32,7 +32,7 @@ clean:
 	rm -fr Encoder.sdnet Encoder
 
 Update_patches:
-	p4c-sdnet -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet.original
+	p4c-sdnet -I ../RSEVivadoHLS -I ../MemcachedP4 Sources/Encoder.p4 -o Encoder.sdnet.original
 	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder.original
 	Scripts/Create_patches.bash
 
