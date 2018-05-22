@@ -87,7 +87,8 @@ sleep 1
 
 # start tcpreplay to send input from the network to the device (at 1k pps).
 echo "starting tcpreplay..."
-tcpreplay --preload-pcap --quiet --loop=1 --topspeed -i frontVeth1 $INPUT_PCAP
+# do NOT use --topspeed parameter : boosters fall behind and input is lost
+tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
 sleep 1
 
 # cleanup

@@ -20,6 +20,10 @@ char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pk
 
 int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
 
+/* storage for parity packets in fbk.pdata.
+ * fbk.pdata is array of pointers, and must point to allocated memory */
+static fec_sym parity_buffer[FEC_MAX_H][FEC_MAX_COLS];
+
 int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
 
 /**
@@ -57,7 +61,6 @@ void free_pkt_buffer() {
 void call_fec_blk_get(int blockId) {
 
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	fec_sym p[FEC_MAX_N][FEC_MAX_COLS];   /* storage for packets in FEC block (fb) */
 	fec_sym k = NUM_DATA_PACKETS;
 	fec_sym h = NUM_PARITY_PACKETS;
 	fec_sym o = 0;
@@ -65,7 +68,7 @@ void call_fec_blk_get(int blockId) {
 	fec_sym s = 3;
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-	fec_blk_get(p, k, h, c, s, o, blockId);
+	fec_blk_get(parity_buffer, k, h, c, s, o, blockId);
 }
 
 /**
@@ -204,23 +207,16 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 		}
 		y = k + i;                                  /* FEC block index */
 		z = FEC_MAX_N - o - i - 1;             /* Codeword index */
-		fbk[FB_INDEX].pdata[y] = p[y];
+		fbk[FB_INDEX].pdata[y] = p[i];
 		fbk[FB_INDEX].cbi[y] = z;
 		fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
 		fbk[FB_INDEX].pstat[y] = FEC_FLAG_WANTED;
-	}
-
-	/* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
-	if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
-		fbk[FB_INDEX].plen[k - 1] -= 1;
-		p[k - 1][0] -= 1;
 	}
 }
 
 /* Called by the decoder to fill the FEC structure with the available data and parity packets, and mark the missing packets as WANTED*/
 void call_fec_blk_put(int blockId) {
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	fec_sym p[FEC_MAX_N][FEC_MAX_COLS];   /* storage for packets in FEC block (fb) */
 	fec_sym k = NUM_DATA_PACKETS;
 	fec_sym h = NUM_PARITY_PACKETS;
 	fec_sym o = 0;
@@ -228,10 +224,10 @@ void call_fec_blk_put(int blockId) {
 	fec_sym s = 3;
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-	fec_blk_put(p, k, h, c, s, o, blockId);
+	fec_blk_put(k, h, c, s, o, blockId);
 }
 
-void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
+void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
 	fec_sym i, y, z;
 	int maxPacketLength = 0;
 	fbk[FB_INDEX].block_N = k + h;
@@ -258,9 +254,14 @@ void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 		} else {
 			/*If the data packet is not present, then mark the packet state as WANTED*/
-			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
-			fbk[FB_INDEX].cbi[i] = i;
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_WANTED;
+            /* RSE must have a memory location into which it can write the generated packet.
+             * We pass it the pkt_buffer pointer, so in this case it generates the packet
+             * directly into the pkt_buffer */
+			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
+
+            /** Must explicity mark cbi, even of WANTED packets */
+			fbk[FB_INDEX].cbi[i] = i;
 		}
 	}
 	fbk[FB_INDEX].block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
@@ -268,31 +269,26 @@ void fec_blk_put(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 
 	/*Now populate the recieved parity packets into the packet buffer*/
 	for (i = 0; i < h; i++) {
+        y = k + i;                             /* FEC block index */
 		/*If the parity packet is present, then update it in the packet buffer*/
-		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
+		if (pkt_buffer_filled[blockId][y] == PACKET_PRESENT) {
 
 			if (i >= FEC_MAX_H) {
 				fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
 				exit(34);
 			}
-			y = k + i;                             /* FEC block index */
 			z = FEC_MAX_N - o - i - 1;             /* Codeword index */ /*TODO: Need to verify these values if the decoder does not work*/
-			fbk[FB_INDEX].pdata[y] = (fec_sym *) pkt_buffer[blockId][i];
+			fbk[FB_INDEX].pdata[y] = (fec_sym *) pkt_buffer[blockId][y];
 			fbk[FB_INDEX].cbi[y] = z; /*TODO: Need to verify these values if the decoder does not work*/
 			fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C; /*TODO: Need to verify these values if the decoder does not work*/
 			fbk[FB_INDEX].pstat[y] = FEC_FLAG_KNOWN;
 
 		} else { /*If the parity packet is missing*/
 			/*Since it is parity packet we can set the status of non-recieved packets to IGNORE*/
-			fbk[FB_INDEX].pstat[i] = FEC_FLAG_IGNORE;
+			fbk[FB_INDEX].pstat[y] = FEC_FLAG_IGNORE;
 		}
 	}
 
-	/* shorten last packet, if not: a) 1 symbol/packet, b) lone packet, c) fixed size */
-	if ((c > 1) && (k > 1) && (FEC_EXTRA_COLS > 0)) {
-		fbk[FB_INDEX].plen[k - 1] -= 1;
-		p[k - 1][0] -= 1;
-	}
 }
 
 unsigned char* get_payload_start_for_packet(char* packet) {
@@ -600,7 +596,7 @@ int main (int argc, char** argv) {
 	free_pkt_buffer();
 }
 
-void copy_data_packets_to_pkt_buffer(int blockId) {
+void copy_data_packets_to_pkt_buffer_DEPRECATED(int blockId) {
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
 		if (PACKET_PRESENT != pkt_buffer_filled[blockId][i]) {
 			const FRAME_SIZE_TYPE original_frame_size = (FRAME_SIZE_TYPE)(*pkt_buffer[blockId][i]);
