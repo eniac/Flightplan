@@ -1,6 +1,122 @@
---- Encoder.sdnet.original	2018-05-03 12:18:58.308517707 -0400
-+++ Encoder.sdnet	2018-05-03 12:12:43.295084351 -0400
-@@ -141,6 +141,31 @@
+--- Encoder.sdnet.original	2018-05-22 18:38:17.130963132 -0400
++++ Encoder.sdnet	2018-05-22 18:29:44.560991436 -0400
+@@ -35,20 +35,16 @@
+   original_type : 16 }
+ struct headers_t {
+   eth : eth_h,
+-  fec : fec_h,
+-  ipv4 : ipv4_t,
+-  udp : udp_h }
++  fec : fec_h }
+ class ioports_t::Tuple(inout) {
+   struct {
+     ingress_port : 4,
+     egress_port : 4 } }
+-class Parser_t::ParsingEngine(12144,4,start) {
++class Parser_t::ParsingEngine(12144,2,start) {
+   class hdr_t::Tuple(out) {
+     struct {
+       eth : eth_h,
+-      fec : fec_h,
+-      ipv4 : ipv4_t,
+-      udp : udp_h } }
++      fec : fec_h } }
+   class Parser_extracts_t::Tuple(out) {
+     struct {
+       size : 32 } }
+@@ -59,67 +55,15 @@
+       dst_0 : 48,
+       src_0 : 48,
+       type_0 : 16 }
+-    map transition_0 {
+-      (2048, parse_ipv4),
+-      accept }
+     method update = {
+       hdr.eth.isValid = 1,
+       hdr.eth.dst = dst_0,
+       hdr.eth.src = src_0,
+       hdr.eth.type = type_0,
+       Parser_extracts.size = (Parser_extracts.size + 112) }
+-    method move_to_section = transition_0(type_0);
+-    method increment_offset = 112; }
+-  class parse_ipv4::Section(2) {
+-    struct {
+-      version_0 : 4,
+-      ihl_0 : 4,
+-      diffserv_0 : 8,
+-      totallen_0 : 16,
+-      identification_0 : 16,
+-      flags_0 : 3,
+-      fragoffset_0 : 13,
+-      ttl_0 : 8,
+-      protocol_0 : 8,
+-      hdrchecksum_0 : 16,
+-      srcAddr_0 : 32,
+-      dstAddr_0 : 32 }
+-    map transition_1 {
+-      (17, parse_udp),
+-      accept }
+-    method update = {
+-      hdr.ipv4.isValid = 1,
+-      hdr.ipv4.version = version_0,
+-      hdr.ipv4.ihl = ihl_0,
+-      hdr.ipv4.diffserv = diffserv_0,
+-      hdr.ipv4.totallen = totallen_0,
+-      hdr.ipv4.identification = identification_0,
+-      hdr.ipv4.flags = flags_0,
+-      hdr.ipv4.fragoffset = fragoffset_0,
+-      hdr.ipv4.ttl = ttl_0,
+-      hdr.ipv4.protocol = protocol_0,
+-      hdr.ipv4.hdrchecksum = hdrchecksum_0,
+-      hdr.ipv4.srcAddr = srcAddr_0,
+-      hdr.ipv4.dstAddr = dstAddr_0,
+-      Parser_extracts.size = (Parser_extracts.size + 160) }
+-    method move_to_section = transition_1(protocol_0);
+-    method increment_offset = 160; }
+-  class parse_udp::Section(3) {
+-    struct {
+-      sport_0 : 16,
+-      dport_0 : 16,
+-      len_0 : 16,
+-      chksum_0 : 16 }
+-    method update = {
+-      hdr.udp.isValid = 1,
+-      hdr.udp.sport = sport_0,
+-      hdr.udp.dport = dport_0,
+-      hdr.udp.len = len_0,
+-      hdr.udp.chksum = chksum_0,
+-      Parser_extracts.size = (Parser_extracts.size + 64) }
+     method move_to_section = accept;
+-    method increment_offset = 64; }
+-  class accept::Section(4) {
++    method increment_offset = 112; }
++  class accept::Section(2) {
+     method move_to_section = done(0);
+     method increment_offset = 0; }
+   class reject::Section {
+@@ -133,9 +77,7 @@
+   class hdr_t_0::Tuple(inout) {
+     struct {
+       eth : eth_h,
+-      fec : fec_h,
+-      ipv4 : ipv4_t,
+-      udp : udp_h } }
++      fec : fec_h } }
+   class ioports_t::Tuple(inout) {
+     struct {
+       ingress_port : 4,
+@@ -158,9 +100,7 @@
+   class hdr_t_0::Tuple(inout) {
+     struct {
+       eth : eth_h,
+-      fec : fec_h,
+-      ipv4 : ipv4_t,
+-      udp : udp_h } }
++      fec : fec_h } }
+   class ioports_t::Tuple(inout) {
+     struct {
+       ingress_port : 4,
+@@ -221,6 +161,31 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
  class fec_0_t::UserEngine(200, 0) {
@@ -32,7 +148,110 @@
    class fec_input_t::Tuple(in) {
      struct {
        stateful_valid : 1,
-@@ -249,17 +274,23 @@
+@@ -239,9 +204,7 @@
+   class hdr_t_0::Tuple(inout) {
+     struct {
+       eth : eth_h,
+-      fec : fec_h,
+-      ipv4 : ipv4_t,
+-      udp : udp_h } }
++      fec : fec_h } }
+   class ioports_t::Tuple(inout) {
+     struct {
+       ingress_port : 4,
+@@ -271,66 +234,20 @@
+   class sink::Section(3) {
+     method move_to_section = done(0);
+     method increment_offset = 0; } }
+-class Deparser_t::EditingEngine(12144,6,extract_headers_sec) {
++class Deparser_t::EditingEngine(12144,4,extract_headers_sec) {
+   class hdr_t_1::Tuple(in) {
+     struct {
+       eth : eth_h,
+-      fec : fec_h,
+-      ipv4 : ipv4_t,
+-      udp : udp_h } }
++      fec : fec_h } }
+   class Deparser_extracts_t::Tuple(in) {
+     struct {
+       size : 32 } }
+   hdr_t_1 hdr;
+   Deparser_extracts_t Deparser_extracts;
+   class act_3_sec::Section(2) {
+-    method move_to_section = emit_3;
+-    method increment_offset = 0; }
+-  class emit_0::Section(6) {
+-    struct {
+-      sport : 16,
+-      dport : 16,
+-      len : 16,
+-      chksum : 16 }
+-    method insert = if (hdr.udp.isValid) 64 else 0;
+-    method update = {
+-      sport = hdr.udp.sport,
+-      dport = hdr.udp.dport,
+-      len = hdr.udp.len,
+-      chksum = hdr.udp.chksum }
+-    method move_to_section = done(0);
+-    method increment_offset = 0; }
+-  class emit_1::Section(5) {
+-    struct {
+-      version : 4,
+-      ihl : 4,
+-      diffserv : 8,
+-      totallen : 16,
+-      identification : 16,
+-      flags : 3,
+-      fragoffset : 13,
+-      ttl : 8,
+-      protocol : 8,
+-      hdrchecksum : 16,
+-      srcAddr : 32,
+-      dstAddr : 32 }
+-    method insert = if (hdr.ipv4.isValid) 160 else 0;
+-    method update = {
+-      version = hdr.ipv4.version,
+-      ihl = hdr.ipv4.ihl,
+-      diffserv = hdr.ipv4.diffserv,
+-      totallen = hdr.ipv4.totallen,
+-      identification = hdr.ipv4.identification,
+-      flags = hdr.ipv4.flags,
+-      fragoffset = hdr.ipv4.fragoffset,
+-      ttl = hdr.ipv4.ttl,
+-      protocol = hdr.ipv4.protocol,
+-      hdrchecksum = hdr.ipv4.hdrchecksum,
+-      srcAddr = hdr.ipv4.srcAddr,
+-      dstAddr = hdr.ipv4.dstAddr }
+-    method move_to_section = emit_0;
++    method move_to_section = emit_1;
+     method increment_offset = 0; }
+-  class emit_2::Section(4) {
++  class emit_0::Section(4) {
+     struct {
+       traffic_class : 3,
+       block_index : 5,
+@@ -342,9 +259,9 @@
+       block_index = hdr.fec.block_index,
+       packet_index = hdr.fec.packet_index,
+       original_type = hdr.fec.original_type }
+-    method move_to_section = emit_1;
++    method move_to_section = done(0);
+     method increment_offset = 0; }
+-  class emit_3::Section(3) {
++  class emit_1::Section(3) {
+     struct {
+       dst : 48,
+       src : 48,
+@@ -354,7 +271,7 @@
+       dst = hdr.eth.dst,
+       src = hdr.eth.src,
+       type = hdr.eth.type }
+-    method move_to_section = emit_2;
++    method move_to_section = emit_0;
+     method increment_offset = 0; }
+   class extract_headers_sec::Section(1) {
+     method remove = Deparser_extracts.size;
+@@ -377,17 +294,23 @@
      Update_lvl_0.hdr = Update_lvl.hdr,
      Update_lvl_0.ioports = Update_lvl.ioports,
      Update_lvl_0.local_state = Update_lvl.local_state,
