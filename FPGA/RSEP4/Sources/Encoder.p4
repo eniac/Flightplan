@@ -135,8 +135,11 @@ control Deparser(in headers_t hdr, packet_out pkt) {
 	{
 		pkt.emit(hdr.eth);
 		pkt.emit(hdr.fec);
+
+#if 0
 		pkt.emit(hdr.ipv4);
 		pkt.emit(hdr.udp);
+#endif
 	}
 }
 
