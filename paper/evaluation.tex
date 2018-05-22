@@ -86,11 +86,11 @@ Here we evaluate the implementation directly, not using a model.
 Latency and throughput graphs for experiments involving different loss rates, and the encoder working on the CPU and FPGA.
 Note: we have not optimized the CPU implementation.
 \fi
-We measured the performance of our current encoder implementation, which has a
-few restrictions.  The encoder parameters are fixed to $k = 8$ and $h = 4$,
-and it handles only a single flow of packets with 1024-byte payloads.
-Packets were supplied to the FPGA with the packet generator of DPDK 17.08.1.
-At the output, we measured a throughput of 9.025 Gbps over a 10-minute period,
+We measured the performance of our current encoder implementation.  Packets
+in a single flow with uniformly-distributed payload sizes of 64--1450 bytes are
+supplied to the FPGA with the packet generator of DPDK 17.08.1. The encoder
+processes the packet with parameters $k = 50$ and $h = 1$.
+At the output, we measured a throughput of 9.3 Gbps over a 10-minute period,
 nearly saturating the 10-Gbps link.
 
 \iffalse
