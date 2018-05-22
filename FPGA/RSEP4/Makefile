@@ -25,7 +25,7 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
 	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
 
 Encoder.sdnet: Sources/Encoder.p4
-	p4c-sdnet -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet
+	p4c-sdnet -I ../RSEVivadoHLS -I ../MemcachedP4 Sources/Encoder.p4 -o Encoder.sdnet
 	patch Encoder.sdnet Patches/Encoder.sdnet.patch
 
 clean:
