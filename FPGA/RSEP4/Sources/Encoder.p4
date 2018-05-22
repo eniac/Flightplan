@@ -30,7 +30,7 @@
 
 #include "Configuration.h"
 
-#include "Memcached.p4"
+#include "Memcached_headers.p4"
 
 // We need at least space for one packet or the encoder will deadlock.
 @Xilinx_MaxLatency(200)
@@ -142,6 +142,8 @@ control Deparser(in headers_t hdr, packet_out pkt) {
 #endif
 	}
 }
+
+#include "Memcached.p4"
 
 XilinxSwitch(Parser(), /* FIXME disabled CheckCache(),*/ Update(), Deparser()) main;
 
