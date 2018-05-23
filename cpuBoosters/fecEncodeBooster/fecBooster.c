@@ -189,18 +189,23 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 			exit (33);
 		}
 
-		int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
-
 		fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
 		fbk[FB_INDEX].cbi[i] = i;
-		fbk[FB_INDEX].plen[i] = payloadLength;
-
-		/*  Keep track of maximum packet length to set the block_C field of FEC structure    */
-		if (payloadLength > maxPacketLength) {
-			maxPacketLength = payloadLength;
-		}
 		fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
+		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
+
+			int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
+
+			fbk[FB_INDEX].plen[i] = payloadLength;
+
+			if (payloadLength > maxPacketLength) {
+				maxPacketLength = payloadLength;
+			}
+		} else {
+			fprintf(stderr, "WARNING: ABSENT packet being forwarded\n");
+			fbk[FB_INDEX].plen[i] = 0;
+		}
 	}
 
 
