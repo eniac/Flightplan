@@ -137,5 +137,5 @@ control Deparser(in headers_t hdr, packet_out pkt) {
 
 #include "Memcached.p4"
 
-XilinxSwitch(Parser(), /* FIXME disabled CheckCache(),*/ Update(), Deparser()) main;
+XilinxSwitch(Parser(), CheckCache(), /* FIXME disabled Update(),*/ Deparser()) main;
 
