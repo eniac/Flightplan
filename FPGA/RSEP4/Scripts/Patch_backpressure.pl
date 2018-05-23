@@ -7,7 +7,7 @@ use warnings;
 use Getopt::Std;
 
 my %options=();
-getopts("i:d:p:t:", \%options);
+getopts("i:d:p:t:m:", \%options);
 
 my $File_name;
 if (defined $options{i}) {
@@ -40,6 +40,13 @@ if (defined $options{t}) {
   die 'Need to specify -t ("type" of the module we are interested in)';
 }
 
+my $ModuleName;
+if (defined $options{m}) {
+  $ModuleName = $options{m};
+} else {
+  die 'Need to specify -m (name of the module we are interested in)';
+}
+
 open(my $Input_file, '<', $File_name)
   or die 'Could not open "$File_name".';
 
@@ -52,7 +59,7 @@ while (my $Line = <$Input_file>)
 {
   $Line =~ s/^\s+|\s+$//g;
   
-  $Inside_module = 1 if ($Line eq "fec_0");
+  $Inside_module = 1 if ($Line eq "${ModuleName}");
   $Inside_module = 0 if ($Line eq ");");
 
   my @Tokens = split /\s+/, $Line;
@@ -64,7 +71,7 @@ die 'Cannot find ".packet_in_packet_in_DAT" port of "${ModuleType}" module.' if 
 die 'Cannot find ".packet_out_packet_out_DAT" port of "${ModuleType}" module.' if (!defined $Packet_output);
 
 # Find the modules that are immediately upstream and downstream on the packet bus with respect to
-# the fec_0 module.
+# the ${ModuleName} module.
 
 seek $Input_file, 0, 0;
 
@@ -138,7 +145,7 @@ while (my $Line = <$Input_file>)
   $Inside_module = 1 if ($Line eq "(");
   $Inside_module = 0 if ($Line eq ");");
 
-  $Start_of_FEC = $Line_number if ($Inside_module && $Line eq "(" && $Module_name eq "fec_0");
+  $Start_of_FEC = $Line_number if ($Inside_module && $Line eq "(" && $Module_name eq "${ModuleName}");
   $Back_pres_dest = $Line_number if ($Inside_module && $Module_name eq $Input_module && $#Tokens > 0 && $Tokens[0] eq ".backpressure_in" );
   $Back_pres_source = $Line_number if ($Inside_module && $Module_name eq $Output_module && $#Tokens > 0 && $Tokens[0] eq ".backpressure_out" );
 
