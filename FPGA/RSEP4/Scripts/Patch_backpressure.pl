@@ -7,13 +7,23 @@ use warnings;
 use Getopt::Std;
 
 my %options=();
-getopts("i:", \%options);
+getopts("i:d:", \%options);
 
 my $File_name;
 if (defined $options{i}) {
   $File_name = $options{i};
 } else {
   die 'Need to specify -i (input file, usually XilinxSwitch.v)';
+}
+
+my $Delay;
+if (defined $options{d}) {
+  $Delay = $options{d};
+  if ($Delay <= 0) {
+    die '-d parameter must be greater than 0';
+  }
+} else {
+  die 'Need to specify -d (delay, e.g., 3)';
 }
 
 open(my $Input_file, '<', $File_name)
@@ -140,7 +150,7 @@ while (my $Line = <$Input_file>)
   }
   elsif ($Line_number == $Back_pres_dest)
   {
-    print "\t.backpressure_in\t( fec_backpressure_out_3 ),\n";
+    print "\t.backpressure_in\t( fec_backpressure_out_${Delay} ),\n";
   }
   else
   {
@@ -150,44 +160,48 @@ while (my $Line = <$Input_file>)
   if ($Line_number == $End_of_decl)
   {
     print "wire fec_backpressure_in ;\n";
-    print "reg fec_backpressure_in_1 ;\n";
-    print "reg fec_backpressure_in_2 ;\n";
-    print "reg fec_backpressure_in_3 ;\n";
+    for (my $i = 1; $i <= $Delay; $i++) {
+      print "reg fec_backpressure_in_${i} ;\n";
+    }
     print "wire fec_backpressure_out ;\n";
-    print "reg fec_backpressure_out_1 ;\n";
-    print "reg fec_backpressure_out_2 ;\n";
-    print "reg fec_backpressure_out_3 ;\n";
+    for (my $i = 1; $i <= $Delay; $i++) {
+      print "reg fec_backpressure_out_${i} ;\n";
+    }
     print "\n";
     print "always @( posedge clk_line ) begin\n";
     print "\tif ( clk_line_rst_high ) begin\n";
-    print "\t\tfec_backpressure_in_1 <= 0 ;\n";
-    print "\t\tfec_backpressure_in_2 <= 0 ;\n";
-    print "\t\tfec_backpressure_in_3 <= 0 ;\n";
+    for (my $i = 1; $i <= $Delay; $i++) {
+      print "\t\tfec_backpressure_in_${i} <= 0 ;\n";
+    }
     print "\tend\n";
     print "\telse  begin\n";
     print "\t\tfec_backpressure_in_1 <= fec_backpressure_in ;\n";
-    print "\t\tfec_backpressure_in_2 <= fec_backpressure_in_1 ;\n";
-    print "\t\tfec_backpressure_in_3 <= fec_backpressure_in_2 ;\n";
+    for (my $i = 1; $i < $Delay; $i++) {
+      my $iplus1 = $i + 1;
+      print "\t\tfec_backpressure_in_${iplus1} <= fec_backpressure_in_${i} ;\n";
+    }
     print "\tend\n";
     print "end\n";
     print "\n";
     print "always @( posedge clk_line ) begin\n";
     print "\tif ( clk_line_rst_high ) begin\n";
-    print "\t\tfec_backpressure_out_1 <= 0 ;\n";
-    print "\t\tfec_backpressure_out_2 <= 0 ;\n";
-    print "\t\tfec_backpressure_out_3 <= 0 ;\n";
+    for (my $i = 1; $i <= $Delay; $i++) {
+      print "\t\tfec_backpressure_out_${i} <= 0 ;\n";
+    }
     print "\tend\n";
     print "\telse  begin\n";
     print "\t\tfec_backpressure_out_1 <= fec_backpressure_out ;\n";
-    print "\t\tfec_backpressure_out_2 <= fec_backpressure_out_1 ;\n";
-    print "\t\tfec_backpressure_out_3 <= fec_backpressure_out_2 ;\n";
+    for (my $i = 1; $i < $Delay; $i++) {
+      my $iplus1 = $i + 1;
+      print "\t\tfec_backpressure_out_${iplus1} <= fec_backpressure_out_${i} ;\n";
+    }
     print "\tend\n";
     print "end\n";
   }
 
   if ($Line_number == $Start_of_FEC)
   {
-    print "\t.backpressure_in\t( fec_backpressure_in_3 ),\n";
+    print "\t.backpressure_in\t( fec_backpressure_in_${Delay} ),\n";
     print "\t.backpressure_out\t( fec_backpressure_out ),\n";
   }
 
