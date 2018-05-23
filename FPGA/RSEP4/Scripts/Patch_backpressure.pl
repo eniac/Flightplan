@@ -4,8 +4,17 @@
 
 use strict;
 use warnings;
+use Getopt::Std;
 
-my $File_name = "Encoder/XilinxSwitch/XilinxSwitch.v";
+my %options=();
+getopts("i:", \%options);
+
+my $File_name;
+if (defined $options{i}) {
+  $File_name = $options{i};
+} else {
+  die 'Need to specify -i (input file, usually XilinxSwitch.v)';
+}
 
 open(my $Input_file, '<', $File_name)
   or die 'Could not open "$File_name".';
