@@ -470,6 +470,12 @@ void print_hex_memory(void *mem, int len) {
 static unsigned int block_id = 0;
 static unsigned int frame_index = 0;
 
+unsigned int advance_block_id(void) {
+	block_id = (block_id + 1) % MAX_BLOCK;
+	frame_index = 0;
+	return block_id;
+}
+
 
 /**
  * @brief      Encapsulate the packet with new header.

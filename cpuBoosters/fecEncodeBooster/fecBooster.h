@@ -48,6 +48,7 @@ u_short compute_csum(struct sniff_ip *ip , int len);
 void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
 
 enum traffic_class {one=1, two=2, three=3};
+unsigned int advance_block_id();
 int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result);
 int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size);
 #define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header))
@@ -63,4 +64,5 @@ void free_pkt_buffer();
 #define PACKET_RECOVERED 2
 
 // WHARF_DECODE_TIMEOUT==0 means we're not using the timeout, otherwise it's the seconds before a block is timed out.
-#define WHARF_DECODE_TIMEOUT 0
+#define WHARF_DECODE_TIMEOUT 2
+#define WHARF_ENCODE_TIMEOUT 1

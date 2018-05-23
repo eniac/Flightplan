@@ -10,9 +10,6 @@ bool nothing_to_decode = true; // This is true when the buffer doesn't contain a
 int lastBlockId = 0;
 
 inline void reset_decoder (const int block_id) {
-#if WHARF_DECODE_TIMEOUT != 0
-	signal(SIGALRM, SIG_IGN);
-#endif // WHARF_DECODE_TIMEOUT != 0
 	nothing_to_decode = true;
 	zeroout_block_in_pkt_buffer(block_id);
 }
@@ -40,7 +37,11 @@ void decode_and_forward(const int block_id) {
 
 			char* packetToInject = pkt_buffer[block_id][i] + sizeof(FRAME_SIZE_TYPE);
 			size_t outPktLen = *(FRAME_SIZE_TYPE*)(pkt_buffer[block_id][i]);
-			forward_frame(packetToInject, outPktLen);
+			// Recovered packet may have a length of 0, if it was filler
+			// In this case, no need to forward
+			if (outPktLen > 0) {
+				forward_frame(packetToInject, outPktLen);
+			}
 		}
 	}
 
@@ -100,8 +101,11 @@ void my_packet_handler(
 
 	// Forward data packets immediately
 	if (fecHeader->index < NUM_DATA_PACKETS) {
-		forward_frame(packet + WHARF_ORIG_FRAME_OFFSET,
-		              header->len - WHARF_ORIG_FRAME_OFFSET); // This also strips the Wharf tag.
+		// If there is no data outside of the wharf frame, no need to forward (packet was filler)
+		if (header->len > WHARF_ORIG_FRAME_OFFSET) {
+			forward_frame(packet + WHARF_ORIG_FRAME_OFFSET,
+			              header->len - WHARF_ORIG_FRAME_OFFSET); // This also strips the Wharf tag.
+		}
 	}
 
 	// Buffer data and parity packets in case need to decode.
