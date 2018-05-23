@@ -39,7 +39,7 @@ void call_fec_blk_put(int blockId);
 void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId);
 void simulate_packet_loss();
 void encode_block();
-void decode_block();
+void decode_block(int block_id);
 int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId);
 int copy_parity_packets_to_pkt_buffer(int blockId);
 void copy_data_packets_to_pkt_buffer(int blockId);

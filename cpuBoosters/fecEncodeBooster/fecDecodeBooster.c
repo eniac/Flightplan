@@ -29,13 +29,13 @@ void decode_and_forward(const int block_id) {
 	call_fec_blk_put(block_id);
 
     // Decode inserts the packets directly into pkt_buffer
-	decode_block();
+	decode_block(block_id);
 
 #if WHARF_DEBUGGING
 	int num_recovered_packets = 0;
 #endif // WHARF_DEBUGGING
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
-		if (pkt_buffer_filled[block_id][i] != PACKET_PRESENT) {
+		if (pkt_buffer_filled[block_id][i] == PACKET_RECOVERED) {
 			num_recovered_packets += 1;
 
 			char* packetToInject = pkt_buffer[block_id][i] + sizeof(FRAME_SIZE_TYPE);

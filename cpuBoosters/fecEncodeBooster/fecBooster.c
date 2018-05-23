@@ -107,11 +107,19 @@ void simulate_packet_loss() {
 /**
  * @brief      Wrapper to invoke the decoder
  */
-void decode_block() {
+void decode_block(int block_id) {
 	int rc;
-	if ((rc = rse_code(FB_INDEX, 'd')) != 0 )  exit(rc);
-	fprintf(stderr, "\nRecovered ");
+	if ((rc = rse_code(FB_INDEX, 'd')) != 0 ) {
+        fprintf(stderr, "\nCould not decode block: ");
+    } else {
+        fprintf(stderr, "\nRecovered ");
+    }
 	D0(fec_block_print(FB_INDEX));
+    for (int i=0; i < NUM_DATA_PACKETS; i++) {
+        if (fbk[FB_INDEX].pstat[i] == FEC_FLAG_GENNED) {
+            pkt_buffer_filled[block_id][i] = PACKET_RECOVERED;
+        }
+    }
 }
 
 /**
