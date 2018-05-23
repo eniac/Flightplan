@@ -7,7 +7,7 @@
 
 #define WHARF_DROP_AFTER (NUM_DATA_PACKETS - 1)
 #define WHARF_DROP_NOTAFTER NUM_PARITY_PACKETS
-int drop = WHARF_DROP_AFTER;
+int drop = 0;
 int packets_so_far = 0;
 
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
