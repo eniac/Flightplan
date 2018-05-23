@@ -110,16 +110,16 @@ void simulate_packet_loss() {
 void decode_block(int block_id) {
 	int rc;
 	if ((rc = rse_code(FB_INDEX, 'd')) != 0 ) {
-        fprintf(stderr, "\nCould not decode block: ");
-    } else {
-        fprintf(stderr, "\nRecovered ");
-    }
+		fprintf(stderr, "\nCould not decode block: ");
+	} else {
+		fprintf(stderr, "\nRecovered ");
+	}
 	D0(fec_block_print(FB_INDEX));
-    for (int i=0; i < NUM_DATA_PACKETS; i++) {
-        if (fbk[FB_INDEX].pstat[i] == FEC_FLAG_GENNED) {
-            pkt_buffer_filled[block_id][i] = PACKET_RECOVERED;
-        }
-    }
+	for (int i=0; i < NUM_DATA_PACKETS; i++) {
+		if (fbk[FB_INDEX].pstat[i] == FEC_FLAG_GENNED) {
+			pkt_buffer_filled[block_id][i] = PACKET_RECOVERED;
+		}
+	}
 }
 
 /**
@@ -263,12 +263,12 @@ void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) 
 		} else {
 			/*If the data packet is not present, then mark the packet state as WANTED*/
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_WANTED;
-            /* RSE must have a memory location into which it can write the generated packet.
-             * We pass it the pkt_buffer pointer, so in this case it generates the packet
-             * directly into the pkt_buffer */
+			/* RSE must have a memory location into which it can write the generated packet.
+			 * We pass it the pkt_buffer pointer, so in this case it generates the packet
+			 * directly into the pkt_buffer */
 			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
 
-            /** Must explicity mark cbi, even of WANTED packets */
+			/** Must explicity mark cbi, even of WANTED packets */
 			fbk[FB_INDEX].cbi[i] = i;
 		}
 	}
@@ -277,7 +277,7 @@ void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) 
 
 	/*Now populate the recieved parity packets into the packet buffer*/
 	for (i = 0; i < h; i++) {
-        y = k + i;                             /* FEC block index */
+		y = k + i;                             /* FEC block index */
 		/*If the parity packet is present, then update it in the packet buffer*/
 		if (pkt_buffer_filled[blockId][y] == PACKET_PRESENT) {
 
@@ -588,12 +588,12 @@ int main (int argc, char** argv) {
 
 	char input_error_buffer[PCAP_ERRBUF_SIZE];
 	input_handle = pcap_open_live(
-	             inputInterface,
-	             BUFSIZ,
-	             1, /*set device to promiscous*/
-	             0, /*Timeout of 0*/
-	             input_error_buffer
-	         );
+				inputInterface,
+				BUFSIZ,
+				1, /*set device to promiscous*/
+				0, /*Timeout of 0*/
+				input_error_buffer
+			);
 	if (input_handle == NULL) {
 		fprintf(stderr, "Could not open device %s: %s\n", inputInterface, input_error_buffer);
 		exit(1);

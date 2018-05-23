@@ -28,7 +28,7 @@ void decode_and_forward(const int block_id) {
 
 	call_fec_blk_put(block_id);
 
-    // Decode inserts the packets directly into pkt_buffer
+	// Decode inserts the packets directly into pkt_buffer
 	decode_block(block_id);
 
 #if WHARF_DEBUGGING
@@ -39,7 +39,7 @@ void decode_and_forward(const int block_id) {
 			num_recovered_packets += 1;
 
 			char* packetToInject = pkt_buffer[block_id][i] + sizeof(FRAME_SIZE_TYPE);
-            size_t outPktLen = *(FRAME_SIZE_TYPE*)(pkt_buffer[block_id][i]);
+			size_t outPktLen = *(FRAME_SIZE_TYPE*)(pkt_buffer[block_id][i]);
 			forward_frame(packetToInject, outPktLen);
 		}
 	}
