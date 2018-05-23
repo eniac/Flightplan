@@ -22,7 +22,7 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
 # Convert configuration file to Verilog.
 	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
 # Fix backpressure.
-	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl -i Encoder/XilinxSwitch/XilinxSwitch.v -d 3 > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
+	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl -i Encoder/XilinxSwitch/XilinxSwitch.v -d 3 -p fec > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
 
 Encoder.sdnet: Sources/Encoder.p4
 	p4c-sdnet -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet
