@@ -7,7 +7,7 @@ use warnings;
 use Getopt::Std;
 
 my %options=();
-getopts("i:d:p:", \%options);
+getopts("i:d:p:t:", \%options);
 
 my $File_name;
 if (defined $options{i}) {
@@ -33,10 +33,17 @@ if (defined $options{p}) {
   die 'Need to specify -p (prefix for elements added by this script)';
 }
 
+my $ModuleType;
+if (defined $options{t}) {
+  $ModuleType = $options{t};
+} else {
+  die 'Need to specify -t ("type" of the module we are interested in)';
+}
+
 open(my $Input_file, '<', $File_name)
   or die 'Could not open "$File_name".';
 
-# Find the signals that connect to the packet input and output of the fec_0_t module.
+# Find the signals that connect to the packet input and output of the ${ModuleType} module.
 
 my $Inside_module = 0;
 my $Packet_input;
@@ -53,8 +60,8 @@ while (my $Line = <$Input_file>)
   $Packet_output = $Tokens[2] if ($Inside_module && $Tokens[0] eq ".packet_out_packet_out_DAT");
 }
 
-die 'Cannot find ".packet_in_packet_in_DAT" port of "fec_0_t" module.' if (!defined $Packet_input);
-die 'Cannot find ".packet_out_packet_out_DAT" port of "fec_0_t" module.' if (!defined $Packet_output);
+die 'Cannot find ".packet_in_packet_in_DAT" port of "${ModuleType}" module.' if (!defined $Packet_input);
+die 'Cannot find ".packet_out_packet_out_DAT" port of "${ModuleType}" module.' if (!defined $Packet_output);
 
 # Find the modules that are immediately upstream and downstream on the packet bus with respect to
 # the fec_0 module.
@@ -79,15 +86,15 @@ while (my $Line = <$Input_file>)
   $Inside_module = 0 if ($Line eq ");");
 
   my @Tokens = split /\s+/, $Line;
-  if ($Inside_module && $Module_name ne "fec_0_t" && $#Tokens >= 2)
+  if ($Inside_module && $Module_name ne "${ModuleType}" && $#Tokens >= 2)
   {
     $Input_module = $Module_name if ($Tokens[2] eq $Packet_input);
     $Output_module = $Module_name if ($Tokens[2] eq $Packet_output);
   }
 }
 
-die 'Cannot find source module of packet bus to "fec_0_t" module.' if (!defined $Input_module);
-die 'Cannot find destination module of packet bus to "fec_0_t" module.' if (!defined $Output_module);
+die 'Cannot find source module of packet bus to "${ModuleType}" module.' if (!defined $Input_module);
+die 'Cannot find destination module of packet bus to "${ModuleType}" module.' if (!defined $Output_module);
 
 # Locate the end of the signal declarations.
 
@@ -107,8 +114,8 @@ while (my $Line = <$Input_file>)
 
 die 'Cannot find the last declaration.' if (!defined $End_of_decl);
 
-# Locate the first argument of the fec_0_t module instantiation and the lines with the ports that
-# produce and consume the backpressure connected to the fec_0_t module.
+# Locate the first argument of the ${ModuleType} module instantiation and the lines with the ports that
+# produce and consume the backpressure connected to the ${ModuleType} module.
 
 seek $Input_file, 0, 0;
 
@@ -138,9 +145,9 @@ while (my $Line = <$Input_file>)
   $Line_number++;
 }
 
-die 'Cannot find the first argument of the "fec_0_t" module.' if (!defined $Start_of_FEC);
-die 'Cannot find the source of the backpressure for the "fec_0_t" module.' if (!defined $Back_pres_source);
-die 'Cannot find the destination of the backpressure for the "fec_0_t" module.' if (!defined $Back_pres_dest);
+die 'Cannot find the first argument of the "${ModuleType}" module.' if (!defined $Start_of_FEC);
+die 'Cannot find the source of the backpressure for the "${ModuleType}" module.' if (!defined $Back_pres_source);
+die 'Cannot find the destination of the backpressure for the "${ModuleType}" module.' if (!defined $Back_pres_dest);
 
 # Generate the output file.
 
