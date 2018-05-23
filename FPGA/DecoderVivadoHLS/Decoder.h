@@ -15,6 +15,7 @@
 typedef ap_uint<FEC_TRAFFIC_CLASS_WIDTH> traffic_class;
 typedef ap_uint<FEC_BLOCK_INDEX_WIDTH> block_index;
 typedef ap_uint<FEC_PACKET_INDEX_WIDTH> packet_index;
+typedef ap_uint<FEC_ETHER_TYPE_WIDTH> packet_type;
 typedef ap_uint<FEC_K_WIDTH> k_type;
 typedef ap_uint<FEC_AXI_BUS_WIDTH> data_word;
 
@@ -70,9 +71,6 @@ typedef struct
 
 typedef struct
 {
-    packet_index Packet_index;
-    block_index Block_index;
-    traffic_class Traffic_class;
     k_type k;
     ap_uint<1> Stateful_valid;
 } tuple_Decoder_input;

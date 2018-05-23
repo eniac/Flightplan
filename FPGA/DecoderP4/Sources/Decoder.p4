@@ -32,9 +32,6 @@
 
 @Xilinx_MaxLatency(200)
 extern void Decoder(in bit<FEC_K_WIDTH> k,
-    in bit<FEC_TRAFFIC_CLASS_WIDTH> traffic_class,
-    in bit<FEC_BLOCK_INDEX_WIDTH> block_index,
-    in bit<FEC_PACKET_INDEX_WIDTH> packet_index,
     out bit<FEC_K_WIDTH> packet_count);
 
 typedef bit<48> MacAddress;
@@ -65,9 +62,19 @@ parser Parser(packet_in pkt, out headers_t hdr)
 	state start
 	{
 		pkt.extract(hdr.eth);
-		pkt.extract(hdr.fec);
-	        transition accept;
+		transition select(hdr.eth.type)
+		{
+			0x81C:		Parse_FEC;
+			default:	accept;
+		}
         }
+
+
+	state Parse_FEC
+	{
+		pkt.extract(hdr.fec);
+		transition accept;
+	}
 }
 
 control Update(inout headers_t hdr, inout switch_metadata_t ioports)
@@ -98,8 +105,7 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 				h = 5;
 			}
 
-		        Decoder(k, hdr.fec.traffic_class, hdr.fec.block_index,
-		                hdr.fec.packet_index, packet_count);
+		        Decoder(k, packet_count);
 		}
 	}
 }
