@@ -12,18 +12,18 @@ Encoder/XilinxSwitch/vivado_sim.bash
  set -x
 -find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % xvlog -sv % || true; } 
 -find -name "*.c" | { xargs -I % xsc --compile % || true; } 
--xsc --compile ./XilinxSwitch.TB/XilinxSwitch.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./Update_lvl_t.TB/" --gcc_compile_options "-I./Update_lvl_0_t.TB/" --gcc_compile_options "-I./fec_0_t.TB/" --gcc_compile_options "-I./Update_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
--xsc --compile ./XilinxSwitch.TB/sdnet_lib.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./Update_lvl_t.TB/" --gcc_compile_options "-I./Update_lvl_0_t.TB/" --gcc_compile_options "-I./fec_0_t.TB/" --gcc_compile_options "-I./Update_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
+-xsc --compile ./XilinxSwitch.TB/XilinxSwitch.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_0_t.TB/" --gcc_compile_options "-I./memcached_0_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
+-xsc --compile ./XilinxSwitch.TB/sdnet_lib.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_0_t.TB/" --gcc_compile_options "-I./memcached_0_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
 -xsc --link 
 -xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb 
 -xsim --runall XilinxSwitch_tb 
-+find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv -i fec_0_t.HDL % || true; } 
++find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv -i memcached_0_t.HDL % || true; } 
 +find -name "*.vhd" | { xargs -I % ${XILINX_VIVADO}/bin/xvhdl % || true; }
 +mkdir -p xsim.dir/xsc
 +find -name "*.c" | xargs ${XILINX_VIVADO}/bin/xsc -mt off -v 1
-+LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -c -fPIC -I ../../../RSEConfig -o xsim.dir/xsc/rse.o fec_0_t.TB/rse.cpp
-+g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/ -I ../../../RSEConfig -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
-+g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++#LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -c -fPIC -I ../../../RSEConfig -o xsim.dir/xsc/rse.o fec_0_t.TB/rse.cpp
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./memcached_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/ -I ../../../RSEConfig -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./memcached_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
 +LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -std=gnu++11 -Wa,-W  -O -fPIC  -m64  -shared  -o xsim.dir/xsc/dpi.so xsim.dir/xsc/*.o ${XILINX_VIVADO}/lib/lnx64.o/librdi_simulator_kernel.so -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
 +${XILINX_VIVADO}/bin/xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb  
 +${XILINX_VIVADO}/bin/xsim --runall XilinxSwitch_tb
@@ -42,18 +42,18 @@ Encoder/XilinxSwitch/vivado_sim_waveform.bash
  set -x
 -find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % xvlog -sv % || true; } 
 -find -name "*.c" | { xargs -I % xsc --compile % || true; } 
--xsc --compile ./XilinxSwitch.TB/XilinxSwitch.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./Update_lvl_t.TB/" --gcc_compile_options "-I./Update_lvl_0_t.TB/" --gcc_compile_options "-I./fec_0_t.TB/" --gcc_compile_options "-I./Update_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
--xsc --compile ./XilinxSwitch.TB/sdnet_lib.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./Update_lvl_t.TB/" --gcc_compile_options "-I./Update_lvl_0_t.TB/" --gcc_compile_options "-I./fec_0_t.TB/" --gcc_compile_options "-I./Update_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
+-xsc --compile ./XilinxSwitch.TB/XilinxSwitch.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_0_t.TB/" --gcc_compile_options "-I./memcached_0_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
+-xsc --compile ./XilinxSwitch.TB/sdnet_lib.cpp -gcc_compile_options "-I./XilinxSwitch.TB/" --gcc_compile_options "-I./Parser_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_0_t.TB/" --gcc_compile_options "-I./memcached_0_t.TB/" --gcc_compile_options "-I./CheckCache_lvl_1_t.TB/" --gcc_compile_options "-I./Deparser_t.TB/" 
 -xsc --link 
 -xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb 
 -xsim XilinxSwitch_tb -gui -wdb work.XilinxSwitch_tb.wdb  
-+find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv -i fec_0_t.HDL % || true; } 
++find -name "*.v" -o -name "*.vp" -o -name "*.sv" | { xargs -I % ${XILINX_VIVADO}/bin/xvlog -sv -i memcached_0_t.HDL % || true; } 
 +find -name "*.vhd" | { xargs -I % ${XILINX_VIVADO}/bin/xvhdl % || true; }
 +mkdir -p xsim.dir/xsc
 +find -name "*.c" | xargs ${XILINX_VIVADO}/bin/xsc -mt off -v 1
-+LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -c -fPIC -I ../../../RSEConfig -o xsim.dir/xsc/rse.o fec_0_t.TB/rse.cpp
-+g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/ -I ../../../RSEConfig -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
-+g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++#LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -c -fPIC -I ../../../RSEConfig -o xsim.dir/xsc/rse.o fec_0_t.TB/rse.cpp
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./memcached_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/ -I ../../../RSEConfig -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Forward_lvl_t.TB/ -I./Forward_lvl_0_t.TB/ -I./loop_0_t.TB/ -I./Forward_lvl_1_t.TB/ -I./memcached_0_t.TB/ -I./Forward_lvl_2_t.TB/ -I./Deparser_t.TB/  -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
 +LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -std=gnu++11 -m64 -Wa,-W  -O -fPIC  -m64  -shared  -o xsim.dir/xsc/dpi.so xsim.dir/xsc/*.o ${XILINX_VIVADO}/lib/lnx64.o/librdi_simulator_kernel.so -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
 +${XILINX_VIVADO}/bin/xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb -s XilinxSwitch_tb_sim 
 +${XILINX_VIVADO}/bin/xsim XilinxSwitch_tb_sim -gui -wdb work.XilinxSwitch_tb_tb.wdb  
@@ -188,14 +188,14 @@ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
  		std::cout << "Entering system " << _name << std::endl;
  		// input packet
 @@ -104,7 +104,7 @@
- 		fec_0.packet_in = Parser.packet_out;
- 		fec_0.control = 0;
- 		fec_0.Parser_extracts = Parser.Parser_extracts;
--		fec_0();
-+		bool repeat = fec_0();
+ 		memcached_0.packet_in = Parser.packet_out;
+ 		memcached_0.control = 0;
+ 		memcached_0.Parser_extracts = Parser.Parser_extracts;
+-		memcached_0();
++		bool repeat = memcached_0();
  
- 		Update_lvl_1.Update_fl = fec_0.Update_fl;
- 		Update_lvl_1.hdr = fec_0.hdr;
+ 		CheckCache_lvl_1.CheckCache_fl = memcached_0.CheckCache_fl;
+ 		CheckCache_lvl_1.hdr = memcached_0.hdr;
 @@ -131,6 +131,8 @@
  		std::cout << packet_out;
  		std::cout << "Exiting system " << _name << std::endl;

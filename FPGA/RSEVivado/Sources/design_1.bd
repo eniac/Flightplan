@@ -230,6 +230,7 @@
           <spirit:configurableElementValue spirit:referenceId="C_SLOT_1_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
           <spirit:configurableElementValue spirit:referenceId="C_SLOT_2_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
           <spirit:configurableElementValue spirit:referenceId="C_SLOT_3_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="C_SLOT_4_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
         </spirit:configurableElementValues>
       </spirit:componentInstance>
       <spirit:componentInstance>
@@ -251,6 +252,17 @@
         <spirit:componentRef spirit:library="user" spirit:name="RSEOutputBufferVivado" spirit:vendor="upenn.edu" spirit:version="1.0"/>
         <spirit:configurableElementValues>
           <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_RSEOutputBufferVivado_0_0</spirit:configurableElementValue>
+        </spirit:configurableElementValues>
+      </spirit:componentInstance>
+      <spirit:componentInstance>
+        <spirit:instanceName>system_ila_1</spirit:instanceName>
+        <spirit:componentRef spirit:library="ip" spirit:name="system_ila" spirit:vendor="xilinx.com" spirit:version="1.0"/>
+        <spirit:configurableElementValues>
+          <spirit:configurableElementValue spirit:referenceId="bd:xciName">design_1_system_ila_1_0</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="C_SLOT">1</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="C_NUM_MONITOR_SLOTS">2</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="C_SLOT_0_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="C_SLOT_1_INTF_TYPE">xilinx.com:interface:axis_rtl:1.0</spirit:configurableElementValue>
         </spirit:configurableElementValues>
       </spirit:componentInstance>
     </spirit:componentInstances>
@@ -306,11 +318,21 @@
         <spirit:activeInterface spirit:busRef="M00_AXIS" spirit:componentRef="axis_interconnect_1"/>
         <spirit:activeInterface spirit:busRef="axis_in" spirit:componentRef="RSEOutputBufferVivado_0"/>
       </spirit:interconnection>
+      <spirit:monitorInterconnection>
+        <spirit:name>axis_interconnect_1_M00_AXIS</spirit:name>
+        <spirit:monitoredActiveInterface spirit:busRef="M00_AXIS" spirit:componentRef="axis_interconnect_1"/>
+        <spirit:monitorInterface spirit:busRef="SLOT_0_AXIS" spirit:componentRef="system_ila_1"/>
+      </spirit:monitorInterconnection>
       <spirit:interconnection>
         <spirit:name>RSEOutputBufferVivado_0_axis_out</spirit:name>
         <spirit:activeInterface spirit:busRef="axis_tx_0" spirit:componentRef="xxv_ethernet_0"/>
         <spirit:activeInterface spirit:busRef="axis_out" spirit:componentRef="RSEOutputBufferVivado_0"/>
       </spirit:interconnection>
+      <spirit:monitorInterconnection>
+        <spirit:name>RSEOutputBufferVivado_0_axis_out</spirit:name>
+        <spirit:monitoredActiveInterface spirit:busRef="axis_tx_0" spirit:componentRef="xxv_ethernet_0"/>
+        <spirit:monitorInterface spirit:busRef="SLOT_1_AXIS" spirit:componentRef="system_ila_1"/>
+      </spirit:monitorInterconnection>
     </spirit:interconnections>
     <spirit:adHocConnections>
       <spirit:adHocConnection>
@@ -321,14 +343,15 @@
       <spirit:adHocConnection>
         <spirit:name>M00_AXIS_ACLK_2</spirit:name>
         <spirit:internalPortReference spirit:componentRef="xxv_ethernet_0" spirit:portRef="tx_clk_out_0"/>
-        <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="M00_AXIS_ACLK"/>
         <spirit:internalPortReference spirit:componentRef="RSEOutputBufferVivado_0" spirit:portRef="clk_line"/>
+        <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="M00_AXIS_ACLK"/>
+        <spirit:internalPortReference spirit:componentRef="system_ila_1" spirit:portRef="clk"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>M00_AXIS_ARESETN_1</spirit:name>
         <spirit:internalPortReference spirit:componentRef="util_vector_logic_2" spirit:portRef="Res"/>
         <spirit:internalPortReference spirit:componentRef="axis_interconnect_1" spirit:portRef="M00_AXIS_ARESETN"/>
-        <spirit:internalPortReference spirit:componentRef="RSEOutputBufferVivado_0" spirit:portRef="clk_line_rst"/>
+        <spirit:internalPortReference spirit:componentRef="system_ila_1" spirit:portRef="resetn"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>XilinxSwitch_0_internal_rst_done</spirit:name>
@@ -431,6 +454,7 @@
         <spirit:name>xxv_ethernet_0_user_tx_reset_0</spirit:name>
         <spirit:internalPortReference spirit:componentRef="xxv_ethernet_0" spirit:portRef="user_tx_reset_0"/>
         <spirit:internalPortReference spirit:componentRef="util_vector_logic_2" spirit:portRef="Op1"/>
+        <spirit:internalPortReference spirit:componentRef="RSEOutputBufferVivado_0" spirit:portRef="clk_line_rst"/>
       </spirit:adHocConnection>
       <spirit:adHocConnection>
         <spirit:name>zynq_ultra_ps_e_0_pl_clk0</spirit:name>

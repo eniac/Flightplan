@@ -1,19 +1,22 @@
---- Encoder.sdnet.original	2018-05-03 12:18:58.308517707 -0400
-+++ Encoder.sdnet	2018-05-03 12:12:43.295084351 -0400
-@@ -141,6 +141,31 @@
+--- Encoder.sdnet.original	2018-05-23 09:45:13.265805590 -0400
++++ Encoder.sdnet	2018-05-23 09:45:24.769889385 -0400
+@@ -194,6 +194,35 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
- class fec_0_t::UserEngine(200, 0) {
+ class memcached_0_t::UserEngine(200, 0) {
++
 +  Packet_input packet_in;
 +  Packet_output packet_out;
-+  class Update_fl_t::Tuple(inout) {
++
++  class CheckCache_fl_t::Tuple(inout) {
 +    struct {
-+      k_1 : 8,
-+      h_1 : 8 } }
++      forward_1 : 1 } }
 +  class hdr_t_0::Tuple(inout) {
 +    struct {
 +      eth : eth_h,
-+      fec : fec_h } }
++      fec : fec_h,
++      ipv4 : ipv4_t,
++      udp : udp_h } }
 +  class ioports_t::Tuple(inout) {
 +    struct {
 +      ingress_port : 4,
@@ -24,42 +27,46 @@
 +  class Parser_extracts_t::Tuple(inout) {
 +    struct {
 +      size : 32 } }
-+  Update_fl_t Update_fl;
++  CheckCache_fl_t CheckCache_fl;
 +  hdr_t_0 hdr;
 +  ioports_t ioports;
 +  local_state_t local_state;
 +  Parser_extracts_t Parser_extracts;
-   class fec_input_t::Tuple(in) {
++
+   class memcached_input_t::Tuple(in) {
      struct {
-       stateful_valid : 1,
-@@ -249,17 +274,23 @@
-     Update_lvl_0.hdr = Update_lvl.hdr,
-     Update_lvl_0.ioports = Update_lvl.ioports,
-     Update_lvl_0.local_state = Update_lvl.local_state,
--    Update_lvl_1.Update_fl = Update_lvl_0.Update_fl,
--    Update_lvl_1.hdr = Update_lvl_0.hdr,
--    Update_lvl_1.ioports = Update_lvl_0.ioports,
--    Update_lvl_1.local_state = Update_lvl_0.local_state,
-+    Update_lvl_1.Update_fl = fec_0.Update_fl,
-+    Update_lvl_1.hdr = fec_0.hdr,
-+    Update_lvl_1.ioports = fec_0.ioports,
-+    Update_lvl_1.local_state = fec_0.local_state,
-     fec_0.fec_input = Update_lvl_0.fec_input,
-+    fec_0.Update_fl = Update_lvl_0.Update_fl,
-+    fec_0.hdr = Update_lvl_0.hdr,
-+    fec_0.ioports = Update_lvl_0.ioports,
-+    fec_0.local_state = Update_lvl_0.local_state,
-     Update_lvl_1.fec_output = fec_0.fec_output,
-     Update_lvl.hdr = Parser.hdr,
-     Deparser.hdr = Update_lvl_1.hdr,
-     Update_lvl.ioports = ioports,
-     ioports = Update_lvl_1.ioports,
+       stateful_valid : 1 } }
+@@ -348,17 +377,26 @@
+     CheckCache_lvl_0.hdr = CheckCache_lvl.hdr,
+     CheckCache_lvl_0.ioports = CheckCache_lvl.ioports,
+     CheckCache_lvl_0.local_state = CheckCache_lvl.local_state,
+-    CheckCache_lvl_1.CheckCache_fl = CheckCache_lvl_0.CheckCache_fl,
+-    CheckCache_lvl_1.hdr = CheckCache_lvl_0.hdr,
+-    CheckCache_lvl_1.ioports = CheckCache_lvl_0.ioports,
+-    CheckCache_lvl_1.local_state = CheckCache_lvl_0.local_state,
++
++    CheckCache_lvl_1.CheckCache_fl = memcached_0.CheckCache_fl,
++    CheckCache_lvl_1.hdr = memcached_0.hdr,
++    CheckCache_lvl_1.ioports = memcached_0.ioports,
++    CheckCache_lvl_1.local_state = memcached_0.local_state,
++
+     memcached_0.memcached_input = CheckCache_lvl_0.memcached_input,
++    memcached_0.CheckCache_fl = CheckCache_lvl_0.CheckCache_fl,
++    memcached_0.hdr = CheckCache_lvl_0.hdr,
++    memcached_0.ioports = CheckCache_lvl_0.ioports,
++    memcached_0.local_state = CheckCache_lvl_0.local_state,
++
+     CheckCache_lvl_1.memcached_output = memcached_0.memcached_output,
+     CheckCache_lvl.hdr = Parser.hdr,
+     Deparser.hdr = CheckCache_lvl_1.hdr,
+     CheckCache_lvl.ioports = ioports,
+     ioports = CheckCache_lvl_1.ioports,
      Parser.packet_in = packet_in,
 -    Deparser.packet_in = Parser.packet_out,
-+    fec_0.packet_in = Parser.packet_out,
-+    Deparser.packet_in = fec_0.packet_out,
++    memcached_0.packet_in = Parser.packet_out,
++    Deparser.packet_in = memcached_0.packet_out,
      packet_out = Deparser.packet_out,
 -    Deparser.Deparser_extracts = Parser.Parser_extracts } }
 \ No newline at end of file
-+    fec_0.Parser_extracts = Parser.Parser_extracts,
-+    Deparser.Deparser_extracts = fec_0.Parser_extracts } }
++    memcached_0.Parser_extracts = Parser.Parser_extracts,
++    Deparser.Deparser_extracts = memcached_0.Parser_extracts } }
