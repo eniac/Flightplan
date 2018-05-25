@@ -162,32 +162,23 @@ public:
 		}
 	};
 	struct Decoder_input_t {
-		static const size_t _SIZE = 25;
+		static const size_t _SIZE = 9;
 		_LV<1> stateful_valid;
 		_LV<8> k;
-		_LV<3> traffic_class;
-		_LV<5> block_index;
-		_LV<8> packet_index;
-		Decoder_input_t& operator=(_LV<25> _x) {
-			stateful_valid = _x.slice(24,24);
-			k = _x.slice(23,16);
-			traffic_class = _x.slice(15,13);
-			block_index = _x.slice(12,8);
-			packet_index = _x.slice(7,0);
+		Decoder_input_t& operator=(_LV<9> _x) {
+			stateful_valid = _x.slice(8,8);
+			k = _x.slice(7,0);
 			return *this;
 		}
-		_LV<25> get_LV() { return (stateful_valid,k,traffic_class,block_index,packet_index); }
-		operator _LV<25>() { return get_LV(); } 
+		_LV<9> get_LV() { return (stateful_valid,k); }
+		operator _LV<9>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\tk = " + k.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\tk = " + k.to_string() + "\n" + "\t)";
 		}
 		Decoder_input_t() {} 
-		Decoder_input_t( _LV<1> _stateful_valid, _LV<8> _k, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index) {
+		Decoder_input_t( _LV<1> _stateful_valid, _LV<8> _k) {
 			stateful_valid = _stateful_valid;
 			k = _k;
-			traffic_class = _traffic_class;
-			block_index = _block_index;
-			packet_index = _packet_index;
 		}
 	};
 	struct Decoder_output_t {
@@ -288,9 +279,6 @@ public:
 			input_tuples Tuple;
 			Tuple.Decoder_input.Stateful_valid = Decoder_input.stateful_valid.to_ulong();
 			Tuple.Decoder_input.k = Decoder_input.k.to_ulong();
-			Tuple.Decoder_input.Traffic_class = Decoder_input.traffic_class.to_ulong();
-			Tuple.Decoder_input.Block_index = Decoder_input.block_index.to_ulong();
-			Tuple.Decoder_input.Packet_index = Decoder_input.packet_index.to_ulong();
 			Tuple.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
 			Tuple.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
 			Tuple.Hdr.Eth.Src = hdr.eth.src.to_ulong();
