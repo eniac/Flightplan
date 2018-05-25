@@ -36,3 +36,5 @@ typedef struct cmd_staus{
   int BYTE;
   char DATA[MAX_DATA_SIZE]; 
 }CMD_STAT;
+extern unsigned char packet_block[MAX_DATA_SIZE];
+void mem_code(unsigned char input[MAX_DATA_SIZE]);

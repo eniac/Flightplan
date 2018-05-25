@@ -122,8 +122,11 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
    }
   test(commands);
 }
-
-int main(){
+void mem_code(unsigned char input[MAX_DATA_SIZE]){
+	printf("%s",input);
+	printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside the mem_core<<<<<<<<<<<<");
+}
+/*int main(){
   // Should change data format to packet_interfarce
   FILE *fp = fopen("input.txt","rt");
   char s[MAX_DATA_SIZE];
@@ -133,7 +136,7 @@ int main(){
   fread(s, 1, filesize,fp);
   Mem_Parser(s); 
   return 0;
-}
+}*/
 void test(CMD_STAT command){
   switch (command.CMD){
     case(SET_CMD):
