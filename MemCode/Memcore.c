@@ -109,8 +109,17 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       commands.BYTE = atoi(strncpy(temp,BYTE.f_start,BYTE.f_len));
 
       parse_data(BYTE.f_start+BYTE.f_len,commands.BYTE, &DATA);
-      strncpy(commands.DATA,DATA.f_start,DATA.f_len);	
-  }
+      strncpy(commands.DATA,DATA.f_start,DATA.f_len);
+      break;
+    case(GET_CMD):      
+      parse_next(CMD.f_start+CMD.f_len,&KEY);
+      strncpy(commands.KEY,KEY.f_start, KEY.f_len);	
+      break;
+    case(DELETE_CMD):      
+      parse_next(CMD.f_start+CMD.f_len,&KEY);
+      strncpy(commands.KEY,KEY.f_start, KEY.f_len);	
+      break;
+   }
   test(commands);
 }
 
@@ -122,7 +131,6 @@ int main(){
   size_t filesize = ftell(fp);
   fseek(fp,0L,SEEK_SET);
   fread(s, 1, filesize,fp);
-  printf("%s\n",s);  
   Mem_Parser(s); 
   return 0;
 }
@@ -132,6 +140,15 @@ void test(CMD_STAT command){
       printf("SET:\n");
       printf("The KEY is: %s\n",command.KEY); 
       printf("The DATA is:\n%s\n",command.DATA);
+      break;
+    case(GET_CMD):
+      printf("GET:\n");
+      printf("The KEY is: %s\n",command.KEY); 
+      break;
+    case(DELETE_CMD):
+      printf("DELETE:\n");
+      printf("The KEY is: %s\n",command.KEY); 
+      break;     
  }
 }
 
