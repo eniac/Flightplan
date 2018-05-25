@@ -23,16 +23,28 @@ Our link-layer FEC complements the physical-layer FEC that is used in
 high-capacity Ethernet links: the physical-layer FEC helps the link sustain a
 given capacity over longer distances, whereas our FEC is intended to mitigate
 errors that do not arise because of challenging environmental factors; rather
-the errors arise because of physical damage to the link or failing transceivers~\cite{Zhuo:2017:UMP:3098822.3098849}.
+the errors arise because of physical damage to the link or failing
+transceivers~\cite{Zhuo:2017:UMP:3098822.3098849}.
+Note that changing the PHY-layer FEC would deviate from the Ethernet standard,
+leading to loss of interoparability with COTS hardware.
 
 Our approach also complements higher-layer reliability measures, as provided by
 TCP for example.  TCP provides end-to-end reliability, whereas we concentrate
 on link-level reliability. Unlike TCP, we are able to distinguish congestion
 from corruption as the cause of packet loss, and we are able to locate the
 lossy links in the network. Thus we can react to them much more quickly than
-TCP at the end-points; we evaluate this in~\S\ref{sec:evaluation}. As with TCP, our mechanism results in a reduced
-transmission rate, but this is necessary since the link capacity has been
-reduce because of the link's failure.
+TCP at the end-points; we evaluate this in~\S\ref{sec:evaluation}. We show
+that, as with using TCP alone, our mechanism results in a reduced
+transmission rate, but \OurSys helps TCP over lossy links to improve its
+throughput under high loss rates.
+%this is necessary since the link capacity has been
+%reduced because of the link's failure.
+Experiments using the QUIC transport protocol suggested that the gains of
+end-to-end FEC did not outweigh the bandwidth overhead (even if $h=1$), and
+adversely affected some kinds of
+traffic~\cite[\S7.3]{Langley:2017:QTP:3098822.3098842}. In this paper
+we use FEC to cross a single link, rather than multiple links only
+one of which might be faulty.
 
 In this paper we focus on Clos
 topologies~\cite{clos_bstj1953}, 
