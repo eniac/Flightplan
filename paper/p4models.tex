@@ -40,7 +40,7 @@ select packets for loss according to a binomial  distribution.
 
 
 Finally, the \textbf{decoder model} processes packets ingressing from the
-faulty link. It removes added headers and passes non- corrupt packets to
+faulty link. It removes added headers and passes non-corrupt packets to
 forwarding. It withholds corrupt packets, using recirculation, until the block
 ends. If it has counted at least $K$ data plus parity packets in the block,
 the model "recovers" the corrupt packets by allowing them to pass to
@@ -107,8 +107,9 @@ drops relating to their flows. We tested our hypothesis by repeating the $(5,
 5)$ trials with the sending host limited to 4.5 Gb/s, just under effective
 capacity. The average latency was 41 $\mu$s, within the same range as latency
 in the no FEC trials. We plan to integrate rate limiting into the next
-versions of \OurSys and the P4 models, using the metering features of P4 and
-the Tofino.
+versions of \OurSys and the P4 models, using the metering features of P4.
+% and
+%the Tofino.
 
 % Figure~\ref{fig:latency} shows end-to-end network latency. Latency increased
 % with $h/k$ because of the dynamics between the FEC model and TCP. The TCP
