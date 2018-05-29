@@ -7,6 +7,9 @@
 
 #define WHARF_DROP_AFTER (NUM_DATA_PACKETS - 1)
 #define WHARF_DROP_NOTAFTER NUM_PARITY_PACKETS
+
+// Setting this to 0 drops the first packet, which ensures that a packet is dropped
+// in every set of packets, regardless of whether the set is complete
 int drop = 0;
 int packets_so_far = 0;
 
