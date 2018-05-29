@@ -6,7 +6,6 @@
 #include "rse.h"
 
 #define SIZE_ETHERNET sizeof(struct ether_header)
-#define SIZE_FEC_TAG sizeof(struct fec_header)
 
 #define NUM_DATA_PACKETS 8
 #define NUM_PARITY_PACKETS 4
@@ -17,12 +16,22 @@
 /** Number of packets in a block of pkt_buffer */
 #define TOTAL_NUM_PACKETS NUM_DATA_PACKETS + NUM_PARITY_PACKETS
 
-extern int workerId;
-extern int workerCt;
+/** Offset into the wharf-encapsulated packet at which original frame occurs */
+#define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header))
 
-extern pcap_t *handle;
+/**
+ * Amount of time before the decoder attempts to decode packets if no activity
+ * WHARF_DECODE_TIMEOUT==0 means we're not using the timeout
+ */
+#define WHARF_DECODE_TIMEOUT 2
 
-extern int cnt;
+/**
+ * Amount of time before the encoder forwards parity packets if no activity.
+ * WHARF_ENCODE_TIMEOUT should be less than WHARF_DECODE_TIMEOUT, otherwise
+ * a frame could be decoded before it's finished being sent.
+ * WHARF_ENCODE_TIMEOUT==0 disables the timeout
+ */
+#define WHARF_ENCODE_TIMEOUT 1
 
 enum pkt_buffer_status {
     PACKET_ABSENT = 0,
@@ -36,36 +45,22 @@ extern char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
 extern enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
-bool is_all_pkts_recieved_for_block(int blockId);
+/** Checks that no packets are absent */
 bool is_all_data_pkts_recieved_for_block(int blockId);
-void zeroout_block_in_pkt_buffer(int blockId);
-int get_payload_length_for_pkt(char* packet);
-unsigned char* get_payload_start_for_packet(char* packet);
+/** Marks all packets in given block as absent */
+void mark_pkts_absent(int blockId);
+/** Copies pkt_buffer data to fbk */
 void populate_fec_blk_data_and_parity(int blockId);
 void populate_fec_blk_data(int blockId);
-void encode_block();
+/** Wrapper to envoke encoder on filled fbk */
+void encode_block(void);
+/** Wrapper to envoke decoder on filled fbk */
 void decode_block(int block_id);
-int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId);
+/** Copies parity from fbk to pkt_buffer */
 int copy_parity_packets_to_pkt_buffer(int blockId);
-void copy_data_packets_to_pkt_buffer(int blockId);
-int get_total_packet_size(char* packet);
-u_short compute_csum(struct sniff_ip *ip , int len);
-void modify_IP_headers_for_parity_packets(int payloadSize, char* packet);
-
-enum traffic_class {one=1, two=2, three=3};
+/** Advances the block ID with which new wharf frames will be tagged */
 unsigned int advance_block_id();
 int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result);
 int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size);
-#define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header))
-
-void print_hex_memory(void *mem, int len);
 void forward_frame(const void * packet, int len);
 
-void alloc_pkt_buffer();
-void free_pkt_buffer();
-
-// WHARF_DECODE_TIMEOUT==0 means we're not using the timeout, otherwise it's the seconds before a block is timed out.
-#define WHARF_DECODE_TIMEOUT 2
-// WHARF_ENCODE_TIMEOUT should be less than WHARF_DECODE_TIMEOUT, otherwise a frame could be
-// decoded before it's finished being sent
-#define WHARF_ENCODE_TIMEOUT 1

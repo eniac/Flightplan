@@ -11,7 +11,7 @@ int lastBlockId = 0;
 
 inline void reset_decoder (const int block_id) {
 	nothing_to_decode = true;
-	zeroout_block_in_pkt_buffer(block_id);
+	mark_pkts_absent(block_id);
 }
 
 // Try to decode new packets, and forward them on.
@@ -77,7 +77,7 @@ void my_packet_handler(
     const u_char *packet
 ) {
 
-	enum traffic_class tclass = one;
+	enum traffic_class tclass = TCLASS_ONE;
 	struct ether_header *eth_header = (struct ether_header *)packet;
 	if (WHARF_ETHERTYPE != ntohs(eth_header->ether_type)) {
 		fprintf(stderr, "Received untagged frame -- ignoring\n");

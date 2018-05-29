@@ -8,13 +8,8 @@
 // NOTE we only work with a single block because of how we interface with the rse_code function.
 #define FB_INDEX 0
 
-int workerId = 0;
-int workerCt = 1;
-
 pcap_t *input_handle = NULL;
 pcap_t *output_handle = NULL;
-
-int cnt = 0;
 
 /** Global buffer into which received and decoded packets will be placed */
 char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
@@ -57,17 +52,6 @@ void decode_block(int block_id) {
  *
  * @return     True if all packets recieved for block, False otherwise.
  */
-bool is_all_pkts_recieved_for_block(int blockId) {
-	int blockSize = NUM_PARITY_PACKETS + NUM_DATA_PACKETS;
-	for (int i = 0; i < blockSize; i++) {
-		if (pkt_buffer_filled[blockId][i] == PACKET_ABSENT) {
-			// printf("all_pkts_received_fail @ (%i, %i)\n",blockId, i);
-			return false;
-		}
-	}
-	return true;
-}
-
 bool is_all_data_pkts_recieved_for_block(int blockId) {
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
 		if (pkt_buffer_filled[blockId][i] == PACKET_ABSENT) {
@@ -211,97 +195,6 @@ void populate_fec_blk_data_and_parity(int blockId) {
 	populate_fec_blk(k, h, o, blockId, true);
 }
 
-unsigned char* get_payload_start_for_packet(char* packet) {
-	/*We need to account for the newly added tag after the ethernet heaader.*/
-	const struct sniff_ip *ip;              /* The IP header */
-
-	/* compute ip header offset */
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
-	int sizeIP = IP_HL(ip) * 4;
-	if (sizeIP < 20) {
-		return NULL;
-	}
-
-	/* compute payload offset after IP header */
-	unsigned char* payload = (u_char *)(packet + SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP);
-
-	return payload;
-}
-
-int get_payload_length_for_pkt(char* packet) {
-	/*We need to account for the newly added tag after the ethernet heaader.*/
-	const struct sniff_ip *ip;              /* The IP header */
-
-	/* compute ip header offset */
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
-	int sizeIP = IP_HL(ip) * 4;
-	if (sizeIP < 20) {
-		return -1;
-	}
-
-	int sizePayload = ntohs(ip->ip_len) - (sizeIP);
-	return sizePayload;
-}
-
-int get_total_packet_size(char* packet) {
-	/*We need to account for the newly added tag after the ethernet heaader.*/
-	const struct sniff_ip *ip;              /* The IP header */
-
-	/* compute ip header offset */
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
-	int sizeIP = IP_HL(ip) * 4;
-	if (sizeIP < 20) {
-	//(	fec_dbg_printf)("size0\n");
-		return -1;
-	}
-
-	int sizePayload = ntohs(ip->ip_len) - (sizeIP /*FIXME should not care about TCP: + sizeTCP*/);
-	int totalSize = SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP /*FIXME should not care about TCP: + sizeTCP*/ + sizePayload;
-	return totalSize;
-}
-
-int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId) {
-	int startIndexOfParityPacket = 0 + NUM_DATA_PACKETS;
-	int sizeOfParityPackets = fbk[FB_INDEX].plen[startIndexOfParityPacket];
-//(	fec_dbg_printf)("This is inside copy packets \n");
-	/*For each parity packet*/
-	for (int i = startIndexOfParityPacket; i < (startIndexOfParityPacket + NUM_PARITY_PACKETS); i++) {
-
-		char* packet = pkt_buffer[blockId][i];
-
-		/*We need to account for the newly added tag after the ethernet heaader.*/
-		const struct sniff_ip *ip;              /* The IP header */
-
-		/* compute ip header offset */
-		/*Skip the ether header, wharf header, old ether_type*/
-		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG); 
-		int sizeIP = IP_HL(ip) * 4;
-		if (sizeIP < 20) {
-		//(	fec_dbg_printf)("size0\n");
-			return -1;
-		}
-
-		int totalHeaderSize =  SIZE_ETHERNET + SIZE_FEC_TAG + sizeIP ;
-
-		/*update the parity packet in the pkt buffer.*/
-		// char* parityPacket = (char *) malloc(totalMallocSize);
-		// pkt_buffer[blockId][i] = parityPacket;
-
-		/*copy headers from the original packet.*/
-		memcpy(pkt_buffer[blockId][i], packet, totalHeaderSize);
-
-		/*Copy payload from the global fec struct*/
-		memcpy(pkt_buffer[blockId][i] + totalHeaderSize, fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
-
-		/*Update the the payload lenght and checksum*/
-		modify_IP_headers_for_parity_packets(sizeOfParityPackets, pkt_buffer[blockId][i]);
-
-		// // Set filled.
-		// pkt_buffer_filled[blockId][i] = PACKET_PRESENT;
-	}
-	return 0;
-}
-
 int copy_parity_packets_to_pkt_buffer(int blockId) {
 	int startIndexOfParityPacket = NUM_DATA_PACKETS;
 	int sizeOfParityPackets = fbk[FB_INDEX].plen[startIndexOfParityPacket];
@@ -311,67 +204,6 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 		pkt_buffer_filled[blockId][i] = PACKET_PRESENT;
 	}
 	return sizeOfParityPackets;
-}
-
-void modify_IP_headers_for_parity_packets(int payloadSize, char* packet) {
-	struct sniff_ip *ip;              /* The IP header */
-
-	/* compute ip header offset */
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET + SIZE_FEC_TAG);
-	int sizeIP = IP_HL(ip) * 4;
-	if (sizeIP < 20) {
-	//(	fec_dbg_printf)("size0\n");
-		return;
-	}
-
-	/*TODO: Need to verify this. */
-	// TODO: use htons to format short ints in the right order.
-	ip->ip_len = htons(payloadSize + sizeIP);
-
-	/*Compute checksum*/
-	ip->ip_sum =  compute_csum(ip, sizeIP);
-}
-
-/* Computes the checksum of the IP header. */
-u_short compute_csum(struct sniff_ip *ipHeader , int len) {
-	long sum = 0;  /* assume 32 bit long, 16 bit short */
-	unsigned short* ip = (unsigned short*) ipHeader;
-	while (len > 1) {
-		sum += *ip;
-		ip++;
-		if (sum & 0x80000000)  /* if high order bit set, fold */
-			sum = (sum & 0xFFFF) + (sum >> 16);
-		len -= 2;
-	}
-
-	if (len)      /* take care of left over byte */
-		sum += (unsigned short) * (unsigned char *)ip;
-
-	while (sum >> 16)
-		sum = (sum & 0xFFFF) + (sum >> 16);
-
-	return ~sum;
-}
-
-//void ( fec_dbg_printf)( const char* format, ... ) {
-	// printf("lolboat.\n");
-// #ifdef DBG_PRINT
-//     va_list args;
-//     va_start( args, format );
-//     vprintf(format, args );
-//     va_end( args );
-// #endif
-// }
-
-void print_hex_memory(void *mem, int len) {
-  int i;
-  unsigned char *p = (unsigned char *)mem;
-  for (i=0;i<len;i++) {
-    printf("0x%02x ", p[i]);
-    // if (i%16==0)
-    //   printf("\n");
-  }
-  printf("\n");
 }
 
 static unsigned int block_id = 0;
@@ -476,10 +308,10 @@ int main (int argc, char** argv) {
 			outputInterface = optarg;
 			break;
 		case 'w':
-			workerId = atoi(optarg);
+			fprintf(stderr, "Warning: worker ID is unused\n");
 			break;
 		case 't':
-			workerCt = atoi(optarg);
+			fprintf(stderr, "Warning: Worker Count is unused\n");
 			break;
 		default:
 			printf("\nNot yet defined opt = %d\n", opt);
@@ -491,8 +323,6 @@ int main (int argc, char** argv) {
 		fprintf(stderr, "Need -i parameter at least\n");
 		exit(1);
 	}
-
-	printf("starting worker %i / %i\n",workerId, workerCt);
 
 	if (NULL != outputInterface) {
 		char output_error_buffer[PCAP_ERRBUF_SIZE];
@@ -517,14 +347,4 @@ int main (int argc, char** argv) {
 	}
 
 	pcap_loop(input_handle, 0, my_packet_handler, NULL);
-}
-
-void copy_data_packets_to_pkt_buffer_DEPRECATED(int blockId) {
-	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
-		if (PACKET_PRESENT != pkt_buffer_filled[blockId][i]) {
-			const FRAME_SIZE_TYPE original_frame_size = (FRAME_SIZE_TYPE)(*pkt_buffer[blockId][i]);
-			memcpy(pkt_buffer[blockId][i], fbk[FB_INDEX].pdata[i] + sizeof(FRAME_SIZE_TYPE), original_frame_size);
-			pkt_buffer_filled[blockId][i] = PACKET_RECOVERED;
-		}
-	}
 }
