@@ -24,9 +24,6 @@ extern int cnt;
 extern char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS];
 extern int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS];
 
-extern int Default_erase_list[FEC_MAX_N];
-
-
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 bool is_all_pkts_recieved_for_block(int blockId);
 bool is_all_data_pkts_recieved_for_block(int blockId);
@@ -37,7 +34,6 @@ void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, in
 void call_fec_blk_get(int blockId);
 void call_fec_blk_put(int blockId);
 void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId);
-void simulate_packet_loss();
 void encode_block();
 void decode_block(int block_id);
 int copy_parity_packets_to_pkt_buffer_DEPRECATED(int blockId);

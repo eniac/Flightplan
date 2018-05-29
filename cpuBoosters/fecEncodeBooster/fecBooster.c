@@ -24,8 +24,6 @@ int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Glob
  * fbk.pdata is array of pointers, and must point to allocated memory */
 static fec_sym parity_buffer[FEC_MAX_H][FEC_MAX_COLS];
 
-int Default_erase_list[FEC_MAX_N] = {0, 2, 4, FEC_MAX_N};
-
 /**
  *
  * Allocate the entire packet buffer at once.
@@ -80,28 +78,6 @@ void encode_block() {
 //(	fec_dbg_printf)("\nSending ");
 	D0(fec_block_print(FB_INDEX));
 	// print_global_fb_block();
-}
-
-/**
- * @brief      wrapper to simulate packet loss.
- */
-void simulate_packet_loss() {
-	int e_list[FEC_MAX_N];
-	int list_done = (int) FEC_MAX_N;
-	e_list[0] = list_done;
-	int i;
-	/* If no erasure input indices input, then use defaults */
-	if ( e_list[0] == list_done) {
-		for (i = 0; Default_erase_list[i] != list_done; i++) {
-			e_list[i] = Default_erase_list[i];      /* copy default values */
-		}
-	}
-	e_list[i] = list_done; /* put list_done marker at end of input */
-
-	/* Erasure Channel */
-	fec_block_delete(FB_INDEX, e_list);
-	fprintf(stderr, "\nReceived ");
-	D0(fec_block_print(FB_INDEX));
 }
 
 /**
