@@ -91,7 +91,10 @@ sleep 1
 echo "starting tcpreplay..."
 # do NOT use --topspeed parameter : boosters fall behind and input is lost
 tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
-sleep 1
+sleep 5
+# Play again after a pause to ensure that encoder and decoder will not break after timeout
+tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
+sleep 5
 
 # cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
