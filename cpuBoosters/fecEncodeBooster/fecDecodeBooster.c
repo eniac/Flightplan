@@ -36,11 +36,11 @@ void decode_and_forward(const int block_id) {
 			num_recovered_packets += 1;
 
 			char* packetToInject = pkt_buffer[block_id][i] + sizeof(FRAME_SIZE_TYPE);
-			size_t outPktLen = *(FRAME_SIZE_TYPE*)(pkt_buffer[block_id][i]);
+			FRAME_SIZE_TYPE *size_p = (FRAME_SIZE_TYPE*)pkt_buffer[block_id][i];
 			// Recovered packet may have a length of 0, if it was filler
 			// In this case, no need to forward
-			if (outPktLen > 0) {
-				forward_frame(packetToInject, outPktLen);
+			if (*size_p > 0) {
+				forward_frame(packetToInject, *size_p);
 			}
 		}
 	}
