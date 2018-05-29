@@ -65,17 +65,17 @@ We customized a fat-tree datacenter topology in ns-3~\cite{ns3-dcn} to
 model (i)~a link with loss characteristics as described by Zhuo et
 al.~\cite{Zhuo:2017:UMP:3098822.3098849}; and (ii)~FEC to support
 transport protocols. In this model we experimented with end-to-end
-error correction rather than link-layer, to simulate a more complex
+error correction rather than at the link-layer, to simulate a more complex
 implementation without incurring the burden of implementing it fully.
 
 We simulated a 128-node fat-tree network with 10Gbps links where two
 nodes communicate over TCP to transfer a 10MB file at 2Gbps. We found
-that using FEC completely eliminated retransmissions (which consisted
+that using (5, 1) FEC completely eliminated retransmissions (which consisted
   of 152, 23, and 2 packets for loss rates of $10^{-3}$, $10^{-4}$,
 and $10^{-5}$ respectively). But achieving end-to-end reliability
 over a lossy link with little sacrifice to latency came at a steep
-end-to-end overhead of 20\%, since a parity packet was added for each
-5 data packets. The approach described in this paper only adds
+end-to-end overhead of 20\%.
+The approach described in this paper only adds
 overhead on lossy links, rather than across paths that contain a
 lossy link.
 
@@ -132,9 +132,13 @@ can be further reduced because several arrays were overpartitioned.
 \begin{center}
 \small
 % \resizebox{\linewidth}{!}{
-\begin{tabular}{ l r r r r } 
+\begin{tabular}{ l r@{\hspace{.5em}}r@{\hspace{.5em}} r@{\hspace{.5em}}r@{\hspace{.5em}} r@{\hspace{.5em}}r@{\hspace{.5em}} r@{\hspace{.5em}}r@{\hspace{.5em}} } 
 \toprule
-$(k, h)$ & $(25, 1)$ & $(25, 5)$ & $(25,10)$ & $(50, 1)$ \\
+$(k, h)$ &
+  \multicolumn{2}{c}{$(25, 1)$} &
+  \multicolumn{2}{c}{$(25, 5)$} &
+  \multicolumn{2}{c}{$(25,10)$} &
+  \multicolumn{2}{c}{$(50, 1)$} \\
 \midrule
 %\emph{Software} & & & & \\
 %\cmidrule{1-1}
@@ -143,16 +147,20 @@ $(k, h)$ & $(25, 1)$ & $(25, 5)$ & $(25,10)$ & $(50, 1)$ \\
 %\midrule
 %\emph{FPGA} & & & & \\
 %\cmidrule{1-1}
-BRAM (18Kb) & 130 (7\%) & 183 (10\%) & 248 (14\%) & 130 (7\%) \\
-Flip-flop & 49019 (9\%) & 49291 (9\%) & 49781 (9\%) & 49019 (9\%) \\
-LUT & 29909 (11\%) & 30758 (11\%) & 31851 (12\%) & 29919 (11\%) \\
+BRAM (18Kb) & 130 & (7\%) & 183 & (10\%) & 248 & (14\%) & 130 & (7\%) \\
+Flip-flop & 49019 & (9\%) & 49291 & (9\%) & 49781 & (9\%) & 49019 & (9\%) \\
+LUT & 29909 & (11\%) & 30758 & (11\%) & 31851 & (12\%) & 29919 & (11\%) \\
 %Proc. Time (ns) & \FIXME{?} & & & \\
 \bottomrule
 \end{tabular}
 % }
-\caption{Resource requirement %Comparison
-of the FPGA %and CPU
-implementation of \OurSys with different configurations.  Note that BRAMs are local memories,
+\caption{Resource requirements of different configurations of
+  \OurSys
+  on the ZU9EG %Comparison
+FPGA. %and CPU
+%implementation
+%Note that
+BRAMs are local memories,
 and LUTs (lookup tables) are programmable gates.} % typically implement logic.}
 \label{tab:microbenchmarks}
 \end{center}
