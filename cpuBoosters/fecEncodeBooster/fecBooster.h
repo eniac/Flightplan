@@ -65,4 +65,6 @@ void free_pkt_buffer();
 
 // WHARF_DECODE_TIMEOUT==0 means we're not using the timeout, otherwise it's the seconds before a block is timed out.
 #define WHARF_DECODE_TIMEOUT 2
+// WHARF_ENCODE_TIMEOUT should be less than WHARF_DECODE_TIMEOUT, otherwise a frame could be
+// decoded before it's finished being sent
 #define WHARF_ENCODE_TIMEOUT 1
