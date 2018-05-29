@@ -11,8 +11,11 @@
 #define NUM_DATA_PACKETS 8
 #define NUM_PARITY_PACKETS 4
 #define NUM_BLOCKS 256
-#define PKT_BUF_SZ 2048
 
+/** Size of an individual packet in pkt_buffer */
+#define PKT_BUF_SZ 2048
+/** Number of packets in a block of pkt_buffer */
+#define TOTAL_NUM_PACKETS NUM_DATA_PACKETS + NUM_PARITY_PACKETS
 
 extern int workerId;
 extern int workerCt;
@@ -21,8 +24,16 @@ extern pcap_t *handle;
 
 extern int cnt;
 
-extern char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS];
-extern int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS];
+enum pkt_buffer_status {
+    PACKET_ABSENT = 0,
+    PACKET_PRESENT,
+    PACKET_RECOVERED
+};
+
+/** Global buffer into which received and decoded packets will be placed */
+extern char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+/** Status of packets stored in global buffer */
+extern enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 bool is_all_pkts_recieved_for_block(int blockId);
@@ -54,10 +65,6 @@ void forward_frame(const void * packet, int len);
 
 void alloc_pkt_buffer();
 void free_pkt_buffer();
-
-#define PACKET_ABSENT 0
-#define PACKET_PRESENT 1
-#define PACKET_RECOVERED 2
 
 // WHARF_DECODE_TIMEOUT==0 means we're not using the timeout, otherwise it's the seconds before a block is timed out.
 #define WHARF_DECODE_TIMEOUT 2

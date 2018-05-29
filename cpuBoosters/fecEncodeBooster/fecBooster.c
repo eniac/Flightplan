@@ -16,40 +16,14 @@ pcap_t *output_handle = NULL;
 
 int cnt = 0;
 
-char* pkt_buffer[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
-
-int pkt_buffer_filled[NUM_BLOCKS][NUM_DATA_PACKETS + NUM_PARITY_PACKETS]; /*Global pkt buffer*/
+/** Global buffer into which received and decoded packets will be placed */
+char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+/** Status of packets stored in global buffer */
+enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
 /* storage for parity packets in fbk.pdata.
  * fbk.pdata is array of pointers, and must point to allocated memory */
 static fec_sym parity_buffer[FEC_MAX_H][FEC_MAX_COLS];
-
-/**
- *
- * Allocate the entire packet buffer at once.
- *
- */
-void alloc_pkt_buffer() {
-	for (int i = 0; i<NUM_BLOCKS; i++){
-		for (int j = 0; j < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; j++){
-			pkt_buffer[i][j] = (char *)malloc(PKT_BUF_SZ);
-			pkt_buffer_filled[i][j] = PACKET_ABSENT;
-		}
-	}
-}
-
-/**
- * Clean up.
- */
-void free_pkt_buffer() {
-	for (int i = 0; i<NUM_BLOCKS; i++){
-		for (int j = 0; j < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; j++){
-			free(pkt_buffer[i][j]);
-		}
-	}
-
-}
-
 
 /**
  * @brief      Wrapper to populate the fec structure.
@@ -562,7 +536,6 @@ int main (int argc, char** argv) {
 	}
 
 	printf("starting worker %i / %i\n",workerId, workerCt);
-	alloc_pkt_buffer();
 
 	if (NULL != outputInterface) {
 		char output_error_buffer[PCAP_ERRBUF_SIZE];
@@ -587,8 +560,6 @@ int main (int argc, char** argv) {
 	}
 
 	pcap_loop(input_handle, 0, my_packet_handler, NULL);
-
-	free_pkt_buffer();
 }
 
 void copy_data_packets_to_pkt_buffer_DEPRECATED(int blockId) {
