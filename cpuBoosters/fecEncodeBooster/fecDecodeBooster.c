@@ -23,7 +23,7 @@ void decode_and_forward(const int block_id) {
 		return;
 	}
 
-	call_fec_blk_put(block_id);
+	populate_fec_blk_data_and_parity(block_id);
 
 	// Decode inserts the packets directly into pkt_buffer
 	decode_block(block_id);

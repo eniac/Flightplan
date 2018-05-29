@@ -21,28 +21,6 @@ char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
 /** Status of packets stored in global buffer */
 enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
-/* storage for parity packets in fbk.pdata.
- * fbk.pdata is array of pointers, and must point to allocated memory */
-static fec_sym parity_buffer[FEC_MAX_H][FEC_MAX_COLS];
-
-/**
- * @brief      Wrapper to populate the fec structure.
- *
- * @param[in]  blockId  The block identifier
- */
-void call_fec_blk_get(int blockId) {
-
-	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	fec_sym k = NUM_DATA_PACKETS;
-	fec_sym h = NUM_PARITY_PACKETS;
-	fec_sym o = 0;
-	fec_sym c = 2;
-	fec_sym s = 3;
-	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-	fec_blk_get(parity_buffer, k, h, c, s, o, blockId);
-}
-
 /**
  * @brief      Wrapper to invoke encoder
  */
@@ -73,7 +51,7 @@ void decode_block(int block_id) {
 }
 
 /**
- * @brief      returns if all packets for a given block are received or not
+ * @brief checks if all packets for a given block are received or not
  *
  * @param[in]  blockId  The block identifier
  *
@@ -126,132 +104,111 @@ int updated_get_payload_length_for_pkt (u_char* packet){
 /*
  * Create Random Data and Blank Parity packets and link to the FEC block (fb)
  */
-void fec_blk_get(fec_blk p, fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
-	// fprintf(stderr, "At the top of fec_blk_get\n");
-	fec_sym i, y, z;
+static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
+                             int blockId, bool expect_parity) {
 	int maxPacketLength = 0;
 	fbk[FB_INDEX].block_N = k + h; /*TODO: replace this with a macro later.*/
-	
-	/* copy the K data packets from packet buffer */
-	for (i = 0; i < k; i++) {
-		if (i >= FEC_MAX_K) {
-			fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
-			exit (33);
-		}
 
-		fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
+	if (k > FEC_MAX_K) {
+		fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
+		exit (33);
+	}
+
+	/* copy the K data packets from packet buffer */
+	for (int i = 0; i < k; i++) {
+		/* Regardless of packet presense, point it to the memory in the pkt_buffer.
+		 * If the packet is marked as WANTED, RSE will later write the generated packet
+		 * to that location */
+		fbk[FB_INDEX].pdata[i] = (fec_sym *)pkt_buffer[blockId][i];
+		/* CBI must be marked even for WANTED packets */
 		fbk[FB_INDEX].cbi[i] = i;
-		fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
 		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
+			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
 			int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
 
 			fbk[FB_INDEX].plen[i] = payloadLength;
 
+			/* Keep track of maximum packet length to set block_C field of FEC structure */
 			if (payloadLength > maxPacketLength) {
 				maxPacketLength = payloadLength;
 			}
 		} else {
-			fprintf(stderr, "WARNING: ABSENT packet being forwarded\n");
-			fbk[FB_INDEX].plen[i] = 0;
+			fbk[FB_INDEX].pstat[i] = FEC_FLAG_WANTED;
 		}
 	}
 
+	/** Block size is greater than max packet length by the number of extra cols in parity */
+	fbk[FB_INDEX].block_C = maxPacketLength + FEC_EXTRA_COLS;
 
-	fbk[FB_INDEX].block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
+	if (h > FEC_MAX_H) {
+		fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
+		exit (34);
+	}
 
+	/* Now populate parity packets, either from the static parity parity buffer, or
+	 * the next blocks received in pkt_buffer */
+	for (int i = 0; i < h; i++) {
 
-	/* Leave H Parity packets empty */
-	for (i = 0; i < h; i++) {
-		if (i >= FEC_MAX_H) {
-			fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
-			exit (34);
+		/* FEC block index */
+		int y = k + i;
+
+		/* Codeword index */
+		fbk[FB_INDEX].cbi[y] = FEC_MAX_N - o - i - 1;
+
+		if (expect_parity) {
+			/* If parity should be in the pkt_buffer */
+			if (pkt_buffer_filled[blockId][y] == PACKET_PRESENT) {
+				fbk[FB_INDEX].pdata[y] = (fec_sym *)pkt_buffer[blockId][y];
+				fbk[FB_INDEX].pstat[y] = FEC_FLAG_KNOWN;
+				fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
+			} else {
+				/* If it should be, but is not */
+				fbk[FB_INDEX].pstat[y] = FEC_FLAG_IGNORE;
+			}
+		} else {
+			/* Otherwise, mark the parity packets as WANTED */
+			fbk[FB_INDEX].pdata[y] = (fec_sym *)pkt_buffer[blockId][y];
+			fbk[FB_INDEX].pstat[y] = FEC_FLAG_WANTED;
+			fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
 		}
-		y = k + i;                                  /* FEC block index */
-		z = FEC_MAX_N - o - i - 1;             /* Codeword index */
-		fbk[FB_INDEX].pdata[y] = p[i];
-		fbk[FB_INDEX].cbi[y] = z;
-		fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
-		fbk[FB_INDEX].pstat[y] = FEC_FLAG_WANTED;
 	}
 }
 
-/* Called by the decoder to fill the FEC structure with the available data and parity packets, and mark the missing packets as WANTED*/
-void call_fec_blk_put(int blockId) {
+/**
+ * @brief		 Populates the fec block with the data packets from pkt_buffer
+ *
+ * Marks the parity packets as WANTED, so they will be generated on call to encode.
+ *
+ * @param[in]	 blockId		 The block of pkt_buffer from which to populate the fbk
+ */
+void populate_fec_blk_data(int blockId) {
+
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	fec_sym k = NUM_DATA_PACKETS;
 	fec_sym h = NUM_PARITY_PACKETS;
 	fec_sym o = 0;
-	fec_sym c = 2;
-	fec_sym s = 3;
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-	fec_blk_put(k, h, c, s, o, blockId);
+	populate_fec_blk(k, h, o, blockId, false);
 }
 
-void fec_blk_put(fec_sym k, fec_sym h, int c, int seed, fec_sym o, int blockId) {
-	fec_sym i, y, z;
-	int maxPacketLength = 0;
-	fbk[FB_INDEX].block_N = k + h;
+/** 
+ * @brief		 Populates the fec block with both data _and_ parity packets from buffer
+ *
+ * Missing parity packets are marked as IGNORE.
+ *
+ * @param[in]	 blockId		 The block of pkt_buffer from which to populate the fbk
+ */
+void populate_fec_blk_data_and_parity(int blockId) {
+	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+	fec_sym k = NUM_DATA_PACKETS;
+	fec_sym h = NUM_PARITY_PACKETS;
+	fec_sym o = 0;
+	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-	/* copy the K data packets from packet buffer */
-	for (i = 0; i < k; i++) {
-		/*Only if the data packet is present in packet buffer, add it to the fb struct*/
-		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
-			if (i >= FEC_MAX_K) {
-				fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
-				exit (33);
-			}
-
-			int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
-
-			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
-			fbk[FB_INDEX].cbi[i] = i;
-			fbk[FB_INDEX].plen[i] = payloadLength;
-
-			/*  Keep track of maximum packet length to set the block_C field of FEC structure    */
-			if (payloadLength > maxPacketLength) {
-				maxPacketLength = payloadLength;
-			}
-			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
-		} else {
-			/*If the data packet is not present, then mark the packet state as WANTED*/
-			fbk[FB_INDEX].pstat[i] = FEC_FLAG_WANTED;
-			/* RSE must have a memory location into which it can write the generated packet.
-			 * We pass it the pkt_buffer pointer, so in this case it generates the packet
-			 * directly into the pkt_buffer */
-			fbk[FB_INDEX].pdata[i] = (fec_sym *) pkt_buffer[blockId][i];
-
-			/** Must explicity mark cbi, even of WANTED packets */
-			fbk[FB_INDEX].cbi[i] = i;
-		}
-	}
-	fbk[FB_INDEX].block_C = maxPacketLength + FEC_EXTRA_COLS;    /* One extra for length symbol */
-
-
-	/*Now populate the recieved parity packets into the packet buffer*/
-	for (i = 0; i < h; i++) {
-		y = k + i;                             /* FEC block index */
-		/*If the parity packet is present, then update it in the packet buffer*/
-		if (pkt_buffer_filled[blockId][y] == PACKET_PRESENT) {
-
-			if (i >= FEC_MAX_H) {
-				fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
-				exit(34);
-			}
-			z = FEC_MAX_N - o - i - 1;             /* Codeword index */ /*TODO: Need to verify these values if the decoder does not work*/
-			fbk[FB_INDEX].pdata[y] = (fec_sym *) pkt_buffer[blockId][y];
-			fbk[FB_INDEX].cbi[y] = z; /*TODO: Need to verify these values if the decoder does not work*/
-			fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C; /*TODO: Need to verify these values if the decoder does not work*/
-			fbk[FB_INDEX].pstat[y] = FEC_FLAG_KNOWN;
-
-		} else { /*If the parity packet is missing*/
-			/*Since it is parity packet we can set the status of non-recieved packets to IGNORE*/
-			fbk[FB_INDEX].pstat[y] = FEC_FLAG_IGNORE;
-		}
-	}
-
+	populate_fec_blk(k, h, o, blockId, true);
 }
 
 unsigned char* get_payload_start_for_packet(char* packet) {

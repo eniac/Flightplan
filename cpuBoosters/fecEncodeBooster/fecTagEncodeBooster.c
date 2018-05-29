@@ -40,7 +40,7 @@ void encode_and_forward_block(int currBlockID, const u_char *last_packet) {
 	}
 
 	/* Populate the global fec structure for rse encoder and call the encode */
-	call_fec_blk_get(currBlockID);
+	populate_fec_blk_data(currBlockID);
 
 	/* Encoder */
 	encode_block();
