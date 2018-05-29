@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # run the empty booster.
 ENCODER_NAME=fecTagEncodeBooster
 FORWARD_NAME=forwardingNonbooster
@@ -89,7 +91,10 @@ sleep 1
 echo "starting tcpreplay..."
 # do NOT use --topspeed parameter : boosters fall behind and input is lost
 tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
-sleep 1
+sleep 5
+# Play again after a pause to ensure that encoder and decoder will not break after timeout
+tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
+sleep 5
 
 # cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
@@ -102,3 +107,19 @@ ip link delete frontVeth1
 ip link delete frontVeth2
 ip link delete frontVeth3
 ip link delete frontVeth4
+
+echo "output pcap: $OUTPUT_PCAP"
+echo "input pcap: $INPUT_PCAP"
+
+INLINES=$(tcpdump -tenr $INPUT_PCAP | wc -l)
+OUTLINES=$(tcpdump -tenr $OUTPUT_PCAP | wc -l)
+
+# We sent in the input twice, so double the number of lines
+INLINES=$(( $INLINES * 2 ))
+
+if [[ $INLINES == $OUTLINES ]]; then
+    echo "Input and output both contain $INLINES lines"
+else
+    echo "Input and output contain different number of lines!"
+    echo "($INLINES and $OUTLINES)"
+fi

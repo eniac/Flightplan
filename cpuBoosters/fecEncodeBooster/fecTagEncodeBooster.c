@@ -79,6 +79,7 @@ void sigalrm_handler(int signal) {
 	}
 	encode_and_forward_block(lastBlockId, last_unencoded_packet);
 	lastBlockId = advance_block_id();
+	zeroout_block_in_pkt_buffer(lastBlockId);
 }
 
 /**
@@ -142,7 +143,7 @@ void my_packet_handler(
 		/* Update filled status */
 		pkt_buffer_filled[currBlockID][currPktIdx] = PACKET_PRESENT;
 	} else {
-		fprintf(stderr, "Tagging produced a duplicate index\n");
+		fprintf(stderr, "Tagging produced a duplicate index: %d/%d\n", currBlockID, currPktIdx);
 		exit(1);
 	}
 
