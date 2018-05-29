@@ -82,7 +82,7 @@ void mark_pkts_absent(int blockId) {
  *
  * @return Size of original packet + sizeof(FRAME_SIZE_TYPE)
  */
-int get_pkt_payload_length(u_char* packet){
+static int get_pkt_payload_length(u_char* packet){
 
 	FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(packet);
 	int payloadLength = *original_frame_size + sizeof(FRAME_SIZE_TYPE);
