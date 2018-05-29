@@ -107,3 +107,19 @@ ip link delete frontVeth1
 ip link delete frontVeth2
 ip link delete frontVeth3
 ip link delete frontVeth4
+
+echo "output pcap: $OUTPUT_PCAP"
+echo "input pcap: $INPUT_PCAP"
+
+INLINES=$(tcpdump -tenr $INPUT_PCAP | wc -l)
+OUTLINES=$(tcpdump -tenr $OUTPUT_PCAP | wc -l)
+
+# We sent in the input twice, so double the number of lines
+INLINES=$(( $INLINES * 2 ))
+
+if [[ $INLINES == $OUTLINES ]]; then
+    echo "Input and output both contain $INLINES lines"
+else
+    echo "Input and output contain different number of lines!"
+    echo "($INLINES and $OUTLINES)"
+fi
