@@ -79,6 +79,7 @@ void sigalrm_handler(int signal) {
 	}
 	encode_and_forward_block(lastBlockId, last_unencoded_packet);
 	lastBlockId = advance_block_id();
+	zeroout_block_in_pkt_buffer(lastBlockId);
 }
 
 /**
