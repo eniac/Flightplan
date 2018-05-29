@@ -17,40 +17,44 @@ char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
 enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
 /**
- * @brief      Wrapper to invoke encoder
+ * @brief Wrapper to invoke encoder
  */
-void encode_block() {
+void encode_block(void) {
 	int rc;
-	if ((rc = rse_code(FB_INDEX, 'e')) != 0 )  exit(rc);
-//(	fec_dbg_printf)("\nSending ");
+	if ((rc = rse_code(FB_INDEX, 'e')) != 0 ) {
+		D0(fprintf(stderr, "\nCould not encode block: "));
+	} else {
+		D0(fprintf(stderr, "\nEncoded: "));
+	}
 	D0(fec_block_print(FB_INDEX));
-	// print_global_fb_block();
 }
 
 /**
- * @brief      Wrapper to invoke the decoder
+ * @brief Wrapper to invoke the decoder
+ *
+ * @param[in] blockId Used to mark RECOVERED in appropriate index in pkt_buffer_filled
  */
-void decode_block(int block_id) {
+void decode_block(int blockId) {
 	int rc;
 	if ((rc = rse_code(FB_INDEX, 'd')) != 0 ) {
-		fprintf(stderr, "\nCould not decode block: ");
+		D0(fprintf(stderr, "\nCould not decode block: "));
 	} else {
-		fprintf(stderr, "\nRecovered ");
+		D0(fprintf(stderr, "\nDecoded: "));
 	}
 	D0(fec_block_print(FB_INDEX));
 	for (int i=0; i < NUM_DATA_PACKETS; i++) {
 		if (fbk[FB_INDEX].pstat[i] == FEC_FLAG_GENNED) {
-			pkt_buffer_filled[block_id][i] = PACKET_RECOVERED;
+			pkt_buffer_filled[blockId][i] = PACKET_RECOVERED;
 		}
 	}
 }
 
 /**
- * @brief checks if all packets for a given block are received or not
+ * @brief Checks that no data packets in the block are marked as ABSENT
  *
- * @param[in]  blockId  The block identifier
+ * @param[in] blockId Block ID to check for absent packets
  *
- * @return     True if all packets recieved for block, False otherwise.
+ * @return true if no absent packets, false otherwise
  */
 bool is_all_data_pkts_recieved_for_block(int blockId) {
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
@@ -62,22 +66,23 @@ bool is_all_data_pkts_recieved_for_block(int blockId) {
 }
 
 /**
- * @brief      Zeros-out the given block in the buffer.
+ * @brief Marks all packets in provided block as ABSENT
  *
  * @param[in]  blockId  The block identifier
  */
-void zeroout_block_in_pkt_buffer(int blockId) {
-	int blockSize = NUM_PARITY_PACKETS + NUM_DATA_PACKETS;
-	for (int i = 0; i < blockSize; i++) {
+void mark_pkts_absent(int blockId) {
+	for (int i = 0; i < TOTAL_NUM_PACKETS; i++) {
 		pkt_buffer_filled[blockId][i] = PACKET_ABSENT;
 	}
 	return;
 }
 
-/*
- * Returns the size of original packet + sizeof(FRAME_SIZE_TYPE) 
+/**
+ * @brief Gets the total size of the packet to be placed in fbk
+ *
+ * @return Size of original packet + sizeof(FRAME_SIZE_TYPE)
  */
-int updated_get_payload_length_for_pkt (u_char* packet){
+int get_pkt_payload_length(u_char* packet){
 
 	FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(packet);
 	int payloadLength = *original_frame_size + sizeof(FRAME_SIZE_TYPE);
@@ -85,11 +90,21 @@ int updated_get_payload_length_for_pkt (u_char* packet){
 	return payloadLength;
 }
 
-/*
- * Create Random Data and Blank Parity packets and link to the FEC block (fb)
+/**
+ * @brief Populates the fbk with the packets present in the provided block
+ *
+ * If expectParity is true, parity packets will be copied to fbk from block.
+ * Otherwise, parity packets will be marked as WANTED.
+ *
+ * @param[in] k Number of data packets
+ * @param[in] h Number of parity packets
+ * @param[in] o Offset used when calculating cbi of parity
+ * @param[in] blockId Block to be copied to fbk
+ * @param[in] expectParity Whether to copy parity packets in addition to data packets
+ *
  */
 static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
-                             int blockId, bool expect_parity) {
+                             int blockId, bool expectParity) {
 	int maxPacketLength = 0;
 	fbk[FB_INDEX].block_N = k + h; /*TODO: replace this with a macro later.*/
 
@@ -110,7 +125,7 @@ static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
 		if (pkt_buffer_filled[blockId][i] == PACKET_PRESENT) {
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
-			int payloadLength = updated_get_payload_length_for_pkt((u_char *)pkt_buffer[blockId][i]);
+			int payloadLength = get_pkt_payload_length((u_char *)pkt_buffer[blockId][i]);
 
 			fbk[FB_INDEX].plen[i] = payloadLength;
 
@@ -141,7 +156,7 @@ static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
 		/* Codeword index */
 		fbk[FB_INDEX].cbi[y] = FEC_MAX_N - o - i - 1;
 
-		if (expect_parity) {
+		if (expectParity) {
 			/* If parity should be in the pkt_buffer */
 			if (pkt_buffer_filled[blockId][y] == PACKET_PRESENT) {
 				fbk[FB_INDEX].pdata[y] = (fec_sym *)pkt_buffer[blockId][y];
@@ -161,11 +176,11 @@ static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
 }
 
 /**
- * @brief		 Populates the fec block with the data packets from pkt_buffer
+ * @brief Populates the fec block with the data packets from pkt_buffer
  *
- * Marks the parity packets as WANTED, so they will be generated on call to encode.
+ * Marks the parity packets as WANTED, so they will be generated on next call to encode.
  *
- * @param[in]	 blockId		 The block of pkt_buffer from which to populate the fbk
+ * @param[in] blockId The block of pkt_buffer from which to populate the fbk
  */
 void populate_fec_blk_data(int blockId) {
 
@@ -178,12 +193,12 @@ void populate_fec_blk_data(int blockId) {
 	populate_fec_blk(k, h, o, blockId, false);
 }
 
-/** 
- * @brief		 Populates the fec block with both data _and_ parity packets from buffer
+/**
+ * @brief Populates the fec block with both data _and_ parity packets from buffer
  *
  * Missing parity packets are marked as IGNORE.
  *
- * @param[in]	 blockId		 The block of pkt_buffer from which to populate the fbk
+ * @param[in] blockId The block of pkt_buffer from which to populate the fbk
  */
 void populate_fec_blk_data_and_parity(int blockId) {
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -195,6 +210,13 @@ void populate_fec_blk_data_and_parity(int blockId) {
 	populate_fec_blk(k, h, o, blockId, true);
 }
 
+/**
+ * @brief Copies parity packets from fbk to pkt_buffer
+ *
+ * @param[in] blockId block into which packets are copied
+ *
+ * @return Size of each individual parity packet
+ */
 int copy_parity_packets_to_pkt_buffer(int blockId) {
 	int startIndexOfParityPacket = NUM_DATA_PACKETS;
 	int sizeOfParityPackets = fbk[FB_INDEX].plen[startIndexOfParityPacket];
@@ -206,9 +228,16 @@ int copy_parity_packets_to_pkt_buffer(int blockId) {
 	return sizeOfParityPackets;
 }
 
+/** Block ID with which new wharf frames will be tagged */
 static unsigned int block_id = 0;
+/** Frame index with which new wharf frames will be tagged */
 static unsigned int frame_index = 0;
 
+/**
+ * @brief Advances the block id for new wharf frames and resets frame index
+ *
+ * @return New block ID
+ */
 unsigned int advance_block_id(void) {
 	block_id = (block_id + 1) % MAX_BLOCK;
 	frame_index = 0;
@@ -217,10 +246,15 @@ unsigned int advance_block_id(void) {
 
 
 /**
- * @brief      Encapsulate the packet with new header.
- *  		   so the new resulting packet looks like NEW_ETH_HEADER | WHARF_TAG | oldPacket 
- * 
- * @return     resulting size of the newly encapsulated packet.
+ * @brief Encapsulate the packet with new header.
+ *
+ * The new resulting packet looks like NEW_ETH_HEADER | WHARF_TAG | oldPacket
+ *
+ * @param[in] tclass Class of the wharf frame, indicating parity ratio
+ * @param[in] packet Packet data to be encapsulated
+ * @param[out] result Pointer to buffer which will be allocated and filled with the encapsulation
+ *
+ * @return resulting size of the newly encapsulated packet.
  */
 int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result) {
   if (size >= FRAME_SIZE_CUTOFF) {
@@ -236,7 +270,7 @@ int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u
   memcpy(*result, packet, sizeof(struct ether_header));
 
   /* Copy over the original packet as is.*/
-  memcpy(*result + sizeof(struct ether_header) + sizeof(struct fec_header), packet, size);
+  memcpy(*result + extra_header_size, packet, size);
 
   /* Replace the ether_type in the new ether header with wharf_ethertype*/
   struct ether_header *eth_header = (struct ether_header *)*result;
@@ -249,7 +283,7 @@ int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u
   tag->index = frame_index;
   tag->size = size;
 
-  /* update the block_id and packet_id */
+  /* update the block_id and frame_index */
   frame_index = (frame_index + 1) % (NUM_DATA_PACKETS + NUM_PARITY_PACKETS);
   if (0 == frame_index) {
     block_id = (block_id + 1) % MAX_BLOCK;
@@ -258,7 +292,15 @@ int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u
   return size + extra_header_size;
 }
 
-/*Removes the added wharf & new ether tag and returns the original packet*/
+/**
+ * @brief Removes the added wharf & new ether tag and returns the original packet
+ *
+ * @param[out] tclass Class of traffic that was marked in header
+ * @param[inout] packet Encapsulated packet, which will be stripped to original packet
+ * @param[in] size Total size of received packet
+ *
+ * @return size of newly stripped packet
+ */
 int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size) {
   struct ether_header *eth_header = (struct ether_header *)packet;
   /*If not a wharf encoded packet*/
@@ -278,6 +320,12 @@ int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size) {
   return size - offset;
 }
 
+/**
+ * @brief Forwards the provided frame to the configured output pcap handle.
+ *
+ * @param[in] packet Packet data to be send on the output interface
+ * @param[in] len Size of the provided packet
+ */
 void forward_frame(const void * packet, int len) {
 	if (NULL != output_handle) {
 		pcap_inject(output_handle, packet, len);
@@ -319,8 +367,9 @@ int main (int argc, char** argv) {
 		}
 	}
 
-	if (NULL == inputInterface && NULL == outputInterface) {
+	if (NULL == inputInterface) {
 		fprintf(stderr, "Need -i parameter at least\n");
+		fprintf(stderr, "Usage: %s -i input [-o output] [-w workerId] [-t workerCt]\n", argv[0]);
 		exit(1);
 	}
 

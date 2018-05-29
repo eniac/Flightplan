@@ -13,6 +13,7 @@
 
 /** Size of an individual packet in pkt_buffer */
 #define PKT_BUF_SZ 2048
+
 /** Number of packets in a block of pkt_buffer */
 #define TOTAL_NUM_PACKETS NUM_DATA_PACKETS + NUM_PARITY_PACKETS
 
@@ -33,17 +34,27 @@
  */
 #define WHARF_ENCODE_TIMEOUT 1
 
+/** Marks in pkt_buffer_filled whether the packet has been received */
 enum pkt_buffer_status {
     PACKET_ABSENT = 0,
     PACKET_PRESENT,
     PACKET_RECOVERED
 };
 
+/** Traffic class that determines parity/data ratio */
+enum traffic_class {
+    TCLASS_ONE=1,
+    TCLASS_TWO=2,
+    TCLASS_THREE=3
+};
+
 /** Global buffer into which received and decoded packets will be placed */
 extern char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+
 /** Status of packets stored in global buffer */
 extern enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
+/** The handler to be specified in each individual booster file */
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 /** Checks that no packets are absent */
 bool is_all_data_pkts_recieved_for_block(int blockId);
@@ -51,6 +62,7 @@ bool is_all_data_pkts_recieved_for_block(int blockId);
 void mark_pkts_absent(int blockId);
 /** Copies pkt_buffer data to fbk */
 void populate_fec_blk_data_and_parity(int blockId);
+/** Copies pkt_buffer data and parity to fbk */
 void populate_fec_blk_data(int blockId);
 /** Wrapper to envoke encoder on filled fbk */
 void encode_block(void);
@@ -60,7 +72,10 @@ void decode_block(int block_id);
 int copy_parity_packets_to_pkt_buffer(int blockId);
 /** Advances the block ID with which new wharf frames will be tagged */
 unsigned int advance_block_id();
+/** Encapsulates packet with new header */
 int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result);
+/** Removes header from encapsulated packet */
 int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size);
+/** Forwards the frame on the ouptut pcap handle */
 void forward_frame(const void * packet, int len);
 
