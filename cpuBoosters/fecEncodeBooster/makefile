@@ -9,7 +9,7 @@ FLAGS=-Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -DWHARF_DEBUGGING
 # For Configuration.h
 OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
-all: fecBooster.o fecEncodeBooster fecEncodeBooster_baseline fecDecodeBooster fecTagUntagBooster fecTagEncodeBooster forwardingNonbooster
+all: fecBooster.o fecDecodeBooster fecTagEncodeBooster forwardingNonbooster
 
 fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h
 	g++ $(FLAGS) -c fecBooster.c -lpcap
