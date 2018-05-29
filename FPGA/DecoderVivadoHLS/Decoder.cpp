@@ -19,6 +19,7 @@
  */
 
 #include "Decoder.h"
+#include "Decoder_core.h"
 
 static const unsigned HEADER_SIZE = FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH
     + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH;
@@ -44,25 +45,6 @@ typedef struct
 static block_index Current_blocks[TRAFFIC_CLASS_COUNT];
 static packet_index Packet_counts[TRAFFIC_CLASS_COUNT];
 static k_type Data_packet_counts[TRAFFIC_CLASS_COUNT];
-
-static data_word Decode_word(unsigned Packet, data_word Input[FEC_MAX_K],
-    packet_index Packet_indices[FEC_MAX_K], unsigned k, unsigned Offset)
-{
-  data_word Word;
-  bool Found = false;
-  for (unsigned i = 0; i < FEC_MAX_K; i++)
-    if (i < k && Packet == Packet_indices[i])
-    {
-      Word = Input[i];
-      Found = true;
-    }
-
-  if (!Found)
-    for (unsigned i = 0; i < BYTES_PER_WORD; i++)
-      Word = (Word << 8) | (BYTES_PER_WORD * Offset + i + 1);
-
-  return Word;
-}
 
 static command Select_command(bool Wait_for_data, bool Data_packet,
 bool New_block, unsigned Traffic_class, unsigned k)
@@ -188,17 +170,18 @@ static void Select_packets(unsigned Traffic_class,
     unsigned Packet_count, hls::stream<data_word> & Output_raw_data_FIFO,
     hls::stream<data_word> & Output_encoded_data_FIFO,
     hls::stream<packet_info> & Output_raw_info_FIFO,
-    hls::stream<packet_info> & Output_encoded_info_FIFO)
+    hls::stream<packet_info> & Output_encoded_info_FIFO, unsigned & Output_packet_count)
 {
   if (Command == COMMAND_DECODE || Command == COMMAND_OUTPUT_DATA)
   {
     unsigned Count = Command == COMMAND_DECODE ? k : Packet_count;
+    Output_packet_count = 0;
     for (unsigned Packet = 0; Packet < Count; Packet++)
     {
       packet_info Info = Input_info_FIFOs[Traffic_class].read();
       if (Command == COMMAND_DECODE)
         Output_encoded_info_FIFO.write(Info);
-      else
+      else if (Info.Data_packet)
         Output_raw_info_FIFO.write(Info);
 
       unsigned Words_per_packet = DIVIDE_AND_ROUND_UP(Info.Bytes_per_packet, BYTES_PER_WORD);
@@ -208,9 +191,11 @@ static void Select_packets(unsigned Traffic_class,
         data_word Input = Input_FIFOs[Traffic_class].read();
         if (Command == COMMAND_DECODE)
           Output_encoded_data_FIFO.write(Input);
-        else
+        else if (Info.Data_packet)
           Output_raw_data_FIFO.write(Input);
       }
+
+      Output_packet_count += Command == COMMAND_DECODE || Info.Data_packet ? 1 : 0;
     }
   }
 }
@@ -301,6 +286,10 @@ static void Decode_packets(data_word Input_buffer[FEC_MAX_K][PING_PONG_BUFFER_SI
 {
 #pragma HLS array_partition variable=Packet_indices complete
   if (Command == COMMAND_DECODE)
+  {
+    fec_sym Matrix[FEC_MAX_K][FEC_MAX_K];
+    Lookup_matrix(Matrix, Packet_indices);
+
     for (unsigned Packet = 0; Packet < k; Packet++)
     {
       packet_info Info = Input_info_FIFO.read();
@@ -309,12 +298,12 @@ static void Decode_packets(data_word Input_buffer[FEC_MAX_K][PING_PONG_BUFFER_SI
       for (unsigned Offset = 0; Offset < Words_per_packet; Offset++)
       {
 #pragma HLS pipeline
+
         data_word Input[FEC_MAX_K];
         for (int Packet_2 = 0; Packet_2 < FEC_MAX_K; Packet_2++)
-          if (Packet_2 < k)
-            Input[Packet_2] = Input_buffer[Packet_2][Offset];
+          Input[Packet_2] = Input_buffer[Packet_2][Offset];
 
-        data_word Output = Decode_word(Packet, Input, Packet_indices, k, Offset);
+        data_word Output = Matrix_multiply_word(Input, Matrix, Packet, k);
 
         if (Offset == 0)
         {
@@ -327,6 +316,7 @@ static void Decode_packets(data_word Input_buffer[FEC_MAX_K][PING_PONG_BUFFER_SI
 
       Output_info_FIFO.write(Info);
     }
+  }
 }
 
 static void Postprocess_headers(hls::stream<data_word> & Input_FIFO,
@@ -481,6 +471,7 @@ void Process_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple
 #pragma HLS STREAM variable=Raw_info_stream depth=Info_stream_size
   command Command;
   unsigned Packet_count;
+  unsigned Output_packet_count;
 
   tuple_fec Header = Tuple_input.Hdr.FEC;
   k_type k = Tuple_input.Decoder_input.k;
@@ -489,7 +480,8 @@ void Process_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple
       Header.Original_type, k, Packet_input, Data_streams, Info_streams, Command, Packet_count,
       Wait_for_data);
   Select_packets(Header.Traffic_class, Data_streams, Info_streams, k, Command, Packet_count,
-      Raw_data_stream, Encoded_data_stream, Raw_info_stream, Encoded_info_stream);
+      Raw_data_stream, Encoded_data_stream, Raw_info_stream, Encoded_info_stream,
+      Output_packet_count);
   Preprocess_headers(Encoded_data_stream, Encoded_info_stream, k, Command, Preprocessed_data_stream,
       Preprocessed_info_stream);
   Reorder_packets(Preprocessed_data_stream, Preprocessed_info_stream, Command, k, Ping_pong_buffer,
@@ -499,7 +491,7 @@ void Process_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple
   Postprocess_headers(Decoded_data_stream, Decoded_info_stream, k, Command,
       Postprocessed_data_stream, Postprocessed_info_stream);
   Output_packets(Tuple_input, Tuple_output, Postprocessed_data_stream, Raw_data_stream,
-      Postprocessed_info_stream, Raw_info_stream, Packet_count, Command, k, Packet_output);
+      Postprocessed_info_stream, Raw_info_stream, Output_packet_count, Command, k, Packet_output);
 }
 
 void Forward_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple_output,
@@ -510,15 +502,7 @@ void Forward_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple
   {
 #pragma HLS pipeline
     Input = Packet_input.read();
-
-    packet_interface Output;
-    Output.Data = Input.Data;
-    Output.Start_of_frame = Input.Start_of_frame;
-    Output.End_of_frame = Input.End_of_frame;
-    Output.Count = Input.Count;
-    Output.Error = Input.Error;
-
-    Packet_output.write(Output);
+    Packet_output.write(Input);
   }
   while (!Input.End_of_frame);
 
