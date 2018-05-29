@@ -143,7 +143,7 @@ void my_packet_handler(
 		/* Update filled status */
 		pkt_buffer_filled[currBlockID][currPktIdx] = PACKET_PRESENT;
 	} else {
-		fprintf(stderr, "Tagging produced a duplicate index\n");
+		fprintf(stderr, "Tagging produced a duplicate index: %d/%d\n", currBlockID, currPktIdx);
 		exit(1);
 	}
 
