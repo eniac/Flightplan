@@ -357,22 +357,25 @@ public:
 		std::cout << "clear internal and output-only tuples" << std::endl;
 		memcached_output = 0;
 		std::cout << "	memcached_output = " << memcached_output.to_string() << std::endl;
-
+		std::cout << "packet_in1111111 :"<< packet_in.size() << std::endl;
 		// TODO: *********************************
 		// TODO: *** USER ENGINE FUNCTIONALITY ***
 		// TODO: *********************************
-		packet_out = packet_in;
-	        unsigned char packet[MAX_PACKET_SIZE];
-                unsigned char out_packet[MAX_PACKET_SIZE];
-                 
+                char * packet = packet_block.data;
+		std::cout <<"Enter USER ENGINE FUNCTION" << std::endl;
+		std::cout <<"packet_in: " << packet_in.size() << std::endl;
+		std::cout << packet_in;
 		for (int i = 0; i< packet_in.size(); i++)
-			packet[i] = packet_in[i];
-		mem_code(packet);
-		packet_out.resize(10);
-		for (int i = 0; i< 4; i++)
+			{
+			  packet[i] =(unsigned char) packet_in[i];
+			}
+                     
+		mem_code();
+		packet_out.resize(UDP_OFFSET);
+		for (int i = UDP_OFFSET; i < packet_block.len; i++)
 			packet_out.push_back(packet[i]);
 		control.done = 1;
-		// inout and output tuples:
+		//inout and output tuples:
 		std::cout << "final inout and output tuples:" << std::endl;
 		std::cout << "	control = " << control.to_string() << std::endl;
 		std::cout << "	CheckCache_fl = " << CheckCache_fl.to_string() << std::endl;

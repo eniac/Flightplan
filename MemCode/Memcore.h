@@ -1,25 +1,17 @@
-#define Request_LINE_SIZE 2000
-#define MAX_DATA_SIZE 10000
-#define MAX_PACKET_SIZE Request_LINE_SIZE+MAX_DATA_SIZE
+#define REQUEST_LINE_SIZE 2000
+#define MAX_DATA_SIZE 1100
+#define MAX_PACKET_SIZE REQUEST_LINE_SIZE+MAX_DATA_SIZE
 #define MAX_KEY_LEN 256
+#define UDP_OFFSET 42
+#define _STORED 0
+#define _NOTFOUND 1
+#define MAGIC_NUM 31
+#define MAX_MEMORY_SIZE 32767
 #include<stdint.h>
 enum ascii_cmd {
   GET_CMD,
-  GETS_CMD,
   SET_CMD,
-  ADD_CMD,
-  REPLACE_CMD,
-  CAS_CMD,
-  APPEND_CMD,
-  PREPEND_CMD,
   DELETE_CMD,
-  INCR_CMD,
-  DECR_CMD,
-  STATS_CMD,
-  FLUSH_ALL_CMD,
-  VERSION_CMD,
-  QUIT_CMD,
-  VERBOSITY_CMD,
   UNKNOWN_CMD
 };
 typedef struct field_pos{
@@ -36,5 +28,19 @@ typedef struct cmd_staus{
   int BYTE;
   char DATA[MAX_DATA_SIZE]; 
 }CMD_STAT;
-extern unsigned char packet_block[MAX_DATA_SIZE];
-void mem_code(unsigned char input[MAX_DATA_SIZE]);
+
+typedef struct key_data{
+  char KEY[MAX_KEY_LEN];
+  int KEY_LEN;
+  char DATA[MAX_DATA_SIZE];
+  long DATA_LEN;
+  char VALID;
+}CACHE;
+
+typedef struct mem_packet{
+	char data[MAX_DATA_SIZE];
+	long len;
+}MEM;
+
+extern MEM packet_block;
+void mem_code();
