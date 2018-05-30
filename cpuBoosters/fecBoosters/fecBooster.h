@@ -7,8 +7,8 @@
 
 #define SIZE_ETHERNET sizeof(struct ether_header)
 
-#define NUM_DATA_PACKETS 8
-#define NUM_PARITY_PACKETS 4
+#define NUM_DATA_PACKETS 5
+#define NUM_PARITY_PACKETS 1
 #define NUM_BLOCKS 256
 
 /** Size of an individual packet in pkt_buffer */
@@ -48,11 +48,16 @@ enum traffic_class {
     TCLASS_THREE=3
 };
 
-/** Global buffer into which received and decoded packets will be placed */
-extern char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+/** Inserts a packet, tagged with its size, into the buffer */
+void insert_into_pkt_buffer(int blockId, int pktIdx,
+                            FRAME_SIZE_TYPE pkt_size, const u_char *packet);
+/** Gets a packet without its tagged size from the buffer */
+u_char *retrieve_from_pkt_buffer(int blockId, int pktIdx, FRAME_SIZE_TYPE *pktSize);
+/** Checks if a packet is already inserted into the buffer */
+bool pkt_already_inserted(int blockId, int pktIdx);
+/** Checks if a packet has been recovered by FEC */
+bool pkt_recovered(int blockId, int pktIdx);
 
-/** Status of packets stored in global buffer */
-extern enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
 /** The handler to be specified in each individual booster file */
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
@@ -75,7 +80,7 @@ unsigned int advance_block_id();
 /** Encapsulates packet with new header */
 int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result);
 /** Removes header from encapsulated packet */
-int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size);
+const u_char *wharf_strip_frame(const u_char* packet, int *size);
 /** Forwards the frame on the ouptut pcap handle */
 void forward_frame(const void * packet, int len);
 

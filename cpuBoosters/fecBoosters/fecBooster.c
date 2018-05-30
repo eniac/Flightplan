@@ -12,9 +12,9 @@ pcap_t *input_handle = NULL;
 pcap_t *output_handle = NULL;
 
 /** Global buffer into which received and decoded packets will be placed */
-char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+static char pkt_buffer[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
 /** Status of packets stored in global buffer */
-enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
+static enum pkt_buffer_status pkt_buffer_filled[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
 /**
  * @brief Wrapper to invoke encoder
@@ -85,9 +85,66 @@ void mark_pkts_absent(int blockId) {
 static int get_pkt_payload_length(u_char* packet){
 
 	FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(packet);
-	int payloadLength = *original_frame_size + sizeof(FRAME_SIZE_TYPE);
+	FRAME_SIZE_TYPE flipped = ntohs(*original_frame_size);
+	int payloadLength = flipped + sizeof(FRAME_SIZE_TYPE);
 
 	return payloadLength;
+}
+
+/**
+ * @brief Inserts the packet, tagged with its size, into the packet buffer
+ *
+ * @param[in] blockId ID of the block into which the packet is to be placed
+ * @param[in] pktIdx Index of the packet in the block
+ * @param[in] pktSize Size of the packet
+ * @param[in] packet The packet to be stored
+ */
+void insert_into_pkt_buffer(int blockId, int pktIdx,
+                            FRAME_SIZE_TYPE pktSize, const u_char *packet) {
+	size_t offset = 0;
+	if (pktIdx < NUM_DATA_PACKETS) {
+		FRAME_SIZE_TYPE flipped = ntohs(pktSize);
+		memcpy(pkt_buffer[blockId][pktIdx], &flipped, sizeof(pktSize));
+		offset += sizeof(pktSize);
+	}
+
+	memcpy(pkt_buffer[blockId][pktIdx] + offset, packet, pktSize);
+	pkt_buffer_filled[blockId][pktIdx] = PACKET_PRESENT;
+}
+
+/**
+ * @brief Gets the packet from the packet buffer with the size stripped
+ *
+ * @param[in] blockId ID of the packet's block
+ * @param[in] pktIdx Index of the packet in the block
+ * @param[out] pktSize If a data packet, stores the size of the original packet stored
+ *
+ * @return The packet with the size stripped off
+ */
+u_char *retrieve_from_pkt_buffer(int blockId, int pktIdx, FRAME_SIZE_TYPE *pktSize) {
+	size_t offset = 0;
+	if (pktIdx < NUM_DATA_PACKETS) {
+		FRAME_SIZE_TYPE *size_p = (FRAME_SIZE_TYPE *)pkt_buffer[blockId][pktIdx];
+		*pktSize = ntohs(*size_p);
+		offset = sizeof(*pktSize);
+	}
+	return (u_char *)pkt_buffer[blockId][pktIdx] + offset;
+}
+
+/**
+ * @brief Checks if a packet has already been inserted into the buffer
+ * @returns True if the packet is already inserted
+ */
+bool pkt_already_inserted(int blockId, int pktIdx) {
+	return pkt_buffer_filled[blockId][pktIdx] != PACKET_ABSENT;
+}
+
+/**
+ * @brief Checks if a packet is marked as recovered
+ * @returns True of the packet is RECOVERED
+ */
+bool pkt_recovered(int blockId, int pktIdx) {
+	return pkt_buffer_filled[blockId][pktIdx] == PACKET_RECOVERED;
 }
 
 /**
@@ -248,7 +305,10 @@ unsigned int advance_block_id(void) {
 /**
  * @brief Encapsulate the packet with new header.
  *
- * The new resulting packet looks like NEW_ETH_HEADER | WHARF_TAG | oldPacket
+ * The new resulting packet looks like NEW_ETH_HEADER | WHARF_TAG | oldPacket w/o eth_header
+ *
+ * If the tagged packet is a parity packet, ether_header is not removed
+ * (it does not exist to begin with)
  *
  * @param[in] tclass Class of the wharf frame, indicating parity ratio
  * @param[in] packet Packet data to be encapsulated
@@ -269,9 +329,6 @@ int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u
   /* Copy over the etherHeader from the original packet */
   memcpy(*result, packet, sizeof(struct ether_header));
 
-  /* Copy over the original packet as is.*/
-  memcpy(*result + extra_header_size, packet, size);
-
   /* Replace the ether_type in the new ether header with wharf_ethertype*/
   struct ether_header *eth_header = (struct ether_header *)*result;
   eth_header->ether_type=htons(WHARF_ETHERTYPE);
@@ -281,7 +338,21 @@ int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u
   tag->class_id = (int)tclass;
   tag->block_id = block_id;
   tag->index = frame_index;
-  tag->size = size;
+
+  /* Populate the wharf tag with the packet's ethertype */
+  struct ether_header *orig_eth_header = (struct ether_header *)packet;
+  tag->orig_ethertype = orig_eth_header->ether_type;
+
+  size_t offset = 0;
+  /* If it's a data packet, don't copy the ether header */
+  if (tag->index < NUM_DATA_PACKETS && size > 0) {
+    offset = sizeof(struct ether_header);
+  }
+
+  /* Copy over the original packet as is.*/
+  if (size > 0) {
+      memcpy(*result + extra_header_size, packet + offset, size - offset);
+  }
 
   /* update the block_id and frame_index */
   frame_index = (frame_index + 1) % (NUM_DATA_PACKETS + NUM_PARITY_PACKETS);
@@ -289,35 +360,47 @@ int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u
     block_id = (block_id + 1) % MAX_BLOCK;
   }
 
-  return size + extra_header_size;
+  return size + extra_header_size - offset;
 }
 
 /**
- * @brief Removes the added wharf & new ether tag and returns the original packet
+ * @brief Gets the pointer to the original packet within the tagged frame.
  *
- * @param[out] tclass Class of traffic that was marked in header
- * @param[inout] packet Encapsulated packet, which will be stripped to original packet
- * @param[in] size Total size of received packet
+ * NOTE: If a data packet, modifies the packet to restore the ether header
+ * prior to the data.
  *
- * @return size of newly stripped packet
+ * @param[in] packet Encapsulated packet
+ * @param[inout] size Total size of received packet in, packet payload size out
+ *
+ * @return Pointer to the stripped packet (within the tagged frame)
  */
-int wharf_strip_frame(enum traffic_class * tclass, u_char* packet, int size) {
-  struct ether_header *eth_header = (struct ether_header *)packet;
-  /*If not a wharf encoded packet*/
-  if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
-    fprintf(stderr, "Cannot strip non-Wharf frame");
-    exit(1);
-  }
+const u_char *wharf_strip_frame(const u_char* packet, int *size) {
+	 struct ether_header *eth_header = (struct ether_header *)packet;
+	/*If not a wharf encoded packet*/
+	if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
+		fprintf(stderr, "Cannot strip non-Wharf frame");
+		exit(1);
+	}
 
-  /*extract the original size and copy in place*/
-  struct fec_header *tag = (struct fec_header *)(packet + sizeof(struct ether_header));
-  *tclass = (enum traffic_class)tag->class_id;
-  const int original_size = tag->size;
-  const int offset = sizeof(struct ether_header) + sizeof(struct fec_header);
-  for (int i = 0; i < original_size; i++) {
-    packet[i] = packet[i + offset];
-  }
-  return size - offset;
+	struct fec_header fec_hdr = *(struct fec_header *)(packet + sizeof(struct ether_header));
+
+	struct ether_header *pkt_ether = (struct ether_header *)(packet + sizeof(fec_hdr));
+
+	if (*size == sizeof(fec_hdr) + sizeof(*eth_header)) {
+		*size = 0;
+		return packet + sizeof(fec_hdr) + sizeof(*eth_header);
+	}
+
+	size_t offset = sizeof(struct fec_header);
+	if (fec_hdr.index < NUM_DATA_PACKETS) {
+		*pkt_ether = *eth_header;
+		pkt_ether->ether_type = fec_hdr.orig_ethertype;
+	} else {
+		offset += sizeof(struct ether_header);
+	}
+
+	*size = *size - offset;
+	return packet + offset;
 }
 
 /**

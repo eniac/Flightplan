@@ -6,7 +6,8 @@
 
 #include "fecBooster.h"
 
-bool nothing_to_decode = true; // This is true when the buffer doesn't contain any packets for decoding.
+// This is true when the buffer doesn't contain any packets for decoding.
+bool nothing_to_decode = true;
 int lastBlockId = 0;
 
 inline void reset_decoder (const int block_id) {
@@ -15,7 +16,7 @@ inline void reset_decoder (const int block_id) {
 }
 
 // Try to decode new packets, and forward them on.
-// FIXME possible race condition if have simultaneous timer expiry and a packet arrival that also triggers the decode.
+// FIXME possible race condition if simultaneous timer expiry and packet arrival that triggers decode.
 void decode_and_forward(const int block_id) {
 	if (nothing_to_decode || is_all_data_pkts_recieved_for_block(block_id)) {
 		reset_decoder (block_id);
@@ -25,28 +26,29 @@ void decode_and_forward(const int block_id) {
 
 	populate_fec_blk_data_and_parity(block_id);
 
-	// Decode inserts the packets directly into pkt_buffer
+	// Decode inserts the packets directly into the packet buffer
 	decode_block(block_id);
 
 #if WHARF_DEBUGGING
 	int num_recovered_packets = 0;
 #endif // WHARF_DEBUGGING
 	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
-		if (pkt_buffer_filled[block_id][i] == PACKET_RECOVERED) {
+		if (pkt_recovered(block_id, i)) {
 			num_recovered_packets += 1;
 
-			char* packetToInject = pkt_buffer[block_id][i] + sizeof(FRAME_SIZE_TYPE);
-			FRAME_SIZE_TYPE *size_p = (FRAME_SIZE_TYPE*)pkt_buffer[block_id][i];
+			FRAME_SIZE_TYPE size;
+			u_char *pkt = retrieve_from_pkt_buffer(block_id, i, &size);
+
 			// Recovered packet may have a length of 0, if it was filler
 			// In this case, no need to forward
-			if (*size_p > 0) {
-				forward_frame(packetToInject, *size_p);
+			if (size > 0) {
+				forward_frame(pkt, size);
 			}
 		}
 	}
 
 #if WHARF_DEBUGGING
-	printf("num_recovered_packets=%d\n", num_recovered_packets); // FIXME this is always printing the total number of data packets in the block.
+	printf("num_recovered_packets=%d\n", num_recovered_packets);
 #endif // WHARF_DEBUGGING
 
 	reset_decoder (block_id);
@@ -76,63 +78,46 @@ void my_packet_handler(
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
-
-	enum traffic_class tclass = TCLASS_ONE;
 	struct ether_header *eth_header = (struct ether_header *)packet;
 	if (WHARF_ETHERTYPE != ntohs(eth_header->ether_type)) {
 		fprintf(stderr, "Received untagged frame -- ignoring\n");
 		return;
 	}
-	const struct fec_header *fecHeader = (struct fec_header *)(packet + sizeof(struct ether_header));
+
+	// Make a copy of the header so the packet can later be modified
+	struct fec_header fecHeader = *(struct fec_header *)(packet + sizeof(struct ether_header));
 
 #if WHARF_DEBUGGING
-	printf("class_id=%d block_id=%d index=%d size=%d\n", fecHeader->class_id, fecHeader->block_id,
-	       fecHeader->index, fecHeader->size);
+	printf("class_id=%d block_id=%d index=%d size=%d\n", fecHeader.class_id, fecHeader.block_id,
+	       fecHeader.index, header->len);
 #endif // WHARF_DEBUGGING
 
-	if (fecHeader->block_id != lastBlockId) {
+	if (fecHeader.block_id != lastBlockId ||
+			pkt_already_inserted(fecHeader.block_id, fecHeader.index)) {
 		decode_and_forward(lastBlockId);
-		lastBlockId = fecHeader->block_id;
+		lastBlockId = fecHeader.block_id;
 #if WHARF_DECODE_TIMEOUT != 0
 		alarm(WHARF_DECODE_TIMEOUT);
 		signal(SIGALRM, sigalrm_handler);
 #endif // WHARF_DECODE_TIMEOUT != 0
 	}
 
+	int size = header->len;
+	const u_char *stripped = wharf_strip_frame(packet, &size);
+
 	// Forward data packets immediately
-	if (fecHeader->index < NUM_DATA_PACKETS) {
+	if (fecHeader.index < NUM_DATA_PACKETS) {
 		// If there is no data outside of the wharf frame, no need to forward (packet was filler)
 		if (header->len > WHARF_ORIG_FRAME_OFFSET) {
-			forward_frame(packet + WHARF_ORIG_FRAME_OFFSET,
-			              header->len - WHARF_ORIG_FRAME_OFFSET); // This also strips the Wharf tag.
+			forward_frame(stripped, size);
 		}
 	}
 
 	// Buffer data and parity packets in case need to decode.
-	if (pkt_buffer_filled[fecHeader->block_id][fecHeader->index] == PACKET_ABSENT) {
+	if (!pkt_already_inserted(fecHeader.block_id, fecHeader.index)) {
 		nothing_to_decode = false;
-		u_char *untagged_packet = (u_char *) packet;
 
-		/*Passing this, although we know what the size is*/
-		int tagged_size = fecHeader->size + WHARF_ORIG_FRAME_OFFSET;
-
-		/*storing these values,before stripping the tag.*/
-		int currBlockID = fecHeader->block_id;
-		int currPktIdx = fecHeader->index;
-
-		/*First strip the wharf tag and copy the packet to the packet buffer*/
-		int untagged_size = wharf_strip_frame(&tclass, untagged_packet, tagged_size);
-		
-		/* prepend the packet length for data packets.*/
-		if (currPktIdx < NUM_DATA_PACKETS) {
-			FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(pkt_buffer[currBlockID][currPktIdx]);
-			*original_frame_size = untagged_size;
-			memcpy(pkt_buffer[currBlockID][currPktIdx] + sizeof(FRAME_SIZE_TYPE), untagged_packet, untagged_size);
-		} else { /*For parity packets, do not prepend the length*/
-			memcpy(pkt_buffer[currBlockID][currPktIdx], untagged_packet, untagged_size);
-		}
-
-		pkt_buffer_filled[currBlockID][currPktIdx] = PACKET_PRESENT;
+	    insert_into_pkt_buffer(fecHeader.block_id, fecHeader.index, size, stripped);
 	}
 	else {
 		fprintf(stderr, "Not buffering duplicate packet\n");
