@@ -5,6 +5,8 @@
 #define UDP_OFFSET 42
 #define _STORED 0
 #define _NOTFOUND 1
+#define STR_STORED "STORED"
+#define STR_NOTFOUND "NOT FOUND"
 #define MAGIC_NUM 31
 #define MAX_MEMORY_SIZE 32767
 #include<stdint.h>

@@ -357,14 +357,11 @@ public:
 		std::cout << "clear internal and output-only tuples" << std::endl;
 		memcached_output = 0;
 		std::cout << "	memcached_output = " << memcached_output.to_string() << std::endl;
-		std::cout << "packet_in1111111 :"<< packet_in.size() << std::endl;
 		// TODO: *********************************
 		// TODO: *** USER ENGINE FUNCTIONALITY ***
 		// TODO: *********************************
                 char * packet = packet_block.data;
 		std::cout <<"Enter USER ENGINE FUNCTION" << std::endl;
-		std::cout <<"packet_in: " << packet_in.size() << std::endl;
-		std::cout << packet_in;
 		for (int i = 0; i< packet_in.size(); i++)
 			{
 			  packet[i] =(unsigned char) packet_in[i];

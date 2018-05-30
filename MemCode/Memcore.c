@@ -8,8 +8,8 @@ struct response{
 	char* line;
 	int len;
 }RESPONSE[]={
-	{.line = "STORED", .len = 6},
-	{.line = "NOT FOUND", .len = 9}
+	{.line = STR_STORED, .len = strlen(STR_STORED)},
+	{.line = STR_NOTFOUND, .len = strlen(STR_NOTFOUND)}
 };
 MEM packet_block;
 
@@ -56,7 +56,7 @@ static int parse_next(char in[MAX_PACKET_SIZE], FIELD* NEXT)
 {
   int len= 0;
   /* Strip leading whitespaces */
-  if ((*(in))!= ' ')  printf("No Spcae Found"); 
+  if ((*(in))!= ' ')  printf("No Space Found"); 
   in++;
   while (*(in + len) != '\0' && !isspace(*(in + len)) && (*(in+len)!='\r'))
   {
@@ -111,8 +111,6 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       commands.DATA[commands.BYTE] = 0;
 
       mem_index = lookup(commands.KEY, KEY.f_len);  
-      mem_index = 1;    
-      printf("mem_index is %d\n", mem_index);
       Memory[mem_index].KEY_LEN = KEY.f_len;
       strncpy(Memory[mem_index].KEY,commands.KEY, Memory[mem_index].KEY_LEN);
       Memory[mem_index].DATA_LEN = commands.BYTE;
@@ -129,7 +127,6 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
     case(GET_CMD):      
       parse_next(CMD.f_start+CMD.f_len,&KEY);
       strncpy(commands.KEY,KEY.f_start, KEY.f_len);
-      printf("The mem_index\n");
       mem_index = lookup(commands.KEY,KEY.f_len);
       printf("%d\n", mem_index);
       if (Memory[mem_index].VALID == 1)
@@ -160,17 +157,11 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       }
       break;
    }
-   print_command(commands);
-   print_memory(mem_index);
 }
 void mem_code(){
 	printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside the mem_core<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
-	printf("The Original input is:\n");
-	for (int i = UDP_OFFSET; i< 1155; i++) 
-		printf("%c",packet_block.data[i]);
   	int count = rm_space(packet_block.data+UDP_OFFSET); 
-	Mem_Parser(packet_block.data+UDP_OFFSET+count);
-	
+	Mem_Parser(packet_block.data+UDP_OFFSET+count);	
 	printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside the mem_core<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
 }
 void print_command(CMD_STAT command){
