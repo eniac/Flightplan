@@ -22,7 +22,7 @@ Wharf: Wharf.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl \
 # Convert configuration file to Verilog.
 	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Wharf/XilinxSwitch/fec_0_t.HDL/Configuration.v
 # Fix backpressure.
-	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl > $${FILE} && mv $${FILE} Wharf/XilinxSwitch/XilinxSwitch.v
+	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl -i Wharf/XilinxSwitch/XilinxSwitch.v -d 3 -p fec -t fec_0_t -m fec_0 > $${FILE} && mv $${FILE} Wharf/XilinxSwitch/XilinxSwitch.v
 
 Wharf.sdnet: Sources/Wharf.p4
 	p4c-sdnet -I ../RSEVivadoHLS Sources/Wharf.p4 -o Wharf.sdnet

@@ -7,7 +7,14 @@ then
   exit 1
 fi
 
-cd Wharf/XilinxSwitch
+PROJECT_DIR=$1
+if [ -z "${PROJECT_DIR}" ]
+then
+  PROJECT_DIR="Encoder"
+  echo "No project directory given, defaulting to ${PROJECT_DIR}/"
+fi
+
+cd ${PROJECT_DIR}/XilinxSwitch
 ./Generate_packets.sh
 cd XilinxSwitch.TB
 ./compile.bash
