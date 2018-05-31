@@ -362,17 +362,40 @@ public:
 		// TODO: *********************************
                 char * packet = packet_block.data;
 		std::cout <<"Enter USER ENGINE FUNCTION" << std::endl;
+		
+		//write input
 		for (int i = 0; i< packet_in.size(); i++)
 			{
 			  packet[i] =(unsigned char) packet_in[i];
 			}
                 packet_block.len = packet_in.size();
+	
 		mem_code();
+		
+		//retrieve output 
 		packet_out.resize(PAYLOAD_OFFSET_UDP);
 		for (int i = PAYLOAD_OFFSET_UDP; i < packet_block.len; i++)
 			packet_out.push_back(packet[i]);
+		
+		//change output packet header length
 		hdr.ipv4.totallen =(_LV<16>) (packet_block.len - ETH_OFFSET);
 		hdr.udp.len =(_LV<16>)(packet_block.len - ETH_OFFSET - IPV4_OFFSET);
+		//swap src and dst address 
+		//better way ???
+	        if (packet_block.SWAP)
+		{
+			_LV<48> eth_temp = hdr.eth.src;
+			hdr.eth.src = hdr.eth.dst;
+			hdr.eth.dst = eth_temp;
+			
+			_LV<32> ipv4_temp = hdr.ipv4.srcAddr;
+			hdr.ipv4.srcAddr = hdr.ipv4.dstAddr;
+			hdr.ipv4.dstAddr = ipv4_temp;
+			
+			_LV<16> udp_temp = hdr.udp.sport;
+			hdr.udp.sport = hdr.udp.dport;
+			hdr.udp.dport = udp_temp;
+		}		
 		control.done = 1;
 		//inout and output tuples:
 		std::cout << "final inout and output tuples:" << std::endl;
