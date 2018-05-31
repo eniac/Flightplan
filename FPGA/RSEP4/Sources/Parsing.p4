@@ -67,16 +67,6 @@ struct headers_t {
 }
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
-control Deparser(in headers_t hdr, packet_out pkt) {
-  apply
-  {
-    pkt.emit(hdr.eth);
-    pkt.emit(hdr.fec);
-    pkt.emit(hdr.ipv4);
-  }
-}
-
-@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser Parser(packet_in pkt, out headers_t hdr) {
   state start {
     pkt.extract(hdr.eth);
@@ -111,5 +101,15 @@ parser Parser(packet_in pkt, out headers_t hdr) {
   state parse_ipv4 {
     pkt.extract(hdr.ipv4);
     transition accept;
+  }
+}
+
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
+control Deparser(in headers_t hdr, packet_out pkt) {
+  apply
+  {
+    pkt.emit(hdr.eth);
+    pkt.emit(hdr.fec);
+    pkt.emit(hdr.ipv4);
   }
 }
