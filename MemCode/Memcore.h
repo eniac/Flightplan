@@ -58,9 +58,17 @@ typedef struct key_data{
 typedef struct mem_packet{
 	char data[MAX_DATA_SIZE];
 	uint16_t len;
-	// indicator for packet direction: 0 -> back to user; 1 -> to Memcached Server
-	// -1 -> unprocessed
-	int dir; 
+	/*There are three states: 
+		0 : unprocessed packet;
+		1 : finished packet;
+		2 : need one more process;
+	  The packet fed into Memcore is either in state 0 or state 2. Assume that if one packet requires to
+	  send packets to both server and user. It will send to user first. That is to say, when the income packet
+	  is in state 2, the Memcore will generate the packet for the server.
+	*/
+	int STATE;
+	// swap the src and dst: 0 -> no need for swap; 1 -> swap.
+	int SWAP; 
 }MEM;
 
 extern MEM packet_block;

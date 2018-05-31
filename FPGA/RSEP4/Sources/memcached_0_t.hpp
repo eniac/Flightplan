@@ -367,7 +367,6 @@ public:
 			  packet[i] =(unsigned char) packet_in[i];
 			}
                 packet_block.len = packet_in.size();
-		packet_block.dir = -1;     
 		mem_code();
 		packet_out.resize(PAYLOAD_OFFSET_UDP);
 		for (int i = PAYLOAD_OFFSET_UDP; i < packet_block.len; i++)
@@ -389,6 +388,10 @@ public:
 		std::cout << packet_out;
 		std::cout << "Exiting engine " << _name << std::endl;
 		std::cout << "===================================================================" << std::endl;
+		if (packet_block.STATE == 1) { packet_block.STATE = 0; return false; }
+		if (packet_block.STATE == 2) return true;
+		printf("STATE ERROR!");
+		exit(0);
 		return false;
 	}
 };

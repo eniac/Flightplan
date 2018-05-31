@@ -14,7 +14,7 @@ struct response{
 	{.line = STR_DELETED, .len = strlen(STR_DELETED)},
 	{.line = STR_NOTFOUND, .len = strlen(STR_NOTFOUND)}
 };
-MEM packet_block;
+MEM packet_block = {0};
 
 static CACHE Memory[MAX_MEMORY_SIZE];
 void print_command(CMD_STAT command); 
@@ -94,36 +94,39 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
   commands.CMD = ascii_to_command(s, length, &CMD);
   switch (commands.CMD){
     case(SET_CMD):
+      if (packet_block.STATE == 0)
+      {
+        parse_next(CMD.f_start+CMD.f_len,&KEY);
+        strncpy(commands.KEY,KEY.f_start, KEY.f_len);
+        commands.KEY[KEY.f_len] = 0;
+        parse_next(KEY.f_start+KEY.f_len, &FLAG);
+        mem_index = lookup(commands.KEY, KEY.f_len); 
+        commands.FLAG = atoi(strncpy(temp,FLAG.f_start,FLAG.f_len));
+        parse_next(FLAG.f_start+FLAG.f_len, &EXPERT);
+        memset(temp,0,8);	
+        commands.EXPERT = atoi(strncpy(temp, EXPERT.f_start, EXPERT.f_len));
+        parse_next(EXPERT.f_start+EXPERT.f_len, &BYTE);
+        memset(temp,0,8);
+        commands.BYTE = atoi(strncpy(temp,BYTE.f_start,BYTE.f_len));
+        parse_data(BYTE.f_start+BYTE.f_len,commands.BYTE, &DATA);
+        strncpy(commands.DATA,DATA.f_start,commands.BYTE);
+        Memory[mem_index].KEY_LEN = KEY.f_len;
+        strncpy(Memory[mem_index].KEY,commands.KEY, Memory[mem_index].KEY_LEN);
+        Memory[mem_index].DATA_LEN = commands.BYTE;
+        strncpy(Memory[mem_index].DATA, commands.DATA, Memory[mem_index].DATA_LEN); 
+        Memory[mem_index].VALID = 1;
 
-      parse_next(CMD.f_start+CMD.f_len,&KEY);
-      strncpy(commands.KEY,KEY.f_start, KEY.f_len);
-      commands.KEY[KEY.f_len] = 0;
-      parse_next(KEY.f_start+KEY.f_len, &FLAG);
-      mem_index = lookup(commands.KEY, KEY.f_len); 
-      commands.FLAG = atoi(strncpy(temp,FLAG.f_start,FLAG.f_len));
-  
-      parse_next(FLAG.f_start+FLAG.f_len, &EXPERT);
-      memset(temp,0,8);	
-      commands.EXPERT = atoi(strncpy(temp, EXPERT.f_start, EXPERT.f_len));
-
-      parse_next(EXPERT.f_start+EXPERT.f_len, &BYTE);
-      memset(temp,0,8);
-      commands.BYTE = atoi(strncpy(temp,BYTE.f_start,BYTE.f_len));
-
-      parse_data(BYTE.f_start+BYTE.f_len,commands.BYTE, &DATA);
-      strncpy(commands.DATA,DATA.f_start,commands.BYTE);
-
-      Memory[mem_index].KEY_LEN = KEY.f_len;
-      strncpy(Memory[mem_index].KEY,commands.KEY, Memory[mem_index].KEY_LEN);
-      Memory[mem_index].DATA_LEN = commands.BYTE;
-      strncpy(Memory[mem_index].DATA, commands.DATA, Memory[mem_index].DATA_LEN); 
-      Memory[mem_index].VALID = 1;
-      // backward packet 
-      packet_block.dir = 0;
-      packet_block.len = PAYLOAD_OFFSET_UDP;
-      ADD_RESP_WORD(packet_block.len, _STORED);
-      // forward packet
-      // packet_block.dir = 1;
+	packet_block.STATE = 2;
+	packet_block.SWAP = 1;
+        packet_block.len = PAYLOAD_OFFSET_UDP;
+        ADD_RESP_WORD(packet_block.len, _STORED);
+      }
+      else
+      {
+	packet_block.STATE = 1;
+	packet_block.SWAP = 0;
+	//Pass the packet to the Server
+      }
       break;
 
     case(GET_CMD):      
@@ -132,7 +135,8 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       mem_index = lookup(commands.KEY,KEY.f_len);
       if (Memory[mem_index].VALID == 1)
       { 
-	packet_block.dir = 0;
+	packet_block.STATE = 1;
+	packet_block.SWAP = 1;
 	packet_block.len = PAYLOAD_OFFSET_UDP;
 	print_memory(mem_index);	
 	//ADD VALUE WORD
@@ -164,18 +168,34 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
 	ADD_RESP_WORD(packet_block.len, _END);
       }
       else {
-	//packet_block.dir = 1;
+	packet_block.STATE = 1;
+	packet_block.SWAP = 0;
+        //Pass to the server
       } 	
       break;
     case(DELETE_CMD):      
-      parse_next(CMD.f_start+CMD.f_len,&KEY);
-      strncpy(commands.KEY,KEY.f_start, KEY.f_len);	
-      mem_index = lookup(commands.KEY, KEY.f_len);
-      if (Memory[mem_index].VALID == 1)
+      if (packet_block.STATE == 0)
       {
-	Memory[mem_index].VALID = 0;
+        parse_next(CMD.f_start+CMD.f_len,&KEY);
+        strncpy(commands.KEY,KEY.f_start, KEY.f_len);	
+        mem_index = lookup(commands.KEY, KEY.f_len);
+        if (Memory[mem_index].VALID == 1)
+        {
+	  Memory[mem_index].VALID = 0;
+          packet_block.STATE = 2;
+	  packet_block.SWAP = 1;
+        }
+	else 
+	{
+	  packet_block.STATE = 1;
+	  packet_block.SWAP = 0;
+	}
       }
-      //Send to Server
+      else
+      {
+	packet_block.STATE = 1;
+	packet_block.SWAP = 0;
+      }
     case(VALUE_RESP):
 	//If the packet from server: ignored 
 	//else RESPONSE ERROR
