@@ -53,17 +53,17 @@ header ipv4_h {
 }
 
 struct headers_t {
-	eth_h	eth;
-	fec_h	fec;
+  eth_h              eth;
+  fec_h              fec;
 
-  ipv4_h     ipv4;
+  ipv4_h             ipv4;
 
-  tlv_t                lldp_tlv_chassis_id;
-  tlv_t                lldp_tlv_port_id;
-  tlv_t                lldp_tlv_ttl_id;
-  prefix_tlv_t         lldp_prefix;
+  tlv_t              lldp_tlv_chassis_id;
+  tlv_t              lldp_tlv_port_id;
+  tlv_t              lldp_tlv_ttl_id;
+  prefix_tlv_t       lldp_prefix;
   activate_fec_tlv_t lldp_activate_fec;
-  tlv_t                lldp_tlv_end;
+  tlv_t              lldp_tlv_end;
 }
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
