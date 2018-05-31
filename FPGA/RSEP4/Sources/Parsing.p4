@@ -67,20 +67,48 @@ struct headers_t {
 }
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
-parser Parser(packet_in pkt, out headers_t hdr)
-{
-	state start
-	{
-		pkt.extract(hdr.eth);
-	        transition accept;
-        }
-}
-
-@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control Deparser(in headers_t hdr, packet_out pkt) {
 	apply
 	{
 		pkt.emit(hdr.eth);
 		pkt.emit(hdr.fec);
 	}
+}
+
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
+parser Parser(packet_in pkt, out headers_t hdr) {
+  state start {
+    pkt.extract(hdr.eth);
+    transition select(hdr.eth.type) {
+      ETHERTYPE_IPv4 : parse_ipv4;
+      ETHERTYPE_LLDP : parse_lldp;
+      default        : accept;
+    }
+  }
+
+  state parse_lldp {
+    pkt.extract(hdr.lldp_tlv_chassis_id);
+    pkt.extract(hdr.lldp_tlv_port_id);
+
+    pkt.extract(hdr.lldp_tlv_ttl_id); // NOTE when this and subsequent parsing code is enabled, we get this warning, it seems related to the parser: "*** Warning: Truncation of sized constant detected while generating C++ model: target width:5, value:48, width of value:6"
+    pkt.extract(hdr.lldp_prefix);
+
+    // FIXME ensure that hdr.lldp_prefix.tlv_type == 7w127
+    transition select(hdr.lldp_prefix.tlv_length) {
+      9w1 : parse_lldp_activate_fec;
+      default        : accept;
+    }
+  }
+
+  state parse_lldp_activate_fec {
+    pkt.extract(hdr.lldp_activate_fec);
+    // FIXME ensure that lldp_tlv_end has type=0 etc
+    pkt.extract(hdr.lldp_tlv_end);
+    transition accept;
+  }
+
+  state parse_ipv4 {
+    pkt.extract(hdr.ipv4);
+    transition accept;
+  }
 }
