@@ -70,7 +70,7 @@ parser Parser(packet_in pkt, out headers_t hdr)
 control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 {
 	bit<FEC_K_WIDTH>		k;
-	bit<FEC_K_WIDTH>		h;
+	bit<FEC_H_WIDTH>		h;
 
 	apply
 	{
