@@ -68,11 +68,12 @@ struct headers_t {
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control Deparser(in headers_t hdr, packet_out pkt) {
-	apply
-	{
-		pkt.emit(hdr.eth);
-		pkt.emit(hdr.fec);
-	}
+  apply
+  {
+    pkt.emit(hdr.eth);
+    pkt.emit(hdr.fec);
+    pkt.emit(hdr.ipv4);
+  }
 }
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)

@@ -117,14 +117,5 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
 }
 
 
-@Xilinx_MaxPacketRegion(1518*8)  // in bits
-control Deparser(in headers_t hdr, packet_out pkt) {
-    apply {
-        pkt.emit(hdr.eth);
-        pkt.emit(hdr.fec);
-        pkt.emit(hdr.ipv4);
-    }
-}
-
 XilinxSwitch(Parser(), Pipeline(), Deparser()) main;
 
