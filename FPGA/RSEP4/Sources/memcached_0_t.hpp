@@ -366,11 +366,14 @@ public:
 			{
 			  packet[i] =(unsigned char) packet_in[i];
 			}
-                     
+                packet_block.len = packet_in.size();
+		packet_block.dir = -1;     
 		mem_code();
-		packet_out.resize(UDP_OFFSET);
-		for (int i = UDP_OFFSET; i < packet_block.len; i++)
+		packet_out.resize(PAYLOAD_OFFSET_UDP);
+		for (int i = PAYLOAD_OFFSET_UDP; i < packet_block.len; i++)
 			packet_out.push_back(packet[i]);
+		hdr.ipv4.totallen =(_LV<16>) (packet_block.len - ETH_OFFSET);
+		hdr.udp.len =(_LV<16>)(packet_block.len - ETH_OFFSET - IPV4_OFFSET);
 		control.done = 1;
 		//inout and output tuples:
 		std::cout << "final inout and output tuples:" << std::endl;

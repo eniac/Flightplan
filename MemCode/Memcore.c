@@ -9,6 +9,9 @@ struct response{
 	int len;
 }RESPONSE[]={
 	{.line = STR_STORED, .len = strlen(STR_STORED)},
+	{.line = STR_VALUE, .len = strlen(STR_VALUE)},
+	{.line = STR_END, .len = strlen(STR_END)},
+	{.line = STR_DELETED, .len = strlen(STR_DELETED)},
 	{.line = STR_NOTFOUND, .len = strlen(STR_NOTFOUND)}
 };
 MEM packet_block;
@@ -18,6 +21,8 @@ void print_command(CMD_STAT command);
 void print_memory(long index);
 int rm_space(char in[MAX_PACKET_SIZE]);
 int lookup(char KEY[MAX_KEY_LEN], int KEY_LEN);
+void ADD_RESP_WORD(int PACKET_OFFSET, int RESP_INDEX);
+void ADD_NUM_FIELD(int PACKET_OFFSET, int NUM);
 
 static enum ascii_cmd ascii_to_command(char in[MAX_PACKET_SIZE], size_t length, FIELD* CMD)
 {
@@ -29,6 +34,8 @@ static enum ascii_cmd ascii_to_command(char in[MAX_PACKET_SIZE], size_t length, 
       { .cmd= "get", .len= 3, .cc= GET_CMD },
       { .cmd= "set", .len= 3, .cc= SET_CMD },
       { .cmd= "delete", .len= 6, .cc= DELETE_CMD },
+      { .cmd = "VALUE", .len= 5, .cc= VALUE_RESP },
+      { .cmd = "DELETED", .len = 7, .cc = DELETED_RESP},
       { .cmd= NULL, .len= 0, .cc= UNKNOWN_CMD }};  
   int x= 0;
   while (commands[x].len > 0) {
@@ -54,19 +61,16 @@ static enum ascii_cmd ascii_to_command(char in[MAX_PACKET_SIZE], size_t length, 
 
 static int parse_next(char in[MAX_PACKET_SIZE], FIELD* NEXT)
 {
-  int len= 0;
-  /* Strip leading whitespaces */
-  if ((*(in))!= ' ')  printf("No Space Found"); 
-  in++;
-  while (*(in + len) != '\0' && !isspace(*(in + len)) && (*(in+len)!='\r'))
-  {
-    ++len;
-  }
-
-  NEXT->f_start = in;
-  NEXT->f_len = len; 
-  if (!len) return 0;
-  return 1;
+	int len= 0;
+	/* Strip leading whitespaces */
+	if ((*(in))!= ' ')  printf("No Space Found"); 
+	in++;
+	while (*(in + len) != '\0' && !isspace(*(in + len)) && (*(in+len)!='\r'))
+		++len;
+	NEXT->f_start = in;
+	NEXT->f_len = len; 
+	if (!len) return 0;
+	return 1;
 }
 
 static int parse_data(char in[MAX_PACKET_SIZE], int len, FIELD* NEXT)
@@ -88,7 +92,6 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
   char temp[8];
   int mem_index = -1; 
   commands.CMD = ascii_to_command(s, length, &CMD);
-  printf("PASS1\n");
   switch (commands.CMD){
     case(SET_CMD):
 
@@ -96,6 +99,7 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       strncpy(commands.KEY,KEY.f_start, KEY.f_len);
       commands.KEY[KEY.f_len] = 0;
       parse_next(KEY.f_start+KEY.f_len, &FLAG);
+      mem_index = lookup(commands.KEY, KEY.f_len); 
       commands.FLAG = atoi(strncpy(temp,FLAG.f_start,FLAG.f_len));
   
       parse_next(FLAG.f_start+FLAG.f_len, &EXPERT);
@@ -108,39 +112,59 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
 
       parse_data(BYTE.f_start+BYTE.f_len,commands.BYTE, &DATA);
       strncpy(commands.DATA,DATA.f_start,commands.BYTE);
-      commands.DATA[commands.BYTE] = 0;
 
-      mem_index = lookup(commands.KEY, KEY.f_len);  
       Memory[mem_index].KEY_LEN = KEY.f_len;
       strncpy(Memory[mem_index].KEY,commands.KEY, Memory[mem_index].KEY_LEN);
       Memory[mem_index].DATA_LEN = commands.BYTE;
       strncpy(Memory[mem_index].DATA, commands.DATA, Memory[mem_index].DATA_LEN); 
       Memory[mem_index].VALID = 1;
       // backward packet 
-      packet_block.len = UDP_OFFSET + RESPONSE[_STORED].len;
-      for (int i = 0; i < RESPONSE[_STORED].len; i++)
-	packet_block.data[UDP_OFFSET+i] = (RESPONSE[_STORED].line)[i];      
-      
+      packet_block.dir = 0;
+      packet_block.len = PAYLOAD_OFFSET_UDP;
+      ADD_RESP_WORD(packet_block.len, _STORED);
       // forward packet
+      // packet_block.dir = 1;
       break;
 
     case(GET_CMD):      
       parse_next(CMD.f_start+CMD.f_len,&KEY);
       strncpy(commands.KEY,KEY.f_start, KEY.f_len);
       mem_index = lookup(commands.KEY,KEY.f_len);
-      printf("%d\n", mem_index);
       if (Memory[mem_index].VALID == 1)
       { 
-	printf("FOUND!\n");
-	packet_block.len = UDP_OFFSET + Memory[mem_index].DATA_LEN;
-        for (int i = 0; i < packet_block.len; i++)
-	  packet_block.data[UDP_OFFSET+i] = Memory[mem_index].DATA[i];
+	packet_block.dir = 0;
+	packet_block.len = PAYLOAD_OFFSET_UDP;
+	print_memory(mem_index);	
+	//ADD VALUE WORD
+	ADD_RESP_WORD(packet_block.len, _VALUE);
+	//ADD KEY
+	for (int i = 0; i < Memory[mem_index].KEY_LEN; i++)
+		packet_block.data[packet_block.len+i] = Memory[mem_index].KEY[i];
+	packet_block.len += Memory[mem_index].KEY_LEN;
+	packet_block.data[packet_block.len] = 32;
+	packet_block.len++;
+	
+	//ADD FLAG and BYTES
+	ADD_NUM_FIELD(packet_block.len, 0);
+	ADD_NUM_FIELD(packet_block.len, Memory[mem_index].DATA_LEN);
+	
+	// ADD DATA
+        for (int i = 0; i < Memory[mem_index].DATA_LEN; i++)
+	{
+		packet_block.data[packet_block.len+i] = Memory[mem_index].DATA[i];
+		printf("%c",Memory[mem_index].DATA[i]);
+	}
+	packet_block.len += Memory[mem_index].DATA_LEN;
+	packet_block.data[packet_block.len] = 13;
+	packet_block.len++;
+	packet_block.data[packet_block.len] = 10;
+	packet_block.len++;
+	
+	//ADD END WORD
+	ADD_RESP_WORD(packet_block.len, _END);
       }
       else {
-	packet_block.len = UDP_OFFSET + RESPONSE[_NOTFOUND].len;
-        for (int i = 0; i < RESPONSE[_NOTFOUND].len; i++)
-          packet_block.data[UDP_OFFSET+i] = (RESPONSE[_NOTFOUND].line)[i];      
-      
+	//packet_block.dir = 1;
       } 	
       break;
     case(DELETE_CMD):      
@@ -149,19 +173,29 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       mem_index = lookup(commands.KEY, KEY.f_len);
       if (Memory[mem_index].VALID == 1)
       {
-	
+	Memory[mem_index].VALID = 0;
       }
-      else 
-      {
-	Memory[mem_index].VALID == 0;
-      }
+      //Send to Server
+    case(VALUE_RESP):
+	//If the packet from server: ignored 
+	//else RESPONSE ERROR
       break;
+    case(DELETED_RESP):
+	//If the packet from server: ignored 
+	//else RESPONSE ERROR
+	break;
    }
 }
 void mem_code(){
 	printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside the mem_core<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
-  	int count = rm_space(packet_block.data+UDP_OFFSET); 
-	Mem_Parser(packet_block.data+UDP_OFFSET+count);	
+	//printf("The Original Input is:\n");
+	//for (int i = 0;  i< 1155; i++)
+	//	printf("%c", packet_block.data[i]);		
+  	int count = rm_space(packet_block.data+PAYLOAD_OFFSET_UDP); 
+	Mem_Parser(packet_block.data+PAYLOAD_OFFSET_UDP+count);
+	uint16_t IPV4_LEN = packet_block.len - ETH_OFFSET;
+	packet_block.data[16] =	0xff;
+	packet_block.data[17] = 0xaf;
 	printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside the mem_core<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
 }
 void print_command(CMD_STAT command){
@@ -191,9 +225,10 @@ void print_memory(long index)
 }
 
 int rm_space(char in[MAX_PACKET_SIZE])
-{
+{       
+	//There are some meaningless bytes before the real commands. 
         int counter = 0;
-	while ((unsigned int) (*in) != 103 && (unsigned int) (*in) != 115) 
+	while ((unsigned int) (*in) != 103 && (unsigned int) (*in) != 115 && (*in) !='V') 
   	{
     		in++;
 		counter++;
@@ -214,10 +249,44 @@ int rm_space(char in[MAX_PACKET_SIZE])
 }*/
 int lookup(char KEY[MAX_KEY_LEN], int KEY_LEN)
 {
-  unsigned long hash = 0;
-  for (int i =0; i<KEY_LEN; i++)
-    hash = MAGIC_NUM * hash + (int) KEY[i];
-  hash %= MAX_MEMORY_SIZE;
-  return (int) hash; 
+	unsigned long hash = 0;
+	for (int i =0; i<KEY_LEN; i++)
+		hash = MAGIC_NUM * hash + (int) KEY[i];
+	hash %= MAX_MEMORY_SIZE;
+	if (hash < 0) 
+	{
+		printf("ERROR IN HASH FUNCTION");
+		exit(0);
+ 	}
+	  return (int) hash; 
+}
+
+void ADD_RESP_WORD(int PACKET_OFFSET, int RESP_INDEX)
+{       
+	int offset = PACKET_OFFSET;
+	int index = RESP_INDEX;
+	packet_block.len = offset + RESPONSE[index].len;
+	for (int i = 0; i < RESPONSE[index].len; i++)
+		packet_block.data[offset+i] = (RESPONSE[index].line)[i]; 
+	  
+}
+
+void ADD_NUM_FIELD(int PACKET_OFFSET, int NUM)
+{	
+	int offset = PACKET_OFFSET;
+	char temp[10];
+	int len = 0;
+	temp[len] = 32; // ADD Space
+	len++;
+	do
+	{
+		temp[len] =(char) (NUM % 10 + (int) '0');
+		NUM /= 10;
+		len++;
+	}while(NUM>0); 
+	packet_block.len = offset + len;
+	for (int i = 0; i < len; i++)
+		packet_block.data[packet_block.len-i-1] = temp[i];
+	
 }
 
