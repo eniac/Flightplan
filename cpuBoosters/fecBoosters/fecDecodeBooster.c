@@ -7,8 +7,9 @@
 #include "fecBooster.h"
 
 // This is true when the buffer doesn't contain any packets for decoding.
-bool nothing_to_decode = true;
-int lastBlockId = 0;
+static bool nothing_to_decode = true;
+static int lastBlockId = 0;
+static int lastPacketIdx = -1;
 
 inline void reset_decoder (const int block_id) {
 	nothing_to_decode = true;
@@ -92,8 +93,7 @@ void my_packet_handler(
 	       fecHeader.index, header->len);
 #endif // WHARF_DEBUGGING
 
-	if (fecHeader.block_id != lastBlockId ||
-			pkt_already_inserted(fecHeader.block_id, fecHeader.index)) {
+	if (fecHeader.block_id != lastBlockId || fecHeader.index <= lastPacketIdx) {
 		decode_and_forward(lastBlockId);
 		lastBlockId = fecHeader.block_id;
 #if WHARF_DECODE_TIMEOUT != 0
@@ -101,6 +101,7 @@ void my_packet_handler(
 		signal(SIGALRM, sigalrm_handler);
 #endif // WHARF_DECODE_TIMEOUT != 0
 	}
+	lastPacketIdx = fecHeader.index;
 
 	int size = header->len;
 	const u_char *stripped = wharf_strip_frame(packet, &size);
