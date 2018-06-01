@@ -11,7 +11,7 @@ int lastBlockId = 0;
 
 inline void reset_decoder (const int block_id) {
 	nothing_to_decode = true;
-	zeroout_block_in_pkt_buffer(block_id);
+	mark_pkts_absent(block_id);
 }
 
 // Try to decode new packets, and forward them on.
@@ -23,7 +23,7 @@ void decode_and_forward(const int block_id) {
 		return;
 	}
 
-	call_fec_blk_put(block_id);
+	populate_fec_blk_data_and_parity(block_id);
 
 	// Decode inserts the packets directly into pkt_buffer
 	decode_block(block_id);
@@ -36,11 +36,11 @@ void decode_and_forward(const int block_id) {
 			num_recovered_packets += 1;
 
 			char* packetToInject = pkt_buffer[block_id][i] + sizeof(FRAME_SIZE_TYPE);
-			size_t outPktLen = *(FRAME_SIZE_TYPE*)(pkt_buffer[block_id][i]);
+			FRAME_SIZE_TYPE *size_p = (FRAME_SIZE_TYPE*)pkt_buffer[block_id][i];
 			// Recovered packet may have a length of 0, if it was filler
 			// In this case, no need to forward
-			if (outPktLen > 0) {
-				forward_frame(packetToInject, outPktLen);
+			if (*size_p > 0) {
+				forward_frame(packetToInject, *size_p);
 			}
 		}
 	}
@@ -77,7 +77,7 @@ void my_packet_handler(
     const u_char *packet
 ) {
 
-	enum traffic_class tclass = one;
+	enum traffic_class tclass = TCLASS_ONE;
 	struct ether_header *eth_header = (struct ether_header *)packet;
 	if (WHARF_ETHERTYPE != ntohs(eth_header->ether_type)) {
 		fprintf(stderr, "Received untagged frame -- ignoring\n");
