@@ -24,7 +24,7 @@
  * Amount of time before the decoder attempts to decode packets if no activity
  * WHARF_DECODE_TIMEOUT==0 means we're not using the timeout
  */
-#define WHARF_DECODE_TIMEOUT 2
+#define WHARF_DECODE_TIMEOUT 1
 
 /**
  * Amount of time before the encoder forwards parity packets if no activity.
@@ -32,7 +32,7 @@
  * a frame could be decoded before it's finished being sent.
  * WHARF_ENCODE_TIMEOUT==0 disables the timeout
  */
-#define WHARF_ENCODE_TIMEOUT 1
+#define WHARF_ENCODE_TIMEOUT 0
 
 /** Marks in pkt_buffer_filled whether the packet has been received */
 enum pkt_buffer_status {
