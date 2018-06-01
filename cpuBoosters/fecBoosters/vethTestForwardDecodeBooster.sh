@@ -28,8 +28,8 @@ mkdir $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
 chown $real_user:$real_user $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
 
 
-# bring up veth pairs. 
-# frontVeth1 = network side of cable. 
+# bring up veth pairs.
+# frontVeth1 = network side of cable.
 # backVeth1 = booster side of cable.
 ip link add frontVeth1 type veth peer name backVeth1
 sysctl net.ipv6.conf.frontVeth1.disable_ipv6=1

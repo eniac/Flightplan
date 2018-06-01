@@ -26,8 +26,8 @@ mkdir $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
 chown $real_user:$real_user $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
 
 
-# bring up veth pairs. 
-# frontVeth1 = network side of cable. 
+# bring up veth pairs.
+# frontVeth1 = network side of cable.
 # backVeth1 = booster side of cable.
 ip link add frontVeth1 type veth peer name backVeth1
 sysctl net.ipv6.conf.frontVeth1.disable_ipv6=1
@@ -49,7 +49,7 @@ MAX_ID=0
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $DECODER_NAME for worker $WORKER_ID"
-	./$DECODER_NAME -i backVeth1 -o frontVeth2 -w $WORKER_ID -t $NUM_WORKERS & 
+	./$DECODER_NAME -i backVeth1 -o frontVeth2 -w $WORKER_ID -t $NUM_WORKERS &
 done
 
 sleep 1
