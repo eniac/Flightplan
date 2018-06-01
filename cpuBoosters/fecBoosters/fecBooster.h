@@ -43,9 +43,10 @@ enum pkt_buffer_status {
 
 /** Traffic class that determines parity/data ratio */
 enum traffic_class {
-    TCLASS_ONE=1,
-    TCLASS_TWO=2,
-    TCLASS_THREE=3
+    TCLASS_ONE=0x00,
+    TCLASS_TWO=0x01,
+    TCLASS_THREE=0x02,
+    TCLASS_NULL=0xFF
 };
 
 /** Inserts a packet, tagged with its size, into the buffer */
