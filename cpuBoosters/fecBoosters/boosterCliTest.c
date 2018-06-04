@@ -10,6 +10,7 @@ int main(int argc, char **argv) {
             exit(-1);
         }
     } else if (argc != 1) {
+        printf("Usage: %s [rules.csv]\n", argv[0]);
         printf("Bad # of arguments (%d). Exiting\n", argc-1);
         exit(-1);
     }
