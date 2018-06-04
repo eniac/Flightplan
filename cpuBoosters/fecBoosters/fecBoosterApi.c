@@ -12,10 +12,14 @@ struct rule_entry {
 
 #define MAX_RULES 16
 
-#define LOG_ERR(s, ...) fprintf(stderr, s "\n", ##__VA_ARGS__)
+#define LOG(s, ...) fprintf(stderr, s "\n", ##__VA_ARGS__)
 
-#define LOG_RULE(s, r, ...) LOG_ERR(s "\tport: %d  tcp: %d  cls: %d, active: %d", \
-                                    ##__VA_ARGS__, r.port, r.is_tcp, r.tclass, r.active)
+#define LOG_ERR(s, ...) LOG("ERROR: " s, ##__VA_ARGS__)
+
+#define LOG_INFO(s, ...) LOG(s, ##__VA_ARGS__)
+
+#define LOG_RULE(s, r, ...) LOG_INFO(s "\tport: %5d  tcp: %d  cls: %d, active: %d", \
+                                     ##__VA_ARGS__, r.port, r.is_tcp, r.tclass, r.active)
 
 static struct rule_entry rules[MAX_RULES];
 
@@ -66,7 +70,7 @@ int wharf_delete_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
 
 enum traffic_class wharf_query_rule(uint16_t port, bool is_tcp) {
     if (!wharf_enabled) {
-        LOG_ERR("Wharf disabled");
+        LOG_INFO("Wharf disabled");
         return TCLASS_NULL;
     }
     struct rule_entry query = {port, is_tcp, TCLASS_NULL};
@@ -91,16 +95,16 @@ void wharf_list_rules() {
         LOG_ERR("Wharf disabled");
         return;
     }
-    LOG_ERR("Listing active rules:");
+    LOG_INFO("Listing active rules:");
     int n_active = 0;
     for (int i=0; i < MAX_RULES; i++) {
         if (rules[i].active) {
             n_active++;
-            LOG_RULE("\t%d: %d) ", rules[i], n_active, i);
+            LOG_RULE("\t%d: %d)", rules[i], n_active, i);
         }
     }
     if (n_active == 0) {
-        LOG_ERR("\tNO ACTIVE RULES");
+        LOG_INFO("\tNO ACTIVE RULES");
     }
 }
 
