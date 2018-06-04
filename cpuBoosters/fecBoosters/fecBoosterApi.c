@@ -108,8 +108,8 @@ void wharf_list_rules() {
     }
 }
 
-int parse_cmd_opts(enum traffic_class *tclass, uint16_t *port, bool *is_tcp) {
-    char *portc = strtok(NULL, " ");
+static int parse_cmd_opts(char *str, enum traffic_class *tclass, uint16_t *port, bool *is_tcp) {
+    char *portc = strtok(str, " ,");
     if (portc == NULL) {
         LOG_ERR("No port provided");
         return -1;
@@ -119,7 +119,7 @@ int parse_cmd_opts(enum traffic_class *tclass, uint16_t *port, bool *is_tcp) {
         LOG_ERR("Invalid port provided: %s", portc);
         return -1;
     }
-    char *is_tcpc = strtok(NULL, " ");
+    char *is_tcpc = strtok(NULL, " ,");
     if (is_tcpc == NULL) {
         LOG_ERR("No protocol provided");
         return -1;
@@ -131,7 +131,7 @@ int parse_cmd_opts(enum traffic_class *tclass, uint16_t *port, bool *is_tcp) {
     }
     *is_tcp = is_tcpi;
     if (tclass != NULL) {
-        char *tclassc = strtok(NULL, " ");
+        char *tclassc = strtok(NULL, " ,\n");
         if (tclassc == NULL) {
             LOG_ERR("No traffic class provided");
             return -1;
@@ -151,6 +151,35 @@ int parse_cmd_opts(enum traffic_class *tclass, uint16_t *port, bool *is_tcp) {
     return 0;
 }
 
+int wharf_load_from_file(char *filename) {
+    FILE *f = fopen(filename, "r");
+    if (f == NULL) {
+        LOG_ERR("Could not load from file: %s", filename);
+        return -1;
+    }
+    enum traffic_class tclass;
+    uint16_t port;
+    bool is_tcp;
+
+    char line[1024];
+    int rtn = 0;
+    while ( fgets(line, 1024, f) != NULL ) {
+        if (parse_cmd_opts(line, &tclass, &port, &is_tcp) != 0) {
+            LOG_ERR("Error parsing file: %s", filename);
+            rtn = -1;
+            break;
+        }
+        if (wharf_set_rule(tclass, port, is_tcp) != 0) {
+            LOG_ERR("Error setting rule from line: %s", line);
+            rtn = -1;
+            break;
+        }
+    }
+    fclose(f);
+    wharf_list_rules();
+    return rtn;
+}
+
 int wharf_str_call(char *str) {
     char *cmd = strtok(str, " ");
 
@@ -158,13 +187,15 @@ int wharf_str_call(char *str) {
     uint16_t port;
     bool is_tcp;
     if (strcasecmp(cmd, "SET") == 0) {
-        int rtn = parse_cmd_opts(&tclass, &port, &is_tcp);
+        char *args = strtok(NULL, "");
+        int rtn = parse_cmd_opts(args, &tclass, &port, &is_tcp);
         if (rtn < 0) {
             return -1;
         }
         return wharf_set_rule(tclass, port, is_tcp);
     } else if (strcasecmp(cmd, "DEL") == 0) {
-        int rtn = parse_cmd_opts(&tclass, &port, &is_tcp);
+        char *args = strtok(NULL, "");
+        int rtn = parse_cmd_opts(args, &tclass, &port, &is_tcp);
         if (rtn < 0) {
             return -1;
         }
@@ -173,7 +204,8 @@ int wharf_str_call(char *str) {
         wharf_list_rules();
         return 0;
     } else if (strcasecmp(cmd, "QUERY") == 0) {
-        int rtn = parse_cmd_opts(NULL, &port, &is_tcp);
+        char *args = strtok(NULL, "");
+        int rtn = parse_cmd_opts(args, NULL, &port, &is_tcp);
         if (rtn < 0) {
             return -1;
         }
@@ -189,6 +221,7 @@ int wharf_str_call(char *str) {
         }
         int enablei = atoi(enablec);;
         if (enablei != 0 && enablei != 1) {
+
             LOG_ERR("Invalid value (1/0) given for ENABLE: %s", enablec);
             return -1;
         }
