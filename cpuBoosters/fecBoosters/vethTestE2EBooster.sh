@@ -62,19 +62,19 @@ MAX_ID=0
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $ENCODER_NAME for worker $WORKER_ID"
-	./$ENCODER_NAME -i backVeth1 -o frontVeth2 -w $WORKER_ID -t $NUM_WORKERS &
+	./$ENCODER_NAME -i backVeth1 -o frontVeth2 -r tag_all.csv &
 done
 
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $FORWARD_NAME for worker $WORKER_ID"
-	./$FORWARD_NAME -i backVeth2 -o frontVeth3 -w $WORKER_ID -t $NUM_WORKERS &
+	./$FORWARD_NAME -i backVeth2 -o frontVeth3 -r tag_all.csv &
 done
 
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $DECODER_NAME for worker $WORKER_ID"
-	./$DECODER_NAME -i backVeth3 -o frontVeth4 -w $WORKER_ID -t $NUM_WORKERS &
+	./$DECODER_NAME -i backVeth3 -o frontVeth4 -r tag_all.csv &
 done
 
 
