@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include "fecBooster.h"
 #include "wharf_pcap.h"
+#include "fecBoosterApi.h"
 
 // NOTE we only work with a single block because of how we interface with the rse_code function.
 #define FB_INDEX 0
@@ -426,7 +427,7 @@ int main (int argc, char** argv) {
 	/* initialize fec codewords */
 	if ((rc = rse_init()) != 0 ) exit(rc);
 
-	while ((opt = getopt(argc, argv, "i:o:w:t:")) != -1)
+	while ((opt = getopt(argc, argv, "i:o:w:t:r:")) != -1)
 	{
 		switch (opt)
 		{
@@ -443,6 +444,13 @@ int main (int argc, char** argv) {
 			break;
 		case 't':
 			fprintf(stderr, "Warning: Worker Count is unused\n");
+			break;
+		case 'r':
+			printf("Loading rules from file: %s\n", optarg);
+			wharf_set_enabled(1);
+			if (wharf_load_from_file(optarg) != 0) {
+				abort();
+			}
 			break;
 		default:
 			printf("\nNot yet defined opt = %d\n", opt);
