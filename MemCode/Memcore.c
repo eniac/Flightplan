@@ -92,6 +92,7 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
   char temp[8];
   int mem_index = -1; 
   commands.CMD = ascii_to_command(s, length, &CMD);
+  printf("\n\n\nTHE COMMAND is %d \n\n",commands.CMD);
   switch (commands.CMD){
     case(SET_CMD):
       if (packet_block.STATE == 0)
@@ -133,6 +134,7 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       parse_next(CMD.f_start+CMD.f_len,&KEY);
       strncpy(commands.KEY,KEY.f_start, KEY.f_len);
       mem_index = lookup(commands.KEY,KEY.f_len);
+      printf("get index: %d",mem_index);
       if (Memory[mem_index].VALID == 1)
       { 
 	packet_block.STATE = 1;
@@ -208,14 +210,10 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
 }
 void mem_code(){
 	printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside the mem_core<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
-	//printf("The Original Input is:\n");
-	//for (int i = 0;  i< 1155; i++)
-	//	printf("%c", packet_block.data[i]);		
-  	int count = rm_space(packet_block.data+PAYLOAD_OFFSET_UDP); 
-	Mem_Parser(packet_block.data+PAYLOAD_OFFSET_UDP+count);
-	uint16_t IPV4_LEN = packet_block.len - ETH_OFFSET;
-	packet_block.data[16] =	0xff;
-	packet_block.data[17] = 0xaf;
+	printf("The Original Input is:\n");
+	for (int i =PAYLOAD_OFFSET_UDP;  i< 1155; i++)
+		printf("%c", packet_block.data[i]);		
+	Mem_Parser(packet_block.data+PAYLOAD_OFFSET_UDP);
 	printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside the mem_core<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
 }
 void print_command(CMD_STAT command){

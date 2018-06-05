@@ -364,17 +364,19 @@ public:
 		std::cout <<"Enter USER ENGINE FUNCTION" << std::endl;
 		
 		//write input
-		for (int i = 0; i< packet_in.size(); i++)
+		for (int i = 0; i< MAX_DATA_SIZE; i++)
 			{
+			 if (i < packet_in.size())
 			  packet[i] =(unsigned char) packet_in[i];
+			 else packet[i] = 0;
 			}
                 packet_block.len = packet_in.size();
 	
 		mem_code();
 		
 		//retrieve output 
-		packet_out.resize(PAYLOAD_OFFSET_UDP);
-		for (int i = PAYLOAD_OFFSET_UDP; i < packet_block.len; i++)
+		packet_out.resize(PAYLOAD_OFFSET_UDP - MEMCACHED_UDP_HEADER);
+		for (int i = PAYLOAD_OFFSET_UDP - MEMCACHED_UDP_HEADER; i < packet_block.len; i++)
 			packet_out.push_back(packet[i]);
 		
 		//change output packet header length
@@ -411,9 +413,11 @@ public:
 		std::cout << packet_out;
 		std::cout << "Exiting engine " << _name << std::endl;
 		std::cout << "===================================================================" << std::endl;
+		std::cout << "STATE :" << packet_block.STATE << std::endl;
 		if (packet_block.STATE == 1) { packet_block.STATE = 0; return false; }
 		if (packet_block.STATE == 2) return true;
 		printf("STATE ERROR!");
+		printf("%d",packet_block.STATE);
 		exit(0);
 		return false;
 	}

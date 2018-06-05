@@ -3,11 +3,13 @@
 #define MAX_DATA_SIZE 2000 
 #define MAX_PACKET_SIZE REQUEST_LINE_SIZE+MAX_DATA_SIZE
 #define MAX_KEY_LEN 256
-#define PAYLOAD_OFFSET_UDP 42 //Payload location under UDP 
+#define PAYLOAD_OFFSET_UDP 50 //Payload location under UDP include 8 bytes memcached header
+#define MEMCACHED_UDP_HEADER 8 
 #define ETH_OFFSET 14
 #define IPV4_OFFSET 20
 #define MAX_MEMORY_SIZE 32767
-
+#define IPV4_LEN_FIELD 16
+#define UDP_LEN_FIELD 38
 //Standard Response String 
 #define _STORED 0
 #define _VALUE 1 
