@@ -31,3 +31,12 @@ Dropping + decoding accepts the same arguments as decode-only, but drops some po
 Sample arguments are:
 
 `sudo ./vethTestDecodeBooster.sh ../pcaps/encoded_inputs.pcap ../pcaps/decoded_inputs.pcap`
+
+* for checking packet tagging:
+`sudo bash vethTestTableBooster.sh ../pcaps/udp_varied_ports.pcap tcp_udp_test_rules.csv` and
+`sudo bash vethTestTableBooster.sh ../pcaps/tcp_varied_ports.pcap tcp_udp_test_rules.csv`
+
+Should check for lines `Untagged packet should have had class _` or `Traffic classes do not match`.
+
+NOTE: Will only perform check if CHECK_TABLE_ON_DECODE is defined in fecDeodeBooster.c
+
