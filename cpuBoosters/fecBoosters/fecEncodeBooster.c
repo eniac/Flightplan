@@ -5,6 +5,7 @@
 #include <signal.h>
 
 #include "fecBooster.h"
+#include "fecBoosterApi.h"
 
 static int lastBlockId = 0;
 
@@ -92,7 +93,14 @@ void my_packet_handler(
 	const u_char *packet
 ) {
 	u_char *new_packet = NULL;
-	enum traffic_class tclass = TCLASS_ONE; // FIXME const -- use traffic classification
+
+	enum traffic_class tclass = wharf_query_packet(packet, header->len);
+
+	// If no rule mapping this packet to traffic class, simply forward
+	if (tclass == TCLASS_NULL) {
+		forward_frame(packet, header->len);
+		return;
+	}
 
 	int tagged_size = wharf_tag_frame(tclass, packet, header->len, &new_packet);
 
