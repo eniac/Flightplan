@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "fecBooster.h"
+#include "fecBoosterApi.h"
 
 // This is true when the buffer doesn't contain any packets for decoding.
 static bool nothing_to_decode = true;
@@ -67,6 +68,8 @@ void sigalrm_handler(int signal) {
 }
 #endif // WHARF_DECODE_TIMEOUT != 0
 
+#define CHECK_TABLE_ON_DECODE
+
 /**
  * @brief      packet handler function for pcap
  *
@@ -80,8 +83,17 @@ void my_packet_handler(
     const u_char *packet
 ) {
 	struct ether_header *eth_header = (struct ether_header *)packet;
+	// If not a wharf packet, just forward
 	if (WHARF_ETHERTYPE != ntohs(eth_header->ether_type)) {
-		fprintf(stderr, "Received untagged frame -- ignoring\n");
+#ifdef CHECK_TABLE_ON_DECODE
+		enum traffic_class tclass = wharf_query_packet(packet, header->len);
+		if (tclass != TCLASS_NULL) {
+			fprintf(stderr, "Untagged packet should have had class %d\n", tclass);
+		} else {
+			fprintf(stderr, "Untagged packet properly untagged\n");
+		}
+#endif
+		forward_frame(packet, header->len);
 		return;
 	}
 
@@ -106,10 +118,19 @@ void my_packet_handler(
 	int size = header->len;
 	const u_char *stripped = wharf_strip_frame(packet, &size);
 
+
 	// Forward data packets immediately
 	if (fecHeader.index < NUM_DATA_PACKETS) {
 		// If there is no data outside of the wharf frame, no need to forward (packet was filler)
 		if (header->len > WHARF_ORIG_FRAME_OFFSET) {
+#ifdef CHECK_TABLE_ON_DECODE
+			enum traffic_class tclass = wharf_query_packet(stripped, size);
+			if (tclass == (enum traffic_class) fecHeader.class_id) {
+				fprintf(stderr, "Traffic classes match: %d\n", tclass);
+			} else {
+				fprintf(stderr, "Traffic classes do not match! %d and %d\n", tclass, fecHeader.class_id);
+			}
+#endif
 			forward_frame(stripped, size);
 		}
 	}
