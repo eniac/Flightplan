@@ -1,5 +1,6 @@
 #include "fecBooster.h"
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 /** Static flag for checking if wharf has been enabled */
 static bool wharf_enabled;
@@ -252,4 +253,87 @@ int wharf_str_call(char *str) {
         LOG_ERR("Unknown command received: %s", str);
         return -1;
     }
+}
+
+/** IP header starts right after ethernet header. First 4 bits are IP version */
+#define IPV4_OFFSET sizeof(struct ether_header)
+
+/** Checks that the first four bits are 0x04, ignoring the second four bits */
+#define IS_IPV4(bits) (bits & (0x4)) && !(bits & !(0x4F))
+
+/** Checks if a packet is ipv4 */
+static bool is_ipv4(const u_char *packet, uint32_t pkt_len) {
+    if (pkt_len < IPV4_OFFSET) {
+        return false;
+    }
+    return IS_IPV4(packet[IPV4_OFFSET]);
+}
+
+/** Protocol starts 9 bytes into IP header */
+#define PROTOCOL_OFFSET sizeof(struct ether_header) + 9
+#define TCP_PROTOCOL 0x06
+#define UDP_PROTOCOL 0x11
+
+static bool is_tcp(const u_char *packet, uint32_t pkt_len) {
+    if (pkt_len < PROTOCOL_OFFSET) {
+        return false;
+    }
+    return packet[PROTOCOL_OFFSET] == TCP_PROTOCOL;
+}
+
+static bool is_udp(const u_char *packet, uint32_t pkt_len) {
+    if (pkt_len < PROTOCOL_OFFSET) {
+        return false;
+    }
+    return packet[PROTOCOL_OFFSET] == UDP_PROTOCOL;
+}
+
+/** In both TCP and UDP, port starts 2 bits into header.
+ * This assumes that the IP header is 20 bytes long (which may not always be the case)
+ */
+#define PORT_OFFSET sizeof(struct ether_header) + 22
+
+static uint16_t get_port(const u_char *packet, uint32_t pkt_len) {
+    if (pkt_len < PORT_OFFSET) {
+        return 0;
+    }
+    uint16_t *port = (uint16_t*)(packet + PORT_OFFSET);
+    return ntohs(*port);
+}
+
+void describe_packet(const u_char *packet, uint32_t pkt_len) {
+    if (is_ipv4(packet, pkt_len)) {
+        LOG_INFO("PACKET IS IPV4");
+    } else {
+        LOG_INFO("PACKET IS NOT IPV4");
+        return;
+    }
+    if (is_tcp(packet, pkt_len)) {
+        LOG_INFO("PACKET IS TCP");
+    } else if (is_udp(packet, pkt_len)) {
+        LOG_INFO("PACKET IS UDP");
+    } else {
+        LOG_INFO("PACKET FORMAT UNKNOWN");
+        return;
+    }
+
+    LOG_INFO("PORT IS %d", (int)get_port(packet, pkt_len));
+}
+
+enum traffic_class wharf_query_packet(const u_char  *packet, uint32_t pkt_len) {
+    if (!is_ipv4(packet, pkt_len)) {
+        return TCLASS_NULL;
+    }
+    int protocol;
+    if (is_tcp(packet, pkt_len)) {
+        protocol = 1;
+    } else if (is_udp(packet, pkt_len)) {
+        protocol = 0;
+    } else {
+        return TCLASS_NULL;
+    }
+
+    uint16_t port = get_port(packet, pkt_len);
+
+    return wharf_query_rule(port, protocol);
 }

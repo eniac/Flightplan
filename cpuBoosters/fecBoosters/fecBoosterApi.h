@@ -12,4 +12,7 @@ void wharf_list_rules();
 int wharf_load_from_file(char *filename);
 int wharf_str_call(char *str);
 
+void describe_packet(const u_char *packet, uint32_t pkt_len);
+enum traffic_class wharf_query_packet(const u_char *packet, uint32_t pkt_len);
+
 #endif
