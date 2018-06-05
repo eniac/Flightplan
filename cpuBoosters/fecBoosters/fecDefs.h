@@ -3,6 +3,8 @@
  * FEC header definition.
  *
  */
+#ifndef FEC_DEFS_H_
+#define FEC_DEFS_H_
 
 #define FRAME_SIZE_TYPE uint16_t
 
@@ -16,3 +18,5 @@ struct fec_header {
 #define WHARF_ETHERTYPE 0x081C
 #define MAX_BLOCK 6
 #define FRAME_SIZE_CUTOFF 1400
+
+#endif
