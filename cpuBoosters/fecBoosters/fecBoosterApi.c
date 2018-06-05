@@ -1,8 +1,10 @@
 #include "fecBooster.h"
 #include <stdlib.h>
 
+/** Static flag for checking if wharf has been enabled */
 static bool wharf_enabled;
 
+/** A single entry in the table of rules matching ports/protocls to traffic classes */
 struct rule_entry {
     uint16_t port;
     bool is_tcp;
@@ -10,6 +12,7 @@ struct rule_entry {
     bool active;
 };
 
+/** The maximum number of rules allowed in the table */
 #define MAX_RULES 16
 
 #define LOG(s, ...) fprintf(stderr, s "\n", ##__VA_ARGS__)
@@ -18,24 +21,30 @@ struct rule_entry {
 
 #define LOG_INFO(s, ...) LOG(s, ##__VA_ARGS__)
 
+/** Accepts a rule as the first argument after the format string */
 #define LOG_RULE(s, r, ...) LOG_INFO(s "\tport: %5d  tcp: %d  cls: %d, active: %d", \
                                      ##__VA_ARGS__, r.port, r.is_tcp, r.tclass, r.active)
 
+/** The table of rules */
 static struct rule_entry rules[MAX_RULES];
 
+/** Checks if the port and protocl of two rules match */
 static bool rules_equal(struct rule_entry *r1, struct rule_entry *r2) {
     return r1->port == r2->port &&
            r1->is_tcp == r2->is_tcp;
 }
 
+/** Enables wharf if is_enabled is true */
 void wharf_set_enabled(bool is_enabled) {
     wharf_enabled = is_enabled;
 }
 
+/** Returns whether wharf is enabled */
 bool wharf_get_enabled(void) {
     return wharf_enabled;
 }
 
+/** Sets the port and protocol to point to the traffic class in the rules table */
 int wharf_set_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
     struct rule_entry new_rule = { port, is_tcp, tclass, true };
     for (int i=0; i < MAX_RULES; i++) {
@@ -55,6 +64,7 @@ int wharf_set_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
     return -1;
 }
 
+/** Removes the matching rule from the rule table */
 int wharf_delete_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
     struct rule_entry to_del = {port, is_tcp, tclass, false };
     for (int i=0; i < MAX_RULES; i++) {
@@ -68,6 +78,10 @@ int wharf_delete_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
     return -1;
 }
 
+/**
+ * Checks if there is a rule in the table that matches the port + protocol.
+ * If not, returns TCLASS_NULL
+ */
 enum traffic_class wharf_query_rule(uint16_t port, bool is_tcp) {
     if (!wharf_enabled) {
         LOG_INFO("Wharf disabled");
@@ -89,7 +103,7 @@ enum traffic_class wharf_query_rule(uint16_t port, bool is_tcp) {
     return TCLASS_NULL;
 }
 
-
+/** Prints current rule table to stderr */
 void wharf_list_rules() {
     if (!wharf_enabled) {
         LOG_ERR("Wharf disabled");
@@ -108,6 +122,7 @@ void wharf_list_rules() {
     }
 }
 
+/** Parses a string to retrieve the port, protocol, and class (in that order) */
 static int parse_cmd_opts(char *str, enum traffic_class *tclass, uint16_t *port, bool *is_tcp) {
     char *portc = strtok(str, " ,");
     if (portc == NULL) {
@@ -151,6 +166,9 @@ static int parse_cmd_opts(char *str, enum traffic_class *tclass, uint16_t *port,
     return 0;
 }
 
+/** Loads rules from a csv file.
+ * Format: port, protocol, class
+ */
 int wharf_load_from_file(char *filename) {
     FILE *f = fopen(filename, "r");
     if (f == NULL) {
@@ -180,6 +198,9 @@ int wharf_load_from_file(char *filename) {
     return rtn;
 }
 
+/**
+ * CLI interface for rules. One of SET, DEL, LIST, QUERY, ENABLE
+ */
 int wharf_str_call(char *str) {
     char *cmd = strtok(str, " ");
 
