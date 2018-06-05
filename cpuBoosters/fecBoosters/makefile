@@ -11,17 +11,17 @@ OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
 all: fecBooster.o fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
 
-fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h
+fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h fecBoosterApi.c
 	g++ $(FLAGS) -c fecBooster.c -lpcap
 
 fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ fecEncodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o -lpcap
+	g++ $(FLAGS) -o $@ fecEncodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
 
 fecDecodeBooster: fecDecodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ fecDecodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o -lpcap
+	g++ $(FLAGS) -o $@ fecDecodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
 
 forwardingNonbooster: forwardingNonbooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ forwardingNonbooster.c $(COMPILED_RSE)/rse.o fecBooster.o -lpcap
+	g++ $(FLAGS) -o $@ forwardingNonbooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
 
 boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
 	g++ $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c
