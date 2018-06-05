@@ -5,6 +5,8 @@
 /** Static flag for checking if wharf has been enabled */
 static bool wharf_enabled;
 
+static enum traffic_class default_tclass = TCLASS_NULL;
+
 /** A single entry in the table of rules matching ports/protocls to traffic classes */
 struct rule_entry {
     uint16_t port;
@@ -26,6 +28,19 @@ struct rule_entry {
 #define LOG_RULE(s, r, ...) LOG_INFO(s "\tport: %5d  tcp: %d  cls: %d, active: %d", \
                                      ##__VA_ARGS__, r.port, r.is_tcp, r.tclass, r.active)
 
+bool valid_tclass(int tclassi) {
+    switch (tclassi) {
+        case TCLASS_ONE:
+        case TCLASS_TWO:
+        case TCLASS_THREE:
+        case TCLASS_NULL:
+            return true;
+        default:
+            LOG_ERR("Unknown traffic class: %d", tclassi);
+            return false;
+    }
+}
+
 /** The table of rules */
 static struct rule_entry rules[MAX_RULES];
 
@@ -43,6 +58,14 @@ void wharf_set_enabled(bool is_enabled) {
 /** Returns whether wharf is enabled */
 bool wharf_get_enabled(void) {
     return wharf_enabled;
+}
+
+int wharf_set_default_class(enum traffic_class tclass) {
+    if (!valid_tclass(tclass)) {
+        return -1;
+    }
+    default_tclass = tclass;
+    return 0;
 }
 
 /** Sets the port and protocol to point to the traffic class in the rules table */
@@ -81,7 +104,7 @@ int wharf_delete_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
 
 /**
  * Checks if there is a rule in the table that matches the port + protocol.
- * If not, returns TCLASS_NULL
+ * If not, returns default_tclass
  */
 enum traffic_class wharf_query_rule(uint16_t port, bool is_tcp) {
     if (!wharf_enabled) {
@@ -96,12 +119,12 @@ enum traffic_class wharf_query_rule(uint16_t port, bool is_tcp) {
                 return rules[i].tclass;
             } else {
                 LOG_RULE("Rule %d disabled: ", rules[i], i);
-                return TCLASS_NULL;
+                return default_tclass;
             }
         }
     }
     LOG_RULE("Rule has no matching entry: ", query);
-    return TCLASS_NULL;
+    return default_tclass;
 }
 
 /** Prints current rule table to stderr */
@@ -110,6 +133,7 @@ void wharf_list_rules() {
         LOG_ERR("Wharf disabled");
         return;
     }
+    LOG_INFO("Default traffic class: %d", default_tclass);
     LOG_INFO("Listing active rules:");
     int n_active = 0;
     for (int i=0; i < MAX_RULES; i++) {
@@ -153,50 +177,12 @@ static int parse_cmd_opts(char *str, enum traffic_class *tclass, uint16_t *port,
             return -1;
         }
         int tclassi = atoi(tclassc);
-        switch (tclassi) {
-            case TCLASS_ONE:
-            case TCLASS_TWO:
-            case TCLASS_THREE:
-                break;
-            default:
-                LOG_ERR("Unknown traffic class: %s", tclassc);
-                return -1;
+        if (!valid_tclass(tclassi)) {
+            return -1;
         }
         *tclass = (enum traffic_class) tclassi;
     }
     return 0;
-}
-
-/** Loads rules from a csv file.
- * Format: port, protocol, class
- */
-int wharf_load_from_file(char *filename) {
-    FILE *f = fopen(filename, "r");
-    if (f == NULL) {
-        LOG_ERR("Could not load from file: %s", filename);
-        return -1;
-    }
-    enum traffic_class tclass;
-    uint16_t port;
-    bool is_tcp;
-
-    char line[1024];
-    int rtn = 0;
-    while ( fgets(line, 1024, f) != NULL ) {
-        if (parse_cmd_opts(line, &tclass, &port, &is_tcp) != 0) {
-            LOG_ERR("Error parsing file: %s", filename);
-            rtn = -1;
-            break;
-        }
-        if (wharf_set_rule(tclass, port, is_tcp) != 0) {
-            LOG_ERR("Error setting rule from line: %s", line);
-            rtn = -1;
-            break;
-        }
-    }
-    fclose(f);
-    wharf_list_rules();
-    return rtn;
 }
 
 /**
@@ -208,7 +194,15 @@ int wharf_str_call(char *str) {
     enum traffic_class tclass;
     uint16_t port;
     bool is_tcp;
-    if (strcasecmp(cmd, "SET") == 0) {
+    if (strcasecmp(cmd, "DEFAULT") == 0) {
+        char *args = strtok(NULL, "");
+        int tclassi = atoi(args);
+        if (!valid_tclass(tclassi)) {
+            return -1;
+        }
+        wharf_set_default_class((enum traffic_class)tclassi);
+        return 0;
+    } else if (strcasecmp(cmd, "SET") == 0) {
         char *args = strtok(NULL, "");
         int rtn = parse_cmd_opts(args, &tclass, &port, &is_tcp);
         if (rtn < 0) {
@@ -253,7 +247,34 @@ int wharf_str_call(char *str) {
         LOG_ERR("Unknown command received: %s", str);
         return -1;
     }
+
 }
+
+/** Loads rules from a csv file.
+ * Format: port, protocol, class
+ */
+int wharf_load_from_file(char *filename) {
+    FILE *f = fopen(filename, "r");
+    if (f == NULL) {
+        LOG_ERR("Could not load from file: %s", filename);
+        return -1;
+    }
+    char line[1024];
+    int rtn = 0;
+    while ( fgets(line, 1024, f) != NULL ) {
+        char line_cp[1024];
+        strcpy(line_cp, line);
+        if (wharf_str_call(line) != 0) {
+            LOG_ERR("Error parsing line: %s", line_cp);
+            rtn = -1;
+            break;
+        }
+    }
+    fclose(f);
+    wharf_list_rules();
+    return rtn;
+}
+
 
 /** IP header starts right after ethernet header. First 4 bits are IP version */
 #define IPV4_OFFSET sizeof(struct ether_header)
@@ -322,7 +343,7 @@ void describe_packet(const u_char *packet, uint32_t pkt_len) {
 
 enum traffic_class wharf_query_packet(const u_char  *packet, uint32_t pkt_len) {
     if (!is_ipv4(packet, pkt_len)) {
-        return TCLASS_NULL;
+        return default_tclass;
     }
     int protocol;
     if (is_tcp(packet, pkt_len)) {
@@ -330,7 +351,7 @@ enum traffic_class wharf_query_packet(const u_char  *packet, uint32_t pkt_len) {
     } else if (is_udp(packet, pkt_len)) {
         protocol = 0;
     } else {
-        return TCLASS_NULL;
+        return default_tclass;
     }
 
     uint16_t port = get_port(packet, pkt_len);

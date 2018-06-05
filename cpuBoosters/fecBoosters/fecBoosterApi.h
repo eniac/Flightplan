@@ -2,6 +2,7 @@
 #define FEC_BOOSTER_API_H_
 #include "fecBooster.h"
 
+int wharf_set_default_class(enum traffic_class tclass);
 int wharf_set_rule(enum traffic_class tclass, uint16_t port, bool is_tcp);
 int wharf_delete_rule(enum traffic_class tclass, uint16_t port, bool is_tcp);
 bool wharf_set_enabled(bool is_enabled);
