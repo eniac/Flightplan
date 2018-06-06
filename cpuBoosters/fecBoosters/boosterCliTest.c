@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     char buff[2048];
     while (true) {
         char *rtn = fgets(buff, sizeof(buff), stdin);
-        if (rtn != NULL) {
+        if (rtn != NULL && strlen(buff) != 1) {
             rtn[strlen(rtn)-1] = '\0';
             if (wharf_str_call(buff)) {
                 printf("ERROR\n");
