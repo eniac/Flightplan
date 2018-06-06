@@ -9,37 +9,37 @@
 
 // This is true when the buffer doesn't contain any packets for decoding.
 static bool nothing_to_decode = true;
-static int lastBlockId = 0;
-static int lastPacketIdx = -1;
+static int lastBlockId[TCLASS_MAX + 1];
+static int lastPacketIdx[TCLASS_MAX + 1];
 
-inline void reset_decoder (const int block_id) {
+inline void reset_decoder (tclass_type tclass, const int block_id) {
 	nothing_to_decode = true;
-	mark_pkts_absent(block_id);
+	mark_pkts_absent(tclass, block_id);
 }
 
 // Try to decode new packets, and forward them on.
 // FIXME possible race condition if simultaneous timer expiry and packet arrival that triggers decode.
-void decode_and_forward(const int block_id) {
-	if (nothing_to_decode || is_all_data_pkts_recieved_for_block(block_id)) {
-		reset_decoder (block_id);
+void decode_and_forward(tclass_type tclass, const int block_id) {
+	if (nothing_to_decode || is_all_data_pkts_recieved_for_block(tclass, block_id)) {
+		reset_decoder(tclass, block_id);
 		printf("Received all data packets for blockID :: %d Skipping calling decode\n", block_id);
 		return;
 	}
 
-	populate_fec_blk_data_and_parity(block_id);
+	populate_fec_blk_data_and_parity(tclass, block_id);
 
 	// Decode inserts the packets directly into the packet buffer
-	decode_block(block_id);
+	decode_block(tclass, block_id);
 
 #if WHARF_DEBUGGING
 	int num_recovered_packets = 0;
 #endif // WHARF_DEBUGGING
-	for (int i = 0; i < NUM_DATA_PACKETS; i++) {
-		if (pkt_recovered(block_id, i)) {
+	for (int i = 0; i < wharf_get_k(tclass); i++) {
+		if (pkt_recovered(tclass, block_id, i)) {
 			num_recovered_packets += 1;
 
 			FRAME_SIZE_TYPE size;
-			u_char *pkt = retrieve_from_pkt_buffer(block_id, i, &size);
+			u_char *pkt = retrieve_from_pkt_buffer(tclass, block_id, i, &size);
 
 			// Recovered packet may have a length of 0, if it was filler
 			// In this case, no need to forward
@@ -53,7 +53,7 @@ void decode_and_forward(const int block_id) {
 	printf("num_recovered_packets=%d\n", num_recovered_packets);
 #endif // WHARF_DEBUGGING
 
-	reset_decoder (block_id);
+	reset_decoder(tclass, block_id);
 }
 
 
@@ -64,7 +64,8 @@ void sigalrm_handler(int signal) {
 		exit(1);
 	}
 
-	decode_and_forward(lastBlockId); // FIXME ensure the function is reentrant
+    // FIXME Alarm handler/timeouts are broken due to new traffic classes
+	//decode_and_forward(lastBlockId); 
 }
 #endif // WHARF_DECODE_TIMEOUT != 0
 
@@ -105,22 +106,24 @@ void my_packet_handler(
 	       fecHeader.index, header->len);
 #endif // WHARF_DEBUGGING
 
-	if (fecHeader.block_id != lastBlockId || fecHeader.index <= lastPacketIdx) {
-		decode_and_forward(lastBlockId);
-		lastBlockId = fecHeader.block_id;
+	tclass_type tclass = fecHeader.class_id;
+
+	if (fecHeader.block_id != lastBlockId[tclass] || fecHeader.index < lastPacketIdx[tclass]) {
+		decode_and_forward(tclass, lastBlockId[tclass]);
+		lastBlockId[tclass] = fecHeader.block_id;
 #if WHARF_DECODE_TIMEOUT != 0
 		alarm(WHARF_DECODE_TIMEOUT);
 		signal(SIGALRM, sigalrm_handler);
 #endif // WHARF_DECODE_TIMEOUT != 0
 	}
-	lastPacketIdx = fecHeader.index;
+	lastPacketIdx[tclass] = fecHeader.index;
 
 	int size = header->len;
 	const u_char *stripped = wharf_strip_frame(packet, &size);
 
 
 	// Forward data packets immediately
-	if (fecHeader.index < NUM_DATA_PACKETS) {
+	if (fecHeader.index < wharf_get_k(tclass)) {
 		// If there is no data outside of the wharf frame, no need to forward (packet was filler)
 		if (header->len > WHARF_ORIG_FRAME_OFFSET) {
 #ifdef CHECK_TABLE_ON_DECODE
@@ -136,10 +139,10 @@ void my_packet_handler(
 	}
 
 	// Buffer data and parity packets in case need to decode.
-	if (!pkt_already_inserted(fecHeader.block_id, fecHeader.index)) {
+	if (!pkt_already_inserted(tclass, fecHeader.block_id, fecHeader.index)) {
 		nothing_to_decode = false;
 
-	    insert_into_pkt_buffer(fecHeader.block_id, fecHeader.index, size, stripped);
+	    insert_into_pkt_buffer(fecHeader.class_id, fecHeader.block_id, fecHeader.index, size, stripped);
 	}
 	else {
 		fprintf(stderr, "Not buffering duplicate packet\n");

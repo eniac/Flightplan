@@ -8,8 +8,8 @@ static bool wharf_enabled;
 static tclass_type default_tclass = TCLASS_NULL;
 
 struct tclass_params {
-    int k;
-    int h;
+    fec_sym k;
+    fec_sym h;
     int t;
     bool active;
 };
@@ -44,6 +44,7 @@ static struct rule_entry rules[MAX_RULES];
 /** The table of classes */
 static struct tclass_params tclasses[TCLASS_MAX];
 
+/** Checks if there is an entry in the class table corresponding to this class ID */
 static bool valid_tclass(int tclassi) {
     if (tclassi != TCLASS_NULL && tclassi > TCLASS_MAX) {
         LOG_ERR("Tclass %d too high", tclassi);
@@ -63,7 +64,8 @@ static bool rules_equal(struct rule_entry *r1, struct rule_entry *r2) {
            r1->is_tcp == r2->is_tcp;
 }
 
-int wharf_set_tclass(tclass_type tclass, int k, int h, int t) {
+/** Sets an entry in the traffic class table to have the provided k, h, and timeout */
+int wharf_set_tclass(tclass_type tclass, fec_sym k, fec_sym h, int t) {
     if (tclass > TCLASS_MAX) {
          LOG_ERR("Tclass 0x%02x too high", tclass);
          return -1;
@@ -80,6 +82,7 @@ int wharf_set_tclass(tclass_type tclass, int k, int h, int t) {
     return 0;
 }
 
+/** Removes an entry from the traffic class table */
 int wharf_delete_tclass(tclass_type tclass) {
     if (tclass > TCLASS_MAX) {
         LOG_ERR("Tclass 0x%02x too high", (int)tclass);
@@ -90,7 +93,27 @@ int wharf_delete_tclass(tclass_type tclass) {
     return 0;
 }
 
-int wharf_query_tclass(tclass_type tclass, int *k, int *h, int *t) {
+/** Gets the value of `k` associated with the provided traffic class.
+ * Returns 0 if traffic class does not exist */
+fec_sym wharf_get_k(tclass_type tclass) {
+    if (tclass > TCLASS_MAX) {
+        LOG_ERR("Tclass 0x%02x too high", tclass);
+        return 0;
+    }
+    if (!tclasses[tclass].active) {
+        LOG_ERR("Tclass 0x%02x not set", tclass);
+        return 0;
+    }
+    return tclasses[tclass].k;
+}
+
+/**
+ * Gets the value of k, h, and t associated with a given class.
+ * If k, h, or t are NULL, will not attempt to assign them.
+ * @returns 0 on success, -1 if class DNE
+ */
+int wharf_query_tclass(tclass_type tclass,
+                       fec_sym *k, fec_sym *h, int *t) {
     if (tclass > TCLASS_MAX) {
         LOG_ERR("Tclass 0x%02x too high", tclass);
         return -1;
@@ -121,6 +144,7 @@ bool wharf_get_enabled(void) {
     return wharf_enabled;
 }
 
+/** Sets the default class to which unclassified traffic is applied */
 int wharf_set_default_class(tclass_type tclass) {
     if (!valid_tclass(tclass)) {
         return -1;
@@ -260,6 +284,7 @@ static int parse_rule_opts(char *str, tclass_type *tclass, uint16_t *port, bool 
     return 0;
 }
 
+/** Parses CLI options associated with defining a class */
 static int parse_class_opts(char *str, tclass_type *tclass, int *k, int *h, int *t) {
     char *tclassc = strtok(str, " ,");
     if (tclassc == NULL) {
@@ -411,6 +436,7 @@ static bool is_ipv4(const u_char *packet, uint32_t pkt_len) {
 #define TCP_PROTOCOL 0x06
 #define UDP_PROTOCOL 0x11
 
+/** Checks if a packet is tcp */
 static bool is_tcp(const u_char *packet, uint32_t pkt_len) {
     if (pkt_len < PROTOCOL_OFFSET) {
         return false;
@@ -418,6 +444,7 @@ static bool is_tcp(const u_char *packet, uint32_t pkt_len) {
     return packet[PROTOCOL_OFFSET] == TCP_PROTOCOL;
 }
 
+/** Checks if a packet is udp */
 static bool is_udp(const u_char *packet, uint32_t pkt_len) {
     if (pkt_len < PROTOCOL_OFFSET) {
         return false;
@@ -430,6 +457,7 @@ static bool is_udp(const u_char *packet, uint32_t pkt_len) {
  */
 #define PORT_OFFSET sizeof(struct ether_header) + 22
 
+/** Returns a tcp or udp packet's port */
 static uint16_t get_port(const u_char *packet, uint32_t pkt_len) {
     if (pkt_len < PORT_OFFSET) {
         return 0;
@@ -438,6 +466,7 @@ static uint16_t get_port(const u_char *packet, uint32_t pkt_len) {
     return ntohs(*port);
 }
 
+/** Prints to stderr info about a packet */
 void describe_packet(const u_char *packet, uint32_t pkt_len) {
     if (is_ipv4(packet, pkt_len)) {
         LOG_INFO("PACKET IS IPV4");
@@ -457,6 +486,7 @@ void describe_packet(const u_char *packet, uint32_t pkt_len) {
     LOG_INFO("PORT IS %d", (int)get_port(packet, pkt_len));
 }
 
+/** Returns the traffic class to which a packet belongs */
 tclass_type wharf_query_packet(const u_char  *packet, uint32_t pkt_len) {
     if (!is_ipv4(packet, pkt_len)) {
         return default_tclass;

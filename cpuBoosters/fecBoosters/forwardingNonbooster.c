@@ -5,8 +5,8 @@
 
 #include "fecBooster.h"
 
-#define WHARF_DROP_AFTER (NUM_DATA_PACKETS - 1)
-#define WHARF_DROP_NOTAFTER NUM_PARITY_PACKETS
+#define WHARF_DROP_AFTER 15
+#define WHARF_DROP_NOTAFTER 0
 
 // Setting this to 0 drops the first packet, which ensures that a packet is dropped
 // in every set of packets, regardless of whether the set is complete
