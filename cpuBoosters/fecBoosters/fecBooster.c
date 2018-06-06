@@ -317,7 +317,7 @@ unsigned int advance_block_id(void) {
  *
  * @return resulting size of the newly encapsulated packet.
  */
-int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result) {
+int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char** result) {
   if (size >= FRAME_SIZE_CUTOFF) {
     fprintf(stderr, "Frame too big for tagging (%d)", size);
     exit(1);
@@ -447,7 +447,6 @@ int main (int argc, char** argv) {
 			break;
 		case 'r':
 			printf("Loading rules from file: %s\n", optarg);
-			wharf_set_enabled(1);
 			if (wharf_load_from_file(optarg) != 0) {
 				abort();
 			}

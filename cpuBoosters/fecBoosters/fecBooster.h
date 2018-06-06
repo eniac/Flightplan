@@ -27,7 +27,7 @@
  * Amount of time before the decoder attempts to decode packets if no activity
  * WHARF_DECODE_TIMEOUT==0 means we're not using the timeout
  */
-#define WHARF_DECODE_TIMEOUT 1
+#define WHARF_DECODE_TIMEOUT 2
 
 /**
  * Amount of time before the encoder forwards parity packets if no activity.
@@ -35,7 +35,7 @@
  * a frame could be decoded before it's finished being sent.
  * WHARF_ENCODE_TIMEOUT==0 disables the timeout
  */
-#define WHARF_ENCODE_TIMEOUT 0
+#define WHARF_ENCODE_TIMEOUT 1
 
 /** Marks in pkt_buffer_filled whether the packet has been received */
 enum pkt_buffer_status {
@@ -45,12 +45,9 @@ enum pkt_buffer_status {
 };
 
 /** Traffic class that determines parity/data ratio */
-enum traffic_class {
-    TCLASS_ONE=0x00,
-    TCLASS_TWO=0x01,
-    TCLASS_THREE=0x02,
-    TCLASS_NULL=0xFF
-};
+typedef unsigned short int tclass_type;
+#define TCLASS_MAX 0x9F
+#define TCLASS_NULL 0xFF
 
 /** Inserts a packet, tagged with its size, into the buffer */
 void insert_into_pkt_buffer(int blockId, int pktIdx,
@@ -82,7 +79,7 @@ int copy_parity_packets_to_pkt_buffer(int blockId);
 /** Advances the block ID with which new wharf frames will be tagged */
 unsigned int advance_block_id();
 /** Encapsulates packet with new header */
-int wharf_tag_frame(enum traffic_class tclass, const u_char* packet, int size, u_char** result);
+int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char** result);
 /** Removes header from encapsulated packet */
 const u_char *wharf_strip_frame(const u_char* packet, int *size);
 /** Forwards the frame on the ouptut pcap handle */

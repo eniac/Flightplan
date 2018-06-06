@@ -5,13 +5,20 @@
 /** Static flag for checking if wharf has been enabled */
 static bool wharf_enabled;
 
-static enum traffic_class default_tclass = TCLASS_NULL;
+static tclass_type default_tclass = TCLASS_NULL;
+
+struct tclass_params {
+    int k;
+    int h;
+    int t;
+    bool active;
+};
 
 /** A single entry in the table of rules matching ports/protocls to traffic classes */
 struct rule_entry {
     uint16_t port;
     bool is_tcp;
-    enum traffic_class tclass;
+    tclass_type tclass;
     bool active;
 };
 
@@ -25,29 +32,83 @@ struct rule_entry {
 #define LOG_INFO(s, ...) LOG(s, ##__VA_ARGS__)
 
 /** Accepts a rule as the first argument after the format string */
-#define LOG_RULE(s, r, ...) LOG_INFO(s "\tport: %5d  tcp: %d  cls: %d, active: %d", \
+#define LOG_RULE(s, r, ...) LOG_INFO(s "\tport: %5d  tcp: %d  cls: 0x%02x  active: %d", \
                                      ##__VA_ARGS__, r.port, r.is_tcp, r.tclass, r.active)
 
-bool valid_tclass(int tclassi) {
-    switch (tclassi) {
-        case TCLASS_ONE:
-        case TCLASS_TWO:
-        case TCLASS_THREE:
-        case TCLASS_NULL:
-            return true;
-        default:
-            LOG_ERR("Unknown traffic class: %d", tclassi);
-            return false;
-    }
-}
+#define LOG_CLASS(s, c, ...) LOG_INFO(s "\tk: %3d  h: %3d  t: %3d  active: %d", \
+                                      ##__VA_ARGS__, c.k, c.h, c.t, c.active)
 
 /** The table of rules */
 static struct rule_entry rules[MAX_RULES];
+
+/** The table of classes */
+static struct tclass_params tclasses[TCLASS_MAX];
+
+static bool valid_tclass(int tclassi) {
+    if (tclassi != TCLASS_NULL && tclassi > TCLASS_MAX) {
+        LOG_ERR("Tclass %d too high", tclassi);
+        return false;
+    }
+    if (tclassi == TCLASS_NULL || tclasses[tclassi].active) {
+        return true;
+    }
+    LOG_ERR("Unknown traffic class: %d", tclassi);
+    return false;
+}
+
 
 /** Checks if the port and protocl of two rules match */
 static bool rules_equal(struct rule_entry *r1, struct rule_entry *r2) {
     return r1->port == r2->port &&
            r1->is_tcp == r2->is_tcp;
+}
+
+int wharf_set_tclass(tclass_type tclass, int k, int h, int t) {
+    if (tclass > TCLASS_MAX) {
+         LOG_ERR("Tclass 0x%02x too high", tclass);
+         return -1;
+    }
+    struct tclass_params new_tclass = {k, h, t, true};
+    if (tclasses[tclass].active) {
+        LOG_CLASS("Replacing class 0x%02x", tclasses[tclass], tclass);
+        LOG_CLASS("Replacement: ", new_tclass);
+        tclasses[tclass] = new_tclass;
+    } else {
+        LOG_CLASS("Inserting class 0x%02x", new_tclass, tclass);
+        tclasses[tclass] = new_tclass;
+    }
+    return 0;
+}
+
+int wharf_delete_tclass(tclass_type tclass) {
+    if (tclass > TCLASS_MAX) {
+        LOG_ERR("Tclass 0x%02x too high", (int)tclass);
+        return -1;
+    }
+    LOG_CLASS("Disabling class 0x%02x", tclasses[tclass], tclass);
+    tclasses[tclass].active = false;
+    return 0;
+}
+
+int wharf_query_tclass(tclass_type tclass, int *k, int *h, int *t) {
+    if (tclass > TCLASS_MAX) {
+        LOG_ERR("Tclass 0x%02x too high", tclass);
+        return -1;
+    }
+    if (!tclasses[tclass].active) {
+        LOG_ERR("Tclass 0x%02x not set", tclass);
+        return -1;
+    }
+    if (k != NULL) {
+        *k = tclasses[tclass].k;
+    }
+    if (h != NULL) {
+        *h = tclasses[tclass].h;
+    }
+    if (t != NULL) {
+        *t = tclasses[tclass].t;
+    }
+    return 0;
 }
 
 /** Enables wharf if is_enabled is true */
@@ -60,7 +121,7 @@ bool wharf_get_enabled(void) {
     return wharf_enabled;
 }
 
-int wharf_set_default_class(enum traffic_class tclass) {
+int wharf_set_default_class(tclass_type tclass) {
     if (!valid_tclass(tclass)) {
         return -1;
     }
@@ -69,7 +130,10 @@ int wharf_set_default_class(enum traffic_class tclass) {
 }
 
 /** Sets the port and protocol to point to the traffic class in the rules table */
-int wharf_set_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
+int wharf_set_rule(tclass_type tclass, uint16_t port, bool is_tcp) {
+    if (!valid_tclass(tclass)) {
+        return -1;
+    }
     struct rule_entry new_rule = { port, is_tcp, tclass, true };
     for (int i=0; i < MAX_RULES; i++) {
         if (rules_equal(&rules[i], &new_rule)) {
@@ -89,7 +153,7 @@ int wharf_set_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
 }
 
 /** Removes the matching rule from the rule table */
-int wharf_delete_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
+int wharf_delete_rule(tclass_type tclass, uint16_t port, bool is_tcp) {
     struct rule_entry to_del = {port, is_tcp, tclass, false };
     for (int i=0; i < MAX_RULES; i++) {
         if ( rules_equal(&rules[i], &to_del) && rules[i].active && rules[i].tclass == tclass) {
@@ -106,7 +170,7 @@ int wharf_delete_rule(enum traffic_class tclass, uint16_t port, bool is_tcp) {
  * Checks if there is a rule in the table that matches the port + protocol.
  * If not, returns default_tclass
  */
-enum traffic_class wharf_query_rule(uint16_t port, bool is_tcp) {
+tclass_type wharf_query_rule(uint16_t port, bool is_tcp) {
     if (!wharf_enabled) {
         LOG_INFO("Wharf disabled");
         return TCLASS_NULL;
@@ -133,6 +197,17 @@ void wharf_list_rules() {
         LOG_ERR("Wharf disabled");
         return;
     }
+    LOG_INFO("Listing active classes:");
+    int n_classes = 0;
+    for (int i=0; i < TCLASS_MAX; i++) {
+        if (tclasses[i].active) {
+            n_classes++;
+            LOG_CLASS("\t0x%02x)", tclasses[i], i);
+        }
+    }
+    if (n_classes == 0) {
+        LOG_INFO("\tNO CLASSES DEFINED");
+    }
     LOG_INFO("Default traffic class: %d", default_tclass);
     LOG_INFO("Listing active rules:");
     int n_active = 0;
@@ -148,7 +223,7 @@ void wharf_list_rules() {
 }
 
 /** Parses a string to retrieve the port, protocol, and class (in that order) */
-static int parse_cmd_opts(char *str, enum traffic_class *tclass, uint16_t *port, bool *is_tcp) {
+static int parse_rule_opts(char *str, tclass_type *tclass, uint16_t *port, bool *is_tcp) {
     char *portc = strtok(str, " ,");
     if (portc == NULL) {
         LOG_ERR("No port provided");
@@ -180,10 +255,39 @@ static int parse_cmd_opts(char *str, enum traffic_class *tclass, uint16_t *port,
         if (!valid_tclass(tclassi)) {
             return -1;
         }
-        *tclass = (enum traffic_class) tclassi;
+        *tclass = (tclass_type) tclassi;
     }
     return 0;
 }
+
+static int parse_class_opts(char *str, tclass_type *tclass, int *k, int *h, int *t) {
+    char *tclassc = strtok(str, " ,");
+    if (tclassc == NULL) {
+        LOG_ERR("No tclass provided");
+        return -1;
+    }
+    *tclass = atoi(tclassc);
+    char *ki = strtok(NULL, " ,");
+    if (ki == NULL) {
+        LOG_ERR("No k provided");
+        return -1;
+    }
+    *k = atoi(ki);
+    char *hi = strtok(NULL, " ,");
+    if (hi == NULL) {
+        LOG_ERR("No h provided");
+        return -1;
+    }
+    *h = atoi(hi);
+    char *ti = strtok(NULL, " ,");
+    if (ti == NULL) {
+        LOG_ERR("No t provided");
+        return -1;
+    }
+    *t = atoi(ti);
+    return 0;
+}
+
 
 /**
  * CLI interface for rules. One of SET, DEL, LIST, QUERY, ENABLE
@@ -191,27 +295,39 @@ static int parse_cmd_opts(char *str, enum traffic_class *tclass, uint16_t *port,
 int wharf_str_call(char *str) {
     char *cmd = strtok(str, " ");
 
-    enum traffic_class tclass;
+    tclass_type tclass;
     uint16_t port;
     bool is_tcp;
-    if (strcasecmp(cmd, "DEFAULT") == 0) {
+    if (strcasecmp(cmd, "CLASS") == 0) {
+        char *args = strtok(NULL, "");
+        tclass_type tclass;
+        int h, k, i;
+        if (parse_class_opts(args, &tclass, &k, &h, &i) != 0) {
+            return -1;
+        }
+        return wharf_set_tclass(tclass, k, h, i);
+    } else if (strcasecmp(cmd, "DELCLASS") == 0) {
+        char *args = strtok(NULL, "");
+        int tclassi = atoi(args);
+        return wharf_delete_tclass(tclassi);
+    } else if (strcasecmp(cmd, "DEFAULT") == 0) {
         char *args = strtok(NULL, "");
         int tclassi = atoi(args);
         if (!valid_tclass(tclassi)) {
             return -1;
         }
-        wharf_set_default_class((enum traffic_class)tclassi);
+        wharf_set_default_class((tclass_type)tclassi);
         return 0;
     } else if (strcasecmp(cmd, "SET") == 0) {
         char *args = strtok(NULL, "");
-        int rtn = parse_cmd_opts(args, &tclass, &port, &is_tcp);
+        int rtn = parse_rule_opts(args, &tclass, &port, &is_tcp);
         if (rtn < 0) {
             return -1;
         }
         return wharf_set_rule(tclass, port, is_tcp);
     } else if (strcasecmp(cmd, "DEL") == 0) {
         char *args = strtok(NULL, "");
-        int rtn = parse_cmd_opts(args, &tclass, &port, &is_tcp);
+        int rtn = parse_rule_opts(args, &tclass, &port, &is_tcp);
         if (rtn < 0) {
             return -1;
         }
@@ -221,7 +337,7 @@ int wharf_str_call(char *str) {
         return 0;
     } else if (strcasecmp(cmd, "QUERY") == 0) {
         char *args = strtok(NULL, "");
-        int rtn = parse_cmd_opts(args, NULL, &port, &is_tcp);
+        int rtn = parse_rule_opts(args, NULL, &port, &is_tcp);
         if (rtn < 0) {
             return -1;
         }
@@ -341,7 +457,7 @@ void describe_packet(const u_char *packet, uint32_t pkt_len) {
     LOG_INFO("PORT IS %d", (int)get_port(packet, pkt_len));
 }
 
-enum traffic_class wharf_query_packet(const u_char  *packet, uint32_t pkt_len) {
+tclass_type wharf_query_packet(const u_char  *packet, uint32_t pkt_len) {
     if (!is_ipv4(packet, pkt_len)) {
         return default_tclass;
     }

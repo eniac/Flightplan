@@ -20,7 +20,7 @@ static struct ether_header last_eth_header;
  * @param   last_packet     Sample packet, used to obtain src and dst MAC address for parity
  */
 void encode_and_forward_block(int currBlockID, struct ether_header *packet_eth_header) {
-	enum traffic_class tclass = TCLASS_ONE; // FIXME const -- use traffic classification
+	tclass_type tclass = TCLASS_NULL; // FIXME const -- use traffic classification
 
 	u_char *last_packet = (u_char *)packet_eth_header;
 
@@ -31,7 +31,7 @@ void encode_and_forward_block(int currBlockID, struct ether_header *packet_eth_h
 		if (!pkt_already_inserted(currBlockID, i)) {
 
 			/* Have to provide an ether header to be copied to the wharf tag */
-			int tagged_size = wharf_tag_frame(tclass, last_packet, 0, &new_packet);
+			int tagged_size = wharf_tag_frame(TCLASS_NULL, last_packet, 0, &new_packet);
 
 			/* 0-length frames must also be forwarded to the decoder */
 			forward_frame(new_packet, tagged_size);
@@ -94,7 +94,7 @@ void my_packet_handler(
 ) {
 	u_char *new_packet = NULL;
 
-	enum traffic_class tclass = wharf_query_packet(packet, header->len);
+	tclass_type tclass = wharf_query_packet(packet, header->len);
 
 	// If no rule mapping this packet to traffic class, simply forward
 	if (tclass == TCLASS_NULL) {

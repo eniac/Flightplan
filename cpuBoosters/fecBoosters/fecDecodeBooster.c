@@ -86,7 +86,7 @@ void my_packet_handler(
 	// If not a wharf packet, just forward
 	if (WHARF_ETHERTYPE != ntohs(eth_header->ether_type)) {
 #ifdef CHECK_TABLE_ON_DECODE
-		enum traffic_class tclass = wharf_query_packet(packet, header->len);
+		tclass_type tclass = wharf_query_packet(packet, header->len);
 		if (tclass != TCLASS_NULL) {
 			fprintf(stderr, "Untagged packet should have had class %d\n", tclass);
 		} else {
@@ -124,8 +124,8 @@ void my_packet_handler(
 		// If there is no data outside of the wharf frame, no need to forward (packet was filler)
 		if (header->len > WHARF_ORIG_FRAME_OFFSET) {
 #ifdef CHECK_TABLE_ON_DECODE
-			enum traffic_class tclass = wharf_query_packet(stripped, size);
-			if (tclass == (enum traffic_class) fecHeader.class_id) {
+			tclass_type tclass = wharf_query_packet(stripped, size);
+			if (tclass == (tclass_type) fecHeader.class_id) {
 				fprintf(stderr, "Traffic classes match: %d\n", tclass);
 			} else {
 				fprintf(stderr, "Traffic classes do not match! %d and %d\n", tclass, fecHeader.class_id);
