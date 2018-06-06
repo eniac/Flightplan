@@ -9,13 +9,35 @@
 // NOTE we only work with a single block because of how we interface with the rse_code function.
 #define FB_INDEX 0
 
-pcap_t *input_handle = NULL;
-pcap_t *output_handle = NULL;
+static pcap_t *input_handle = NULL;
+static pcap_t *output_handle = NULL;
 
-/** Global buffer into which received and decoded packets will be placed */
-static u_char pkt_buffer[TCLASS_MAX + 1][NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
-/** Status of packets stored in global buffer */
-static enum pkt_buffer_status pkt_buffer_filled[TCLASS_MAX + 1][NUM_BLOCKS][TOTAL_NUM_PACKETS];
+struct tclass_buffer {
+    /** Buffer into which received and decoded packets are placed */
+    u_char pkts[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+    /** Status of packets stored in pkts (present, absent, generated) */
+    enum pkt_buffer_status status[NUM_BLOCKS][TOTAL_NUM_PACKETS];
+
+    /** Block ID with which new wharf frames of this class will be tagged */
+    uint8_t block_id;
+    /** Frame index with which new wharf frames of this class will be tagged */
+    uint8_t frame_idx;
+
+    /** Number of packets for this traffic class */
+    fec_sym k;
+    /** Number of parity packets for this traffic class */
+    fec_sym h;
+    /** Offset used when calculating cbi of parity (always 0?) */
+    fec_sym o;
+};
+
+static struct tclass_buffer tclasses[TCLASS_MAX + 1];
+
+/** Sets the parameters k and h for a given traffic class within the fbk */
+void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h) {
+    tclasses[tclass].k = k;
+    tclasses[tclass].h = h;
+}
 
 /**
  * @brief Wrapper to invoke encoder
@@ -45,11 +67,9 @@ void decode_block(tclass_type tclass, int blockId) {
 	}
 	D0(fec_block_print(FB_INDEX));
 
-	fec_sym k = wharf_get_k(tclass);
-
-	for (int i=0; i < k; i++) {
+	for (int i=0; i < tclasses[tclass].k; i++) {
 		if (fbk[FB_INDEX].pstat[i] == FEC_FLAG_GENNED) {
-			pkt_buffer_filled[tclass][blockId][i] = PACKET_RECOVERED;
+            tclasses[tclass].status[blockId][i] = PACKET_RECOVERED;
 		}
 	}
 }
@@ -64,9 +84,8 @@ void decode_block(tclass_type tclass, int blockId) {
  */
 bool is_all_data_pkts_recieved_for_block(tclass_type tclass, int blockId) {
 
-	fec_sym k = wharf_get_k(tclass);
-	for (int i = 0; i < k; i++) {
-		if (pkt_buffer_filled[tclass][blockId][i] == PACKET_ABSENT) {
+	for (int i = 0; i < tclasses[tclass].k; i++) {
+        if (tclasses[tclass].status[blockId][i] == PACKET_ABSENT) {
 			return false;
 		}
 	}
@@ -81,7 +100,7 @@ bool is_all_data_pkts_recieved_for_block(tclass_type tclass, int blockId) {
  */
 void mark_pkts_absent(tclass_type tclass, int blockId) {
 	for (int i = 0; i < TOTAL_NUM_PACKETS; i++) {
-		pkt_buffer_filled[tclass][blockId][i] = PACKET_ABSENT;
+        tclasses[tclass].status[blockId][i] = PACKET_ABSENT;
 	}
 	return;
 }
@@ -112,15 +131,16 @@ static int get_pkt_payload_length(u_char* packet){
 void insert_into_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
                             FRAME_SIZE_TYPE pktSize, const u_char *packet) {
 	size_t offset = 0;
-	fec_sym k = wharf_get_k(tclass);
-	if (pktIdx < k) {
+
+    u_char *buff = tclasses[tclass].pkts[blockId][pktIdx];
+	if (pktIdx < tclasses[tclass].k) {
 		FRAME_SIZE_TYPE flipped = ntohs(pktSize);
-		memcpy(pkt_buffer[tclass][blockId][pktIdx], &flipped, sizeof(pktSize));
+        memcpy(buff, &flipped, sizeof(pktSize));
 		offset += sizeof(pktSize);
 	}
 
-	memcpy(pkt_buffer[tclass][blockId][pktIdx] + offset, packet, pktSize);
-	pkt_buffer_filled[tclass][blockId][pktIdx] = PACKET_PRESENT;
+	memcpy(buff + offset, packet, pktSize);
+    tclasses[tclass].status[blockId][pktIdx] = PACKET_PRESENT;
 }
 
 /**
@@ -136,13 +156,13 @@ void insert_into_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
 u_char *retrieve_from_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
                                  FRAME_SIZE_TYPE *pktSize) {
 	size_t offset = 0;
-	fec_sym k = wharf_get_k(tclass);
-	if (pktIdx < k) {
-		FRAME_SIZE_TYPE *size_p = (FRAME_SIZE_TYPE *)pkt_buffer[tclass][blockId][pktIdx];
+    u_char *buff = tclasses[tclass].pkts[blockId][pktIdx];
+	if (pktIdx < tclasses[tclass].k) {
+		FRAME_SIZE_TYPE *size_p = (FRAME_SIZE_TYPE *) buff;
 		*pktSize = ntohs(*size_p);
 		offset = sizeof(*pktSize);
 	}
-	return (u_char *)pkt_buffer[tclass][blockId][pktIdx] + offset;
+	return buff + offset;
 }
 
 /**
@@ -150,7 +170,7 @@ u_char *retrieve_from_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
  * @returns True if the packet is already inserted
  */
 bool pkt_already_inserted(tclass_type tclass, int blockId, int pktIdx) {
-	return pkt_buffer_filled[tclass][blockId][pktIdx] != PACKET_ABSENT;
+    return tclasses[tclass].status[blockId][pktIdx] != PACKET_ABSENT;
 }
 
 /**
@@ -158,7 +178,7 @@ bool pkt_already_inserted(tclass_type tclass, int blockId, int pktIdx) {
  * @returns True of the packet is RECOVERED
  */
 bool pkt_recovered(tclass_type tclass, int blockId, int pktIdx) {
-	return pkt_buffer_filled[tclass][blockId][pktIdx] == PACKET_RECOVERED;
+    return tclasses[tclass].status[blockId][pktIdx] == PACKET_RECOVERED;
 }
 
 /**
@@ -175,11 +195,13 @@ bool pkt_recovered(tclass_type tclass, int blockId, int pktIdx) {
  * @param[in] expectParity Whether to copy parity packets in addition to data packets
  *
  */
-static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
-                             u_char pkts[TOTAL_NUM_PACKETS][PKT_BUF_SZ],
-                             pkt_buffer_status pkts_filled[TOTAL_NUM_PACKETS],
-                             bool expectParity) {
+static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity) {
 	int maxPacketLength = 0;
+
+    fec_sym k = buff->k;
+    fec_sym h = buff->h;
+    fec_sym o = buff->o;
+
 	fbk[FB_INDEX].block_N = k + h; /*TODO: replace this with a macro later.*/
 
 	if (k > FEC_MAX_K) {
@@ -192,14 +214,14 @@ static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
 		/* Regardless of packet presense, point it to the memory in the pkt_buffer.
          * If the packet is marked as WANTED, RSE will later write the generated packet
          * to that location */
-		fbk[FB_INDEX].pdata[i] = (fec_sym *)pkts[i];
+		fbk[FB_INDEX].pdata[i] = (fec_sym *)buff->pkts[blockId][i];
 		/* CBI must be marked even for WANTED packets */
 		fbk[FB_INDEX].cbi[i] = i;
 
-		if (pkts_filled[i] == PACKET_PRESENT) {
+		if (buff->status[blockId][i] == PACKET_PRESENT) {
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
-			int payloadLength = get_pkt_payload_length(pkts[i]);
+			int payloadLength = get_pkt_payload_length(buff->pkts[blockId][i]);
 
 			fbk[FB_INDEX].plen[i] = payloadLength;
 
@@ -232,8 +254,8 @@ static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
 
 		if (expectParity) {
 			/* If parity should be in the pkt_buffer */
-			if (pkts_filled[y] == PACKET_PRESENT) {
-				fbk[FB_INDEX].pdata[y] = (fec_sym *)pkts[y];
+			if (buff->status[blockId][y] == PACKET_PRESENT) {
+				fbk[FB_INDEX].pdata[y] = (fec_sym *)buff->pkts[blockId][y];
 				fbk[FB_INDEX].pstat[y] = FEC_FLAG_KNOWN;
 				fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
 			} else {
@@ -242,7 +264,7 @@ static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
 			}
 		} else {
 			/* Otherwise, mark the parity packets as WANTED */
-			fbk[FB_INDEX].pdata[y] = (fec_sym *)pkts[y];
+			fbk[FB_INDEX].pdata[y] = (fec_sym *)buff->pkts[blockId][y];
 			fbk[FB_INDEX].pstat[y] = FEC_FLAG_WANTED;
 			fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
 		}
@@ -259,16 +281,7 @@ static void populate_fec_blk(fec_sym k, fec_sym h, fec_sym o,
  */
 int populate_fec_blk_data(tclass_type tclass, int blockId) {
 
-	fec_sym k, h, o = 0;
-	int rtn = wharf_query_tclass(tclass, &k, &h, NULL);
-	if (rtn < 0) {
-		return -1;
-	}
-
-	populate_fec_blk(k, h, o,
-			pkt_buffer[tclass][blockId],
-			pkt_buffer_filled[tclass][blockId],
-			false);
+	populate_fec_blk(&tclasses[tclass], blockId, false);
 
 	return 0;
 }
@@ -283,16 +296,7 @@ int populate_fec_blk_data(tclass_type tclass, int blockId) {
  */
 int populate_fec_blk_data_and_parity(tclass_type tclass, int blockId) {
 
-	fec_sym k, h, o = 0;
-	int rtn = wharf_query_tclass(tclass, &k, &h, NULL);
-	if (rtn < 0) {
-		return -1;
-	}
-
-	populate_fec_blk(k, h, o,
-			pkt_buffer[tclass][blockId],
-			pkt_buffer_filled[tclass][blockId],
-			true);
+	populate_fec_blk(&tclasses[tclass], blockId, true);
 
 	return 0;
 }
@@ -306,21 +310,19 @@ int populate_fec_blk_data_and_parity(tclass_type tclass, int blockId) {
  * @return Size of each individual parity packet
  */
 int copy_parity_packets_to_pkt_buffer(tclass_type tclass, int blockId) {
-	fec_sym k, h;
-	wharf_query_tclass(tclass, &k, &h, NULL);
+
+    struct tclass_buffer *tc = &tclasses[tclass];
+
+	fec_sym k = tc->k;
+    fec_sym h = tc->h;
 	int sizeOfParityPackets = fbk[FB_INDEX].plen[k];
 
 	for (int i = k; i < (k + h); i++) {
-		memcpy(pkt_buffer[tclass][blockId][i], fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
-		pkt_buffer_filled[tclass][blockId][i] = PACKET_PRESENT;
+		memcpy(tc->pkts[blockId][i], fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
+        tc->status[blockId][i] = PACKET_PRESENT;
 	}
 	return sizeOfParityPackets;
 }
-
-/** Block ID with which new wharf frames will be tagged. One per traffic class. */
-static uint8_t block_id[TCLASS_MAX + 1];
-/** Frame index with which new wharf frames will be tagged. One per traffic class. */
-static uint8_t frame_index[TCLASS_MAX + 1];
 
 /**
  * @brief Advances the block id for new wharf frames and resets frame index
@@ -328,8 +330,8 @@ static uint8_t frame_index[TCLASS_MAX + 1];
  * @return New block ID
  */
 void advance_block_id(tclass_type tclass) {
-	block_id[tclass] = (block_id[tclass] + 1) % MAX_BLOCK;
-	frame_index[tclass] = 0;
+    tclasses[tclass].block_id = (tclasses[tclass].block_id + 1) % MAX_BLOCK;
+	tclasses[tclass].frame_idx = 0;
 }
 
 
@@ -352,8 +354,8 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 		fprintf(stderr, "Frame too big for tagging (%d)", size);
 		exit(1);
 	}
-	fec_sym k, h;
-	wharf_query_tclass(tclass, &k, &h, NULL);
+	fec_sym k = tclasses[tclass].k;
+    fec_sym h = tclasses[tclass].h;
 
 	/* make space for the new header to be added */
 	const int extra_header_size = sizeof(struct ether_header) + sizeof(struct fec_header);
@@ -369,8 +371,8 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 	/* Populate the wharf tag with the block_id, packet_id, class, & packetsize*/
 	struct fec_header *tag = (struct fec_header *)(*result + sizeof(struct ether_header));
 	tag->class_id = tclass;
-	tag->block_id = block_id[tclass];
-	tag->index = frame_index[tclass];
+	tag->block_id = tclasses[tclass].block_id;
+	tag->index = tclasses[tclass].frame_idx;
 
 	/* Populate the wharf tag with the packet's ethertype */
 	struct ether_header *orig_eth_header = (struct ether_header *)packet;
@@ -388,9 +390,9 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 	}
 
 	/* update the block_id and frame_index */
-	frame_index[tclass] = (frame_index[tclass] + 1) % (k + h);
-	if (0 == frame_index[tclass]) {
-		block_id[tclass] = (block_id[tclass] + 1) % MAX_BLOCK;
+	tclasses[tclass].frame_idx = (tclasses[tclass].frame_idx + 1) % (k + h);
+	if (0 == tclasses[tclass].frame_idx) {
+		tclasses[tclass].block_id = (tclasses[tclass].block_id + 1) % MAX_BLOCK;
 	}
 
 	return size + extra_header_size - offset;
@@ -425,7 +427,7 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size) {
 	}
 
 	size_t offset = sizeof(struct fec_header);
-	if (fec_hdr.index < wharf_get_k(fec_hdr.class_id)) {
+	if (fec_hdr.index < tclasses[fec_hdr.class_id].k) {
 		*pkt_ether = *eth_header;
 		pkt_ether->ether_type = fec_hdr.orig_ethertype;
 	} else {

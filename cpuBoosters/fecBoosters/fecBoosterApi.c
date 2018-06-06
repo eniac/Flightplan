@@ -79,6 +79,10 @@ int wharf_set_tclass(tclass_type tclass, fec_sym k, fec_sym h, int t) {
         LOG_CLASS("Inserting class 0x%02x", new_tclass, tclass);
         tclasses[tclass] = new_tclass;
     }
+
+#ifndef NO_FBK
+    set_fec_params(tclass, k, h);
+#endif
     return 0;
 }
 

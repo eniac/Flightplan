@@ -24,7 +24,7 @@ forwardingNonbooster: forwardingNonbooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RS
 	g++ $(FLAGS) -o $@ forwardingNonbooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
 
 boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
-	g++ $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c
+	g++ $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c -DNO_FBK
 
 $(COMPILED_RSE)/rse.o:
 	make -C $(COMPILED_RSE) rse.o

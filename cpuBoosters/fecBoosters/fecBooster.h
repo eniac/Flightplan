@@ -49,6 +49,9 @@ typedef unsigned short int tclass_type;
 #define TCLASS_MAX 0x0F
 #define TCLASS_NULL 0xFF
 
+/** Sets the parameters k and h for a given traffic class */
+void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h);
+
 /** Inserts a packet, tagged with its size, into the buffer */
 void insert_into_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
                             FRAME_SIZE_TYPE pkt_size, const u_char *packet);
