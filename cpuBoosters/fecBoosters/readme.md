@@ -1,4 +1,31 @@
-### FEC Encoder booster ###
+# FEC Encoder booster #
+
+## Running
+
+The each booster accepts arguments:
+
+```
+./<booster> -i input_interface [-o output_interface] [-r rules.csv]
+```
+Where `rules.csv` is a list of rules to pass to the fec API.
+
+### Rules format
+
+The input rules must be one of the following:
+
+```shell
+ENABLE [1/0]             # Enables with 1, disables with 0. With no args prints current state
+CLASS <id> <h> <k> <t>   # Defines a new traffic class
+DELCLASS <id>            # Deletes the traffic class with the provided ID
+DEFAULT <id>             # Sets the default class for unmatched traffic
+SET <port> <tcp> <class> # Sets the port and protocol (tcp = 1, udp = 0) to match the class ID.
+                         # NOTE: Class ID must have been previously defined.
+DEL <port> <tcp> <class> # Removes the rule associated associated with the given parameters
+QUERY <port> <tcp>       # Returns the class assigned to the given port and IP
+LIST                     # Prints the current class & rule list to stderr
+```
+
+## Running tests
 
 example usage: `sudo ./vethTestBooster.sh ../pcaps/tofinoProcessed_iperfClient2Server.pcap`
 
