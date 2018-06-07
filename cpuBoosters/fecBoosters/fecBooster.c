@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <netinet/ether.h>
 #include "wharf_pcap.h"
 #include "fecBooster.h"
 #include "fecBoosterApi.h"
@@ -135,7 +136,7 @@ void insert_into_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
 
 	u_char *buff = tclasses[tclass].pkts[blockId][pktIdx];
 	if (pktIdx < tclasses[tclass].k) {
-		FRAME_SIZE_TYPE flipped = ntohs(pktSize);
+		FRAME_SIZE_TYPE flipped = htons(pktSize);
 		memcpy(buff, &flipped, sizeof(pktSize));
 		offset += sizeof(pktSize);
 	}
@@ -356,6 +357,8 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 		LOG_ERR("Frame too big for tagging (%d)", size);
 		return -1;
 	}
+	struct ether_header *orig_eth_header = (struct ether_header *)packet;
+
 	fec_sym k = tclasses[tclass].k;
 	fec_sym h = tclasses[tclass].h;
 
@@ -363,11 +366,9 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 	const int extra_header_size = sizeof(struct ether_header) + sizeof(struct fec_header);
 	*result = (u_char *)malloc(size + extra_header_size);
 
-	/* Copy over the etherHeader from the original packet */
-	memcpy(*result, packet, sizeof(struct ether_header));
-
-	/* Replace the ether_type in the new ether header with wharf_ethertype*/
+	/* Copy the original ether header and replace the ether_type with wharf_ethertype*/
 	struct ether_header *eth_header = (struct ether_header *)*result;
+	*eth_header = *orig_eth_header;
 	eth_header->ether_type=htons(WHARF_ETHERTYPE);
 
 	/* Populate the wharf tag with the block_id, packet_id, class, & packetsize*/
@@ -377,7 +378,6 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 	tag->index = tclasses[tclass].frame_idx;
 
 	/* Populate the wharf tag with the packet's ethertype */
-	struct ether_header *orig_eth_header = (struct ether_header *)packet;
 	tag->orig_ethertype = orig_eth_header->ether_type;
 
 	size_t offset = 0;
@@ -412,9 +412,9 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
  * @return Pointer to the stripped packet (within the tagged frame)
  */
 const u_char *wharf_strip_frame(const u_char* packet, int *size) {
-	 struct ether_header *eth_header = (struct ether_header *)packet;
+	 struct ether_header eth_header = *(struct ether_header *)packet;
 	/*If not a wharf encoded packet*/
-	if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
+	if (htons(WHARF_ETHERTYPE) != eth_header.ether_type) {
 		LOG_ERR("Cannot strip non-warf frame");
 		return 0;
 	}
@@ -423,14 +423,14 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size) {
 
 	struct ether_header *pkt_ether = (struct ether_header *)(packet + sizeof(fec_hdr));
 
-	if (*size == sizeof(fec_hdr) + sizeof(*eth_header)) {
+	if (*size == sizeof(fec_hdr) + sizeof(eth_header)) {
 		*size = 0;
-		return packet + sizeof(fec_hdr) + sizeof(*eth_header);
+		return packet + sizeof(fec_hdr) + sizeof(eth_header);
 	}
 
 	size_t offset = sizeof(struct fec_header);
 	if (fec_hdr.index < tclasses[fec_hdr.class_id].k) {
-		*pkt_ether = *eth_header;
+		*pkt_ether = eth_header;
 		pkt_ether->ether_type = fec_hdr.orig_ethertype;
 	} else {
 		offset += sizeof(struct ether_header);
