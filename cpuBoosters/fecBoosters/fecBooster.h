@@ -8,6 +8,9 @@
 #include "fecDefs.h"
 #include "rse.h"
 
+#define LOG_ERR(s, ...) fprintf(stderr, "ERROR: " s "\n", ##__VA_ARGS__)
+#define LOG_INFO(s, ...) fprintf(stderr, s "\n", ##__VA_ARGS__)
+
 #define SIZE_ETHERNET sizeof(struct ether_header)
 
 #define MAX_NUM_DATA_PACKETS 50

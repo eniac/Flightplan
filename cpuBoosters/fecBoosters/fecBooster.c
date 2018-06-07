@@ -46,9 +46,9 @@ void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h) {
 void encode_block(void) {
 	int rc;
 	if ((rc = rse_code(FB_INDEX, 'e')) != 0 ) {
-		D0(fprintf(stderr, "\nCould not encode block: "));
+		LOG_ERR("Could not encode block!");
 	} else {
-		D0(fprintf(stderr, "\nEncoded: "));
+		LOG_INFO("Encoded: ");
 	}
 	D0(fec_block_print(FB_INDEX));
 }
@@ -62,9 +62,9 @@ void encode_block(void) {
 void decode_block(tclass_type tclass, int blockId) {
 	int rc;
 	if ((rc = rse_code(FB_INDEX, 'd')) != 0 ) {
-		D0(fprintf(stderr, "\nCould not decode block: "));
+		LOG_ERR("Could not decode block!");
 	} else {
-		D0(fprintf(stderr, "\nDecoded: "));
+		LOG_INFO("Decoded: ");
 	}
 	D0(fec_block_print(FB_INDEX));
 
@@ -206,8 +206,8 @@ static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity
 	fbk[FB_INDEX].block_N = k + h; /*TODO: replace this with a macro later.*/
 
 	if (k > FEC_MAX_K) {
-		fprintf(stderr, "Number of Requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
-		exit (33);
+		LOG_ERR("Number of requested data packet (%d) > FEC_MAX_K (%d)\n", k, FEC_MAX_K);
+		return;
 	}
 
 	/* copy the K data packets from packet buffer */
@@ -239,8 +239,8 @@ static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity
 	fbk[FB_INDEX].block_C = maxPacketLength + FEC_EXTRA_COLS;
 
 	if (h > FEC_MAX_H) {
-		fprintf(stderr, "Number of Requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
-		exit (34);
+		LOG_ERR("Number of requested parity packet (%d) > FEC_MAX_H (%d)\n", h, FEC_MAX_H);
+		return;
 	}
 
 	/* Now populate parity packets, either from the static parity parity buffer, or
@@ -281,7 +281,7 @@ static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity
  * @param[in] blockId The block of pkt_buffer from which to populate the fbk
  */
 int populate_fec_blk_data(tclass_type tclass, int blockId) {
-
+	LOG_INFO("Populating fec block with class %d, block %d", tclass, blockId);
 	populate_fec_blk(&tclasses[tclass], blockId, false);
 
 	return 0;
@@ -296,7 +296,7 @@ int populate_fec_blk_data(tclass_type tclass, int blockId) {
  * @param[in] blockId The block of pkt_buffer from which to populate the fbk
  */
 int populate_fec_blk_data_and_parity(tclass_type tclass, int blockId) {
-
+	LOG_INFO("Populating fec block with class %d, block %d", tclass, blockId);
 	populate_fec_blk(&tclasses[tclass], blockId, true);
 
 	return 0;
@@ -353,8 +353,8 @@ int advance_block_id(tclass_type tclass) {
  */
 int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char** result) {
 	if (size >= FRAME_SIZE_CUTOFF) {
-		fprintf(stderr, "Frame too big for tagging (%d)", size);
-		exit(1);
+		LOG_ERR("Frame too big for tagging (%d)", size);
+		return -1;
 	}
 	fec_sym k = tclasses[tclass].k;
 	fec_sym h = tclasses[tclass].h;
@@ -415,8 +415,8 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size) {
 	 struct ether_header *eth_header = (struct ether_header *)packet;
 	/*If not a wharf encoded packet*/
 	if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
-		fprintf(stderr, "Cannot strip non-Wharf frame");
-		exit(1);
+		LOG_ERR("Cannot strip non-warf frame");
+		return 0;
 	}
 
 	struct fec_header fec_hdr = *(struct fec_header *)(packet + sizeof(struct ether_header));
@@ -498,7 +498,7 @@ int main (int argc, char** argv) {
 	}
 
 	if (NULL == inputInterface) {
-		fprintf(stderr, "Need -i parameter at least\n");
+		LOG_ERR("Need -i at least -i parameter");
 		fprintf(stderr, "Usage: %s -i input [-o output] [-w workerId] [-t workerCt]\n", argv[0]);
 		exit(1);
 	}
@@ -507,7 +507,7 @@ int main (int argc, char** argv) {
 		char output_error_buffer[PCAP_ERRBUF_SIZE];
 		output_handle = pcap_open_live(outputInterface, BUFSIZ, 0, 0, output_error_buffer);
 		if (output_handle == NULL) {
-			fprintf(stderr, "Could not open device %s: %s\n", outputInterface, output_error_buffer);
+			LOG_ERR("Could not open device %s: %s", outputInterface, output_error_buffer);
 			exit(1);
 		}
 	}
@@ -521,7 +521,7 @@ int main (int argc, char** argv) {
 				input_error_buffer
 			);
 	if (input_handle == NULL) {
-		fprintf(stderr, "Could not open device %s: %s\n", inputInterface, input_error_buffer);
+		LOG_ERR("Could not open device %s: %s\n", inputInterface, input_error_buffer);
 		exit(1);
 	}
 
@@ -529,9 +529,10 @@ int main (int argc, char** argv) {
 	signal(SIGALRM, sigalrm_handler);
 
 	while (1) {
-		// Execute the pcap loop for 1 second, then break and call the timeout handler
 		alarm(1);
+		// Execute the pcap loop for 1 second, then break and call the timeout handler
 		pcap_loop(input_handle, 0, my_packet_handler, NULL);
+		LOG_INFO("Handled alarm...");
 		booster_timeout_handler();
 	}
 }

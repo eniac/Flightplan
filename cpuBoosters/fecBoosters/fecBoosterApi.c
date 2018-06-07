@@ -25,12 +25,6 @@ struct rule_entry {
 /** The maximum number of rules allowed in the table */
 #define MAX_RULES 16
 
-#define LOG(s, ...) fprintf(stderr, s "\n", ##__VA_ARGS__)
-
-#define LOG_ERR(s, ...) LOG("ERROR: " s, ##__VA_ARGS__)
-
-#define LOG_INFO(s, ...) LOG(s, ##__VA_ARGS__)
-
 /** Accepts a rule as the first argument after the format string */
 #define LOG_RULE(s, r, ...) LOG_INFO(s "\tport: %5d  tcp: %d  cls: 0x%02x  active: %d", \
                                      ##__VA_ARGS__, r.port, r.is_tcp, r.tclass, r.active)
@@ -383,13 +377,15 @@ int wharf_str_call(char *str) {
             return -1;
         }
         tclass = wharf_query_rule(port, is_tcp);
-        LOG_ERR("Query returned tclass: %d", (int)tclass);
+        LOG_INFO("Query returned tclass: %d", (int)tclass);
         return 0;
     } else if (strcasecmp(cmd, "ENABLE") == 0) {
         char *enablec = strtok(NULL, " ");
         if (enablec == NULL) {
             bool enabled = wharf_get_enabled();
-            LOG_ERR("Wharf enabled? %d", enabled);
+            // Gets rid of unused variable warning when LOG_INFO disabled
+            (void)enabled;
+            LOG_INFO("Wharf enabled? %d", enabled);
             return 0;
         }
         int enablei = atoi(enablec);;

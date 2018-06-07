@@ -18,11 +18,10 @@ inline void reset_decoder (tclass_type tclass, const int block_id) {
 }
 
 // Try to decode new packets, and forward them on.
-// FIXME possible race condition if simultaneous timer expiry and packet arrival that triggers decode.
 void decode_and_forward(tclass_type tclass, const int block_id) {
 	if (nothing_to_decode || is_all_data_pkts_recieved_for_block(tclass, block_id)) {
 		reset_decoder(tclass, block_id);
-		printf("Received all data packets for blockID :: %d Skipping calling decode\n", block_id);
+		LOG_INFO("Received all data packets for blockID :: %d Skipping calling decode", block_id);
 		return;
 	}
 
@@ -95,9 +94,9 @@ void my_packet_handler(
 #ifdef CHECK_TABLE_ON_DECODE
 		tclass_type tclass = wharf_query_packet(packet, header->len);
 		if (tclass != TCLASS_NULL) {
-			fprintf(stderr, "Untagged packet should have had class %d\n", tclass);
+			LOG_ERR("Untagged packet should have had class %d", tclass);
 		} else {
-			fprintf(stderr, "Untagged packet properly untagged\n");
+			LOG_INFO("Untagged packet properly untagged");
 		}
 #endif
 		forward_frame(packet, header->len);
@@ -108,8 +107,8 @@ void my_packet_handler(
 	struct fec_header fecHeader = *(struct fec_header *)(packet + sizeof(struct ether_header));
 
 #if WHARF_DEBUGGING
-	printf("class_id=%d block_id=%d index=%d size=%d\n", fecHeader.class_id, fecHeader.block_id,
-	       fecHeader.index, header->len);
+	LOG_INFO("class_id=%d block_id=%d index=%d size=%d",
+             fecHeader.class_id, fecHeader.block_id, fecHeader.index, header->len);
 #endif // WHARF_DEBUGGING
 
 	tclass_type tclass = fecHeader.class_id;
@@ -137,9 +136,9 @@ void my_packet_handler(
 #ifdef CHECK_TABLE_ON_DECODE
 			tclass_type tclass = wharf_query_packet(stripped, size);
 			if (tclass == (tclass_type) fecHeader.class_id) {
-				fprintf(stderr, "Traffic classes match: %d\n", tclass);
+				LOG_INFO("Traffic classes match: %d", tclass);
 			} else {
-				fprintf(stderr, "Traffic classes do not match! %d and %d\n", tclass, fecHeader.class_id);
+				LOG_ERR("Traffic classes do not match! %d and %d", tclass, fecHeader.class_id);
 			}
 #endif
 			forward_frame(stripped, size);
@@ -153,6 +152,6 @@ void my_packet_handler(
 	    insert_into_pkt_buffer(fecHeader.class_id, fecHeader.block_id, fecHeader.index, size, stripped);
 	}
 	else {
-		fprintf(stderr, "Not buffering duplicate packet\n");
+		LOG_ERR("Not buffering duplicate packet");
 	}
 }
