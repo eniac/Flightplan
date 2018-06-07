@@ -17,6 +17,6 @@ struct fec_header {
 
 #define WHARF_ETHERTYPE 0x081C
 #define MAX_BLOCK 6
-#define FRAME_SIZE_CUTOFF 1400
+#define FRAME_SIZE_CUTOFF 1498
 
 #endif
