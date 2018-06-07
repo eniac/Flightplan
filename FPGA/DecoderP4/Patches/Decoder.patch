@@ -1,5 +1,5 @@
 Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
---- Decoder.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-06-07 15:08:22.208466210 -0400
+--- Decoder.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-06-07 17:52:03.988072519 -0400
 +++ Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-06-07 14:59:32.348837625 -0400
 @@ -224,7 +224,7 @@
  initial begin
@@ -11,7 +11,7 @@ Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
      stim_file = 1;
      check_file = 1;
 Decoder/XilinxSwitch/vivado_sim.bash
---- Decoder.original/XilinxSwitch/vivado_sim.bash	2018-06-07 15:08:22.208466210 -0400
+--- Decoder.original/XilinxSwitch/vivado_sim.bash	2018-06-07 17:52:03.988072519 -0400
 +++ Decoder/XilinxSwitch/vivado_sim.bash	2018-06-07 14:59:32.348837625 -0400
 @@ -1,14 +1,17 @@
  #!/bin/bash
@@ -37,8 +37,8 @@ Decoder/XilinxSwitch/vivado_sim.bash
  xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb 
  xsim --runall XilinxSwitch_tb 
 Decoder/XilinxSwitch/vivado_sim_waveform.bash
---- Decoder.original/XilinxSwitch/vivado_sim_waveform.bash	2018-06-07 15:08:22.208466210 -0400
-+++ Decoder/XilinxSwitch/vivado_sim_waveform.bash	2018-06-07 14:59:32.348837625 -0400
+--- Decoder.original/XilinxSwitch/vivado_sim_waveform.bash	2018-06-07 17:52:03.988072519 -0400
++++ Decoder/XilinxSwitch/vivado_sim_waveform.bash	2018-06-07 17:15:32.506713228 -0400
 @@ -1,14 +1,18 @@
  #!/bin/bash
 +[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
@@ -59,14 +59,14 @@ Decoder/XilinxSwitch/vivado_sim_waveform.bash
 +find ../../../DecoderVivadoHLS/Batch/DecoderVivadoHLS/solution1/syn/vhdl -name "*.vhd" | { xargs -I % ${XILINX_VIVADO}/bin/xvhdl % || true; }
 +mkdir -p xsim.dir/xsc
 +find -name "*.c" | xargs ${XILINX_VIVADO}/bin/xsc -mt off -v 1
-+g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./Decoder_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Deparser_t.TB/ -I$SDSOC_ROOT/Vivado_HLS/include -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
-+g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./Decoder_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./fec_0_t.TB/ -I./Deparser_t.TB/ -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/XilinxSwitch.cpp -o xsim.dir/xsc/XilinxSwitch.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./Decoder_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./Deparser_t.TB/ -I../../../DecoderVivadoHLS -I$SDSOC_ROOT/Vivado_HLS/include -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
++g++ -std=gnu++11 -c -m64 -Wa,-W -fPIC ./XilinxSwitch.TB/sdnet_lib.cpp -o xsim.dir/xsc/sdnet_lib.o -I./XilinxSwitch.TB/ -I./Parser_t.TB/ -I./Update_lvl_t.TB/ -I./Update_lvl_0_t.TB/ -I./Decoder_0_t.TB/ -I./Update_lvl_1_t.TB/ -I./Deparser_t.TB/ -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
 +LIBRARY_PATH=/usr/lib/x86_64-linux-gnu g++ -std=gnu++11 -Wa,-W  -O -fPIC  -m64  -shared  -o xsim.dir/xsc/dpi.so xsim.dir/xsc/*.o ${XILINX_VIVADO}/lib/lnx64.o/librdi_simulator_kernel.so -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1 
 +${XILINX_VIVADO}/bin/xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb -s XilinxSwitch_tb_sim
 +${XILINX_VIVADO}/bin/xsim XilinxSwitch_tb_sim -gui -wdb work.XilinxSwitch_tb_tb.wdb  
 +
 Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
---- Decoder.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-06-07 15:08:22.280465007 -0400
+--- Decoder.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-06-07 17:52:04.132072743 -0400
 +++ Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-06-07 15:01:18.935211689 -0400
 @@ -1,4 +1,5 @@
  #!/bin/bash
@@ -76,7 +76,7 @@ Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
 +g++ -g -O0 -I. -I$SDSOC_ROOT/Vivado_HLS/include -I../../../../DecoderVivadoHLS -I../../../../RSEConfig -std=c++11 $(find .. -name '*.cpp') ../../../../DecoderVivadoHLS/Decoder_core.cpp ../../../../DecoderVivadoHLS/Decoder.cpp -o XilinxSwitch -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1
 +
 Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
---- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-06-07 15:08:22.256465408 -0400
+--- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-06-07 17:52:04.088072675 -0400
 +++ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-06-07 14:59:32.352837640 -0400
 @@ -58,6 +58,8 @@
  	Update_lvl_1_t Update_lvl_1;
@@ -189,7 +189,7 @@ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
  };
  //######################################################
 Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
---- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-06-07 15:08:22.260465341 -0400
+--- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-06-07 17:52:04.088072675 -0400
 +++ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-06-07 14:59:32.352837640 -0400
 @@ -99,13 +99,18 @@
  			_tuple_in_stream << ((_LV<8>)_DUT.ioports).to_hex() << ' ';
