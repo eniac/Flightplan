@@ -1,17 +1,18 @@
 #!/bin/bash
+## This test script runs a pre-encoded file through the forwarder,
+## (which will drop a portion of the packets), and then through the decoder,
+## and checks if the final output matches an input provided in a second file.
 
 # run the empty booster.
-ENCODER_NAME=fecEncodeBooster
 FORWARD_NAME=forwardingNonbooster
 DECODER_NAME=fecDecodeBooster
-BOOSTER_NAME="${ENCODER_NAME}_${DECODER_NAME}"
+BOOSTER_NAME="${DECODER_NAME}"
 INPUT_PCAP=$1
+VERIFY_PCAP=$2
 OUTPUT_PCAP=$(dirname "$INPUT_PCAP")/$BOOSTER_NAME/"_veth_"$(basename "$INPUT_PCAP")
-ENCODED_OUTPUT_PCAP=$(dirname "$INPUT_PCAP")/$BOOSTER_NAME/"_veth_Encoded_"$(basename "$INPUT_PCAP")
 echo "testing booster $BOOSTER_NAME with veth pairs."
 echo "input pcap: $INPUT_PCAP"
 echo "output pcap: $OUTPUT_PCAP"
-echo "encoded output pcap: $ENCODED_OUTPUT_PCAP"
 
 if ! [ $(id -u) = 0 ]; then
    echo "The script need to be run as root." >&2
@@ -48,12 +49,6 @@ sysctl net.ipv6.conf.backVeth3.disable_ipv6=1
 ifconfig frontVeth3 up promisc
 ifconfig backVeth3 up promisc
 
-ip link add frontVeth4 type veth peer name backVeth4
-sysctl net.ipv6.conf.frontVeth4.disable_ipv6=1
-sysctl net.ipv6.conf.backVeth4.disable_ipv6=1
-ifconfig frontVeth4 up promisc
-ifconfig backVeth4 up promisc
-
 #NUM_WORKERS=8
 #MAX_ID=7
 NUM_WORKERS=1
@@ -61,61 +56,44 @@ MAX_ID=0
 
 for WORKER_ID in `seq 0 $MAX_ID`
 do
-	echo "starting $ENCODER_NAME for worker $WORKER_ID"
-	./$ENCODER_NAME -i backVeth1 -o frontVeth2 -w $WORKER_ID -t $NUM_WORKERS &
-done
-
-for WORKER_ID in `seq 0 $MAX_ID`
-do
 	echo "starting $FORWARD_NAME for worker $WORKER_ID"
-	./$FORWARD_NAME -i backVeth2 -o frontVeth3 -w $WORKER_ID -t $NUM_WORKERS &
+	./$FORWARD_NAME -i backVeth1 -o frontVeth2 -w $WORKER_ID -t $NUM_WORKERS &
 done
 
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $DECODER_NAME for worker $WORKER_ID"
-	./$DECODER_NAME -i backVeth3 -o frontVeth4 -w $WORKER_ID -t $NUM_WORKERS &
+	./$DECODER_NAME -i backVeth2 -o frontVeth3 -w $WORKER_ID -t $NUM_WORKERS  &
 done
 
 
 sleep 1
 # start tcpdump to collect the packets that come back into the network from the device.
-echo "starting tcpdump... OUTPUT_PCAP=$OUTPUT_PCAP and ENCODED_OUTPUT_PCAP=$ENCODED_OUTPUT_PCAP"
+echo "starting tcpdump... OUTPUT_PCAP=$OUTPUT_PCAP"
 rm $OUTPUT_PCAP
-tcpdump -Q in -i backVeth4 -w $OUTPUT_PCAP &
-rm $ENCODED_OUTPUT_PCAP
-tcpdump -Q in -i backVeth2 -w $ENCODED_OUTPUT_PCAP &
+tcpdump -Q in -i backVeth3 -w $OUTPUT_PCAP &
 sleep 1
 
 # start tcpreplay to send input from the network to the device (at 1k pps).
 echo "starting tcpreplay..."
 # do NOT use --topspeed parameter : boosters fall behind and input is lost
-tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
-sleep 5
-# Play again after a pause to ensure that encoder and decoder will not break after timeout
-tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
-sleep 5
+tcpreplay --preload-pcap --quiet --loop=1 -p 1000 -i frontVeth1 $INPUT_PCAP
+sleep 10
 
 # cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
-chown $real_user:$real_user $ENCODED_OUTPUT_PCAP
 killall tcpdump
-killall $ENCODER_NAME
 killall $FORWARD_NAME
 killall $DECODER_NAME
 ip link delete frontVeth1
 ip link delete frontVeth2
 ip link delete frontVeth3
-ip link delete frontVeth4
 
 echo "output pcap: $OUTPUT_PCAP"
 echo "input pcap: $INPUT_PCAP"
 
-INLINES=$(tcpdump -tenr $INPUT_PCAP | wc -l)
-OUTLINES=$(tcpdump -tenr $OUTPUT_PCAP | wc -l)
-
-# We sent in the input twice, so double the number of lines
-INLINES=$(( $INLINES * 2 ))
+INLINES=$(tcpdump -tenqr $VERIFY_PCAP | wc -l)
+OUTLINES=$(tcpdump -tenqr $OUTPUT_PCAP | wc -l)
 
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
