@@ -13,6 +13,13 @@ static struct ether_header last_eth_header[TCLASS_MAX + 1];
 static int lastBlockId[TCLASS_MAX + 1];
 
 /**
+ * Timeout values for each traffic class.
+ * Decremented once a second.
+ * When it reaches 0, dummy packets are inserted and the block is forwarded.
+ */
+static int timeouts[TCLASS_MAX + 1];
+
+/**
  * @brief Fills any absent packets with 0-length frames, encodes, and forwards parity packets
  *
  * @param   currBlockID     ID of block to be encoded and forwarded
@@ -66,21 +73,17 @@ void encode_and_forward_block(tclass_type tclass, int currBlockID,
 		forward_frame(new_packet, tagged_size);
 		free(new_packet);
 	}
+	 timeouts[tclass] = 0;
 }
 
-/**
- * Timeout values for each traffic class.
- * Decremented once a second.
- * When it reaches 0, dummy packets are inserted and the block is forwarded.
- */
-static int timeouts[TCLASS_MAX + 1];
 
 void booster_timeout_handler() {
 	for (int i=0; i < TCLASS_MAX; i++) {
 		if (timeouts[i] > 0) {
 			timeouts[i]--;
-			// If the timeout counter transitioned to 0, and all of the data is not yet received
-			if (timeouts[i] == 0 && !is_all_data_pkts_recieved_for_block(i, lastBlockId[i])) {
+			// If the timeout counter transitioned to 0
+			if (timeouts[i] == 0 ) {
+				LOG_INFO("Encode and forward due to timeout %d=0", i);
 				// Force the data to be encoded and forwarded
 				encode_and_forward_block(i, lastBlockId[i], &last_eth_header[i]);
 				lastBlockId[i] = advance_block_id(i);
