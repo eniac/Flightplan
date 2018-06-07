@@ -5,7 +5,14 @@ ENCODER_NAME=fecEncodeBooster
 FORWARD_NAME=forwardingNonbooster
 DECODER_NAME=fecDecodeBooster
 BOOSTER_NAME="${ENCODER_NAME}_${DECODER_NAME}"
+
+if [[ $# != 2 ]]; then
+    echo "Usage: $0 input.pcap rules.csv";
+    exit;
+fi
+
 INPUT_PCAP=$1
+RULES_FILE=$2
 OUTPUT_PCAP=$(dirname "$INPUT_PCAP")/$BOOSTER_NAME/"_veth_"$(basename "$INPUT_PCAP")
 ENCODED_OUTPUT_PCAP=$(dirname "$INPUT_PCAP")/$BOOSTER_NAME/"_veth_Encoded_"$(basename "$INPUT_PCAP")
 echo "testing booster $BOOSTER_NAME with veth pairs."
@@ -62,19 +69,19 @@ MAX_ID=0
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $ENCODER_NAME for worker $WORKER_ID"
-	./$ENCODER_NAME -i backVeth1 -o frontVeth2 -r tag_all.csv &
+	./$ENCODER_NAME -i backVeth1 -o frontVeth2 -r $RULES_FILE &
 done
 
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $FORWARD_NAME for worker $WORKER_ID"
-	./$FORWARD_NAME -i backVeth2 -o frontVeth3 -r tag_all.csv &
+	./$FORWARD_NAME -i backVeth2 -o frontVeth3 -r $RULES_FILE&
 done
 
 for WORKER_ID in `seq 0 $MAX_ID`
 do
 	echo "starting $DECODER_NAME for worker $WORKER_ID"
-	./$DECODER_NAME -i backVeth3 -o frontVeth4 -r tag_all.csv &
+	./$DECODER_NAME -i backVeth3 -o frontVeth4 -r $RULES_FILE&
 done
 
 
@@ -91,10 +98,7 @@ sleep 1
 echo "starting tcpreplay..."
 # do NOT use --topspeed parameter : boosters fall behind and input is lost
 tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
-sleep 5
-# Play again after a pause to ensure that encoder and decoder will not break after timeout
-tcpreplay --preload-pcap --quiet --loop=1  -i frontVeth1 $INPUT_PCAP
-sleep 5
+sleep 2
 
 # cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
@@ -113,9 +117,6 @@ echo "input pcap: $INPUT_PCAP"
 
 INLINES=$(tcpdump -tenr $INPUT_PCAP | wc -l)
 OUTLINES=$(tcpdump -tenr $OUTPUT_PCAP | wc -l)
-
-# We sent in the input twice, so double the number of lines
-INLINES=$(( $INLINES * 2 ))
 
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
