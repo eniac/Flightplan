@@ -7,19 +7,29 @@
 #include "fecBooster.h"
 #include "fecBoosterApi.h"
 
-// This is true when the buffer doesn't contain any packets for decoding.
-static bool nothing_to_decode = true;
-static int lastBlockId[TCLASS_MAX + 1];
-static int lastPacketIdx[TCLASS_MAX + 1];
+/**
+ * Each class of traffic has some decoding state that needs to be maintained
+ */
+struct tclass_state {
+	bool nothing_to_decode;
+	int lastBlockId;
+	int lastPacketIdx;
+	/** After each second, this value is decremented. If it == 0, block is forwarded */
+	int timeout;
+};
+
+static struct tclass_state tclasses[TCLASS_MAX + 1];
 
 inline void reset_decoder (tclass_type tclass, const int block_id) {
-	nothing_to_decode = true;
+	tclasses[tclass].nothing_to_decode = true;
 	mark_pkts_absent(tclass, block_id);
+	tclasses[tclass].timeout = 0;
 }
 
 // Try to decode new packets, and forward them on.
 void decode_and_forward(tclass_type tclass, const int block_id) {
-	if (nothing_to_decode || is_all_data_pkts_recieved_for_block(tclass, block_id)) {
+	if (tclasses[tclass].nothing_to_decode ||
+			is_all_data_pkts_recieved_for_block(tclass, block_id)) {
 		reset_decoder(tclass, block_id);
 		LOG_INFO("Received all data packets for blockID :: %d Skipping calling decode", block_id);
 		return;
@@ -49,26 +59,21 @@ void decode_and_forward(tclass_type tclass, const int block_id) {
 	}
 
 #if WHARF_DEBUGGING
-	printf("num_recovered_packets=%d\n", num_recovered_packets);
+	LOG_INFO("num_recovered_packets=%d\n", num_recovered_packets);
 #endif // WHARF_DEBUGGING
 
 	reset_decoder(tclass, block_id);
 }
 
-/**
- * Holds a timeout value for each traffic class.
- * After each second, this value is decremented.
- * If it reaches 0, the block is forwarded
- */
-static int timeouts[TCLASS_MAX + 1];
 
 void booster_timeout_handler() {
 	for (int i=0; i < TCLASS_MAX; i++) {
-		if (timeouts[i] > 0) {
-			timeouts[i]--;
+		if (tclasses[i].timeout > 0) {
+			tclasses[i].timeout--;
 			// If the timeout counter transitioned to 0 on this iteration
-			if (timeouts[i] == 0) {
-				decode_and_forward(i, lastBlockId[i]);
+			if (tclasses[i].timeout == 0) {
+				LOG_INFO("Decode-and-forward due to timer %d expiry", i);
+				decode_and_forward(i, tclasses[i].lastBlockId);
 			}
 		}
 	}
@@ -112,18 +117,20 @@ void my_packet_handler(
 #endif // WHARF_DEBUGGING
 
 	tclass_type tclass = fecHeader.class_id;
+	struct tclass_state *tclass_status = &tclasses[tclass];
 
-	if (fecHeader.block_id != lastBlockId[tclass] || fecHeader.index < lastPacketIdx[tclass]) {
-		decode_and_forward(tclass, lastBlockId[tclass]);
-		lastBlockId[tclass] = fecHeader.block_id;
+	if (fecHeader.block_id != tclass_status->lastBlockId ||
+			fecHeader.index < tclass_status->lastPacketIdx) {
+		decode_and_forward(tclass, tclass_status->lastBlockId);
+		tclass_status->lastBlockId = fecHeader.block_id;
 
 		int t = wharf_get_t(tclass);
 		if (t > 0) {
-            // TODO: +1 to the decoder timeout to avoid decoding before encoding finished
-			timeouts[tclass] = t + 1;
+			// TODO: +1 to the decoder timeout to avoid decoding before encoding finished
+			tclass_status->timeout = t + 1;
 		}
 	}
-	lastPacketIdx[tclass] = fecHeader.index;
+	tclass_status->lastPacketIdx = fecHeader.index;
 
 	int size = header->len;
 	const u_char *stripped = wharf_strip_frame(packet, &size);
@@ -147,8 +154,7 @@ void my_packet_handler(
 
 	// Buffer data and parity packets in case need to decode.
 	if (!pkt_already_inserted(tclass, fecHeader.block_id, fecHeader.index)) {
-		nothing_to_decode = false;
-
+		tclass_status->nothing_to_decode = false;
 	    insert_into_pkt_buffer(fecHeader.class_id, fecHeader.block_id, fecHeader.index, size, stripped);
 	}
 	else {
