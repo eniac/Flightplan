@@ -11,10 +11,10 @@ Decoder/XilinxSwitch/XilinxSwitch_vivado: Decoder
 Decoder: Decoder.sdnet Scripts/Patch_backpressure.pl
 	@rm -fr Decoder
 	sdnet Decoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Decoder
-	@ln -s ../../../../RSEConfig/Configuration.h Decoder/XilinxSwitch/Decoder_0_t.TB/Configuration.h
+#	@ln -s ../../../../RSEConfig/Configuration.h Decoder/XilinxSwitch/Decoder_0_t.TB/Configuration.h
 	@ln -s ../../../Sources/Decoder_0_t.hpp Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder_0_t.hpp
-	@ln -s ../../../../DecoderVivadoHLS/Decoder.h Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder.h
-	@ln -s ../../../../DecoderVivadoHLS/Decoder.cpp Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder.cpp
+#	@ln -s ../../../../DecoderVivadoHLS/Decoder.h Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder.h
+#	@ln -s ../../../../DecoderVivadoHLS/Decoder.cpp Decoder/XilinxSwitch/Decoder_0_t.TB/Decoder.cpp
 	@ln -s ../../../Sources/Decoder_0_t.v Decoder/XilinxSwitch/Decoder_0_t.HDL/Decoder_0_t.v
 #	@for FILE in ../DecoderVivadoHLS/Batch/DecoderVivadoHLS/solution1/syn/vhdl/*.vhd; do ln -s ../../../$$FILE Decoder/XilinxSwitch/Decoder_0_t.HDL/$$(basename $$FILE); done
 	@cp Input/Packet.user Decoder/XilinxSwitch/Packet.user

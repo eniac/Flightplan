@@ -1,6 +1,6 @@
---- Decoder.sdnet.original	2018-05-17 17:11:51.420905795 -0400
-+++ Decoder.sdnet	2018-05-17 12:48:49.678883281 -0400
-@@ -154,6 +154,31 @@
+--- Decoder.sdnet.original	2018-06-07 15:08:14.732592044 -0400
++++ Decoder.sdnet	2018-06-07 14:59:24.760809067 -0400
+@@ -164,6 +164,32 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
  class Decoder_0_t::UserEngine(200, 0) {
@@ -9,6 +9,7 @@
 +  class Update_fl_t::Tuple(inout) {
 +    struct {
 +      k_1 : 8,
++      h_1 : 8,
 +      packet_count_1 : 8 } }
 +  class hdr_t_0::Tuple(inout) {
 +    struct {
@@ -32,7 +33,7 @@
    class Decoder_input_t::Tuple(in) {
      struct {
        stateful_valid : 1,
-@@ -251,10 +276,15 @@
+@@ -260,10 +286,15 @@
      Update_lvl_0.hdr = Update_lvl.hdr,
      Update_lvl_0.ioports = Update_lvl.ioports,
      Update_lvl_0.local_state = Update_lvl.local_state,
@@ -52,7 +53,7 @@
      Decoder_0.Decoder_input = Update_lvl_0.Decoder_input,
      Update_lvl_1.Decoder_output = Decoder_0.Decoder_output,
      Update_lvl.hdr = Parser.hdr,
-@@ -262,6 +292,7 @@
+@@ -271,6 +302,7 @@
      Update_lvl.ioports = ioports,
      ioports = Update_lvl_1.ioports,
      Parser.packet_in = packet_in,

@@ -13,22 +13,25 @@ public:
 
 	// tuple types
 	struct Update_fl_t {
-		static const size_t _SIZE = 16;
+		static const size_t _SIZE = 24;
 		_LV<8> k_1;
+		_LV<8> h_1;
 		_LV<8> packet_count_1;
-		Update_fl_t& operator=(_LV<16> _x) {
-			k_1 = _x.slice(15,8);
+		Update_fl_t& operator=(_LV<24> _x) {
+			k_1 = _x.slice(23,16);
+			h_1 = _x.slice(15,8);
 			packet_count_1 = _x.slice(7,0);
 			return *this;
 		}
-		_LV<16> get_LV() { return (k_1,packet_count_1); }
-		operator _LV<16>() { return get_LV(); } 
+		_LV<24> get_LV() { return (k_1,h_1,packet_count_1); }
+		operator _LV<24>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tk_1 = " + k_1.to_string() + "\n" + "\t\tpacket_count_1 = " + packet_count_1.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tk_1 = " + k_1.to_string() + "\n" + "\t\th_1 = " + h_1.to_string() + "\n" + "\t\tpacket_count_1 = " + packet_count_1.to_string() + "\n" + "\t)";
 		}
 		Update_fl_t() {} 
-		Update_fl_t( _LV<8> _k_1, _LV<8> _packet_count_1) {
+		Update_fl_t( _LV<8> _k_1, _LV<8> _h_1, _LV<8> _packet_count_1) {
 			k_1 = _k_1;
+			h_1 = _h_1;
 			packet_count_1 = _packet_count_1;
 		}
 	};
@@ -162,23 +165,26 @@ public:
 		}
 	};
 	struct Decoder_input_t {
-		static const size_t _SIZE = 9;
+		static const size_t _SIZE = 17;
 		_LV<1> stateful_valid;
 		_LV<8> k;
-		Decoder_input_t& operator=(_LV<9> _x) {
-			stateful_valid = _x.slice(8,8);
-			k = _x.slice(7,0);
+		_LV<8> h;
+		Decoder_input_t& operator=(_LV<17> _x) {
+			stateful_valid = _x.slice(16,16);
+			k = _x.slice(15,8);
+			h = _x.slice(7,0);
 			return *this;
 		}
-		_LV<9> get_LV() { return (stateful_valid,k); }
-		operator _LV<9>() { return get_LV(); } 
+		_LV<17> get_LV() { return (stateful_valid,k,h); }
+		operator _LV<17>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\tk = " + k.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\tk = " + k.to_string() + "\n" + "\t\th = " + h.to_string() + "\n" + "\t)";
 		}
 		Decoder_input_t() {} 
-		Decoder_input_t( _LV<1> _stateful_valid, _LV<8> _k) {
+		Decoder_input_t( _LV<1> _stateful_valid, _LV<8> _k, _LV<8> _h) {
 			stateful_valid = _stateful_valid;
 			k = _k;
+			h = _h;
 		}
 	};
 	struct Decoder_output_t {
@@ -279,6 +285,7 @@ public:
 			input_tuples Tuple;
 			Tuple.Decoder_input.Stateful_valid = Decoder_input.stateful_valid.to_ulong();
 			Tuple.Decoder_input.k = Decoder_input.k.to_ulong();
+			Tuple.Decoder_input.h = Decoder_input.h.to_ulong();
 			Tuple.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
 			Tuple.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
 			Tuple.Hdr.Eth.Src = hdr.eth.src.to_ulong();
@@ -290,6 +297,7 @@ public:
 			Tuple.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
 			Tuple.Update_fl.Packet_count = Update_fl.packet_count_1.to_ulong();
 			Tuple.Update_fl.k = Update_fl.k_1.to_ulong();
+			Tuple.Update_fl.h = Update_fl.h_1.to_ulong();
 			Tuple.Ioports.Egress_port = ioports.egress_port.to_ulong();
 			Tuple.Ioports.Ingress_port = ioports.ingress_port.to_ulong();
 			Tuple.Local_state.Id = local_state.id.to_ulong();
@@ -359,6 +367,7 @@ public:
 			hdr.fec.original_type = Tuples[0].Hdr.FEC.Original_type.to_uint();
 			Update_fl.packet_count_1 = Tuples[0].Update_fl.Packet_count.to_uint();
 			Update_fl.k_1 = Tuples[0].Update_fl.k.to_uint();
+			Update_fl.h_1 = Tuples[0].Update_fl.h.to_uint();
 			ioports.egress_port = Tuples[0].Ioports.Egress_port.to_uint();
 			ioports.ingress_port = Tuples[0].Ioports.Ingress_port.to_uint();
 			local_state.id = Tuples[0].Local_state.Id.to_uint();
