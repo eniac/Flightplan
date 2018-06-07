@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # run the empty booster.
-ENCODER_NAME=fecTagEncodeBooster
+ENCODER_NAME=fecEncodeBooster
 FORWARD_NAME=forwardingNonbooster
 DECODER_NAME=fecDecodeBooster
 BOOSTER_NAME="${ENCODER_NAME}_${DECODER_NAME}"

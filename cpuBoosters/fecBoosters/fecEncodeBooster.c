@@ -19,7 +19,7 @@ static const u_char *last_unencoded_packet = NULL;
  * @param   last_packet     Sample packet, used to obtain src and dst MAC address for parity
  */
 void encode_and_forward_block(int currBlockID, const u_char *last_packet) {
-	enum traffic_class tclass = one; // FIXME const -- use traffic classification
+	enum traffic_class tclass = TCLASS_ONE; // FIXME const -- use traffic classification
 
 	u_char *new_packet = NULL;
 
@@ -40,7 +40,7 @@ void encode_and_forward_block(int currBlockID, const u_char *last_packet) {
 	}
 
 	/* Populate the global fec structure for rse encoder and call the encode */
-	call_fec_blk_get(currBlockID);
+	populate_fec_blk_data(currBlockID);
 
 	/* Encoder */
 	encode_block();
@@ -79,7 +79,7 @@ void sigalrm_handler(int signal) {
 	}
 	encode_and_forward_block(lastBlockId, last_unencoded_packet);
 	lastBlockId = advance_block_id();
-	zeroout_block_in_pkt_buffer(lastBlockId);
+	mark_pkts_absent(lastBlockId);
 }
 
 /**
@@ -94,13 +94,8 @@ void my_packet_handler(
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
-	if (workerCt > 1) {
-		fprintf(stderr, "This booster doesn't work across workers at present\n");
-		exit(1);
-	}
-
 	u_char *new_packet = NULL;
-	enum traffic_class tclass = one; // FIXME const -- use traffic classification
+	enum traffic_class tclass = TCLASS_ONE; // FIXME const -- use traffic classification
 
 	int tagged_size = wharf_tag_frame(tclass, packet, header->len, &new_packet);
 
@@ -114,7 +109,7 @@ void my_packet_handler(
 	/* If this packet belongs to a new block */
 	if (fecHeader->block_id != lastBlockId) {
 		lastBlockId = fecHeader->block_id;
-		zeroout_block_in_pkt_buffer(lastBlockId);
+		mark_pkts_absent(lastBlockId);
 
 #if WHARF_ENCODE_TIMEOUT != 0
 		// If no new block before timeout, force the block to be forwarded
