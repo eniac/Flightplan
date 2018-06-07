@@ -6,6 +6,7 @@ int wharf_set_tclass(tclass_type tclass, fec_sym k, fec_sym h, int t);
 int wharf_delete_tclass(tclass_type tclass);
 int wharf_query_tclass(tclass_type tclass, fec_sym *k, fec_sym *h, int *t);
 fec_sym wharf_get_k(tclass_type tclass);
+int wharf_get_t(tclass_type tclass);
 
 int wharf_set_default_class(tclass_type tclass);
 int wharf_set_rule(tclass_type tclass, uint16_t port, bool is_tcp);

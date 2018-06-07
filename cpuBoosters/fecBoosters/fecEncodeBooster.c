@@ -9,7 +9,8 @@
 
 // Packet ether header mac address is copied from last received packet
 // Must be global to be accessible through SIGALRM handler
-static struct ether_header last_eth_header;
+static struct ether_header last_eth_header[TCLASS_MAX + 1];
+static int lastBlockId[TCLASS_MAX + 1];
 
 /**
  * @brief Fills any absent packets with 0-length frames, encodes, and forwards parity packets
@@ -67,20 +68,26 @@ void encode_and_forward_block(tclass_type tclass, int currBlockID,
 	}
 }
 
-void sigalrm_handler(int signal) {
-	if (signal != SIGALRM) {
-		fprintf(stderr, "Unexpected signal: %d\n", signal);
-		exit(1);
+/**
+ * Timeout values for each traffic class.
+ * Decremented once a second.
+ * When it reaches 0, dummy packets are inserted and the block is forwarded.
+ */
+static int timeouts[TCLASS_MAX + 1];
+
+void booster_timeout_handler() {
+	for (int i=0; i < TCLASS_MAX; i++) {
+		if (timeouts[i] > 0) {
+			timeouts[i]--;
+			// If the timeout counter transitioned to 0, and all of the data is not yet received
+			if (timeouts[i] == 0 && !is_all_data_pkts_recieved_for_block(i, lastBlockId[i])) {
+				// Force the data to be encoded and forwarded
+				encode_and_forward_block(i, lastBlockId[i], &last_eth_header[i]);
+				lastBlockId[i] = advance_block_id(i);
+				mark_pkts_absent(i, lastBlockId[i]);
+			}
+		}
 	}
-	// FIXME: Alarm handler is broken by addition of traffic classes
-/*
-	if (is_all_data_pkts_recieved_for_block(lastBlockId)) {
-		return;
-	}
-	encode_and_forward_block(lastBlockId, &last_eth_header);
-	lastBlockId = advance_block_id();
-	mark_pkts_absent(lastBlockId);
-*/
 }
 
 /**
@@ -113,10 +120,16 @@ void my_packet_handler(
 	int currBlockID = fecHeader->block_id;
 	int currPktIdx = fecHeader->index;
 
+
 	/* If this packet belongs to a new block */
 	if (fecHeader->index == 0) {
 		mark_pkts_absent(tclass, fecHeader->block_id);
+			lastBlockId[tclass] = currBlockID;
 
+			int t = wharf_get_t(tclass);
+			if (t > 0) {
+				timeouts[tclass] = t;
+			}
 #if WHARF_ENCODE_TIMEOUT != 0
 		// If no new block before timeout, force the block to be forwarded
 		signal(SIGALRM, sigalrm_handler);
@@ -127,7 +140,7 @@ void my_packet_handler(
 
 	/* Forward data packet now, then buffer it below (Needed for encoder) */
 	if (fecHeader->index < wharf_get_k(tclass)) {
-		last_eth_header = *(struct ether_header *)packet;
+		last_eth_header[tclass] = *(struct ether_header *)packet;
 		forward_frame(new_packet, tagged_size);
 	}
 
@@ -145,7 +158,7 @@ void my_packet_handler(
 #if WHARF_ENCODE_TIMEOUT != 0
 		alarm(0);
 #endif
-		encode_and_forward_block(tclass, currBlockID, &last_eth_header);
+		encode_and_forward_block(tclass, currBlockID, &last_eth_header[tclass]);
 	}
 	return;
 }

@@ -5,7 +5,7 @@
 
 #include "fecBooster.h"
 
-#define WHARF_DROP_AFTER 15
+#define WHARF_DROP_AFTER 8
 #define WHARF_DROP_NOTAFTER 0
 
 // Setting this to 0 drops the first packet, which ensures that a packet is dropped
@@ -28,4 +28,7 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_c
 		drop -= 1;
 	}
 #endif // WHARF_DROP_AFTER > 0
+}
+
+void booster_timeout_handler() {
 }

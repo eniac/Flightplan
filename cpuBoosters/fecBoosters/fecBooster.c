@@ -1,5 +1,6 @@
-
+#include <unistd.h>
 #include <stdarg.h>
+#include <signal.h>
 #include <stdio.h>
 #include <arpa/inet.h>
 #include "wharf_pcap.h"
@@ -453,6 +454,10 @@ void forward_frame(const void * packet, int len) {
 	}
 }
 
+static void sigalrm_handler(int signal) {
+	pcap_breakloop(input_handle);
+}
+
 int main (int argc, char** argv) {
 	char* inputInterface = NULL;
 	char* outputInterface = NULL;
@@ -520,5 +525,13 @@ int main (int argc, char** argv) {
 		exit(1);
 	}
 
-	pcap_loop(input_handle, 0, my_packet_handler, NULL);
+	// Alarm handler will signal the pcap loop to break
+	signal(SIGALRM, sigalrm_handler);
+
+	while (1) {
+		// Execute the pcap loop for 1 second, then break and call the timeout handler
+		alarm(1);
+		pcap_loop(input_handle, 0, my_packet_handler, NULL);
+		booster_timeout_handler();
+	}
 }

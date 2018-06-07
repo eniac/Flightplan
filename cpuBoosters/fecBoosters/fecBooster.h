@@ -65,6 +65,9 @@ bool pkt_recovered(tclass_type tclass, int blockId, int pktIdx);
 
 /** The handler to be specified in each individual booster file */
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+
+void booster_timeout_handler();
+
 /** Checks that no packets are absent */
 bool is_all_data_pkts_recieved_for_block(tclass_type type, int blockId);
 /** Marks all packets in given block as absent */
@@ -80,7 +83,7 @@ void decode_block(tclass_type type, int block_id);
 /** Copies parity from fbk to pkt_buffer */
 int copy_parity_packets_to_pkt_buffer(tclass_type tclass, int blockId);
 /** Advances the block ID with which new wharf frames will be tagged */
-unsigned int advance_block_id();
+int advance_block_id(tclass_type tclass);
 /** Encapsulates packet with new header */
 int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char** result);
 /** Removes header from encapsulated packet */

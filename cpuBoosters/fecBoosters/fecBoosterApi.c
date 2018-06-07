@@ -111,6 +111,18 @@ fec_sym wharf_get_k(tclass_type tclass) {
     return tclasses[tclass].k;
 }
 
+int wharf_get_t(tclass_type tclass) {
+    if (tclass > TCLASS_MAX) {
+        LOG_ERR("Tclass 0x%02x too high", tclass);
+        return -1;
+    }
+    if (!tclasses[tclass].active) {
+        LOG_ERR("Tclass 0x%02x not set", tclass);
+        return -1;
+    }
+    return tclasses[tclass].t;
+}
+
 /**
  * Gets the value of k, h, and t associated with a given class.
  * If k, h, or t are NULL, will not attempt to assign them.

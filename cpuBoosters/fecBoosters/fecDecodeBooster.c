@@ -56,18 +56,24 @@ void decode_and_forward(tclass_type tclass, const int block_id) {
 	reset_decoder(tclass, block_id);
 }
 
+/**
+ * Holds a timeout value for each traffic class.
+ * After each second, this value is decremented.
+ * If it reaches 0, the block is forwarded
+ */
+static int timeouts[TCLASS_MAX + 1];
 
-#if WHARF_DECODE_TIMEOUT != 0
-void sigalrm_handler(int signal) {
-	if (signal != SIGALRM) {
-		fprintf(stderr, "Unexpected signal: %d\n", signal);
-		exit(1);
+void booster_timeout_handler() {
+	for (int i=0; i < TCLASS_MAX; i++) {
+		if (timeouts[i] > 0) {
+			timeouts[i]--;
+			// If the timeout counter transitioned to 0 on this iteration
+			if (timeouts[i] == 0) {
+				decode_and_forward(i, lastBlockId[i]);
+			}
+		}
 	}
-
-    // FIXME Alarm handler/timeouts are broken due to new traffic classes
-	//decode_and_forward(lastBlockId); 
 }
-#endif // WHARF_DECODE_TIMEOUT != 0
 
 #define CHECK_TABLE_ON_DECODE
 
@@ -111,10 +117,12 @@ void my_packet_handler(
 	if (fecHeader.block_id != lastBlockId[tclass] || fecHeader.index < lastPacketIdx[tclass]) {
 		decode_and_forward(tclass, lastBlockId[tclass]);
 		lastBlockId[tclass] = fecHeader.block_id;
-#if WHARF_DECODE_TIMEOUT != 0
-		alarm(WHARF_DECODE_TIMEOUT);
-		signal(SIGALRM, sigalrm_handler);
-#endif // WHARF_DECODE_TIMEOUT != 0
+
+		int t = wharf_get_t(tclass);
+		if (t > 0) {
+            // TODO: +1 to the decoder timeout to avoid decoding before encoding finished
+			timeouts[tclass] = t + 1;
+		}
 	}
 	lastPacketIdx[tclass] = fecHeader.index;
 
