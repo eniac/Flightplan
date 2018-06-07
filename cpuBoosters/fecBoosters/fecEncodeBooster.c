@@ -10,7 +10,7 @@ static int lastBlockId = 0;
 
 // Packet ether header mac address is copied from last received packet
 // Must be global to be accessible through SIGALRM handler
-static const u_char *last_unencoded_packet = NULL;
+static struct ether_header last_eth_header;
 
 /**
  * @brief Fills any absent packets with 0-length frames, encodes, and forwards parity packets
@@ -18,24 +18,25 @@ static const u_char *last_unencoded_packet = NULL;
  * @param   currBlockID     ID of block to be encoded and forwarded
  * @param   last_packet     Sample packet, used to obtain src and dst MAC address for parity
  */
-void encode_and_forward_block(int currBlockID, const u_char *last_packet) {
+void encode_and_forward_block(int currBlockID, struct ether_header *packet_eth_header) {
 	enum traffic_class tclass = TCLASS_ONE; // FIXME const -- use traffic classification
+
+	u_char *last_packet = (u_char *)packet_eth_header;
 
 	u_char *new_packet = NULL;
 
 	/* Loop over data packets, filling in missing packets with 0-length frames */
 	for (int i=0; i < NUM_DATA_PACKETS; i++) {
-		if (pkt_buffer_filled[currBlockID][i] == PACKET_ABSENT) {
+		if (!pkt_already_inserted(currBlockID, i)) {
 
-			int tagged_size = wharf_tag_frame(tclass, (u_char*)pkt_buffer[currBlockID][i], 0, &new_packet);
+			/* Have to provide an ether header to be copied to the wharf tag */
+			int tagged_size = wharf_tag_frame(tclass, last_packet, 0, &new_packet);
 
-			/** 0-length frames must also be forwarded to the decoder */
+			/* 0-length frames must also be forwarded to the decoder */
 			forward_frame(new_packet, tagged_size);
 
-			FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(pkt_buffer[currBlockID][i]);
-			*original_frame_size = 0;
-
-			pkt_buffer_filled[currBlockID][i] = PACKET_PRESENT;
+			/* Insert the 0-length dummy packet into the pkt buffer */
+			insert_into_pkt_buffer(currBlockID, i, 0, last_packet);
 		}
 	}
 
@@ -51,8 +52,8 @@ void encode_and_forward_block(int currBlockID, const u_char *last_packet) {
 	/* Inject all parity packets in the block to the network */
 	for (int i = NUM_DATA_PACKETS; i < NUM_DATA_PACKETS + NUM_PARITY_PACKETS; i++) {
 		// We don't encapsulate ethernet header for parity packets
-		int tagged_size = wharf_tag_frame(tclass, (u_char*)pkt_buffer[currBlockID][i], parity_payload_size, &new_packet);
-		struct ether_header *packet_eth_header = (struct ether_header *)last_packet;
+		u_char *parity_pkt = retrieve_from_pkt_buffer(currBlockID, i, NULL);
+		int tagged_size = wharf_tag_frame(tclass, parity_pkt, parity_payload_size, &new_packet);
 		struct ether_header *parity_eth_header = (struct ether_header *)new_packet;
 
 		/* Copy over the src and dst mac from the last data packet in the block
@@ -63,7 +64,6 @@ void encode_and_forward_block(int currBlockID, const u_char *last_packet) {
 		forward_frame(new_packet, tagged_size);
 		free(new_packet);
 	}
-	last_unencoded_packet = NULL;
 }
 
 void sigalrm_handler(int signal) {
@@ -71,13 +71,10 @@ void sigalrm_handler(int signal) {
 		fprintf(stderr, "Unexpected signal: %d\n", signal);
 		exit(1);
 	}
-	if (last_unencoded_packet == NULL) {
-		return;
-	}
 	if (is_all_data_pkts_recieved_for_block(lastBlockId)) {
 		return;
 	}
-	encode_and_forward_block(lastBlockId, last_unencoded_packet);
+	encode_and_forward_block(lastBlockId, &last_eth_header);
 	lastBlockId = advance_block_id();
 	mark_pkts_absent(lastBlockId);
 }
@@ -90,9 +87,9 @@ void sigalrm_handler(int signal) {
  * @param[in]  packet  The packet
  */
 void my_packet_handler(
-    u_char *args,
-    const struct pcap_pkthdr *header,
-    const u_char *packet
+	u_char *args,
+	const struct pcap_pkthdr *header,
+	const u_char *packet
 ) {
 	u_char *new_packet = NULL;
 	enum traffic_class tclass = TCLASS_ONE; // FIXME const -- use traffic classification
@@ -104,7 +101,6 @@ void my_packet_handler(
 	/*storing these values, since new_packet is freed later.*/
 	int currBlockID = fecHeader->block_id;
 	int currPktIdx = fecHeader->index;
-	int currOriginalSize = fecHeader->size;
 
 	/* If this packet belongs to a new block */
 	if (fecHeader->block_id != lastBlockId) {
@@ -121,22 +117,14 @@ void my_packet_handler(
 
 	/* Forward data packet now, then buffer it below (Needed for encoder) */
 	if (fecHeader->index < NUM_DATA_PACKETS) {
-		last_unencoded_packet = packet;
+		last_eth_header = *(struct ether_header *)packet;
 		forward_frame(new_packet, tagged_size);
 	}
 
 	free(new_packet);
 
-	/* Update the received pkt in the pkt buffer */
-	if (pkt_buffer_filled[currBlockID][currPktIdx] == PACKET_ABSENT) {
-		FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(pkt_buffer[currBlockID][currPktIdx]);
-		*original_frame_size = currOriginalSize;
-
-		/* Store the original packet to the packet buffer */
-		memcpy(pkt_buffer[currBlockID][currPktIdx] + sizeof(FRAME_SIZE_TYPE), packet, header->len);
-
-		/* Update filled status */
-		pkt_buffer_filled[currBlockID][currPktIdx] = PACKET_PRESENT;
+	if (!pkt_already_inserted(currBlockID, currPktIdx)) {
+		insert_into_pkt_buffer(currBlockID, currPktIdx, header->len, packet);
 	} else {
 		fprintf(stderr, "Tagging produced a duplicate index: %d/%d\n", currBlockID, currPktIdx);
 		exit(1);
@@ -147,7 +135,7 @@ void my_packet_handler(
 #if WHARF_ENCODE_TIMEOUT != 0
 		alarm(0);
 #endif
-		encode_and_forward_block(currBlockID, packet);
+		encode_and_forward_block(currBlockID, &last_eth_header);
 	}
 	return;
 }

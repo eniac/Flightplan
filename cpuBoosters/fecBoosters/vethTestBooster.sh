@@ -20,8 +20,8 @@ mkdir $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
 chown $real_user:$real_user $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
 
 
-# bring up veth pairs. 
-# networkVeth = network side of cable. 
+# bring up veth pairs.
+# networkVeth = network side of cable.
 # deviceVeth = booster side of cable.
 ip link add networkVeth type veth peer name deviceVeth
 sysctl net.ipv6.conf.networkVeth.disable_ipv6=1
