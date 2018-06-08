@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="MemcoreHLS.cpp" path="/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcoreHLS.cpp"/>
+    <originFiles name="MemcoreHLS.h" path="/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcoreHLS.h"/>
+  </source>
+  <testbench/>
+</autopilotfilemapping:AutoPilotFileMapping>

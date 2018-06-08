@@ -3,6 +3,7 @@
 
 #include "sdnet_lib.hpp"
 #include "Memcore.h"
+#include "MemHLS.h"
 namespace SDNET {
 //#####################################################
 class memcached_0_t { // UserEngine
@@ -360,9 +361,35 @@ public:
 		// TODO: *********************************
 		// TODO: *** USER ENGINE FUNCTIONALITY ***
 		// TODO: *********************************
-                char * packet = packet_block.data;
+	    	//char * packet = packet_block.data;
+		hls::stream<packet_interface> Packet_input;
+		unsigned Words_per_packet = DIVIDE_AND_ROUNDUP(packet_in.size(), BYTES_PER_WORD);
 		std::cout <<"Enter USER ENGINE FUNCTION" << std::endl;
-		
+		for (int i = 0; i < Words_per_packet; i++)
+		{	
+			ap_uint<MEM_AXI_BUS_WIDTH> WORD = 0;
+			for (int j = 0; j < BYTES_PER_WORD; j++)
+			{
+				WORD <<= 8;
+				unsigned Offset = BYTES_PER_WORD * i + j;
+				if (Offset < packet_in.size())
+					WORD |= packet_in[Offset];
+			}
+			bool End = i == Words_per_packet - 1;
+			packet_interface Input;
+			Input.Data = Word;
+			Input.Start_of_frame = i == 0;
+			Input.End_of_frame = End;
+			Input.count = packet_in.size() % BYTES_PER_WORD;
+			if (Input.count == 0 || !End)
+				Input.count = 8;
+			Input.Error = 0;
+			Packet_input.write(Input);
+			
+		}
+		hls::stream<packet_interface> Packet_output;
+		Memcore(Packet_input, Packet_output);
+		/*		
 		//write input
 		for (int i = 0; i< MAX_DATA_SIZE; i++)
 			{
@@ -418,7 +445,7 @@ public:
 		if (packet_block.STATE == 2) return true;
 		printf("STATE ERROR!");
 		printf("%d",packet_block.STATE);
-		exit(0);
+		exit(0);*/
 		return false;
 	}
 };

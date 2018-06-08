@@ -24,7 +24,7 @@ int lookup(char KEY[MAX_KEY_LEN], int KEY_LEN);
 void ADD_RESP_WORD(int PACKET_OFFSET, int RESP_INDEX);
 void ADD_NUM_FIELD(int PACKET_OFFSET, int NUM);
 
-static enum ascii_cmd ascii_to_command(char in[MAX_PACKET_SIZE], size_t length, FIELD* CMD)
+/*static enum ascii_cmd ascii_to_command(char in[MAX_PACKET_SIZE], size_t length, FIELD* CMD)
 {
     struct {
       const char *cmd;
@@ -43,7 +43,7 @@ static enum ascii_cmd ascii_to_command(char in[MAX_PACKET_SIZE], size_t length, 
     {
       if (strncmp(in, commands[x].cmd, commands[x].len) == 0)
       {
-        /* Potential hit */
+       // Potential hit 
         if (length == commands[x].len || isspace(*(in + commands[x].len)))
         {
           CMD->f_start = in;
@@ -57,29 +57,31 @@ static enum ascii_cmd ascii_to_command(char in[MAX_PACKET_SIZE], size_t length, 
   }
 
   return UNKNOWN_CMD;
-}
+}*/
 
-static int parse_next(char in[MAX_PACKET_SIZE], FIELD* NEXT)
+static int parse_next(int start, FIELD* NEXT)
 {
 	int len= 0;
+	int pos_now = start;
 	/* Strip leading whitespaces */
-	if ((*(in))!= ' ')  printf("No Space Found"); 
-	in++;
-	while (*(in + len) != '\0' && !isspace(*(in + len)) && (*(in+len)!='\r'))
+	if (in[pos_now]!= ' ')  printf("No Space Found"); 
+	pos_now++;
+	while (in[pos_now+len] != '\0' && in[pos_now+len] != ' ' && in[pos_now+len]!='\r'))
 		++len;
-	NEXT->f_start = in;
+	NEXT->f_start = pos_now;
 	NEXT->f_len = len; 
 	if (!len) return 0;
 	return 1;
 }
 
-static int parse_data(char in[MAX_PACKET_SIZE], int len, FIELD* NEXT)
+static int parse_data(int start, int len, FIELD* NEXT)
 {
   // Check /r/n
-  if ((*(in)) != '\r' || (*(in+1)) != '\n')
+  int pos_now = start;
+  if (in[pos_now] != '\r' || (in[pos_now+1]) != '\n')
    printf("Request Line should end with \\r\\n");
-  in +=2;
-  NEXT->f_start = in;
+  pos_now +=2;
+  NEXT->f_start =pos_now;
   NEXT->f_len = len;  
   
   return 1;
@@ -98,7 +100,7 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       if (packet_block.STATE == 0)
       {
         parse_next(CMD.f_start+CMD.f_len,&KEY);
-        strncpy(commands.KEY,KEY.f_start, KEY.f_len);
+        //strncpy(commands.KEY,KEY.f_start, KEY.f_len);
         commands.KEY[KEY.f_len] = 0;
         parse_next(KEY.f_start+KEY.f_len, &FLAG);
         mem_index = lookup(commands.KEY, KEY.f_len); 
@@ -110,11 +112,11 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
         memset(temp,0,8);
         commands.BYTE = atoi(strncpy(temp,BYTE.f_start,BYTE.f_len));
         parse_data(BYTE.f_start+BYTE.f_len,commands.BYTE, &DATA);
-        strncpy(commands.DATA,DATA.f_start,commands.BYTE);
+        //strncpy(commands.DATA,DATA.f_start,commands.BYTE);
         Memory[mem_index].KEY_LEN = KEY.f_len;
-        strncpy(Memory[mem_index].KEY,commands.KEY, Memory[mem_index].KEY_LEN);
+        //strncpy(Memory[mem_index].KEY,commands.KEY, Memory[mem_index].KEY_LEN);
         Memory[mem_index].DATA_LEN = commands.BYTE;
-        strncpy(Memory[mem_index].DATA, commands.DATA, Memory[mem_index].DATA_LEN); 
+        //strncpy(Memory[mem_index].DATA, commands.DATA, Memory[mem_index].DATA_LEN); 
         Memory[mem_index].VALID = 1;
 
 	packet_block.STATE = 2;
@@ -132,7 +134,7 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
 
     case(GET_CMD):      
       parse_next(CMD.f_start+CMD.f_len,&KEY);
-      strncpy(commands.KEY,KEY.f_start, KEY.f_len);
+      //strncpy(commands.KEY,KEY.f_start, KEY.f_len);
       mem_index = lookup(commands.KEY,KEY.f_len);
       printf("get index: %d",mem_index);
       if (Memory[mem_index].VALID == 1)
@@ -179,7 +181,7 @@ void Mem_Parser(char s[MAX_DATA_SIZE])
       if (packet_block.STATE == 0)
       {
         parse_next(CMD.f_start+CMD.f_len,&KEY);
-        strncpy(commands.KEY,KEY.f_start, KEY.f_len);	
+        //strncpy(commands.KEY,KEY.f_start, KEY.f_len);	
         mem_index = lookup(commands.KEY, KEY.f_len);
         if (Memory[mem_index].VALID == 1)
         {
