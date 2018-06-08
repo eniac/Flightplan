@@ -377,12 +377,12 @@ public:
 			}
 			bool End = i == Words_per_packet - 1;
 			packet_interface Input;
-			Input.Data = Word;
+			Input.Data = WORD;
 			Input.Start_of_frame = i == 0;
 			Input.End_of_frame = End;
-			Input.count = packet_in.size() % BYTES_PER_WORD;
-			if (Input.count == 0 || !End)
-				Input.count = 8;
+			Input.Count = packet_in.size() % BYTES_PER_WORD;
+			if (Input.Count == 0 || !End)
+				Input.Count = 8;
 			Input.Error = 0;
 			Packet_input.write(Input);
 			

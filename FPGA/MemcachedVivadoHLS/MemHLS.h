@@ -12,7 +12,7 @@ typedef struct
 {
 	ap_uint<1> Error;
 	ap_uint<4> Count;
-	Data_word Data;
+	Data_Word Data;
 	ap_uint<1> End_of_frame;
 	ap_uint<1> Start_of_frame;
 }packet_interface;
