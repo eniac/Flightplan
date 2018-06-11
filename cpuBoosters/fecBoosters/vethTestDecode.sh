@@ -105,6 +105,11 @@ OUTLINES=$(cat $OUT_TXT | wc -l)
 sort $IN_TXT > $IN_SRT
 sort $OUT_TXT > $OUT_SRT
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
     echo "Running diff:"
