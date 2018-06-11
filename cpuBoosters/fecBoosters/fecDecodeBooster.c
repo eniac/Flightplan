@@ -79,6 +79,11 @@ void booster_timeout_handler() {
 	}
 }
 
+/**
+ * This definition causes the decoder to check that encoded packets
+ * are tagged with the proper class (based on port and protocol) upon decoding.
+ * Comment out to disable this feature
+ */
 #define CHECK_TABLE_ON_DECODE
 
 /**

@@ -80,4 +80,4 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size);
 /** Forwards the frame on the ouptut pcap handle */
 void forward_frame(const void * packet, int len);
 
-#endif
+#endif // FEC_BOOSTER_H_
