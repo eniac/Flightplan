@@ -17,6 +17,10 @@ static pcap_t *output_handle = NULL;
 struct tclass_buffer {
 	/** Buffer into which received and decoded packets are placed */
 	u_char pkts[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+
+	/** Size of each packet as it is stored in the buffer */
+	size_t pkt_sz[NUM_BLOCKS][TOTAL_NUM_PACKETS];
+
 	/** Status of packets stored in pkts (present, absent, generated) */
 	enum pkt_buffer_status status[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
@@ -143,6 +147,7 @@ void insert_into_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
 
 	memcpy(buff + offset, packet, pktSize);
 	tclasses[tclass].status[blockId][pktIdx] = PACKET_PRESENT;
+	tclasses[tclass].pkt_sz[blockId][pktIdx] = pktSize + offset;
 }
 
 /**
@@ -223,7 +228,7 @@ static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity
 		if (buff->status[blockId][i] == PACKET_PRESENT) {
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
-			int payloadLength = get_pkt_payload_length(buff->pkts[blockId][i]);
+			int payloadLength = buff->pkt_sz[blockId][i];
 
 			fbk[FB_INDEX].plen[i] = payloadLength;
 
@@ -259,7 +264,16 @@ static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity
 			if (buff->status[blockId][y] == PACKET_PRESENT) {
 				fbk[FB_INDEX].pdata[y] = (fec_sym *)buff->pkts[blockId][y];
 				fbk[FB_INDEX].pstat[y] = FEC_FLAG_KNOWN;
-				fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
+
+				int parity_sz = buff->pkt_sz[blockId][y];
+				fbk[FB_INDEX].plen[y] = parity_sz;
+
+				// It is possible that a missing packet is the largest in the frame.
+				// In this case, the parity packet size should set block_C
+				if (parity_sz > fbk[FB_INDEX].block_C) {
+					fbk[FB_INDEX].block_C = parity_sz;
+				}
+
 			} else {
 				/* If it should be, but is not */
 				fbk[FB_INDEX].pstat[y] = FEC_FLAG_IGNORE;
