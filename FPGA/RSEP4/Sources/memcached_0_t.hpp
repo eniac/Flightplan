@@ -389,6 +389,17 @@ public:
 		}
 		hls::stream<packet_interface> Packet_output;
 		Memcore(Packet_input, Packet_output);
+		packet_out.resize(PAYLOAD_OFFSET_UDP - MEMCACHED_UDP_HEADER);
+		packet_interface Output;
+		do 
+		{
+			Output = Packet_output.read();
+			for (int i = 0; i < Output.Count; i++)
+			{
+				char Byte = (Output.Data >> (8 * (BYTES_PER_WORD - i -1))) & 0xFF;
+				packet_out.push_back(Byte);
+			}	
+		}while(!Output.End_of_frame);
 		/*		
 		//write input
 		for (int i = 0; i< MAX_DATA_SIZE; i++)

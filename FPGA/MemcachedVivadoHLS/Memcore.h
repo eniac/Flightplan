@@ -1,15 +1,22 @@
+
 //Assumptions
 #define REQUEST_LINE_SIZE 2000
 #define MAX_DATA_SIZE 2000 
 #define MAX_PACKET_SIZE REQUEST_LINE_SIZE+MAX_DATA_SIZE
 #define MAX_KEY_LEN 256
+#define MAX_MEMORY_SIZE 32767
+#define MAX_CMD_LEN 10
+#define NUM_OF_CMD 5
+#define MAX_RESPONSE_LEN 20
+#define NUM_OF_RESPONSE 5
+//Some consts in the hdr
+#define IPV4_LEN_FIELD 16
+#define UDP_LEN_FIELD 38
 #define PAYLOAD_OFFSET_UDP 50 //Payload location under UDP include 8 bytes memcached header
 #define MEMCACHED_UDP_HEADER 8 
 #define ETH_OFFSET 14
 #define IPV4_OFFSET 20
-#define MAX_MEMORY_SIZE 32767
-#define IPV4_LEN_FIELD 16
-#define UDP_LEN_FIELD 38
+#define UDP_IDENTIFIER (23)
 //Standard Response String 
 #define _STORED 0
 #define _VALUE 1 
@@ -34,15 +41,19 @@ enum ascii_cmd {
   DELETED_RESP,
   UNKNOWN_CMD
 };
-typedef struct field_pos{
-  int f_start;
-  // Need change to long f_start when chang to HLS
-  int f_len;
-}FIELD;
+
+struct Standard_Cmd{
+	char cmd[MAX_CMD_LEN];
+	int len;
+	enum ascii_cmd cc;
+};
+
+
 
 typedef struct cmd_staus{
   enum ascii_cmd CMD;
   char KEY[MAX_KEY_LEN];
+  int KEY_LEN;
   int FLAG;
   int EXPERT;
   int BYTE;
@@ -54,7 +65,7 @@ typedef struct key_data{
   int KEY_LEN;
   char DATA[MAX_DATA_SIZE];
   long DATA_LEN;
-  char VALID;
+  bool VALID;
 }CACHE;
 
 typedef struct mem_packet{
@@ -71,7 +82,12 @@ typedef struct mem_packet{
 	int STATE;
 	// swap the src and dst: 0 -> no need for swap; 1 -> swap.
 	int SWAP; 
-}MEM;
+}Mem_sym;
 
-extern MEM packet_block;
-void mem_code();
+struct Standard_Response{
+        char line[MAX_RESPONSE_LEN];
+        int len;
+};
+
+
+

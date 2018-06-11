@@ -4,13 +4,15 @@
 ## Copyright (C) 1986-2017 Xilinx, Inc. All Rights Reserved.
 ############################################################
 open_project MemcachedHLS
-add_files MemcoreHLS.cpp
-add_files MemcoreHLS.h
+set_top Memcore
+add_files MemHLS.cpp
+add_files MemHLS.h
+add_files Memcore.h
 open_solution "solution1"
 set_part {xczu9eg-ffvb1156-1-i-es1} -tool vivado
 create_clock -period 10 -name default
 #source "./MemcachedHLS/solution1/directives.tcl"
-#csim_design
+#csim_design -compiler gcc
 csynth_design
 #cosim_design
 export_design -format ip_catalog

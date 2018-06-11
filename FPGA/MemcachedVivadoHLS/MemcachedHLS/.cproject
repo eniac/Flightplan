@@ -30,6 +30,7 @@
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include/etc"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include"/>
+									<listOptionValue builtIn="false" value="/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.553979839" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="AESL_TB"/>
@@ -47,6 +48,7 @@
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include/etc"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include"/>
+									<listOptionValue builtIn="false" value="/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1343704930" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="AESL_TB"/>
@@ -79,7 +81,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="*.c*|*.C*" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="solution1|*.c*|*.C*" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -114,6 +116,7 @@
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include/etc"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include"/>
+									<listOptionValue builtIn="false" value="/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.386255987" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -126,6 +129,7 @@
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include/etc"/>
 									<listOptionValue builtIn="false" value="/opt/Xilinx/SDx/2017.1/Vivado_HLS/include"/>
+									<listOptionValue builtIn="false" value="/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1509638069" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -153,7 +157,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="*.c*|*.C*" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="solution1|*.c*|*.C*" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -179,4 +183,5 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope"/>
 </cproject>

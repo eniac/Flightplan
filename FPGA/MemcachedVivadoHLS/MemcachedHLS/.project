@@ -29,47 +29,52 @@
 		<link>
 			<name>source</name>
 			<type>2</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/.apc/.src</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/.apc/.src</location>
 		</link>
 		<link>
 			<name>testbench</name>
 			<type>2</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/.apc/.tb</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/.apc/.tb</location>
 		</link>
 		<link>
-			<name>.reference/ap_int.h</name>
+			<name>.reference/MemHLS.pragma.1.cpp</name>
 			<type>1</type>
-			<location>/opt/Xilinx/SDx/2017.1/Vivado_HLS/include/ap_int.h</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/.autopilot/db/MemHLS.pragma.1.cpp</location>
 		</link>
 		<link>
 			<name>solution1/constraints</name>
 			<type>2</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/.tcls</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/.tcls</location>
 		</link>
 		<link>
-			<name>source/MemcoreHLS.cpp</name>
+			<name>source/MemHLS.cpp</name>
 			<type>1</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcoreHLS.cpp</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemHLS.cpp</location>
 		</link>
 		<link>
-			<name>source/MemcoreHLS.h</name>
+			<name>source/MemHLS.h</name>
 			<type>1</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcoreHLS.h</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemHLS.h</location>
+		</link>
+		<link>
+			<name>source/Memcore.h</name>
+			<type>1</type>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/Memcore.h</location>
 		</link>
 		<link>
 			<name>solution1/constraints/.xml.directive</name>
 			<type>1</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/solution1.directive</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/solution1.directive</location>
 		</link>
 		<link>
 			<name>solution1/constraints/directives.tcl</name>
 			<type>1</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/directives.tcl</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/directives.tcl</location>
 		</link>
 		<link>
 			<name>solution1/constraints/script.tcl</name>
 			<type>1</type>
-			<location>/home/zhaoyang/Summer/temp/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/script.tcl</location>
+			<location>/home/zhaoyang/Summer/P4Boosters/FPGA/MemcachedVivadoHLS/MemcachedHLS/solution1/script.tcl</location>
 		</link>
 	</linkedResources>
 </projectDescription>
