@@ -412,7 +412,9 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
  * @return Pointer to the stripped packet (within the tagged frame)
  */
 const u_char *wharf_strip_frame(const u_char* packet, int *size) {
-	 struct ether_header eth_header = *(struct ether_header *)packet;
+	/* It's necessary to make a copy of the eth_header because we may write
+	 * over this memory later */
+	struct ether_header eth_header = *(struct ether_header *)packet;
 	/*If not a wharf encoded packet*/
 	if (htons(WHARF_ETHERTYPE) != eth_header.ether_type) {
 		LOG_ERR("Cannot strip non-warf frame");
