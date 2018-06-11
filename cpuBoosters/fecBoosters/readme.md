@@ -24,11 +24,17 @@ DEL <port> <tcp> <class> # Removes the rule associated associated with the given
 QUERY <port> <tcp>       # Returns the class assigned to the given port and IP
 LIST                     # Prints the current class & rule list to stderr
 ```
+**NOTE:** Due to the handling of timeouts, `t` is an *upper bound* on the encoding timeout,
+and a *lower bound* on the decoding timeout.
+The lower bound on encoding is `t-1`, so classes with a timeout of 1 stand a chance of being
+forwarded immediately.
+The upper bound on decoding is `t+1`, so tests should be sure to include at least that
+large of a delay.
 
 An example rule file might look like:
 ```
-CLASS 0 5 2 1   # Sets traffic of class 0 to have k = 5, h = 2, t = 1
-CLASS 1 10 2 1  # Sets traffic of class 10 to have k = 10, h = 2, t = 1
+CLASS 0 5 2 2   # Sets traffic of class 0 to have k = 5, h = 2, t = 2
+CLASS 1 10 2 3  # Sets traffic of class 10 to have k = 10, h = 2, t = 3
 SET 8888 0 0    # UDP traffic over port 8888 is marked as class 0
 SET 8181 1 1    # TCP traffic over port 8181 is marked as class 1
 DEFAULT 1       # Any other traffic is also marked as class 1
@@ -65,7 +71,8 @@ Test output (including stderr, tcpdump, and diff)  is placed in `test_output/<in
 $ sudo  vethTestE2E.sh input.pcap rules_table.txt num_reps delay
 ```
 
-To be thorough, each test should be run with reps=`2`, delay=`3`.
+To be thorough, each test should be run with `reps=2` (to test timeout and reset),
+and `delay=4` (larger than the upper bound on decoding timeout, which is 3).
 
 If `delay < 3`, tests should fail due to timeouts not being met.
 
