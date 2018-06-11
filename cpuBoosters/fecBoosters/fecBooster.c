@@ -112,20 +112,6 @@ void mark_pkts_absent(tclass_type tclass, int blockId) {
 }
 
 /**
- * @brief Gets the total size of the packet to be placed in fbk
- *
- * @return Size of original packet + sizeof(FRAME_SIZE_TYPE)
- */
-static int get_pkt_payload_length(u_char* packet){
-
-	FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(packet);
-	FRAME_SIZE_TYPE flipped = ntohs(*original_frame_size);
-	int payloadLength = flipped + sizeof(FRAME_SIZE_TYPE);
-
-	return payloadLength;
-}
-
-/**
  * @brief Inserts the packet, tagged with its size, into the packet buffer
  *
  * @param[in] tclass Traffic class of the packet
