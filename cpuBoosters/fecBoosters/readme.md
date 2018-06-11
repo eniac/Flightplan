@@ -1,4 +1,4 @@
-# FEC Encoder booster #
+# FEC Encoder booster
 
 ## Running
 
@@ -25,45 +25,61 @@ QUERY <port> <tcp>       # Returns the class assigned to the given port and IP
 LIST                     # Prints the current class & rule list to stderr
 ```
 
+Two sample rule files are provided for convenience:
+* `tag_all.txt`
+  * Tags all packets as class 1 with  k=10, h=2, t=1
+* `tcp_udp_12340-3_rules.txt`
+  * Tags tcp and udp packets arriving over ports 12340-12343 with
+various values of k and h
+* `tag_cls_0.txt`
+  * Tags all packets as class 0 with k=5, h=1, and no timeout
+
 ## Running tests
 
-example usage: `sudo ./vethTestBooster.sh ../pcaps/tofinoProcessed_iperfClient2Server.pcap`
+Two scripts exist to test the functionality of the cpu boosters:
 
-* for end-to-end test:
-`sudo ./vethTestE2EBooster.sh test.pcap`
+* `vethTestE2E.sh`: End-to-end test of encode, forward w/ drop, decode
+* `vethTestDecode.sh`: Tests decode-only, using a pre-encoded file (potentially from hardware)
 
-* for end-to-end test with larger input:
-`sudo ./vethTestE2EBooster.sh ../pcaps/tofinoProcessed_iperfClient2Server.pcap`
+At the end of both tests, the scripts will output a (hopefully blank) diff between
+the decoded output and un-encoded input, as well as any explicit errors encountered
+while running the test.
 
-End-to-end test will send in input file, pause for 5 seconds (which is longer than the
-encode/decode timeouts), then send the input again. The encode/decode timeout can be modified
-in fecBooster.h through the variables `WHARF_DECODE_TIMEOUT` and `WHARF_ENCODE_TIMEOUT`.
+Test output (including stderr, tcpdump, and diff)  is placed in `test_output/<input>/`
 
-This ensures that normal operation, timeout, and recovery from timeout all work properly.
+### End-to-end test
 
-At the end of the end-to-end test, the number of lines in the input and output will be shown
-to verify correct operation. These values should match.
+```shell
+$ sudo  vethTestE2E.sh input.pcap rules_table.txt num_reps delay
+```
 
+To be thorough, each test should be run with reps=`2`, delay=`3`.
 
-* for decoding-only test: `sudo ./vethTestDecodeBooster.sh <encoded_input.pcap> <input.pcap>`
+If `delay < 3`, tests should fail due to timeouts not being met.
 
-Decoding-only test accepts an input that has already been encoded, and the unencoded version of that input.
-It then strips the fec header from the input and tests if it matches the output.
+This test should be run with the following sets of parameters:
 
-* for dropping + decoding test: `sudo ./vethTestForwardDecodeBooster.sh <encoded_input.pcap> <input.pcap>`
+* input: `../pcaps/test.pcap` rules: `tag_all.txt`
+  * Simple test with a few packets
+* input: `../pcaps/tofinoProcessed_iperfClient2Server.pcap` rules:`tag_all.txt`
+  * Many more packets than the last test.
+* input: `../pcaps/tcp_udp_12340-3.pcap` rules: `tcp_udp_12340-3_rules.txt`
+  * Tests that varying k and h based on port and protocol works
+  * To fully check this test, verify in `test_output/tcp_udp_12340-3/encoder.txt`
+    that various values of k and h are used
 
-Dropping + decoding accepts the same arguments as decode-only, but drops some portion of packets
-(configurable in `forwardingNonbooster.c`), and ensures the decoder can reconstruct them.
+### Decode test
 
-Sample arguments are:
+```shell
+$ sudo vethTestDecode.sh encoded.pcap rules_table.txt input.pcap
+```
 
-`sudo ./vethTestDecodeBooster.sh ../pcaps/encoded_inputs.pcap ../pcaps/decoded_inputs.pcap`
+This test should be run with:
 
-* for checking packet tagging:
-`sudo bash vethTestTableBooster.sh ../pcaps/udp_varied_ports.pcap tcp_udp_test_rules.csv` and
-`sudo bash vethTestTableBooster.sh ../pcaps/tcp_varied_ports.pcap tcp_udp_test_rules.csv`
+* encoded: `../pcaps/encoded_inputs.pcap` rules: `tag_cls_0.txt` input: `../pcaps/decoded_inputs.pcap`
+  * NOTE: At the moment, this test is failing with a difference of 1 in the number of output
+    lines. This is due to a bug in the encoded file in which the first encoded packet
+    has an index of 0. If the script shows only a difference of one line, it can be ignored
+    for now.
 
-Should check for lines `Untagged packet should have had class _` or `Traffic classes do not match`.
-
-NOTE: Will only perform check if CHECK_TABLE_ON_DECODE is defined in fecDeodeBooster.c
 

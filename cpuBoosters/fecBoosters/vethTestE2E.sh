@@ -106,9 +106,9 @@ chown $real_user:$real_user -R $TEST_DIR
 
 rm $IN_TXT
 for i in `seq 1 $REPETITIONS`; do
-    tcpdump -tenr $INPUT_PCAP >> $IN_TXT
+    tcpdump -XXtenr $INPUT_PCAP >> $IN_TXT
 done
-tcpdump -tenr $OUT_PCAP > $OUT_TXT
+tcpdump -XXtenr $OUT_PCAP > $OUT_TXT
 
 INLINES=$(cat $IN_TXT | wc -l)
 OUTLINES=$(cat $OUT_TXT | wc -l)
@@ -116,13 +116,28 @@ OUTLINES=$(cat $OUT_TXT | wc -l)
 sort $IN_TXT > $IN_SRT
 sort $OUT_TXT > $OUT_SRT
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
     echo "Running diff:"
     diff $IN_SRT $OUT_SRT
     echo "Diff complete"
+
+    if [[ `diff $IN_SRT $OUT_SRT | wc -l` != '0' ]]; then
+        echo -e ${RED}TEST FAILED${NC}
+        exit 1
+    else
+        echo -e ${GREEN}TEST SUCCEEDED${NC}
+        exit 0
+    fi
+
 else
     echo "Input and output contain different number of lines!"
     echo "($INLINES and $OUTLINES)"
     echo "Check $IN_TXT and $OUT_TXT to compare"
+    echo -e ${RED}TEST FAILED${NC}
+    exit 1
 fi

@@ -110,8 +110,22 @@ if [[ $INLINES == $OUTLINES ]]; then
     echo "Running diff:"
     diff $IN_SRT $OUT_SRT
     echo "Diff complete"
+
+    if [[ `diff $IN_SRT $OUT_SRT | wc -l` != '0' ]]; then
+        echo -e ${RED}TEST FAILED${NC}
+        exit 1
+    else
+        echo -e ${GREEN}TEST SUCCEEDED${NC}
+        exit 0
+    fi
 else
+    echo -e "Difference between input and output:\n"
+    diff $IN_SRT $OUT_SRT
+    echo ""
+
     echo "Input and output contain different number of lines!"
     echo "($INLINES and $OUTLINES)"
     echo "Check $IN_TXT and $OUT_TXT to compare"
+    echo -e ${RED}TEST FAILED${NC}
+    exit 1
 fi
