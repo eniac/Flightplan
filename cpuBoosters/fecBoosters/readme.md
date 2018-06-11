@@ -25,6 +25,18 @@ QUERY <port> <tcp>       # Returns the class assigned to the given port and IP
 LIST                     # Prints the current class & rule list to stderr
 ```
 
+An example rule file might look like:
+```
+CLASS 0 5 2 1   # Sets traffic of class 0 to have k = 5, h = 2, t = 1
+CLASS 1 10 2 1  # Sets traffic of class 10 to have k = 10, h = 2, t = 1
+SET 8888 0 0    # UDP traffic over port 8888 is marked as class 0
+SET 8181 1 1    # TCP traffic over port 8181 is marked as class 1
+DEFAULT 1       # Any other traffic is also marked as class 1
+ENABLE 1        # Tagging must be enabled!
+```
+NOTE: Comments do not work in the syntax of the rule file and are added here
+for descriptive purposes only
+
 Two sample rule files are provided for convenience:
 * `tag_all.txt`
   * Tags all packets as class 1 with  k=10, h=2, t=1
