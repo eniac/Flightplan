@@ -128,12 +128,12 @@ void my_packet_handler(
 	/* If this packet belongs to a new block */
 	if (fecHeader->index == 0) {
 		mark_pkts_absent(tclass, fecHeader->block_id);
-			lastBlockId[tclass] = currBlockID;
+		lastBlockId[tclass] = currBlockID;
 
-			int t = wharf_get_t(tclass);
-			if (t > 0) {
-				timeouts[tclass] = t;
-			}
+		int t = wharf_get_t(tclass);
+		if (t > 0) {
+			timeouts[tclass] = t;
+		}
 	}
 
 	/* Forward data packet now, then buffer it below (Needed for encoder) */
