@@ -334,7 +334,7 @@ int copy_parity_packets_to_pkt_buffer(tclass_type tclass, int blockId) {
 	int sizeOfParityPackets = fbk[FB_INDEX].plen[k];
 
 	for (int i = k; i < (k + h); i++) {
-		memcpy(tc->pkts[blockId][i], fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
+		memmove(tc->pkts[blockId][i], fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
 		tc->status[blockId][i] = PACKET_PRESENT;
 	}
 	return sizeOfParityPackets;
