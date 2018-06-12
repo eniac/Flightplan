@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <netinet/ether.h>
 #include "wharf_pcap.h"
 #include "fecBooster.h"
 #include "fecBoosterApi.h"
@@ -16,6 +17,10 @@ static pcap_t *output_handle = NULL;
 struct tclass_buffer {
 	/** Buffer into which received and decoded packets are placed */
 	u_char pkts[NUM_BLOCKS][TOTAL_NUM_PACKETS][PKT_BUF_SZ];
+
+	/** Size of each packet as it is stored in the buffer */
+	size_t pkt_sz[NUM_BLOCKS][TOTAL_NUM_PACKETS];
+
 	/** Status of packets stored in pkts (present, absent, generated) */
 	enum pkt_buffer_status status[NUM_BLOCKS][TOTAL_NUM_PACKETS];
 
@@ -107,20 +112,6 @@ void mark_pkts_absent(tclass_type tclass, int blockId) {
 }
 
 /**
- * @brief Gets the total size of the packet to be placed in fbk
- *
- * @return Size of original packet + sizeof(FRAME_SIZE_TYPE)
- */
-static int get_pkt_payload_length(u_char* packet){
-
-	FRAME_SIZE_TYPE *original_frame_size = (FRAME_SIZE_TYPE *)(packet);
-	FRAME_SIZE_TYPE flipped = ntohs(*original_frame_size);
-	int payloadLength = flipped + sizeof(FRAME_SIZE_TYPE);
-
-	return payloadLength;
-}
-
-/**
  * @brief Inserts the packet, tagged with its size, into the packet buffer
  *
  * @param[in] tclass Traffic class of the packet
@@ -135,13 +126,14 @@ void insert_into_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
 
 	u_char *buff = tclasses[tclass].pkts[blockId][pktIdx];
 	if (pktIdx < tclasses[tclass].k) {
-		FRAME_SIZE_TYPE flipped = ntohs(pktSize);
+		FRAME_SIZE_TYPE flipped = htons(pktSize);
 		memcpy(buff, &flipped, sizeof(pktSize));
 		offset += sizeof(pktSize);
 	}
 
 	memcpy(buff + offset, packet, pktSize);
 	tclasses[tclass].status[blockId][pktIdx] = PACKET_PRESENT;
+	tclasses[tclass].pkt_sz[blockId][pktIdx] = pktSize + offset;
 }
 
 /**
@@ -222,7 +214,7 @@ static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity
 		if (buff->status[blockId][i] == PACKET_PRESENT) {
 			fbk[FB_INDEX].pstat[i] = FEC_FLAG_KNOWN;
 
-			int payloadLength = get_pkt_payload_length(buff->pkts[blockId][i]);
+			int payloadLength = buff->pkt_sz[blockId][i];
 
 			fbk[FB_INDEX].plen[i] = payloadLength;
 
@@ -258,7 +250,16 @@ static void populate_fec_blk(tclass_buffer *buff, int blockId, bool expectParity
 			if (buff->status[blockId][y] == PACKET_PRESENT) {
 				fbk[FB_INDEX].pdata[y] = (fec_sym *)buff->pkts[blockId][y];
 				fbk[FB_INDEX].pstat[y] = FEC_FLAG_KNOWN;
-				fbk[FB_INDEX].plen[y] = fbk[FB_INDEX].block_C;
+
+				int parity_sz = buff->pkt_sz[blockId][y];
+				fbk[FB_INDEX].plen[y] = parity_sz;
+
+				// It is possible that a missing packet is the largest in the frame.
+				// In this case, the parity packet size should set block_C
+				if (parity_sz > fbk[FB_INDEX].block_C) {
+					fbk[FB_INDEX].block_C = parity_sz;
+				}
+
 			} else {
 				/* If it should be, but is not */
 				fbk[FB_INDEX].pstat[y] = FEC_FLAG_IGNORE;
@@ -319,7 +320,7 @@ int copy_parity_packets_to_pkt_buffer(tclass_type tclass, int blockId) {
 	int sizeOfParityPackets = fbk[FB_INDEX].plen[k];
 
 	for (int i = k; i < (k + h); i++) {
-		memcpy(tc->pkts[blockId][i], fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
+		memmove(tc->pkts[blockId][i], fbk[FB_INDEX].pdata[i], sizeOfParityPackets);
 		tc->status[blockId][i] = PACKET_PRESENT;
 	}
 	return sizeOfParityPackets;
@@ -356,6 +357,8 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 		LOG_ERR("Frame too big for tagging (%d)", size);
 		return -1;
 	}
+	struct ether_header *orig_eth_header = (struct ether_header *)packet;
+
 	fec_sym k = tclasses[tclass].k;
 	fec_sym h = tclasses[tclass].h;
 
@@ -363,11 +366,9 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 	const int extra_header_size = sizeof(struct ether_header) + sizeof(struct fec_header);
 	*result = (u_char *)malloc(size + extra_header_size);
 
-	/* Copy over the etherHeader from the original packet */
-	memcpy(*result, packet, sizeof(struct ether_header));
-
-	/* Replace the ether_type in the new ether header with wharf_ethertype*/
+	/* Copy the original ether header and replace the ether_type with wharf_ethertype*/
 	struct ether_header *eth_header = (struct ether_header *)*result;
+	*eth_header = *orig_eth_header;
 	eth_header->ether_type=htons(WHARF_ETHERTYPE);
 
 	/* Populate the wharf tag with the block_id, packet_id, class, & packetsize*/
@@ -377,7 +378,6 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
 	tag->index = tclasses[tclass].frame_idx;
 
 	/* Populate the wharf tag with the packet's ethertype */
-	struct ether_header *orig_eth_header = (struct ether_header *)packet;
 	tag->orig_ethertype = orig_eth_header->ether_type;
 
 	size_t offset = 0;
@@ -412,9 +412,11 @@ int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char**
  * @return Pointer to the stripped packet (within the tagged frame)
  */
 const u_char *wharf_strip_frame(const u_char* packet, int *size) {
-	 struct ether_header *eth_header = (struct ether_header *)packet;
+	/* It's necessary to make a copy of the eth_header because we may write
+	 * over this memory later */
+	struct ether_header eth_header = *(struct ether_header *)packet;
 	/*If not a wharf encoded packet*/
-	if (htons(WHARF_ETHERTYPE) != eth_header->ether_type) {
+	if (htons(WHARF_ETHERTYPE) != eth_header.ether_type) {
 		LOG_ERR("Cannot strip non-warf frame");
 		return 0;
 	}
@@ -423,14 +425,14 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size) {
 
 	struct ether_header *pkt_ether = (struct ether_header *)(packet + sizeof(fec_hdr));
 
-	if (*size == sizeof(fec_hdr) + sizeof(*eth_header)) {
+	if (*size == sizeof(fec_hdr) + sizeof(eth_header)) {
 		*size = 0;
-		return packet + sizeof(fec_hdr) + sizeof(*eth_header);
+		return packet + sizeof(fec_hdr) + sizeof(eth_header);
 	}
 
 	size_t offset = sizeof(struct fec_header);
 	if (fec_hdr.index < tclasses[fec_hdr.class_id].k) {
-		*pkt_ether = *eth_header;
+		*pkt_ether = eth_header;
 		pkt_ether->ether_type = fec_hdr.orig_ethertype;
 	} else {
 		offset += sizeof(struct ether_header);

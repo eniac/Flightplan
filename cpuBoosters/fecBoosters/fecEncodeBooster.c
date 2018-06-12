@@ -3,6 +3,7 @@
 #include <time.h>
 #include <net/ethernet.h>
 #include <signal.h>
+#include <netinet/ether.h>
 
 #include "fecBooster.h"
 #include "fecBoosterApi.h"
@@ -73,7 +74,7 @@ void encode_and_forward_block(tclass_type tclass, int currBlockID,
 		forward_frame(new_packet, tagged_size);
 		free(new_packet);
 	}
-	 timeouts[tclass] = 0;
+	timeouts[tclass] = 0;
 }
 
 
@@ -127,18 +128,12 @@ void my_packet_handler(
 	/* If this packet belongs to a new block */
 	if (fecHeader->index == 0) {
 		mark_pkts_absent(tclass, fecHeader->block_id);
-			lastBlockId[tclass] = currBlockID;
+		lastBlockId[tclass] = currBlockID;
 
-			int t = wharf_get_t(tclass);
-			if (t > 0) {
-				timeouts[tclass] = t;
-			}
-#if WHARF_ENCODE_TIMEOUT != 0
-		// If no new block before timeout, force the block to be forwarded
-		signal(SIGALRM, sigalrm_handler);
-		alarm(WHARF_ENCODE_TIMEOUT);
-#endif // WHARF_ENCODE_TIMEOUT
-
+		int t = wharf_get_t(tclass);
+		if (t > 0) {
+			timeouts[tclass] = t;
+		}
 	}
 
 	/* Forward data packet now, then buffer it below (Needed for encoder) */
@@ -158,9 +153,6 @@ void my_packet_handler(
 
 	/* Check if the block is ready for processing, i.e., all data packets in the block are populated */
 	if (is_all_data_pkts_recieved_for_block(tclass, currBlockID)) {
-#if WHARF_ENCODE_TIMEOUT != 0
-		alarm(0);
-#endif
 		encode_and_forward_block(tclass, currBlockID, &last_eth_header[tclass]);
 	}
 	return;

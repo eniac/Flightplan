@@ -26,20 +26,6 @@
 /** Offset into the wharf-encapsulated packet at which original frame occurs */
 #define WHARF_ORIG_FRAME_OFFSET (sizeof(struct ether_header) + sizeof(struct fec_header))
 
-/**
- * Amount of time before the decoder attempts to decode packets if no activity
- * WHARF_DECODE_TIMEOUT==0 means we're not using the timeout
- */
-#define WHARF_DECODE_TIMEOUT 0
-
-/**
- * Amount of time before the encoder forwards parity packets if no activity.
- * WHARF_ENCODE_TIMEOUT should be less than WHARF_DECODE_TIMEOUT, otherwise
- * a frame could be decoded before it's finished being sent.
- * WHARF_ENCODE_TIMEOUT==0 disables the timeout
- */
-#define WHARF_ENCODE_TIMEOUT 0
-
 /** Marks in pkt_buffer_filled whether the packet has been received */
 enum pkt_buffer_status {
     PACKET_ABSENT = 0,
@@ -94,4 +80,4 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size);
 /** Forwards the frame on the ouptut pcap handle */
 void forward_frame(const void * packet, int len);
 
-#endif
+#endif // FEC_BOOSTER_H_

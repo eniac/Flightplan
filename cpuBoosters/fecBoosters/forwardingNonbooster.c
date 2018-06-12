@@ -6,7 +6,10 @@
 #include "fecBooster.h"
 
 #ifndef WHARF_DROP_AFTER
-#define WHARF_DROP_AFTER 6
+// As h packets may be recovered for every k + h packets sent, this value should
+// be no larger than (k + h) / h
+// Values smaller than that will result in test failures
+#define WHARF_DROP_AFTER 8
 #endif
 
 // Setting this to 0 drops the first packet, which ensures that a packet is dropped

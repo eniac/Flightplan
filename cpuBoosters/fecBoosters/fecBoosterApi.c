@@ -464,7 +464,7 @@ static bool is_udp(const u_char *packet, uint32_t pkt_len) {
     return packet[PROTOCOL_OFFSET] == UDP_PROTOCOL;
 }
 
-/** In both TCP and UDP, port starts 2 bits into header.
+/** In both TCP and UDP, port starts 2 bytes into header.
  * This assumes that the IP header is 20 bytes long (which may not always be the case)
  */
 #define PORT_OFFSET sizeof(struct ether_header) + 22
