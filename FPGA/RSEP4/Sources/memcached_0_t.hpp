@@ -378,6 +378,7 @@ public:
 			bool End = i == Words_per_packet - 1;
 			packet_interface Input;
 			Input.Data = WORD;
+			std::cout << WORD << std::endl;
 			Input.Start_of_frame = i == 0;
 			Input.End_of_frame = End;
 			Input.Count = packet_in.size() % BYTES_PER_WORD;

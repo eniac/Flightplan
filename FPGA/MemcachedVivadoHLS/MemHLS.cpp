@@ -3,6 +3,7 @@
 #include <iostream>
 
 
+
 static CACHE Memory[MAX_MEMORY_SIZE];
 
 void Print_Command(CMD_STAT Command);
@@ -18,10 +19,10 @@ static void Collect_packets(hls::stream<packet_interface> &Packet_input, Mem_sym
 		Input = Packet_input.read();
 		End = Input.End_of_frame;
 		buffer = Input.Data;
-		for (int i = Input.Count-1; i>=0; i--)
+		for (int i = 0; i< Input.Count; i++)
 		{
-			Raw_Packet.data[Raw_Packet.len + i] = buffer % 256;
-			buffer /= 256;
+			Raw_Packet.data[Raw_Packet.len + i] = (buffer >> 56) & 0xff;
+			buffer <<= 8;
 		} 
 		Raw_Packet.len += Input.Count;
 	}while(!End);
@@ -92,7 +93,7 @@ int Parse_Number(int &pointer, Mem_sym & Raw_Packet)
 
 
 }
-void Parse_Key(int &pointer, Mem_sym & Raw_Packet, char Key[MAX_KEY_LEN], int & key_len)
+void Parse_Key(int &pointer, Mem_sym & Raw_Packet, uint8_t Key[MAX_KEY_LEN], int & key_len)
 {
 	if(Raw_Packet.data[pointer]!=' ')
 	{
@@ -110,7 +111,7 @@ void Parse_Key(int &pointer, Mem_sym & Raw_Packet, char Key[MAX_KEY_LEN], int & 
 	return;
 }
 
-void Parse_Data(int &pointer, Mem_sym & Raw_Packet, char Data[MAX_KEY_LEN], int Bytes)
+void Parse_Data(int &pointer, Mem_sym & Raw_Packet, uint8_t Data[MAX_KEY_LEN], int Bytes)
 {
 	for (int i = pointer; i < pointer + Bytes; i++)
 		Data[i-pointer] = Raw_Packet.data[i];
@@ -160,7 +161,7 @@ void Mem_Parser(Mem_sym & Raw_Packet, CMD_STAT & Command)
 	}
 }
 
-int lookup(char KEY[MAX_KEY_LEN], int KEY_LEN)
+int lookup(uint8_t KEY[MAX_KEY_LEN], int KEY_LEN)
 {
         unsigned long hash = 0;
         for (int i =0; i<KEY_LEN; i++)
@@ -173,36 +174,43 @@ int lookup(char KEY[MAX_KEY_LEN], int KEY_LEN)
 void ADD_RESP_WORD(Mem_sym & Packet_out, int RESP_INDEX)
 {
 		Standard_Response Resp[NUM_OF_RESPONSE]={
-					{STR_STORED, 8},
-					{STR_VALUE, 6},
-					{STR_END, 5},
-					{STR_DELETED, 9},
-					{STR_NOTFOUND, 10}
+					{STR_STORED, 6},
+					{STR_VALUE, 5},
+					{STR_END, 3},
+					{STR_DELETED, 7},
+					{STR_NOTFOUND, 8}
 			};
 		int offset = Packet_out.len;
         int index = RESP_INDEX;
-        Packet_out.len += offset + Resp[index].len;
+        Packet_out.len += Resp[index].len;
         for (int i = 0; i < Resp[index].len; i++)
                 Packet_out.data[offset+i] = (Resp[index].line)[i];
 }
 
-void Add_Udp_MemHdr(char hdr[MEMCACHED_UDP_HEADER], Mem_sym & Packet_out)
+void Add_Udp_MemHdr(uint8_t hdr[MEMCACHED_UDP_HEADER], Mem_sym & Packet_out)
 {
 	for (int i = 0; i < MEMCACHED_UDP_HEADER; i++)
 		Packet_out.data[i + Packet_out.len] = hdr[i];
 	Packet_out.len += MEMCACHED_UDP_HEADER;
 
 }
+void Add_Space(Mem_sym &Packet_out)
+{
+	Packet_out.data[Packet_out.len++] = 32;
+}
+void Add_End(Mem_sym &Packet_out)
+{
+	Packet_out.data[Packet_out.len ++] = '\r';
+	Packet_out.data[Packet_out.len ++] = '\n';
+}
 void Add_Numerical_Field(Mem_sym &Packet_out, int num)
 {
     int offset = Packet_out.len;
-    char temp[10];
+    uint8_t temp[10];
     int len = 0;
-    temp[len] = 32; // ADD Space
-    len++;
     do
     {
-            temp[len] =(char) (num % 10 + (int) '0');
+            temp[len] =(uint8_t) (num % 10 + (int) '0');
             num /= 10;
             len++;
     }while(num>0);
@@ -211,6 +219,24 @@ void Add_Numerical_Field(Mem_sym &Packet_out, int num)
             Packet_out.data[Packet_out.len-i-1] = temp[i];
 
 }
+
+void Add_Key_Field(Mem_sym & Packet_out, int key_len, uint8_t key[MAX_KEY_LEN])
+{
+	for (int i = 0; i < key_len; i++)
+		Packet_out.data[Packet_out.len + i] = key[i];
+	Packet_out.len += key_len;
+}
+
+void Add_Data_Field(Mem_sym & Packet_out, long data_len, uint8_t data[MAX_DATA_SIZE])
+{
+	for (int i = 0; i < data_len; i++)
+		Packet_out.data[Packet_out.len + i] = data[i];
+	Packet_out.len += data_len;
+	for (int i = 0; i < data_len; i++)
+		std::cout << data[i];
+	std::cout << std::endl;
+}
+
 void Action_Set(CMD_STAT Command, Mem_sym &Packet_out)
 {
 	int mem_index = lookup(Command.KEY, Command.KEY_LEN);
@@ -222,39 +248,34 @@ void Action_Set(CMD_STAT Command, Mem_sym &Packet_out)
 	Memory[mem_index].DATA_LEN = Command.BYTE;
 	Memory[mem_index].KEY_LEN = Command.KEY_LEN;
 	Packet_out.len = 0;
-	char hdr[8] = {1};
+	uint8_t hdr[8] = {1};
 	Add_Udp_MemHdr(hdr, Packet_out);
 	ADD_RESP_WORD(Packet_out, _STORED);
+	Add_End(Packet_out);
 
 }
-void Add_Key_Field(Mem_sym & Packet_out, int key_len, char key[MAX_KEY_LEN])
-{
-	for (int i = 0; i < key_len; i++)
-		Packet_out.data[Packet_out.len + i] = key[i];
-	Packet_out.len += key_len;
-}
-void Add_Data_Field(Mem_sym & Packet_out, long data_len, char data[MAX_DATA_SIZE])
-{
-	for (int i = 0; i < data_len; i++)
-		Packet_out.data[Packet_out.len + i] = data[i];
-	Packet_out.len += data_len;
-	Packet_out.data[Packet_out.len] = '\r';
-	Packet_out.data[Packet_out.len + 1] = '\n';
-}
+
 void Action_Get(CMD_STAT & Command, Mem_sym &Packet_out)
 {
 	int mem_index = lookup(Command.KEY, Command.KEY_LEN);
 	if (Memory[mem_index].VALID)
 	{
 		Packet_out.len = 0;
-		char hdr[8] = {1};
+		uint8_t hdr[8] = {1};
 		Add_Udp_MemHdr(hdr, Packet_out);
 		ADD_RESP_WORD(Packet_out, _VALUE);
+		Add_Space(Packet_out);
 		Add_Key_Field(Packet_out, Memory[mem_index].KEY_LEN, Memory[mem_index].KEY);
+		Add_Space(Packet_out);
 		Add_Numerical_Field(Packet_out, 0);
+		Add_Space(Packet_out);
 		Add_Numerical_Field(Packet_out, Memory[mem_index].DATA_LEN);
+		Add_End(Packet_out);
 		Add_Data_Field(Packet_out, Memory[mem_index].DATA_LEN, Memory[mem_index].DATA);
+		Add_End(Packet_out);
 		ADD_RESP_WORD(Packet_out, _END);
+		Add_End(Packet_out);
+
 
 	}
 }
@@ -288,6 +309,7 @@ void Output_Packets(hls::stream<packet_interface> & Packet_output, Mem_sym & Pac
                     if (Offset < Packet_out.len)
                             WORD |= Packet_out.data[Offset];
             }
+
             bool End = i == Words_per_packet - 1;
             packet_interface Input;
             Input.Data = WORD;
@@ -303,7 +325,7 @@ void Output_Packets(hls::stream<packet_interface> & Packet_output, Mem_sym & Pac
 void Memcore(hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output)
 {
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
-	char Raw_Data[MAX_DATA_SIZE];
+	uint8_t Raw_Data[MAX_DATA_SIZE];
 	Mem_sym Raw_Packet, Packet_out;
 	Collect_packets(Packet_input, Raw_Packet);
 
@@ -326,11 +348,11 @@ void Memcore(hls::stream<packet_interface> & Packet_input, hls::stream<packet_in
 	}
 
 	else
-	{	Mem_Action(Command,Packet_out);
-		std::cout << Packet_out.data << std::endl;
+	{	
+		Mem_Action(Command,Packet_out);
 		Output_Packets(Packet_output, Packet_out);
 	}
-	Print_Command(Command);
+	//Print_Command(Command);
 	std::cout << std::endl;
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
 }

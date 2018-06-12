@@ -23,11 +23,11 @@
 #define _END 2
 #define _DELETED 3
 #define _NOTFOUND 4
-#define STR_STORED "STORED\r\n"
-#define STR_VALUE "VALUE "
-#define STR_END "END\r\n"
-#define STR_DELETED "DELETED\r\n"
-#define STR_NOTFOUND "NOT FOUND\r\n"
+#define STR_STORED "STORED"
+#define STR_VALUE "VALUE"
+#define STR_END "END"
+#define STR_DELETED "DELETED"
+#define STR_NOTFOUND "NOT FOUND"
 
 // For Hash Function
 #define MAGIC_NUM 31
@@ -43,7 +43,7 @@ enum ascii_cmd {
 };
 
 struct Standard_Cmd{
-	char cmd[MAX_CMD_LEN];
+	uint8_t cmd[MAX_CMD_LEN];
 	int len;
 	enum ascii_cmd cc;
 };
@@ -52,24 +52,24 @@ struct Standard_Cmd{
 
 typedef struct cmd_staus{
   enum ascii_cmd CMD;
-  char KEY[MAX_KEY_LEN];
+  uint8_t KEY[MAX_KEY_LEN];
   int KEY_LEN;
   int FLAG;
   int EXPERT;
   int BYTE;
-  char DATA[MAX_DATA_SIZE]; 
+  uint8_t DATA[MAX_DATA_SIZE];
 }CMD_STAT;
 
 typedef struct key_data{
-  char KEY[MAX_KEY_LEN];
+  uint8_t KEY[MAX_KEY_LEN];
   int KEY_LEN;
-  char DATA[MAX_DATA_SIZE];
+  uint8_t DATA[MAX_DATA_SIZE];
   long DATA_LEN;
   bool VALID;
 }CACHE;
 
 typedef struct mem_packet{
-	char data[MAX_DATA_SIZE];
+	uint8_t data[MAX_DATA_SIZE];
 	uint16_t len;
 	/*There are three states: 
 		0 : unprocessed packet;
@@ -85,7 +85,7 @@ typedef struct mem_packet{
 }Mem_sym;
 
 struct Standard_Response{
-        char line[MAX_RESPONSE_LEN];
+        uint8_t line[MAX_RESPONSE_LEN];
         int len;
 };
 
