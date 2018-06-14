@@ -33,7 +33,8 @@
 // We need at least space for one packet or the encoder will deadlock.
 @Xilinx_MaxLatency(200)
 extern void fec(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
-    out bit<FEC_PACKET_INDEX_WIDTH> packet_index);
+    out bit<FEC_PACKET_INDEX_WIDTH> packet_index,
+    out bit<FEC_BLOCK_INDEX_WIDTH> block_index);
 
 typedef bit<48> MacAddress;
 
@@ -94,11 +95,10 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 		}
 
 		hdr.fec.original_type = hdr.eth.type;
-		hdr.fec.block_index = 0;
 		hdr.fec.setValid();
 		hdr.eth.type = 0x81C;
 
-		fec(k, h, hdr.fec.packet_index);
+		fec(k, h, hdr.fec.packet_index, hdr.fec.block_index);
 	}
 }
 
