@@ -479,6 +479,7 @@ void Process_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple
   const int Data_streams_size = Packets_needed * WORDS_PER_PACKET;
   const int Info_stream_size = Packets_needed;
   const int Data_stream_size = WORDS_PER_PACKET;
+  const int Raw_data_stream_size = FEC_MAX_K * WORDS_PER_PACKET;
 
   data_word Ping_pong_buffer[FEC_MAX_K][PING_PONG_BUFFER_SIZE];
   packet_index Packet_indices[FEC_MAX_K];
@@ -495,7 +496,7 @@ void Process_packet(input_tuples Tuple_input, hls::stream<output_tuples> & Tuple
   hls::stream<data_word> Postprocessed_data_stream;
 #pragma HLS STREAM variable=Postprocessed_data_stream depth=Data_stream_size
   hls::stream<data_word> Raw_data_stream;
-#pragma HLS STREAM variable=Raw_data_stream depth=Data_stream_size
+#pragma HLS STREAM variable=Raw_data_stream depth=Raw_data_stream_size
   hls::stream<packet_info> Encoded_info_stream;
 #pragma HLS STREAM variable=Encoded_info_stream depth=Info_stream_size
   hls::stream<packet_info> Preprocessed_info_stream;
