@@ -11,9 +11,9 @@ Most prior research in this area has adapted \emph{existing}
 applications to run in hardware at line rate.
 Example applications include
 key-value stores~\cite{Li:2017:KHI:3132747.3132756},
-network testing~\cite{Shahbaz:2013:AOS:2537857.2537880},
-network stacks~\cite{Istvan:2016:CBI:2930611.2930639},
-consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
+%network testing~\cite{Shahbaz:2013:AOS:2537857.2537880},
+%network stacks~\cite{Istvan:2016:CBI:2930611.2930639},
+%consensus protocols~\cite{Istvan:2016:CBI:2930611.2930639},
 and regex matching on payloads~\cite{Woods:2010:CED:1920841.1920926}.
 %and packet filtering~\cite{Fiessler:2016:HVH:2881025.2881033}.
 
@@ -84,7 +84,7 @@ a link-layer forward error-correction (FEC) scheme to mitigate failing
 links, and (ii)~an FPGA implementation of this scheme that fully utilizes 10-Gbps
 links. Part of our implementation is in
 P4~\cite{Bosshart:2014:PPP:2656877.2656890} over SDNet.
-P4's limitation to header processing~\cite{Dang:2017:WPL:3050220.3050231}
+P4's limitation to header processing %~\cite{Dang:2017:WPL:3050220.3050231}
 was transcended by writing external functions in C for high-level synthesis.
 The key challenge we encountered was in streaming packets through our
 %It is also a challenge to stream packets through our

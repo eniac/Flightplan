@@ -189,20 +189,23 @@ public:
 		}
 	};
 	struct fec_output_t {
-		static const size_t _SIZE = 8;
+		static const size_t _SIZE = 13;
 		_LV<8> packet_index;
-		fec_output_t& operator=(_LV<8> _x) {
-			packet_index = _x.slice(7,0);
+		_LV<5> block_index;
+		fec_output_t& operator=(_LV<13> _x) {
+			packet_index = _x.slice(12,5);
+			block_index = _x.slice(4,0);
 			return *this;
 		}
-		_LV<8> get_LV() { return (packet_index); }
-		operator _LV<8>() { return get_LV(); } 
+		_LV<13> get_LV() { return (packet_index,block_index); }
+		operator _LV<13>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t)";
 		}
 		fec_output_t() {} 
-		fec_output_t( _LV<8> _packet_index) {
+		fec_output_t( _LV<8> _packet_index, _LV<5> _block_index) {
 			packet_index = _packet_index;
+			block_index = _block_index;
 		}
 	};
 	struct CONTROL_STRUCT {
@@ -253,11 +256,13 @@ public:
 
 	int maximum_packet_size;
 	int packet_index;
+	int block_index;
 
 	// engine ctor
 	fec_0_t(std::string _n, std::string _filename = "") : _name(_n) {
 
 		packet_index = 0;
+		block_index = 0;
 	}
 
 	// engine function
@@ -343,8 +348,11 @@ public:
 
 			generate_packet = packet_index >= k - 1 && packet_index < k + h - 1;
 
+			fec_output.block_index = block_index;
 			fec_output.packet_index = packet_index;
 
+			if (packet_index == k + h - 1)
+				block_index++;
 			packet_index = (packet_index + 1) % (k + h);
 		}
 

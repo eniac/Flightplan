@@ -31,7 +31,7 @@
 #include "Configuration.h"
 
 @Xilinx_MaxLatency(200)
-extern void Decoder(in bit<FEC_K_WIDTH> k,
+extern void Decoder(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
     out bit<FEC_K_WIDTH> packet_count);
 
 typedef bit<48> MacAddress;
@@ -105,7 +105,7 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 				h = 5;
 			}
 
-		        Decoder(k, packet_count);
+		        Decoder(k, h, packet_count);
 		}
 	}
 }

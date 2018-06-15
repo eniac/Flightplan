@@ -12,7 +12,7 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
          Sources/fec_0_t.hpp Sources/rse.cpp Sources/rse.h Sources/fec_0_t.v \
          Sources/memcached_0_t.hpp Sources/memcached_0_t.v
 	@rm -fr Encoder
-	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder
+	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -lineClock 156.25 -workDir Encoder
 	@ln -s ../../Scripts/Generate_packets.sh Encoder/XilinxSwitch/Generate_packets.sh
 #	@ln -s ../../../Sources/fec_0_t.hpp Encoder/XilinxSwitch/fec_0_t.TB/fec_0_t.hpp
 #	@ln -s ../../../Sources/rse.cpp Encoder/XilinxSwitch/fec_0_t.TB/rse.cpp
@@ -40,6 +40,6 @@ clean:
 
 Update_patches:
 	p4c-sdnet -I ../RSEVivadoHLS -I ../MemcachedP4 Sources/Encoder.p4 -o Encoder.sdnet.original
-	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -workDir Encoder.original
+	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -lineClock 156.25 -workDir Encoder.original
 	Scripts/Create_patches.bash
 
