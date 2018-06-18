@@ -37,6 +37,11 @@
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/.apc/.tb</location>
 		</link>
 		<link>
+			<name>.reference/Matrices.h</name>
+			<type>1</type>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Matrices.h</location>
+		</link>
+		<link>
 			<name>solution1/constraints</name>
 			<type>2</type>
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/solution1/.tcls</location>
@@ -55,6 +60,21 @@
 			<name>source/Decoder.h</name>
 			<type>1</type>
 			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Decoder.h</location>
+		</link>
+		<link>
+			<name>source/Decoder_core.cpp</name>
+			<type>1</type>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Decoder_core.cpp</location>
+		</link>
+		<link>
+			<name>source/Decoder_core.h</name>
+			<type>1</type>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA/DecoderVivadoHLS/Decoder_core.h</location>
+		</link>
+		<link>
+			<name>source/rse.h</name>
+			<type>1</type>
+			<location>/home/gyzuh/University/DComp/Repository/P4Boosters/RSECode/rse.h</location>
 		</link>
 		<link>
 			<name>testbench/Testbench.cpp</name>

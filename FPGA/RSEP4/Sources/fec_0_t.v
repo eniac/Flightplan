@@ -151,7 +151,7 @@ wire [15:0] tuple_out_local_state_DATA ;
 reg tuple_out_Parser_extracts_VALID ;
 wire [31:0] tuple_out_Parser_extracts_DATA ;
 wire tuple_out_fec_output_VALID ;
-wire [`FEC_PACKET_INDEX_WIDTH - 1:0] tuple_out_fec_output_DATA ;
+wire [`FEC_BLOCK_INDEX + `FEC_PACKET_INDEX_WIDTH - 1:0] tuple_out_fec_output_DATA ;
 
 wire tuple_fifo_wr_en;
 reg tuple_fifo_rd_en;
@@ -173,7 +173,7 @@ wire core_idle;
 wire core_ready;
 wire [`FEC_K_WIDTH + `FEC_H_WIDTH:0] core_input_tuple;
 reg core_input_tuple_ap_vld;
-wire [`FEC_PACKET_INDEX_WIDTH - 1:0] core_output_tuple;
+wire [`FEC_BLOCK_INDEX_WIDTH + `FEC_PACKET_INDEX_WIDTH - 1:0] core_output_tuple;
 wire core_output_tuple_ap_vld;
 wire [70:0] core_input_packet_dout;
 wire core_input_packet_empty_n;

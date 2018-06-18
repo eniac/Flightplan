@@ -26,7 +26,6 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1246776140" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1157428273" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/ap_sysc"/>
-									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
@@ -44,7 +43,6 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.2092769146" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1779914022" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/ap_sysc"/>
-									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
@@ -112,7 +110,6 @@
 								<option id="gnu.cpp.compiler.exe.release.option.debugging.level.1375185377" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1301467185" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/ap_sysc"/>
-									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
@@ -125,7 +122,6 @@
 								<option id="gnu.c.compiler.exe.release.option.debugging.level.2104980539" name="Debug Level" superClass="gnu.c.compiler.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.792006643" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include/ap_sysc"/>
-									<listOptionValue builtIn="false" value="/home/gyzuh/University/DComp/Repository/P4Boosters/FPGA"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/systemc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/lnx64/tools/auto_cc/include"/>
 									<listOptionValue builtIn="false" value="/home/gyzuh/SDx/SDx/2017.1/Vivado_HLS/include"/>
@@ -183,4 +179,5 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope"/>
 </cproject>
