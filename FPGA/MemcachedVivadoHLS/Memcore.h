@@ -4,7 +4,7 @@
 #define MAX_DATA_SIZE 2000 
 #define MAX_PACKET_SIZE REQUEST_LINE_SIZE+MAX_DATA_SIZE
 #define MAX_KEY_LEN 256
-#define MAX_MEMORY_SIZE 32767
+#define MAX_MEMORY_SIZE 1500
 #define MAX_CMD_LEN 10
 #define NUM_OF_CMD 5
 #define MAX_RESPONSE_LEN 20
@@ -14,8 +14,10 @@
 #define UDP_LEN_FIELD 38
 #define PAYLOAD_OFFSET_UDP 50 //Payload location under UDP include 8 bytes memcached header
 #define MEMCACHED_UDP_HEADER 8 
-#define ETH_OFFSET 14
-#define IPV4_OFFSET 20
+#define ETH_HDR_LEN 14
+#define IPV4_HDR_LEN 20
+#define UDP_HDR_LEN 8;
+
 #define UDP_IDENTIFIER (23)
 //Standard Response String 
 #define _STORED 0

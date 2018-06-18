@@ -165,6 +165,7 @@ int lookup(uint8_t KEY[MAX_KEY_LEN], int KEY_LEN)
 {
         unsigned long hash = 0;
         for (int i =0; i<KEY_LEN; i++)
+#pragma HLS unroll
                 hash = MAGIC_NUM * hash + (int) KEY[i];
         hash %= MAX_MEMORY_SIZE;
 
@@ -236,18 +237,34 @@ void Add_Data_Field(Mem_sym & Packet_out, long data_len, uint8_t data[MAX_DATA_S
 		std::cout << data[i];
 	std::cout << std::endl;
 }
+void Switch_Address(input_tuples & Tuple_in, output_tuples & Tuple_out)
+{
+	Tuple_out.Hdr.Eth.Src = Tuple_in.Hdr.Eth.Dst;
+	Tuple_out.Hdr.Eth.Dst = Tuple_in.Hdr.Eth.Src;
+	Tuple_out.Hdr.Ipv4.dstAddr = Tuple_in.Hdr.Ipv4.srcAddr;
+	Tuple_out.Hdr.Ipv4.srcAddr = Tuple_in.Hdr.Ipv4.dstAddr;
+	Tuple_out.Hdr.Udp.dport = Tuple_in.Hdr.Udp.sport;
+	Tuple_out.Hdr.Udp.sport = Tuple_in.Hdr.Udp.dport;
+}
+void Modify_Hdr_Length(output_tuples & Tuple_out, uint16_t len)
+{
+	Tuple_out.Hdr.Ipv4.totallen = len - ETH_HDR_LEN;
+	Tuple_out.Hdr.Udp.len = len - ETH_HDR_LEN - IPV4_HDR_LEN;
 
+}
 void Action_Set(CMD_STAT Command, Mem_sym &Packet_out)
 {
 	int mem_index = lookup(Command.KEY, Command.KEY_LEN);
 	Memory[mem_index].VALID = 1;
 	for (int i = 0; i < Command.BYTE; i++)
+#pragma HLS unroll
 		Memory[mem_index].DATA[i] = Command.DATA[i];
+#pragma HLS unroll
 	for (int i = 0; i < Command.KEY_LEN; i++)
 		Memory[mem_index].KEY[i] = Command.KEY[i];
 	Memory[mem_index].DATA_LEN = Command.BYTE;
 	Memory[mem_index].KEY_LEN = Command.KEY_LEN;
-	Packet_out.len = 0;
+	Packet_out.len = PAYLOAD_OFFSET_UDP - MEMCACHED_UDP_HEADER;
 	uint8_t hdr[8] = {1};
 	Add_Udp_MemHdr(hdr, Packet_out);
 	ADD_RESP_WORD(Packet_out, _STORED);
@@ -260,7 +277,7 @@ void Action_Get(CMD_STAT & Command, Mem_sym &Packet_out)
 	int mem_index = lookup(Command.KEY, Command.KEY_LEN);
 	if (Memory[mem_index].VALID)
 	{
-		Packet_out.len = 0;
+		Packet_out.len = PAYLOAD_OFFSET_UDP - MEMCACHED_UDP_HEADER;
 		uint8_t hdr[8] = {1};
 		Add_Udp_MemHdr(hdr, Packet_out);
 		ADD_RESP_WORD(Packet_out, _VALUE);
@@ -275,8 +292,17 @@ void Action_Get(CMD_STAT & Command, Mem_sym &Packet_out)
 		Add_End(Packet_out);
 		ADD_RESP_WORD(Packet_out, _END);
 		Add_End(Packet_out);
-
-
+	}
+}
+void Action_Delete(CMD_STAT & Command, Mem_sym &Packet_out)
+{
+	int mem_index = lookup(Command.KEY, Command.KEY_LEN);
+	if (Memory[mem_index].VALID)
+	{
+		Packet_out.len = 0;
+		uint8_t hdr[8] = {1};
+		Add_Udp_MemHdr(hdr, Packet_out);
+		ADD_RESP_WORD(Packet_out, _DELETED);
 	}
 }
 void Mem_Action(CMD_STAT Command, Mem_sym &Packet_out)
@@ -292,7 +318,7 @@ void Mem_Action(CMD_STAT Command, Mem_sym &Packet_out)
 	}
 	if (Command.CMD == DELETE_CMD)
 	{
-		//Action_Delete(Current_Pos, Raw_Packet, Command);
+		Action_Delete(Command, Packet_out);
 	}
 }
 void Output_Packets(hls::stream<packet_interface> & Packet_output, Mem_sym & Packet_out)
@@ -322,20 +348,29 @@ void Output_Packets(hls::stream<packet_interface> & Packet_output, Mem_sym & Pac
             Packet_output.write(Input);
     }
 }
-void Memcore(hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output)
+void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples> & Output_tuples,
+			 hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output)
 {
+#pragma HLS DATA_PACK variable=Input_tuples
+#pragma HLS DATA_PACK variable=Output_tuples
+#pragma HLS DATA_PACK variable=Packet_input
+#pragma HLS DATA_PACK variable=Packet_output
+#pragma HLS INTERFACE ap_fifo port=Input_tuples
+#pragma HLS INTERFACE ap_hs port=Output_tuples
+#pragma HLS INTERFACE ap_fifo port=Packet_input
+#pragma HLS INTERFACE ap_hs port=Packet_output
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
 	uint8_t Raw_Data[MAX_DATA_SIZE];
 	Mem_sym Raw_Packet, Packet_out;
 	Collect_packets(Packet_input, Raw_Packet);
-
-	//for (int i =0; i < Raw_Packet.len; i++)
-	//	std::cout << Raw_Packet.data[i];
-
+	input_tuples Tuple_in;
+	output_tuples Tuple_out;
+	Tuple_in = Input_tuples.read();
+	Tuple_out.Hdr = Tuple_in.Hdr;
 
 	CMD_STAT Command;
 	Mem_Parser(Raw_Packet, Command);
-	if (Command.CMD == DELETE_CMD)
+	if (Command.CMD == UNKNOWN_CMD)
 	//Output Interface test Only write one byte
 	{
 		packet_interface Temp_output;
@@ -350,7 +385,10 @@ void Memcore(hls::stream<packet_interface> & Packet_input, hls::stream<packet_in
 	else
 	{	
 		Mem_Action(Command,Packet_out);
+		Switch_Address(Tuple_in, Tuple_out);
+		Modify_Hdr_Length(Tuple_out, Packet_out.len);
 		Output_Packets(Packet_output, Packet_out);
+		Output_tuples.write(Tuple_out);
 	}
 	//Print_Command(Command);
 	std::cout << std::endl;
