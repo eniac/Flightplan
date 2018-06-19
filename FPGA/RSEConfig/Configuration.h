@@ -36,3 +36,5 @@
 // Maximum length of Ethernet packet in bytes
 #define FEC_MAX_PACKET_SIZE (1518)
 
+// FIXME hardcoded
+#define FEC_BLOCK_INDEX 0
