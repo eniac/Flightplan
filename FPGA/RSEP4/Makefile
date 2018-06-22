@@ -20,6 +20,8 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
 #	@ln -s ../../../Sources/fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL/fec_0_t.v
 	@ln -s ../../../Sources/memcached_0_t.hpp Encoder/XilinxSwitch/memcached_0_t.TB/memcached_0_t.hpp
 	@ln -s ../../../Sources/memcached_0_t.v Encoder/XilinxSwitch/memcached_0_t.HDL/memcached_0_t.v
+	@ln -s ../MemcachedP4/Scripts/run_C.sh Encoder/XilinxSwitch/run_C.sh
+	@ln -s ../MemcachedP4/Scripts/run_RTL.sh Encoder/XilinxSwitch/run_RTL.sh
 #	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
 	@echo "Copy and link memcached engine here"
 	@echo "Patches/Encoder.patch has been adapted for memcached -- needs editing to work with FEC too"
