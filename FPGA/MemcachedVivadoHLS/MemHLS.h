@@ -21,10 +21,11 @@ typedef struct
 
 typedef struct
 {
+
     ap_uint<16> Type;
     ap_uint<48> Src;
     ap_uint<48> Dst;
-    ap_uint<1> Is_valid;
+    ap_uint<48> Is_valid;
 } tuple_eth;
 
 typedef struct
@@ -37,35 +38,37 @@ typedef struct
 } tuple_fec;
 typedef struct
 {
-	ap_uint<1> isValid;
-	ap_uint<4> version;
-	ap_uint<4> ihl;
-	ap_uint<8> diffserv;
-	ap_uint<16> totallen;
-	ap_uint<16> identification;
-	ap_uint<3> flags;
-	ap_uint<13> fragoffset;
-	ap_uint<8> ttl;
-	ap_uint<8> protocol;
-	ap_uint<16> hdrchecksum;
-	ap_uint<32> srcAddr;
 	ap_uint<32> dstAddr;
+	ap_uint<32> srcAddr;
+	ap_uint<16> hdrchecksum;
+	ap_uint<8> protocol;
+	ap_uint<8> ttl;
+	ap_uint<13> fragoffset;
+	ap_uint<3> flags;
+	ap_uint<16> identification;
+	ap_uint<16> totallen;
+	ap_uint<8> diffserv;
+	ap_uint<4> ihl;
+	ap_uint<4> version;
+	ap_uint<1> isValid;
+
 }tuple_ipv4;
 typedef struct
 {
-	ap_uint<1> isValid;
-	ap_uint<16> sport;
-	ap_uint<16> dport;
-	ap_uint<16> len;
 	ap_uint<16> chksum;
+	ap_uint<16> len;
+	ap_uint<16> dport;
+	ap_uint<16> sport;
+	ap_uint<1> isValid;
 }tuple_udp;
 
 typedef struct
 {
-    tuple_fec FEC;
-    tuple_eth Eth;
-    tuple_ipv4 Ipv4;
 	tuple_udp Udp;
+    tuple_ipv4 Ipv4;
+    tuple_fec FEC;
+	tuple_eth Eth;
+
 } tuple_hdr;
 
 typedef struct

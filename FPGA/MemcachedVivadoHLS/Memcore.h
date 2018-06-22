@@ -44,8 +44,9 @@ enum ascii_cmd {
   UNKNOWN_CMD
 };
 
+
 struct Standard_Cmd{
-	uint8_t cmd[MAX_CMD_LEN];
+	char cmd[MAX_CMD_LEN];
 	int len;
 	enum ascii_cmd cc;
 };
@@ -90,6 +91,12 @@ struct Standard_Response{
         uint8_t line[MAX_RESPONSE_LEN];
         int len;
 };
+//const Standard_Cmd commands[NUM_OF_CMD + 1]={{"get ", 4, GET_CMD},
+//						   {"set ", 4, SET_CMD},
+//						   {"delete ", 7, DELETE_CMD},
+//						   {"VALUE ", 6, VALUE_RESP},
+//						   {"DELETED ", 8, DELETED_RESP},
+//					       {"", 0, UNKNOWN_CMD}};
 
 
 
