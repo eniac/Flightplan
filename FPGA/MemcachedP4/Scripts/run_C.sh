@@ -1,9 +1,10 @@
+echo "Compiling..."
 cd ./XilinxSwitch.TB
 ./compile.bash
 cd ..
-if [!-n "$1"]; then
-	./XilinxSwitch Packet.user > o.log
+if [ "$1" ];then
+	XilinxSwitch.TB/XilinxSwitch $1 > o.log
 else
-	./XilinxSwitch $1 > o.log
+	XilinxSwitch.TB/XilinxSwitch > o.log
 fi
 
