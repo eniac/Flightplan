@@ -25,7 +25,7 @@ typedef struct
     ap_uint<16> Type;
     ap_uint<48> Src;
     ap_uint<48> Dst;
-    ap_uint<48> Is_valid;
+    ap_uint<1> Is_valid;
 } tuple_eth;
 
 typedef struct
