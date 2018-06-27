@@ -20,10 +20,14 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
 #	@ln -s ../../../Sources/fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL/fec_0_t.v
 	@ln -s ../../../Sources/memcached_0_t.hpp Encoder/XilinxSwitch/memcached_0_t.TB/memcached_0_t.hpp
 	@ln -s ../../../Sources/memcached_0_t.v Encoder/XilinxSwitch/memcached_0_t.HDL/memcached_0_t.v
-	@ln -s ../MemcachedP4/Scripts/run_C.sh Encoder/XilinxSwitch/run_C.sh
-	@ln -s ../MemcachedP4/Scripts/run_RTL.sh Encoder/XilinxSwitch/run_RTL.sh
+	@ln -s ../../../MemcachedP4/Scripts/run_C.sh Encoder/XilinxSwitch/run_C.sh
+	@ln -s ../../../MemcachedP4/Scripts/run_RTL.sh Encoder/XilinxSwitch/run_RTL.sh
+	@ln -s ../../../../MemcachedVivadoHLS/Memcore.h Encoder/XilinxSwitch/XilinxSwitch.TB/Memcore.h
+	@ln -s ../../../../MemcachedVivadoHLS/MemHLS.h Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS.h
+	@ln -s ../../../../MemcachedVivadoHLS/MemHLS.cpp Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS.cpp
 #	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
 	@echo "Copy and link memcached engine here"
+	@cp ../MemcachedVivadoHLS/Batch/MemcachedVivadoHLS/solution2/syn/verilog/*.v Encoder/XilinxSwitch/memcached_0_t.HDL
 	@echo "Patches/Encoder.patch has been adapted for memcached -- needs editing to work with FEC too"
 	patch -p0 < Patches/Encoder.patch
 # Convert configuration file to Verilog.
