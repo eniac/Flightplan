@@ -5,7 +5,6 @@ Nik Sultana, UPenn, April 2018
 
 #include <xilinx.p4>
 
-#if 0
 // number of bits used for type-and-proto, concatenated to form key for lookup.
 #define TAP_KEY_SIZE 24
 
@@ -14,7 +13,9 @@ Nik Sultana, UPenn, April 2018
 // Modes: 0 = read, 1 = write.
 @Xilinx_MaxLatency(100)
 extern void port_status(in bit<1> mode, in bit<PORT_SIZE> port_number, out bit<1> faulty);
-#endif
+
+@Xilinx_MaxLatency(100) // FIXME fudge
+extern void get_fec_state(in bit<FEC_TRAFFIC_CLASS_WIDTH> traffic_class, out bit<FEC_BLOCK_INDEX_WIDTH>	block_index, out bit<FEC_PACKET_INDEX_WIDTH> packet_index);
 
 
 // FIXME check if setting FEC_TRAFFIC_CLASS_WIDTH==3, while allowing the match to succeed in RTL, strangely doesn't result in the action taking place (to update the fec header).
@@ -57,7 +58,7 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
     }
 
     bit<12> egress = 0; // NOTE 12 since to be the least width for exact-match. Ideally its type should be "switch_port_t".
-    bit<4/*FIXME arbitrary*/> h = 0;
+    bit<FEC_H_WIDTH> h = 0;
 
     action set_egress (switch_port_t port) {
       egress = (bit<12>)port;
@@ -72,7 +73,7 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
       default_action = NoAction/*FIXME broadcast*/;
     }
 
-    action link_status (bit<4/*FIXME arbitrary*/> status) {
+    action link_status (bit<FEC_H_WIDTH> status) {
       h = status;
     }
 
@@ -85,17 +86,13 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
       if (hdr.lldp_tlv_chassis_id.isValid()) {
         if (hdr.lldp_activate_fec.isValid()) {
           bit<1> faulty;
-#if 0
           port_status(1, (bit<PORT_SIZE>/*FIXME can drop the cast?*/)ctrl.ingress_port, faulty);
-#endif
           drop();
         }
       } else {
         forward.apply();
         bit<1> faulty;
-#if 0
         port_status(0, egress, faulty);
-#endif
         ctrl.egress_port = (switch_port_t)egress;
 
         if (!hdr.ipv4.isValid())
@@ -107,10 +104,9 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
           classification.apply();
           hdr.fec.setValid();
 
-#if 0
-          get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index); // FIXME should manage its own timer?
-#endif
-          // FIXME hand over to Encoder
+          get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index); // FIXME should manage its own timer
+
+          fec(5/*FIXME const*/, h, hdr.fec.packet_index);
         }
       }
     }
@@ -118,4 +114,3 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
 
 
 XilinxSwitch(Parser(), Pipeline(), Deparser()) main;
-
