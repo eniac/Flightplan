@@ -7,4 +7,4 @@ DCOMP project, UPenn, April 2018
 #include "Encoder.p4"
 #include "LLDP.p4"
 
-//XilinxSwitch(Parser(), Update(), Deparser()) main;
+XilinxSwitch(Parser(), Pipeline(), Deparser()) main;

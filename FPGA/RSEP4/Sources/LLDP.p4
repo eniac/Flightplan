@@ -44,9 +44,9 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
       key = {
         type_and_proto : exact; // FIXME ternary might make more sense
       }
-      actions = { classify; /*zero_class*/NoAction; }
+      actions = { classify; zero_class/*NoAction*/; }
       size = 64; // FIXME fudge
-      default_action = /*zero_class*/NoAction;
+      default_action = zero_class/*NoAction*/;
 /* NOTE not supported by SDNet
       const entries = {
         (0x0800, 17 ) : classify(1);
@@ -99,7 +99,6 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
           return;
 
         if (h > 0) {
-//        zero_class();
           type_and_proto = hdr.eth.type ++ hdr.ipv4.proto;
           classification.apply();
           hdr.fec.setValid();
@@ -111,6 +110,3 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
       }
     }
 }
-
-
-XilinxSwitch(Parser(), Pipeline(), Deparser()) main;
