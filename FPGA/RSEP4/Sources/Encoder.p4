@@ -41,3 +41,5 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 		fec(k, h, hdr.fec.packet_index);
 	}
 }
+
+//XilinxSwitch(Parser(), Update(), Deparser()) main;
