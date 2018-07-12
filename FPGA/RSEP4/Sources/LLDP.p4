@@ -20,11 +20,13 @@ extern void get_fec_state(in bit<FEC_TRAFFIC_CLASS_WIDTH> traffic_class, out bit
 
 // FIXME check if setting FEC_TRAFFIC_CLASS_WIDTH==3, while allowing the match to succeed in RTL, strangely doesn't result in the action taking place (to update the fec header).
 
-control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
-    action drop() {
-      ctrl.egress_port = 0xF; // FIXME not portable.
-    }
+control Drop(inout headers_t hdr, inout switch_metadata_t ctrl) {
+  apply {
+    ctrl.egress_port = 0xF; // FIXME not portable.
+  }
+}
 
+control PrePipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
     action classify (bit<FEC_TRAFFIC_CLASS_WIDTH> traffic_class) {
       hdr.fec.setValid();
       hdr.fec.traffic_class = traffic_class;
@@ -78,35 +80,39 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
     }
 
     apply {
-      if (!hdr.eth.isValid()) {
-        drop(); // FIXME needed?
-        return; // FIXME or "exit"?
-      }
+      forward.apply();
+      bit<1> faulty;
+      port_status(0, egress, faulty);
+      ctrl.egress_port = (switch_port_t)egress;
 
-      if (hdr.lldp_tlv_chassis_id.isValid()) {
-        if (hdr.lldp_activate_fec.isValid()) {
-          bit<1> faulty;
-          port_status(1, (bit<PORT_SIZE>/*FIXME can drop the cast?*/)ctrl.ingress_port, faulty);
-          drop();
-        }
-      } else {
-        forward.apply();
-        bit<1> faulty;
-        port_status(0, egress, faulty);
-        ctrl.egress_port = (switch_port_t)egress;
+      if (!hdr.ipv4.isValid())
+        return;
 
-        if (!hdr.ipv4.isValid())
-          return;
+      if (h > 0) {
+        type_and_proto = hdr.eth.type ++ hdr.ipv4.proto;
+        classification.apply();
+        hdr.fec.setValid();
 
-        if (h > 0) {
-          type_and_proto = hdr.eth.type ++ hdr.ipv4.proto;
-          classification.apply();
-          hdr.fec.setValid();
+        get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index); // FIXME should manage its own timer
 
-          get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index); // FIXME should manage its own timer
-
-          fec(5/*FIXME const*/, h, hdr.fec.packet_index);
-        }
+        fec_encode(5/*FIXME const*/, h, hdr.fec.packet_index);
       }
     }
+}
+
+control FECControlPacket(inout headers_t hdr, inout switch_metadata_t ctrl, out bit<1> acted)
+{
+  Drop() drop;
+  apply {
+    acted = 0;
+
+    if (hdr.lldp_tlv_chassis_id.isValid()) {
+      if (hdr.lldp_activate_fec.isValid()) {
+        bit<1> faulty;
+        port_status(1, (bit<PORT_SIZE>/*FIXME can drop the cast?*/)ctrl.ingress_port, faulty);
+        drop.apply(hdr, ctrl); // FIXME needed?
+      }
+      acted = 1;
+    }
+  }
 }
