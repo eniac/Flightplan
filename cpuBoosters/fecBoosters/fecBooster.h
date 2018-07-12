@@ -5,11 +5,29 @@
 #include <net/ethernet.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "fecDefs.h"
 #include "rse.h"
 
-#define LOG_ERR(s, ...) fprintf(stderr, "ERROR: " s "\n", ##__VA_ARGS__)
-#define LOG_INFO(s, ...) fprintf(stderr, s "\n", ##__VA_ARGS__)
+#ifndef LOG_ERR
+#define LOG_ERR(s, ...) fprintf(stderr, "[%s:%s()::%d] ERROR: " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
+#endif
+
+#ifndef LOG_INFO
+#define LOG_INFO(s, ...) fprintf(stderr, "[%s:%s()::%d] " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
+#endif
+
+#define LOG_HEX(buff, len) \
+    for (int _i_=0; _i_ < len; _i_++) { \
+        fprintf(stderr, "%02x", ((char*)buff)[_i_] & 0xff); \
+        if (_i_ % 2 == 1) { \
+            fprintf(stderr, " "); \
+        } \
+    } \
+    fprintf(stderr, "\n");
+
+#define SIZE_ETHERNET sizeof(struct ether_header)
+#define WHARF_TAG_SIZE sizeof(struct ether_header) + sizeof(struct fec_header)
 
 #define SIZE_ETHERNET sizeof(struct ether_header)
 
@@ -44,18 +62,16 @@ void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h);
 /** Inserts a packet, tagged with its size, into the buffer */
 void insert_into_pkt_buffer(tclass_type tclass, int blockId, int pktIdx,
                             FRAME_SIZE_TYPE pkt_size, const u_char *packet);
+
 /** Gets a packet without its tagged size from the buffer */
 u_char *retrieve_from_pkt_buffer(tclass_type tclass, int blockId, int pktIdx, FRAME_SIZE_TYPE *pktSize);
+/** Gets a packet directly from the fec block */
+u_char *retrieve_encoded_packet(tclass_type tclass, int pktIdx, size_t *sz_out);
+
 /** Checks if a packet is already inserted into the buffer */
 bool pkt_already_inserted(tclass_type tclass, int blockId, int pktIdx);
 /** Checks if a packet has been recovered by FEC */
 bool pkt_recovered(tclass_type tclass, int blockId, int pktIdx);
-
-
-/** The handler to be specified in each individual booster file */
-void my_packet_handler(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
-
-void booster_timeout_handler();
 
 /** Checks that no packets are absent */
 bool is_all_data_pkts_recieved_for_block(tclass_type type, int blockId);
@@ -69,15 +85,17 @@ int populate_fec_blk_data(tclass_type type, int blockId);
 void encode_block(void);
 /** Wrapper to envoke decoder on filled fbk */
 void decode_block(tclass_type type, int block_id);
-/** Copies parity from fbk to pkt_buffer */
-int copy_parity_packets_to_pkt_buffer(tclass_type tclass, int blockId);
 /** Advances the block ID with which new wharf frames will be tagged */
 int advance_block_id(tclass_type tclass);
-/** Encapsulates packet with new header */
-int wharf_tag_frame(tclass_type tclass, const u_char* packet, int size, u_char** result);
+/** Encapsulates a parity packet with new header */
+int wharf_tag_parity(tclass_type tclass, int frame_index, int block_id,
+                     const u_char* packet, size_t size_in,
+                     u_char *out, size_t *size_out);
+/** Encapsulates the next data packet with new header */
+int wharf_tag_data(tclass_type tclass,
+                   const u_char *packet, size_t size_in,
+                   u_char *out, size_t *size_out);
 /** Removes header from encapsulated packet */
 const u_char *wharf_strip_frame(const u_char* packet, int *size);
-/** Forwards the frame on the ouptut pcap handle */
-void forward_frame(const void * packet, int len);
 
 #endif // FEC_BOOSTER_H_

@@ -4,24 +4,27 @@ VENCORE_CODE=../../RSECode
 COMPILED_RSE=$(VENCORE_CODE)
 #COMPILED_RSE=../../FPGA/RSEVivadoHLS
 
-FLAGS=-Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -DWHARF_DEBUGGING
+FLAGS=-g -Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -DWHARF_DEBUGGING
 
 # For Configuration.h
 OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
-all: fecBooster.o fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
+PCAP_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c fecPcap.c
+PCAP_DEPS=$(PCAP_INPUTS) $(VENCORE_CODE)/rse.h fecPcap.h makefile
 
-fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h fecBoosterApi.c
+all: fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
+
+fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h makefile
 	g++ $(FLAGS) -c fecBooster.c -lpcap
 
-fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ fecEncodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
+fecEncodeBooster: fecEncodeBooster.c $(PCAP_DEPS)
+	g++ $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
 
-fecDecodeBooster: fecDecodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ fecDecodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
+fecDecodeBooster: fecDecodeBooster.c $(PCAP_DEPS)
+	g++ $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
 
-forwardingNonbooster: forwardingNonbooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ forwardingNonbooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
+forwardingNonbooster: forwardingNonbooster.c $(PCAP_DEPS)
+	g++ $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
 
 boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
 	g++ $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c -DNO_FBK

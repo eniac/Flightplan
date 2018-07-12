@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "fecPcap.h"
 #include "fecBooster.h"
 #include "fecBoosterApi.h"
 
@@ -53,6 +54,7 @@ void decode_and_forward(tclass_type tclass, const int block_id) {
 			// Recovered packet may have a length of 0, if it was filler
 			// In this case, no need to forward
 			if (size > 0) {
+				LOG_INFO("Forwarding packet of size %d", (int)size);
 				forward_frame(pkt, size);
 			}
 		}
@@ -104,7 +106,7 @@ void my_packet_handler(
 #ifdef CHECK_TABLE_ON_DECODE
 		tclass_type tclass = wharf_query_packet(packet, header->len);
 		if (tclass != TCLASS_NULL) {
-			LOG_ERR("Untagged packet should have had class %d", tclass);
+			LOG_ERR("Untagged packet (ether-type %x) should have had class %d", ntohs(eth_header->ether_type), tclass);
 		} else {
 			LOG_INFO("Untagged packet properly untagged");
 		}
@@ -160,7 +162,8 @@ void my_packet_handler(
 	// Buffer data and parity packets in case need to decode.
 	if (!pkt_already_inserted(tclass, fecHeader.block_id, fecHeader.index)) {
 		tclass_status->nothing_to_decode = false;
-	    insert_into_pkt_buffer(fecHeader.class_id, fecHeader.block_id, fecHeader.index, size, stripped);
+		LOG_INFO("Inserting packet %d.%d with size %d", (int)fecHeader.block_id, (int)fecHeader.index, size);
+		insert_into_pkt_buffer(fecHeader.class_id, fecHeader.block_id, fecHeader.index, size, stripped);
 	}
 	else {
 		LOG_ERR("Not buffering duplicate packet");
