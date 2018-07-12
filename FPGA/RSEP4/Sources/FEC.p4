@@ -43,3 +43,58 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 }
 
 //XilinxSwitch(Parser(), Update(), Deparser()) main;
+
+control Encode(inout headers_t hdr, inout switch_metadata_t ctrl) {
+    action classify (bit<FEC_TRAFFIC_CLASS_WIDTH> traffic_class) {
+      hdr.fec.setValid();
+      hdr.fec.traffic_class = traffic_class;
+      // NOTE block_index and packet_index will be updated downstream by get_fec_state()
+      hdr.fec.block_index = /*FEC_BLOCK_INDEX_WIDTH*/5w0;
+      hdr.fec.packet_index = /*FEC_PACKET_INDEX_WIDTH*/8w0;
+    }
+
+    action zero_class () {
+      classify(0);
+    }
+
+    bit<TAP_KEY_SIZE> type_and_proto;
+
+    // NOTE adding this line sends sdnet into tailspin during RTL simulation @Xilinx_ExternallyConnected
+    table classification {
+      key = {
+        type_and_proto : exact; // FIXME ternary might make more sense
+      }
+      actions = { classify; zero_class/*NoAction*/; }
+      size = 64; // FIXME fudge
+      default_action = zero_class/*NoAction*/;
+/* NOTE not supported by SDNet
+      const entries = {
+        (0x0800, 17 ) : classify(1);
+        (0x0800, 6 )  : classify(2);
+        (0x0800, _ )  : classify(3);
+        (_, _ )       : classify(4);
+      }
+*/
+    }
+    bit<FEC_H_WIDTH> h = 0;
+
+    action link_status (bit<FEC_H_WIDTH> status) {
+      h = status;
+    }
+
+    apply {
+
+      if (!hdr.ipv4.isValid())
+        return;
+
+      if (h > 0) {
+        type_and_proto = hdr.eth.type ++ hdr.ipv4.proto;
+        classification.apply();
+        hdr.fec.setValid();
+
+        get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index); // FIXME should manage its own timer
+
+        fec_encode(5/*FIXME const*/, h, hdr.fec.packet_index);
+      }
+    }
+}
