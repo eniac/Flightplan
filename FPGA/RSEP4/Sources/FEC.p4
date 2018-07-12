@@ -83,10 +83,6 @@ control Encode(inout headers_t hdr, inout switch_metadata_t ctrl) {
     }
 
     apply {
-
-      if (!hdr.ipv4.isValid())
-        return;
-
       if (h > 0) {
         type_and_proto = hdr.eth.type ++ hdr.ipv4.proto;
         classification.apply();
