@@ -34,7 +34,9 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
   bit<12> egress = 0; // NOTE 12 since to be the least width for exact-match. Ideally its type should be "switch_port_t".
   FECControlPacket() fec_control_packet;
   bit<1> fcp_acted;
-  Encode() encode;
+  bit<FEC_K_WIDTH> k = 0;
+  bit<FEC_H_WIDTH> h = 0;
+  Classify() classify;
 
   apply {
     if (!hdr.eth.isValid()) {
@@ -53,7 +55,12 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
     if (faulty == 0)
       return; // FIXME check if the packet gets forwarded
 
-    encode.apply(hdr, ctrl);
+    // We use protocol type for traffic classification.
+    if (!hdr.ipv4.isValid())
+      return;
+
+    classify.apply(hdr, ctrl, k, h);
+    fec_encode(k, h, hdr.fec.packet_index);
   }
 }
 

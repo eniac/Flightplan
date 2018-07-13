@@ -44,7 +44,7 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 
 //XilinxSwitch(Parser(), Update(), Deparser()) main;
 
-control Encode(inout headers_t hdr, inout switch_metadata_t ctrl) {
+control Classify(inout headers_t hdr, inout switch_metadata_t ctrl, out bit<FEC_K_WIDTH> k, out bit<FEC_H_WIDTH> h) {
     action classify (bit<FEC_TRAFFIC_CLASS_WIDTH> traffic_class) {
       hdr.fec.setValid();
       hdr.fec.traffic_class = traffic_class;
@@ -76,21 +76,19 @@ control Encode(inout headers_t hdr, inout switch_metadata_t ctrl) {
       }
 */
     }
-    bit<FEC_H_WIDTH> h = 0;
 
     action link_status (bit<FEC_H_WIDTH> status) {
       h = status;
     }
 
     apply {
-      if (h > 0) {
-        type_and_proto = hdr.eth.type ++ hdr.ipv4.proto;
-        classification.apply();
-        hdr.fec.setValid();
+      h = 0; // FIXME const
+      k = 0; // FIXME const
 
-        get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index); // FIXME should manage its own timer
+      type_and_proto = hdr.eth.type ++ hdr.ipv4.proto;
+      classification.apply();
+      hdr.fec.setValid();
 
-        fec_encode(5/*FIXME const*/, h, hdr.fec.packet_index);
-      }
+      get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index); // FIXME should manage its own timer
     }
 }
