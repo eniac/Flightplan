@@ -42,13 +42,17 @@ control Pipeline(inout headers_t hdr, inout switch_metadata_t ctrl) {
       return; // FIXME or "exit"?
     }
     fec_control_packet.apply(hdr, ctrl, fcp_acted);
+    if (fcp_acted == 1)
+      return;
+
     forward.apply(hdr, ctrl, egress);
     ctrl.egress_port = (switch_port_t)egress;
 
     bit<1> faulty;
     port_status(0, egress, faulty);
+    if (faulty == 0)
+      return; // FIXME check if the packet gets forwarded
 
-    // FIXME check value of "faulty"
     encode.apply(hdr, ctrl);
   }
 }
