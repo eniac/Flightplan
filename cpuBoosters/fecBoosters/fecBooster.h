@@ -87,6 +87,8 @@ void encode_block(void);
 void decode_block(tclass_type type, int block_id);
 /** Advances the block ID with which new wharf frames will be tagged */
 int advance_block_id(tclass_type tclass);
+/** Advances the packet index for the next inserted wharf frame */
+int advance_packet_idx(tclass_type tclass);
 /** Encapsulates a parity packet with new header */
 int wharf_tag_parity(tclass_type tclass, int frame_index, int block_id,
                      const u_char* packet, size_t size_in,
@@ -98,4 +100,6 @@ int wharf_tag_data(tclass_type tclass,
 /** Removes header from encapsulated packet */
 const u_char *wharf_strip_frame(const u_char* packet, int *size);
 
+uint8_t get_fec_block_id(tclass_type tclass);
+uint8_t get_fec_frame_idx(tclass_type tclass);
 #endif // FEC_BOOSTER_H_

@@ -1,13 +1,16 @@
 #!/bin/bash
 
 if [[ $# != 3 ]]; then
-    echo "Usage: $0 encoded.pcap rules_table.txt input.pcap"
+    echo "Usage: $0 encoded.pcap rules_table.txt input.pcap [filter]"
     exit 1;
 fi
 
 ENCODED_PCAP=$1
 RULES_TABLE=$2
 INPUT_PCAP=$3
+# Set to 'tcp' or 'udp' if you want only those packets considered
+PROTOCOL_FILTER=$4
+
 DELAY=3
 
 if ! [ $(id -u) = 0 ]; then
@@ -37,6 +40,8 @@ echo Outputting to $OUTDIR
 OUT_PCAP=$OUTDIR/${INPUT_BASENAME}_out.pcap
 ENC_PCAP=$OUTDIR/${INPUT_BASENAME}_enc.pcap
 IN_PCAP=$OUTDIR/${INPUT_BASENAME}_in.pcap
+REIN_PCAP=$OUTDIR/${INPUT_BASENAME}_rein.pcap
+
 cp $INPUT_PCAP $IN_PCAP
 cp $ENCODED_PCAP $ENC_PCAP
 
@@ -69,12 +74,15 @@ echo "**** STARTING $FORWARD_NAME > $FORWARD_OUT"
 echo "**** STARTING $DECODER_NAME > $DECODER_OUT "
 ./$DECODER_NAME -i backVeth2 -o frontVeth3 -r $RULES_TABLE 2> $DECODER_OUT &
 
+sleep 1
 echo "Starting tcpdump to $OUT_PCAP"
 rm $OUT_PCAP
 tcpdump -Q in -i backVeth3 -w $OUT_PCAP &
+tcpdump -Q out -i frontVeth2 -w $REIN_PCAP "$PROTOCOL_FILTER" &
+sleep 1
 
 echo "Starting tcpreplay $i of $INPUT_PCAP"
-tcpreplay --preload-pcap -p $MAX_SPEED --loop=1 -i frontVeth1 $ENCODED_PCAP
+tcpreplay -p $MAX_SPEED -i frontVeth1 $ENCODED_PCAP
 echo "Sleeping for $DELAY"
 sleep $DELAY
 
@@ -96,7 +104,7 @@ ip link delete frontVeth3
 
 chown $real_user:$real_user -R $TEST_DIR
 
-tcpdump -tenr $INPUT_PCAP > $IN_TXT
+tcpdump -tenr $INPUT_PCAP "$PROTOCOL_FILTER" > $IN_TXT
 tcpdump -tenr $OUT_PCAP > $OUT_TXT
 
 INLINES=$(cat $IN_TXT | wc -l)

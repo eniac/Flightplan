@@ -36,6 +36,7 @@ mkdir -p $OUTDIR
 echo Outputting to $OUTDIR
 
 OUT_PCAP=$OUTDIR/${INPUT_BASENAME}_out.pcap
+ENC_PCAP=$OUTDIR/${INPUT_BASENAME}_enc.pcap
 IN_PCAP=$OUTDIR/${INPUT_BASENAME}_in.pcap
 cp $INPUT_PCAP $IN_PCAP
 
@@ -74,6 +75,7 @@ echo "**** STARTING $DECODER_NAME > $DECODER_OUT "
 
 echo "Starting tcpdump to $OUT_PCAP"
 rm $OUT_PCAP
+tcpdump -Q in -i backVeth2 -w $ENC_PCAP &
 tcpdump -Q in -i backVeth4 -w $OUT_PCAP &
 
 for i in `seq 1 $REPETITIONS`; do
