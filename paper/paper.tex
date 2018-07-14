@@ -14,25 +14,19 @@
 %\setcopyright{none}
 %\setcopyright{acmcopyright}
 %\setcopyright{acmlicensed}
-\setcopyright{rightsretained}
+%\setcopyright{rightsretained}
 %\setcopyright{usgov}
 %\setcopyright{usgovmixed}
 %\setcopyright{cagov}
 %\setcopyright{cagovmixed}
 
-
-% DOI
-\acmDOI{10.475/123_4}
-
-% ISBN
-\acmISBN{123-4567-24-567/08/06}
-
-%Conference
-\acmConference[NetCompute'18]{ACM SIGCOMM 2018 Workshop on In-Network Computing conference}{August 2018}{Budapest, Hungary} 
-\acmYear{2018}
-\copyrightyear{2018}
-
+\acmYear{2018}\copyrightyear{2018}
+\setcopyright{licensedusgovmixed}
+\acmConference[NetCompute'18]{NetCompute'18: Morning Workshop on In-Network Computing}{August 20, 2018}{Budapest, Hungary}
+%\acmBooktitle{NetCompute'18: Morning Workshop on In-Network Computing, August 20, 2018, Budapest, Hungary}
 \acmPrice{15.00}
+\acmDOI{10.1145/3229591.3229595}
+\acmISBN{978-1-4503-5908-5/18/08}
 
 \usepackage{xspace}
 \newcommand{\OurSys}{Wharf\xspace}
@@ -59,11 +53,11 @@
 \author{Nik Sultana}
 \affiliation{\institution{University of Pennsylvania}}
 \author{Latha Kant}
-\affiliation{\institution{Vencore Labs}}
+\affiliation{\institution{Perspecta Labs}}
 \author{Anthony J McAuley}
-\affiliation{\institution{Vencore Labs}}
+\affiliation{\institution{Perspecta Labs}}
 \author{Alexander Poylisher}
-\affiliation{\institution{Vencore Labs}}
+\affiliation{\institution{Perspecta Labs}}
 \author{Andr\'e DeHon}
 \affiliation{\institution{University of Pennsylvania}}
 \author{Boon Thau Loo}
@@ -153,29 +147,49 @@ around 10\% of our FPGA's resources.
 % http://dl.acm.org/ccs.cfm
 % Please copy and paste the code instead of the example below. 
 %
+%\begin{CCSXML}
+%<ccs2012>
+%<concept>
+%<concept_id>10003033.10003099.10003102</concept_id>
+%<concept_desc>Networks~Programmable networks</concept_desc>
+%<concept_significance>500</concept_significance>
+%</concept>
+%<concept>
+%<concept_id>10003033.10003083.10003095.10010752</concept_id>
+%<concept_desc>Networks~Error detection and error correction</concept_desc>
+%<concept_significance>300</concept_significance>
+%</concept>
+%<concept>
+%<concept_id>10003033.10003106.10003110</concept_id>
+%<concept_desc>Networks~Data center networks</concept_desc>
+%<concept_significance>100</concept_significance>
+%</concept>
+%</ccs2012>
+%\end{CCSXML}
+%
+%\ccsdesc[500]{Networks~Programmable networks}
+%\ccsdesc[300]{Networks~Error detection and error correction}
+%\ccsdesc[100]{Networks~Data center networks}
+
+
+
 \begin{CCSXML}
 <ccs2012>
 <concept>
-<concept_id>10003033.10003099.10003102</concept_id>
-<concept_desc>Networks~Programmable networks</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
 <concept_id>10003033.10003083.10003095.10010752</concept_id>
 <concept_desc>Networks~Error detection and error correction</concept_desc>
-<concept_significance>300</concept_significance>
+<concept_significance>500</concept_significance>
 </concept>
 <concept>
 <concept_id>10003033.10003106.10003110</concept_id>
 <concept_desc>Networks~Data center networks</concept_desc>
-<concept_significance>100</concept_significance>
+<concept_significance>500</concept_significance>
 </concept>
 </ccs2012>
 \end{CCSXML}
 
-\ccsdesc[500]{Networks~Programmable networks}
-\ccsdesc[300]{Networks~Error detection and error correction}
-\ccsdesc[100]{Networks~Data center networks}
+\ccsdesc[500]{Networks~Error detection and error correction}
+\ccsdesc[500]{Networks~Data center networks}
 
 % We no longer use \terms command
 %\terms{Theory}
@@ -193,14 +207,17 @@ around 10\% of our FPGA's resources.
 \input{conclusion}
 
 \subsection*{Acknowledgements}
-We thank Isaac Pedisich for programming support.
-This material is based upon work supported by the Defense Advanced
-Research Projects Agency (DARPA) under Contracts No. HR001117C0047
-and No. HR0011-16-C-0056.
-Xilinx provided tools and IP.
+We thank Isaac Pedisich for programming support, and Xilinx for
+providing tools and IP.
 %, including SDNet to support P4 to FPGA
 %compilation, the Ethernet MAC, and HLS and physical design mapping
 %software. 
+This material is based upon work supported by the Defense Advanced
+Research Projects Agency (DARPA) under Contracts No. HR0011-17-C-0047
+and No. HR0011-16-C-0056, and NSF grant CNS-1513679.
+Any opinions, findings and conclusions or recommendations expressed in
+this material are those of the authors and do not necessarily reflect
+the views of DARPA or NSF.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{paper}

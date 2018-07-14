@@ -22,7 +22,8 @@ typedef uint64_t uint64;
 #define CONCATENATE_INTERNAL(x, y) x ## y
 #define CONCATENATE(x, y) CONCATENATE_INTERNAL(x, y)
 
-typedef CONCATENATE(uint, FEC_PACKET_INDEX_WIDTH) index_type;
+typedef CONCATENATE(uint, FEC_PACKET_INDEX_WIDTH) packet_index_type;
+typedef CONCATENATE(uint, FEC_BLOCK_INDEX_WIDTH) block_index_type;
 typedef CONCATENATE(uint, FEC_K_WIDTH) k_type;
 typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
 
@@ -42,7 +43,8 @@ typedef struct
 {
   // Note the reverse order with respect to parameter order in external function
   // declaration.
-  index_type Packet_index;
+  block_index_type  Block_index;
+  packet_index_type Packet_index;
 } output_tuple;
 
 typedef struct
@@ -61,7 +63,8 @@ static fec_sym Header[HEADER_SIZE];
 static fec_sym Parity_buffer[FEC_MAX_PACKET_SIZE][FEC_MAX_H];
 static fec_sym Packet_length_parity[FEC_PACKET_LENGTH_WIDTH / 8][FEC_MAX_H];
 
-static index_type Packet_index;
+static packet_index_type Packet_index;
+static block_index_type  Block_index;
 
 static unsigned Maximum_packet_length;
 
@@ -196,10 +199,14 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   while (!End);
 
   Output_tuple->Packet_index = Packet_index;
+  Output_tuple->Block_index = Block_index;
 
   Packet_index++;
   if (Packet_index == Input_tuple.k + Input_tuple.h)
+  {
     Packet_index = 0;
+    Block_index++;
+  }
 }
 
 void RSE_core(input_tuple Input_tuple, output_tuple * Output_tuple, packet_interface * Input_packet,

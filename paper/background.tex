@@ -46,15 +46,21 @@ traffic~\cite[\S7.3]{Langley:2017:QTP:3098822.3098842}. In this paper
 we use FEC to cross a single link, rather than multiple links only
 one of which might be faulty.
 
-In this paper we focus on Clos
-topologies~\cite{clos_bstj1953}, 
-%% surely we can give Clos credit for Clos networks... -- AMD
-which are used in datacenters~\cite{Singh:2016:JRD:2991470.2975159}.
-We believe that our design could be useful in mitigating faulty links in a Clos
-topology due to the large number links it uses when compared to a
-hierarchical topology~\cite{Al-Fares:2008:SCD:1402946.1402967}, which 
-%makes  -- AMD don't want "makes exposes" -- pick one...
-exposes it more to link-related faults.
+%In this paper we focus on Clos
+%topologies~\cite{clos_bstj1953}, 
+%%% surely we can give Clos credit for Clos networks... -- AMD
+%which are used in datacenters~\cite{Singh:2016:JRD:2991470.2975159}.
+%We believe that our design could be useful in mitigating faulty links in a Clos
+%topology due to the large number links it uses when compared to a
+%hierarchical topology~\cite{Al-Fares:2008:SCD:1402946.1402967}, which 
+%%makes  -- AMD don't want "makes exposes" -- pick one...
+%exposes it more to link-related faults.
+
+In this paper we focus on Clos topologies which are used in
+datacenters~\cite{Singh:2016:JRD:2991470.2975159}.
+Our design could be useful in mitigating faulty links in a
+Clos topology due to the large number of links it uses when compared to a
+hierarchical topology, which exposes it more to link-related faults.
 
 Centralized approaches have been described in the literature to mitigate
 faulty links in a WAN~\cite{traffic-engineering-with-forward-fault-correction}

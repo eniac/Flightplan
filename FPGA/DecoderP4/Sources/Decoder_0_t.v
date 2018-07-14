@@ -38,12 +38,12 @@
 `define FEC_HDR_WIDTH `FEC_TRAFFIC_CLASS_WIDTH + `FEC_BLOCK_INDEX_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_ETHER_TYPE_WIDTH
 
 `define TUPLE_CONTROL_WIDTH          23
-`define TUPLE_UPDATE_FL_WIDTH        2 * `FEC_K_WIDTH
+`define TUPLE_UPDATE_FL_WIDTH        2 * `FEC_K_WIDTH + `FEC_H_WIDTH
 `define TUPLE_HDR_WIDTH              `FEC_ETH_HEADER_SIZE + `FEC_HDR_WIDTH + 2
 `define TUPLE_IOPORTS_WIDTH          8
 `define TUPLE_LOCAL_STATE_WIDTH      16
 `define TUPLE_PARSER_EXTRACTS_WIDTH  32
-`define TUPLE_DECODER_INPUT_WIDTH    1 + `FEC_K_WIDTH
+`define TUPLE_DECODER_INPUT_WIDTH    1 + `FEC_K_WIDTH + `FEC_H_WIDTH
 `define TUPLE_DECODER_OUTPUT_WIDTH   `FEC_K_WIDTH
 
 `define TUPLE_CONTROL_START          0
@@ -108,7 +108,9 @@ module Decoder_0_t (
 	tuple_in_Decoder_input_VALID,
 	tuple_in_Decoder_input_DATA,
 	tuple_out_Decoder_output_VALID,
-	tuple_out_Decoder_output_DATA
+	tuple_out_Decoder_output_DATA,
+	backpressure_in,
+	backpressure_out
 );
 
 input clk_line;
@@ -155,6 +157,8 @@ input tuple_in_Decoder_input_VALID;
 input [`TUPLE_DECODER_INPUT_WIDTH - 1:0] tuple_in_Decoder_input_DATA;
 output tuple_out_Decoder_output_VALID;
 output [`TUPLE_DECODER_OUTPUT_WIDTH - 1:0] tuple_out_Decoder_output_DATA;
+input backpressure_in;
+output backpressure_out;
 
 wire packet_in_packet_in_RDY;
 wire packet_out_packet_out_SOF;
@@ -203,6 +207,7 @@ wire [`INPUT_TUPLES_WIDTH - 1:0] tuple_fifo_din;
 wire [`INPUT_TUPLES_WIDTH - 1:0] tuple_fifo_dout;
 wire tuple_fifo_empty;
 wire tuple_fifo_almost_full;
+wire tuple_fifo_full;
 
 wire packet_fifo_wr_en;
 wire packet_fifo_rd_en;
@@ -210,6 +215,7 @@ wire [`FEC_AXI_BUS_WIDTH + 6:0] packet_fifo_din;
 wire [`FEC_AXI_BUS_WIDTH + 6:0] packet_fifo_dout;
 wire packet_fifo_empty;
 wire packet_fifo_almost_full;
+wire packet_fifo_full;
 
 Decode dec
 (
@@ -241,7 +247,7 @@ assign dec_tuple_input_v_empty_n = ~tuple_fifo_empty;
 assign dec_tuple_output_v_ap_ack = 1;
 assign dec_packet_input_v_dout = packet_fifo_dout;
 assign dec_packet_input_v_empty_n = ~packet_fifo_empty;
-assign dec_packet_output_v_ap_ack = packet_out_packet_out_RDY;
+assign dec_packet_output_v_ap_ack = ~backpressure_in;
 
 defparam tuple_fifo.WRITE_DATA_WIDTH = `INPUT_TUPLES_WIDTH;
 defparam tuple_fifo.FIFO_WRITE_DEPTH = 512; 
@@ -264,7 +270,7 @@ xpm_fifo_sync tuple_fifo (
 	.dout(tuple_fifo_dout), 
 	.empty(tuple_fifo_empty), 
 	.prog_full(tuple_fifo_almost_full), 
-	.full(), 
+	.full(tuple_fifo_full), 
 	.rd_data_count(), 
 	.wr_data_count(), 
 	.wr_rst_busy(), 
@@ -304,7 +310,7 @@ xpm_fifo_sync packet_fifo (
 	.dout(packet_fifo_dout), 
 	.empty(packet_fifo_empty), 
 	.prog_full(packet_fifo_almost_full), 
-	.full(), 
+	.full(packet_fifo_full), 
 	.rd_data_count(), 
 	.wr_data_count(), 
 	.wr_rst_busy(), 
@@ -322,7 +328,7 @@ assign packet_fifo_din = {packet_in_packet_in_SOF, packet_in_packet_in_EOF, pack
                           packet_in_packet_in_CNT, packet_in_packet_in_ERR};
 assign packet_fifo_rd_en = dec_packet_input_v_read;
 
-assign packet_in_packet_in_RDY = ~packet_fifo_almost_full;
+assign packet_in_packet_in_RDY = 1;
 
 assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_out_DAT,
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = dec_packet_output_v;
@@ -343,6 +349,8 @@ assign tuple_out_ioports_VALID         = dec_tuple_output_v_ap_vld;
 assign tuple_out_hdr_VALID             = dec_tuple_output_v_ap_vld;
 assign tuple_out_Update_fl_VALID       = dec_tuple_output_v_ap_vld;
 assign tuple_out_control_VALID         = dec_tuple_output_v_ap_vld;
+
+assign backpressure_out = packet_fifo_almost_full;
 
 endmodule
 

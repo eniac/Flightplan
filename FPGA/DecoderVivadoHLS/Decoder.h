@@ -17,11 +17,13 @@ typedef ap_uint<FEC_BLOCK_INDEX_WIDTH> block_index;
 typedef ap_uint<FEC_PACKET_INDEX_WIDTH> packet_index;
 typedef ap_uint<FEC_ETHER_TYPE_WIDTH> packet_type;
 typedef ap_uint<FEC_K_WIDTH> k_type;
+typedef ap_uint<FEC_H_WIDTH> h_type;
 typedef ap_uint<FEC_AXI_BUS_WIDTH> data_word;
 
 typedef struct
 {
     k_type Packet_count;
+    h_type h;
     k_type k;
 } tuple_Update_fl;
 
@@ -71,6 +73,7 @@ typedef struct
 
 typedef struct
 {
+    h_type h;
     k_type k;
     ap_uint<1> Stateful_valid;
 } tuple_Decoder_input;
