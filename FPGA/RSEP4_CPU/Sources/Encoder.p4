@@ -108,7 +108,7 @@ struct headers_t {
 #define UDP_PROTOCOL 0x11
 
 extern void get_fec_state(in TClass class, out BIndex block_index, out PIndex packet_index);
-extern void fec_encode(in eth_h eth, in ipv4_h ip, in TClass tclass,in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h);
+extern void fec_encode(in eth_h eth, in ipv4_h ip, in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h);
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser FecParser(packet_in pkt, out headers_t hdr, inout booster_metadata_t meta, inout standard_metadata_t smd)
@@ -209,7 +209,7 @@ control FecProcess(inout headers_t hdr, inout booster_metadata_t meta, inout sta
         forward.apply();
         if (hdr.fec.isValid()) {
             get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index);
-            fec_encode(hdr.eth, hdr.ipv4, hdr.fec.traffic_class, k, h);
+            fec_encode(hdr.eth, hdr.ipv4, hdr.fec, k, h);
             hdr.fec.orig_ethertype = hdr.eth.type;
             hdr.eth.type = ETHERTYPE_WHARF;
             hdr.eth.setValid();
