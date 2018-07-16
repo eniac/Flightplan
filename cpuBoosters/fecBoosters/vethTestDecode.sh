@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ $# != 3 ]]; then
+if [[ $# != 3 && $# != 4 ]]; then
     echo "Usage: $0 encoded.pcap rules_table.txt input.pcap [filter]"
     exit 1;
 fi
@@ -105,7 +105,7 @@ ip link delete frontVeth3
 chown $real_user:$real_user -R $TEST_DIR
 
 tcpdump -tenr $INPUT_PCAP "$PROTOCOL_FILTER" > $IN_TXT
-tcpdump -tenr $OUT_PCAP > $OUT_TXT
+tcpdump -tenr $OUT_PCAP "$PROTOCOL_FILTER" > $OUT_TXT
 
 INLINES=$(cat $IN_TXT | wc -l)
 OUTLINES=$(cat $OUT_TXT | wc -l)
@@ -138,7 +138,7 @@ else
 
     echo "Input and output contain different number of lines!"
     echo "($INLINES and $OUTLINES)"
-    echo "Check $IN_TXT and $OUT_TXT to compare"
+    echo "Check $IN_TXT $OUT_TXT to compare"
     echo -e ${RED}TEST FAILED${NC}
     exit 1
 fi
