@@ -55,7 +55,7 @@ struct bmv2_hash {
   }
 };
 
-}  // namespace
+} // namespace
 
 // if REGISTER_HASH calls placed in the anonymous namespace, some compiler can
 // give an unused variable warning
@@ -130,8 +130,11 @@ SimpleSwitch::receive_(port_t port_num, const char *buffer, int len) {
   phv->reset_metadata();
 
   // setting standard metadata
-
   phv->get_field("standard_metadata.ingress_port").set(port_num);
+
+  // set metadata for boosters
+  //phv->get_field("booster_metadata.booster_spec").set(0);
+
   // using packet register 0 to store length, this register will be updated for
   // each add_header / remove_header primitive call
   packet->set_register(PACKET_LENGTH_REG_IDX, len);
@@ -442,9 +445,33 @@ SimpleSwitch::ingress_thread() {
       BMLOG_DEBUG_PKT(*packet, "Dropping packet at the end of ingress");
       continue;
     }
-
     enqueue(egress_port, std::move(packet));
   }
+}
+
+void SimpleSwitch::check_booster_queue(packet_id_t id) {
+    BMLOG_DEBUG("Checking booster queue");
+
+    auto it = booster_output_buffer.find(id);
+    if ( it == booster_output_buffer.end()) {
+        BMLOG_DEBUG("Booster queue empty for id {}", id);
+        return;
+    }
+    BMLOG_DEBUG("Booster queue found");
+
+    std::unique_ptr<Queue<std::unique_ptr<Packet> > > queue = std::move(booster_output_buffer[id]);
+
+    BMLOG_DEBUG("Iterating over queue of size {}", queue->size());
+    for (unsigned int i=0; i < queue->size(); i++) {
+        std::unique_ptr<Packet> packet;
+        queue->pop_back(&packet);
+
+        BMLOG_DEBUG("Enqueueing for output packet of size {}", packet->get_data_size());
+        output_buffer.push_front(std::move(packet));
+    }
+
+    BMLOG_DEBUG("Erasing queue", queue->size());
+    booster_output_buffer.erase(it);
 }
 
 void
@@ -548,6 +575,45 @@ SimpleSwitch::egress_thread(size_t worker_id) {
       }
     }
 
+    packet_id_t id = packet->get_packet_id();
     output_buffer.push_front(std::move(packet));
+    check_booster_queue(id);
+
   }
 }
+
+void SimpleSwitch::enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> new_packet) {
+    BMLOG_DEBUG("Searching output buffer");
+    if (booster_output_buffer.find(id) == booster_output_buffer.end()) {
+       BMLOG_DEBUG("Creating new booster queue");
+        booster_output_buffer[id] =
+            std::unique_ptr<Queue<std::unique_ptr<Packet> > >(new Queue<std::unique_ptr<Packet> >);
+    }
+    booster_output_buffer[id]->push_front(std::move(new_packet));
+    BMLOG_DEBUG("Enqueueing new booster packet");
+}
+
+void SimpleSwitch::enqueue_booster_packet(Packet &src, const u_char *payload, size_t len) {
+    PHV *src_phv = src.get_phv();
+    packet_id_t packet_id = src.get_packet_id();
+
+    BMLOG_DEBUG("Attempting to enqueue new booster packet of len {} to id {}", len, packet_id);
+
+    int input_port = src_phv->get_field("standard_metadata.ingress_port").get_int();
+    int output_port = src_phv->get_field("standard_metadata.egress_spec").get_int();
+
+    BMLOG_DEBUG("Making new packet of len {}", len);
+    auto booster_pkt = new_packet_ptr(input_port, packet_id, // FIXME: Get packet ID from switch?
+                                      len,
+                                      bm::PacketBuffer(len + 512, (char *)payload, len));
+    BMLOG_DEBUG("Setting headers");
+    PHV *phv_copy = booster_pkt->get_phv();
+    phv_copy->copy_headers(*src_phv);
+    phv_copy->get_field("standard_metadata.packet_length").set(len);
+    booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
+    booster_pkt->set_egress_port(output_port);
+
+    BMLOG_DEBUG("Calling enqueue");
+    enqueue_booster_packet(packet_id, std::move(booster_pkt));
+}
+

@@ -67,6 +67,8 @@ using bm::p4object_id_t;
 
 class SimpleSwitch : public Switch {
  public:
+  void enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> packet);
+  void enqueue_booster_packet(Packet &src, const u_char *payload, size_t len);
   using mirror_id_t = int;
 
   using TransmitFn = std::function<void(port_t, packet_id_t,
@@ -181,11 +183,14 @@ class SimpleSwitch : public Switch {
 #endif
   egress_buffers;
   Queue<std::unique_ptr<Packet> > output_buffer;
+  std::unordered_map<packet_id_t, std::unique_ptr<Queue<std::unique_ptr<Packet>> > > booster_output_buffer;
   TransmitFn my_transmit_fn;
   std::shared_ptr<McSimplePreLAG> pre;
   clock::time_point start;
   std::unordered_map<mirror_id_t, port_t> mirroring_map;
   bool with_queueing_metadata{false};
+
+  void check_booster_queue(packet_id_t id);
 };
 
 #endif  // SIMPLE_SWITCH_SIMPLE_SWITCH_H_

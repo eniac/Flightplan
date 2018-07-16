@@ -26,11 +26,13 @@
 #include <bm/SimpleSwitch.h>
 #include <bm/bm_runtime/bm_runtime.h>
 #include <bm/bm_sim/target_parser.h>
+#include <bm/bm_sim/logger.h>
 
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "fec_boosters/fecBooster.h"
 #include "simple_switch.h"
 
 namespace {
@@ -99,10 +101,20 @@ SimpleSwitchParser *simple_switch_parser;
 
 namespace sswitch_runtime {
 shared_ptr<SimpleSwitchIf> get_handler(SimpleSwitch *sw);
+
+SimpleSwitch *get_switch() {
+    return simple_switch;
+}
 }  // namespace sswitch_runtime
 
 int
 main(int argc, char* argv[]) {
+
+  if (rse_init() != 0) {
+      printf("ERROR\n");
+      exit(-1);
+  }
+
   simple_switch = new SimpleSwitch();
   simple_switch_parser = new SimpleSwitchParser();
   int status = simple_switch->init_from_command_line_options(

@@ -13,6 +13,7 @@ $(top_builddir)/src/BMI/libbmi.la \
 $(top_builddir)/third_party/jsoncpp/libjson.la \
 -lboost_system $(THRIFT_LIB) -lboost_program_options -lboost_filesystem
 
+
 if COND_THRIFT
 
 simple_switch_thrift_py_files = \
@@ -58,7 +59,10 @@ simple_switch_CLI
 
 AM_CPPFLAGS += \
 -I$(srcdir)/thrift/src/ \
--I$(builddir)/gen-cpp
+-I$(builddir)/gen-cpp \
+-I/home/iped/dcomp/P4Boosters/RSECode \
+-I/home/iped/dcomp/P4Boosters/FPGA/RSEVivadoHLS \
+-Ifec_boosters/
 
 libsimpleswitch_la_SOURCES += thrift/src/SimpleSwitch_server.cpp
 
@@ -68,7 +72,8 @@ simple_switch_LDADD = \
 $(top_builddir)/src/bm_runtime/libbmruntime.la \
 $(top_builddir)/thrift_src/libruntimestubs.la \
 libsimpleswitch.la \
-libsimpleswitch_thrift.la
+libsimpleswitch_thrift.la  \
+fec_boosters/fecBoosterP4lib.a
 
 simple_switch_SOURCES = main.cpp
 simple_switch_LDFLAGS =

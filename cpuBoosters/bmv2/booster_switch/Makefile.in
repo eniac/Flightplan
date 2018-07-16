@@ -93,7 +93,10 @@ build_triplet = @build@
 host_triplet = @host@
 @COND_THRIFT_TRUE@am__append_1 = \
 @COND_THRIFT_TRUE@-I$(srcdir)/thrift/src/ \
-@COND_THRIFT_TRUE@-I$(builddir)/gen-cpp
+@COND_THRIFT_TRUE@-I$(builddir)/gen-cpp \
+@COND_THRIFT_TRUE@-I/home/iped/dcomp/P4Boosters/RSECode \
+@COND_THRIFT_TRUE@-I/home/iped/dcomp/P4Boosters/FPGA/RSEVivadoHLS \
+@COND_THRIFT_TRUE@-Ifec_boosters/
 
 @COND_THRIFT_TRUE@am__append_2 = thrift/src/SimpleSwitch_server.cpp
 @COND_THRIFT_TRUE@bin_PROGRAMS = simple_switch$(EXEEXT)
@@ -181,7 +184,8 @@ am__simple_switch_SOURCES_DIST = main.cpp
 simple_switch_OBJECTS = $(am_simple_switch_OBJECTS)
 @COND_THRIFT_TRUE@simple_switch_DEPENDENCIES = $(top_builddir)/src/bm_runtime/libbmruntime.la \
 @COND_THRIFT_TRUE@	$(top_builddir)/thrift_src/libruntimestubs.la \
-@COND_THRIFT_TRUE@	libsimpleswitch.la libsimpleswitch_thrift.la
+@COND_THRIFT_TRUE@	libsimpleswitch.la libsimpleswitch_thrift.la \
+@COND_THRIFT_TRUE@	fec_boosters/fecBoosterP4lib.a
 simple_switch_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(AM_CXXFLAGS) $(CXXFLAGS) $(simple_switch_LDFLAGS) $(LDFLAGS) \
@@ -290,7 +294,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = . tests
+DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp \
 	$(top_srcdir)/py-compile
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -461,8 +465,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@COND_NANOMSG_TRUE@MAYBE_TESTS = tests
-SUBDIRS = . $(MAYBE_TESTS)
+SUBDIRS = .
 THRIFT_IDL = $(srcdir)/thrift/simple_switch.thrift
 noinst_LTLIBRARIES = libsimpleswitch.la
 libsimpleswitch_la_SOURCES = simple_switch.cpp simple_switch.h \
@@ -509,7 +512,8 @@ $(top_builddir)/third_party/jsoncpp/libjson.la \
 @COND_THRIFT_TRUE@$(top_builddir)/src/bm_runtime/libbmruntime.la \
 @COND_THRIFT_TRUE@$(top_builddir)/thrift_src/libruntimestubs.la \
 @COND_THRIFT_TRUE@libsimpleswitch.la \
-@COND_THRIFT_TRUE@libsimpleswitch_thrift.la
+@COND_THRIFT_TRUE@libsimpleswitch_thrift.la  \
+@COND_THRIFT_TRUE@fec_boosters/fecBoosterP4lib.a
 
 @COND_THRIFT_TRUE@simple_switch_SOURCES = main.cpp
 @COND_THRIFT_TRUE@simple_switch_LDFLAGS = $(am__append_3)
