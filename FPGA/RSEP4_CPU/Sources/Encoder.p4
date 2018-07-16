@@ -26,7 +26,6 @@
 //   All rights reserved.                                                   //
 //----------------------------------------------------------------------------
 
-#include "xilinx.p4"
 #include "v1model.p4"
 #include "Configuration.h"
 
