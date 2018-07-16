@@ -12,7 +12,7 @@ static void encode_and_forward(tclass_type tclass, forward_fn_t forward,
         size_t tagged_size = parity_size + WHARF_TAG_SIZE;
         u_char tagged_pkt[tagged_size];
 
-        wharf_tag_parity(tclass, i, block_id,
+        wharf_tag_parity(tclass, block_id, i,
                          parity_pkt, parity_size,
                          tagged_pkt, &tagged_size);
 
@@ -30,7 +30,7 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
     // TODO: This shouldn't have to be done every time this is called
     set_fec_params(tclass, k, h);
 
-    LOG_INFO("Inserting pkt of size %zu into buffer", pkt_size);
+    LOG_INFO("Inserting pkt of tclass %d size %zu into buffer", (int)tclass, pkt_size);
     insert_into_pkt_buffer(tclass, fec->block_id, fec->index, pkt_size, pkt);
 
     // If advancing the packet index starts a new block
