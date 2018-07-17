@@ -56,6 +56,7 @@ clean:
 	$(RM) boosterCliTest
 	$(RM) *.o
 	$(RM) fecP4/*.o
+	$(RM) fecP4/*.a
 	$(RM) fecPcap/*.o
 	$(RM) fecBoosterP4lib.a
 	$(RM) $(COMPILED_RSE)/rse.o
