@@ -170,11 +170,17 @@ class fec_encode : public ActionPrimitive<Header &, Header &, Header &,
 
 REGISTER_PRIMITIVE(fec_encode);
 
+/**
+ * Copy_modified accepts an index, a width, and a value.
+ * It copies `width` bytes from `value` into location `index` of a copy of the payload,
+ * then enqueues the newly modified (copied) packet for deparsing.
+ */
 class copy_modified : public ActionPrimitive<const Data &, const Data &, const Data &> {
 
     void operator ()(const Data &idx_d, const Data &width_d, const Data &value_d) {
         Packet &packet = get_packet();
 
+        // Retrieve the value of the passed in data
         uint8_t idx = idx_d.get<uint8_t>();
         uint8_t width = width_d.get<uint8_t>();
         std::string value = value_d.get_string();
@@ -186,10 +192,12 @@ class copy_modified : public ActionPrimitive<const Data &, const Data &, const D
             return;
         }
 
+        // Create a copy of the payload, modifying the appropriate bits
         u_char new_payload[payload_size];
         memcpy(new_payload, packet.data(), payload_size);
         memcpy(&new_payload[idx], value.c_str(), width);
 
+        // Send the new packet to the deparser for output
         sswitch_runtime::get_switch()->deparse_booster_packet(packet, new_payload, payload_size);
     }
 };
