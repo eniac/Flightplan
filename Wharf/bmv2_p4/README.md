@@ -12,3 +12,12 @@ Sample and fec booster bmv2 inputs can both be built with `make`
 - Sources/Sample.p4 : an example of extern usage
   - Creates copy of incoming packets with specified bytes of payload modified
   - Run in mininet with `make run-Sample`
+
+Executing `make run` will start up a network:
+```
+h1 <--> Encoder (s0) <--> Dropper (s1) <--> Decoder (s2) <--> h2
+```
+
+Execution `bash e2etest.sh <pcap_file.pcap>` will start the network,
+feed replay the pcap file on h1, and then check that identical output
+is received by h2.
