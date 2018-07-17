@@ -26,9 +26,6 @@ run: Encoder.json
 run-%: %.json
 	sudo python $(BMV2_REPO_M)/mininet/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump dump.pcap
 
-run-Sample: Sample.json
-	sudo python $(BMV2_REPO_M)/mininet/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $< --pcap-dump dump.pcap
-
 %.json: Sources/%.p4 Makefile
 	p4c-bm2-ss --emit-externs -I  ../../FPGA/RSEVivadoHLS/ $< -o $@ --target bmv2 --arch v1model
 
