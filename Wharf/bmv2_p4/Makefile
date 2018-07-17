@@ -20,8 +20,13 @@ Decoder: Decoder.json
 
 Dropper: Dropper.json
 
-run: Encoder.json
-	sudo python $(BMV2_REPO_M)/mininet/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump dump.pcap
+run: All
+	sudo python fec_demo.py \
+		--behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch \
+		--encoder-json Encoder.json \
+		--decoder-json Decoder.json \
+		--dropper-json Dropper.json \
+		--pcap-dump dump
 
 run-%: %.json
 	sudo python $(BMV2_REPO_M)/mininet/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump dump.pcap
