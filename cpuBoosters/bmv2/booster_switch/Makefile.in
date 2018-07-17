@@ -94,8 +94,8 @@ host_triplet = @host@
 @COND_THRIFT_TRUE@am__append_1 = \
 @COND_THRIFT_TRUE@-I$(srcdir)/thrift/src/ \
 @COND_THRIFT_TRUE@-I$(builddir)/gen-cpp \
-@COND_THRIFT_TRUE@-I/home/iped/dcomp/P4Boosters/RSECode \
-@COND_THRIFT_TRUE@-I/home/iped/dcomp/P4Boosters/FPGA/RSEVivadoHLS \
+@COND_THRIFT_TRUE@-I$(p4boosters_repo)/RSECode \
+@COND_THRIFT_TRUE@-I$(p4boosters_repo)/FPGA/RSEVivadoHLS \
 @COND_THRIFT_TRUE@-Ifec_boosters/
 
 @COND_THRIFT_TRUE@am__append_2 = thrift/src/SimpleSwitch_server.cpp
@@ -466,6 +466,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = .
+p4boosters_repo = $(P4BOOSTERS_REPO)# Fill in location of P4Booster repo
 THRIFT_IDL = $(srcdir)/thrift/simple_switch.thrift
 noinst_LTLIBRARIES = libsimpleswitch.la
 libsimpleswitch_la_SOURCES = simple_switch.cpp simple_switch.h \

@@ -1,5 +1,7 @@
 SUBDIRS = .
 
+p4boosters_repo=$(P4BOOSTERS_REPO)# Fill in location of P4Booster repo
+
 THRIFT_IDL = $(srcdir)/thrift/simple_switch.thrift
 
 noinst_LTLIBRARIES = libsimpleswitch.la
@@ -60,8 +62,8 @@ simple_switch_CLI
 AM_CPPFLAGS += \
 -I$(srcdir)/thrift/src/ \
 -I$(builddir)/gen-cpp \
--I/home/iped/dcomp/P4Boosters/RSECode \
--I/home/iped/dcomp/P4Boosters/FPGA/RSEVivadoHLS \
+-I$(p4boosters_repo)/RSECode \
+-I$(p4boosters_repo)/FPGA/RSEVivadoHLS \
 -Ifec_boosters/
 
 libsimpleswitch_la_SOURCES += thrift/src/SimpleSwitch_server.cpp

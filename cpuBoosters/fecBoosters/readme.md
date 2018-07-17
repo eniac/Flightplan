@@ -7,9 +7,12 @@ by listening to a pcap interface, or running within the P4 behavioral model.
 
 To build this code and incorporate it into the P4 behavioral model, perform the following steps
 
-Note: assumes the variable `$BMV2_REPO` has been set to a cloned copy of p4's
-`behavioral_model` repository
+Note:
+assumes the variable `$BMV2_REPO` is the path to a cloned copy of p4's `behavioral_model` repository
+and that `$P4BOOSTERS_REPO` is the path to a cloned copy of this repository
+
 ```shell
+cd $P4BOOSTERS_REPO/cpuBoosters/fecBoosters
 make # Builds the fecBoosters core code
 cp -r . ../bmv2/booster_switch/fecBoosters
 cp -r ../bmv2/booster_switch $BMV2_REPO/targets
@@ -20,17 +23,16 @@ Then modify `$BMV2_REPO/configure.ac` to add the line:
 ```
 to the variable  `AC_CONFIG_FILES` (~line 274)
 
-Finally, build the `behavioral_model` repo with
+Finally, configure and build the `booster_switch` repo:
 ```
 cd $BMV2_REPO
 ./configure
 make
-sudo make install
 ```
 
 At that point, the sample p4 file should be able to be run with
 ```shell
-cd P4Boosters/Wharf/bmv2_p4
+cd $P4BOOSTERS_REPO/Wharf/bmv2_p4
 make run
 ```
 which will start an instance of mininet running the p4 `booster_switch`
