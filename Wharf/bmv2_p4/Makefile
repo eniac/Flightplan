@@ -10,13 +10,15 @@ $(error Must set BMV2_REPO to run mininet with makefile)
 endif
 endif
 
-All: Encoder Decoder Sample
+All: Encoder Decoder Dropper Sample
 
 Encoder: Encoder.json
 
 Sample: Sample.json
 
 Decoder: Decoder.json
+
+Dropper: Dropper.json
 
 run: Encoder.json
 	sudo python $(BMV2_REPO_M)/mininet/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump dump.pcap
