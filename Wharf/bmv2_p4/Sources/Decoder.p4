@@ -31,7 +31,7 @@
 
 typedef bit<48> MacAddress;
 
-struct  booster_metadata_t {
+struct booster_metadata_t {
 }
 
 header eth_h
@@ -53,63 +53,15 @@ header fec_h
     bit<16> orig_ethertype;
 }
 
-header ipv4_h {
-  	bit<4>   version;
-  	bit<4>   ihl;
-  	bit<8>   tos;
-  	bit<16>  len;
-  	bit<16>  id;
-  	bit<3>   flags;
-  	bit<13>  frag;
-  	bit<8>   ttl;
-  	bit<8>   proto;
-  	bit<16>  chksum;
-  	bit<32>  src;
-  	bit<32>  dst;
-}
-
-header tcp_h {
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<32> seqNo;
-    bit<32> ackNo;
-    bit<4>  dataOffset;
-    bit<3>  res;
-    bit<3>  ecn;
-    bit<6>  ctrl;
-    bit<16> window;
-    bit<16> checksum;
-    bit<16> urgentPtr;
-}
-
-header udp_h {
-	bit<16> srcPort;
-	bit<16> dstPort;
-    bit<16> len;
-    bit<16> checksum;
-}
-
-header_union protocol_h {
-    tcp_h tcp;
-    udp_h udp;
-}
-
 struct headers_t {
 	eth_h	eth;
 	fec_h	fec;
-    ipv4_h  ipv4;
-    protocol_h protocol;
 }
 
-#define ETHERTYPE_IPv4 0x0800
 #define ETHERTYPE_WHARF 0x081C
-#define TCP_PROTOCOL 0x06
-#define UDP_PROTOCOL 0x11
 
-extern void get_fec_state(in TClass class, out BIndex block_index, out PIndex packet_index);
-extern void fec_encode(in eth_h eth, in ipv4_h ip, in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h);
+extern void fec_decode(in eth_h eth, in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h);
 
-@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser FecParser(packet_in pkt, out headers_t hdr, inout booster_metadata_t meta, inout standard_metadata_t smd)
 {
     state start {
@@ -119,31 +71,13 @@ parser FecParser(packet_in pkt, out headers_t hdr, inout booster_metadata_t meta
     state parse_eth {
         pkt.extract(hdr.eth);
         transition select(hdr.eth.type) {
-            ETHERTYPE_IPv4 : parse_ipv4;
+            ETHERTYPE_WHARF : parse_fec;
             default : accept;
         }
     }
 
-    state parse_ipv4 {
-        pkt.extract(hdr.ipv4);
-        transition accept;
-        // For now, not worrying about tcp/udp
-        /*
-        transition select(hdr.ipv4.proto) {
-            TCP_PROTOCOL : parse_tcp;
-            UDP_PROTOCOL: parse_udp;
-            default: accept;
-        }
-        */
-    }
-
-    state parse_tcp {
-        pkt.extract(hdr.protocol.tcp);
-        transition accept;
-    }
-
-    state parse_udp {
-        pkt.extract(hdr.protocol.udp);
+    state parse_fec {
+        pkt.extract(hdr.fec);
         transition accept;
     }
 }
@@ -155,32 +89,6 @@ control NullVerifyCheck(inout headers_t hdr, inout booster_metadata_t meta) {
 control FecProcess(inout headers_t hdr, inout booster_metadata_t meta, inout standard_metadata_t smd) {
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
-    bit<8> test;
-
-    action drop() {
-        mark_to_drop();
-    }
-
-    action classify(TClass traffic_class) {
-        hdr.fec.setValid();
-        hdr.fec.traffic_class = traffic_class;
-        k = 5;
-        h = 1;
-    }
-
-    table classification {
-        key = {
-            hdr.ipv4.proto : exact;
-        }
-
-        actions = { classify; NoAction; }
-        default_action = NoAction;
-
-        const entries = {
-            TCP_PROTOCOL : classify(0);
-            UDP_PROTOCOL : classify(0);
-        }
-    }
 
     action set_egress(bit<9> port) {
         smd.egress_spec = port;
@@ -199,19 +107,41 @@ control FecProcess(inout headers_t hdr, inout booster_metadata_t meta, inout sta
         }
     }
 
+    action set_k_h(bit<FEC_K_WIDTH> k_in, bit<FEC_H_WIDTH> h_in) {
+        k = k_in;
+        h = h_in;
+    }
+
+    table classify {
+        key = {
+            hdr.fec.traffic_class : exact;
+        }
+
+        actions = { set_k_h; NoAction; }
+        default_action = NoAction;
+
+        const entries = {
+            0 : set_k_h(5,1);
+        }
+    }
+
     apply {
         if (!hdr.eth.isValid()) {
             mark_to_drop();
             return;
         }
-        classification.apply();
         forward.apply();
         if (hdr.fec.isValid()) {
-            get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index);
-            hdr.fec.orig_ethertype = hdr.eth.type;
-            fec_encode(hdr.eth, hdr.ipv4, hdr.fec, k, h);
-            hdr.eth.type = ETHERTYPE_WHARF;
-            hdr.eth.setValid();
+
+            classify.apply();
+            fec_decode(hdr.eth, hdr.fec, k, h);
+
+            if (hdr.fec.packet_index >= k) {
+                mark_to_drop();
+                return;
+            }
+
+            hdr.eth.type = hdr.fec.orig_ethertype;
         }
     }
 }
@@ -224,15 +154,10 @@ control NullCompCheck(inout headers_t hdr, inout booster_metadata_t meta) {
     apply {}
 }
 
-@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control FecDeparser(packet_out pkt, in headers_t hdr) {
 	apply
 	{
 		pkt.emit(hdr.eth);
-        pkt.emit(hdr.fec);
-        pkt.emit(hdr.ipv4);
-        //pkt.emit(hdr.protocol.tcp);
-        //pkt.emit(hdr.protocol.udp);
 	}
 }
 
