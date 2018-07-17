@@ -582,22 +582,12 @@ SimpleSwitch::egress_thread(size_t worker_id) {
   }
 }
 
-void SimpleSwitch::enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> new_packet) {
-    BMLOG_DEBUG("Searching output buffer");
-    if (booster_output_buffer.find(id) == booster_output_buffer.end()) {
-       BMLOG_DEBUG("Creating new booster queue");
-        booster_output_buffer[id] =
-            std::unique_ptr<Queue<std::unique_ptr<Packet> > >(new Queue<std::unique_ptr<Packet> >);
-    }
-    booster_output_buffer[id]->push_front(std::move(new_packet));
-    BMLOG_DEBUG("Enqueueing new booster packet");
-}
-
-void SimpleSwitch::enqueue_booster_packet(Packet &src, const u_char *payload, size_t len) {
+std::unique_ptr<Packet> 
+SimpleSwitch::duplicate_modified_packet(Packet &src, const u_char *payload, size_t len) {
     PHV *src_phv = src.get_phv();
     packet_id_t packet_id = src.get_packet_id();
 
-    BMLOG_DEBUG("Attempting to enqueue new booster packet of len {} to id {}", len, packet_id);
+    BMLOG_DEBUG("New booster packet of len {} with id {}", len, packet_id);
 
     int input_port = src_phv->get_field("standard_metadata.ingress_port").get_int();
     int output_port = src_phv->get_field("standard_metadata.egress_spec").get_int();
@@ -613,7 +603,54 @@ void SimpleSwitch::enqueue_booster_packet(Packet &src, const u_char *payload, si
     booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
     booster_pkt->set_egress_port(output_port);
 
-    BMLOG_DEBUG("Calling enqueue");
+    return std::move(booster_pkt);
+}
+
+void SimpleSwitch::enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> new_packet) {
+    BMLOG_DEBUG("Searching output buffer");
+    if (booster_output_buffer.find(id) == booster_output_buffer.end()) {
+       BMLOG_DEBUG("Creating new booster queue");
+        booster_output_buffer[id] =
+            std::unique_ptr<Queue<std::unique_ptr<Packet> > >(new Queue<std::unique_ptr<Packet> >);
+    }
+    booster_output_buffer[id]->push_front(std::move(new_packet));
+    BMLOG_DEBUG("Enqueueing new booster packet");
+}
+
+/**
+ * NOTE: the booster switch provides three functions for creating new packets:
+ *
+ * - enqueue_booster_packet(src, buffer, len) Ties the new packet to the source packet,
+ *   so it will be send out immediately preceding the source.
+ *   Buffer must contain deparsed headers
+ *
+ * - output_booster_packet(src, buffer, len) Outputs the booster packet immediately,
+ *   and does not wait for the source to be sent. Useful if the source may be dropped.
+ *   Buffer must contain deparsed headers
+ *
+ * - deparse_booster_packet(src, buffer, len) Copies the headers from the source packet,
+ *   and sends the new packet to the deparser.
+ *   Buffer must *not* contain a copy of the headers
+ */
+
+void SimpleSwitch::enqueue_booster_packet(Packet &src, const u_char *payload, size_t len) {
+    auto booster_pkt = duplicate_modified_packet(src, payload, len);
+    BMLOG_DEBUG("Enqueueing packet to booster queue");
     enqueue_booster_packet(packet_id, std::move(booster_pkt));
 }
 
+void SimpleSwitch::deparse_booster_packet(Packet &src, const u_char *payload, size_t len) {
+    Deparser *deparser = this->get_deparser("deparser");
+
+    auto booster_pkt = duplicate_modified_packet(src, payload, len);
+    BMLOG_DEBUG("Enqueueing packet for deparsing");
+
+    deparser->deparse(booster_pkt.get());
+    output_buffer.push_front(std::move(booster_pkt));
+}
+
+void SimpleSwitch::output_booster_packet(Packet &src, const u_char *payload, size_t len) {
+    auto booster_pkt = duplicate_modified_packet(src, payload, len);
+    BMLOG_DEBUG("Enqueuing packet directly to output");
+    output_buffer.push_front(std::move(booster_pkt));
+}

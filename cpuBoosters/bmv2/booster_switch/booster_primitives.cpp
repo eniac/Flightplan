@@ -12,6 +12,22 @@
 #include "simple_switch.h"
 #include "fec_boosters/fecP4/fecEncodeBooster.hpp"
 
+/**
+ * NOTE: the booster switch provides three functions for creating new packets:
+ *
+ * - enqueue_booster_packet(src, buffer, len) Ties the new packet to the source packet,
+ *   so it will be send out immediately preceding the source.
+ *   Buffer must contain deparsed headers
+ *
+ * - output_booster_packet(src, buffer, len) Outputs the booster packet immediately,
+ *   and does not wait for the source to be sent. Useful if the source may be dropped.
+ *   Buffer must contain deparsed headers
+ *
+ * - deparse_booster_packet(src, buffer, len) Copies the headers from the source packet,
+ *   and sends the new packet to the deparser.
+ *   Buffer must *not* contain a copy of the headers
+ */
+
 #include <iostream>
 #include <fstream>
 #define PACKET_LENGTH_REG_IDX 0
@@ -153,6 +169,31 @@ class fec_encode : public ActionPrimitive<Header &, Header &, Header &,
 };
 
 REGISTER_PRIMITIVE(fec_encode);
+
+class copy_modified : public ActionPrimitive<const Data &, const Data &, const Data &> {
+
+    void operator ()(const Data &idx_d, const Data &width_d, const Data &value_d) {
+        Packet &packet = get_packet();
+
+        uint8_t idx = idx_d.get<uint8_t>();
+        uint8_t width = width_d.get<uint8_t>();
+        std::string value = value_d.get_string();
+
+        size_t payload_size = packet.get_data_size();
+        if (payload_size <= idx + width) {
+            BMLOG_DEBUG("Payload size {} is smaller than max modification index {}",
+                        payload_size, idx + width);
+        }
+
+        u_char new_payload[payload_size];
+        memcpy(new_payload, packet.data(), payload_size);
+        memcpy(&new_payload[idx], value.c_str(), width);
+
+        sswitch_runtime::get_switch()->deparse_booster_packet(packet, new_payload, payload_size);
+    }
+};
+
+REGISTER_PRIMITIVE(copy_modified);
 
 // dummy function, which ensures that this unit is not discarded by the linker
 // it is being called by the constructor of SimpleSwitch
