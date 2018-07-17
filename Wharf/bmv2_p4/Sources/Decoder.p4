@@ -134,6 +134,7 @@ control FecProcess(inout headers_t hdr, inout booster_metadata_t meta, inout sta
         if (hdr.fec.isValid()) {
 
             classify.apply();
+            hdr.eth.type = hdr.fec.orig_ethertype;
             fec_decode(hdr.eth, hdr.fec, k, h);
 
             if (hdr.fec.packet_index >= k) {
@@ -141,7 +142,6 @@ control FecProcess(inout headers_t hdr, inout booster_metadata_t meta, inout sta
                 return;
             }
 
-            hdr.eth.type = hdr.fec.orig_ethertype;
         }
     }
 }

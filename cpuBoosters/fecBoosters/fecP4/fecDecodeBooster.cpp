@@ -62,6 +62,11 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
     // TODO: This shouldn't have to be done every time this is called
     set_fec_params(tclass, k, h);
 
+    if (fec->index >= k) {
+        pkt += sizeof(struct ether_header);
+        pkt_size -= sizeof(struct ether_header);
+    }
+
     LOG_INFO("Inserting pkt of tclass %d size %zu into buffer",(int)tclass, pkt_size);
     if (!pkt_already_inserted(tclass, fec->block_id, fec->index)) {
         insert_into_pkt_buffer(tclass, fec->block_id, fec->index, pkt_size, pkt);
@@ -75,8 +80,15 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
             fec->index < tclasses[tclass].packet_idx ||
             fec->index == (k + h - 1)) {
         decode_and_forward(tclass, forward, tclasses[tclass].block_id, k, h);
-        tclasses[tclass].block_id = fec->block_id;
+        if (fec->index == (k + h - 1)) {
+            tclasses[tclass].block_id = (fec->block_id + 1) % MAX_BLOCK;
+            tclasses[tclass].packet_idx = 0;
+        } else {
+            tclasses[tclass].block_id = fec->block_id;
+            tclasses[tclass].packet_idx = fec->index;
+        }
+    } else {
+        tclasses[tclass].packet_idx = fec->index;
     }
-    tclasses[tclass].packet_idx = fec->index;
 }
 
