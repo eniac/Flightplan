@@ -12,7 +12,7 @@ OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 PCAP_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.o fecPcap/fecPcap.c
 PCAP_DEPS=$(PCAP_INPUTS) $(VENCORE_CODE)/rse.h fecPcap/fecPcap.h makefile fecBooster.h
 
-P4_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecP4/fecEncodeBooster.o
+P4_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecP4/fecEncodeBooster.o fecP4/fecDecodeBooster.o
 P4_DEPS=$(P4_INPUTS) $(PCAP_DEPS)
 
 all: pcap p4
@@ -39,7 +39,7 @@ boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
 
 p4: fecBoosterP4lib.a
 
-fecP4/fecEncodeBooster.o: fecP4/fecEncodeBooster.cpp fecBooster.h
+fecP4/%.o: fecP4/%.cpp fecBooster.h
 	g++ $(FLAGS) --std=c++11 -o $@ -c $<
 
 fecBoosterP4lib.a: $(P4_DEPS)

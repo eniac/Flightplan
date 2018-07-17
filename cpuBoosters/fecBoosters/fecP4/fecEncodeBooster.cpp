@@ -25,6 +25,9 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
                           const struct fec_header *fec,
                           int k, int h,
                           forward_fn_t forward) {
+    LOG_INFO("Fec_encode called for packet %d: %d.%d", 
+             (int)fec->class_id, (int)fec->block_id, (int)fec->index);
+
     tclass_type tclass = fec->class_id;
 
     // TODO: This shouldn't have to be done every time this is called

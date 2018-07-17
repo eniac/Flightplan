@@ -67,10 +67,10 @@ using bm::p4object_id_t;
 
 class SimpleSwitch : public Switch {
  public:
-  void enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> packet);
   void enqueue_booster_packet(Packet &src, const u_char *payload, size_t len);
   void deparse_booster_packet(Packet &src, const u_char *payload, size_t len);
   void output_booster_packet(Packet &src, const u_char *payload, size_t len);
+
   using mirror_id_t = int;
 
   using TransmitFn = std::function<void(port_t, packet_id_t,
@@ -79,6 +79,7 @@ class SimpleSwitch : public Switch {
  private:
   using clock = std::chrono::high_resolution_clock;
   std::unique_ptr<Packet> duplicate_modified_packet(Packet &src, const u_char *payload, size_t len);
+  void booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> packet);
 
  public:
   // by default, swapping is off

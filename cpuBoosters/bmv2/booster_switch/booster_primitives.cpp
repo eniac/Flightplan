@@ -11,6 +11,8 @@
 
 #include "simple_switch.h"
 #include "fec_boosters/fecP4/fecEncodeBooster.hpp"
+#include "fec_boosters/fecP4/fecDecodeBooster.hpp"
+#include "fec_boosters/fecBooster.h"
 
 /**
  * NOTE: the booster switch provides three functions for creating new packets:
@@ -131,18 +133,6 @@ T get_field_by_name(const Header &hdr, const std::string field_name) {
     return hdr.get_field(offset).get<T>();
 }
 
-class Forwarder {
-private:
-    Packet &packet;
-
-public:
-    Forwarder(Packet &packet) : packet(packet) {}
-
-    void operator ()(const u_char *payload, size_t len) {
-        sswitch_runtime::get_switch()->enqueue_booster_packet(packet, payload, len);
-    };
-};
-
 class fec_encode : public ActionPrimitive<Header &, Header &, Header &,
                                           const Data &, const Data &> {
     void operator ()(Header &eth_h, Header &ip_h, Header &fec_h,
@@ -159,8 +149,12 @@ class fec_encode : public ActionPrimitive<Header &, Header &, Header &,
         uint8_t k = k_d.get<uint8_t>();
         uint8_t h = h_d.get<uint8_t>();
 
+        // Set up the function that will forwaard the packet
+        auto forwarder = [&](const u_char *payload, size_t len) {
+            sswitch_runtime::get_switch()->enqueue_booster_packet(packet, payload, len);
+        };
         // Does the actual external work
-        fec_encode_p4_packet(buff, buff_size, fec, k, h, Forwarder(packet));
+        fec_encode_p4_packet(buff, buff_size, fec, k, h, forwarder);
 
         // Replaces the deserialized headers back to the packet
         replace_headers(packet, buff, {&eth_h, &ip_h});
@@ -169,6 +163,39 @@ class fec_encode : public ActionPrimitive<Header &, Header &, Header &,
 };
 
 REGISTER_PRIMITIVE(fec_encode);
+
+
+class fec_decode : public ActionPrimitive<Header &, Header &,
+                                          const Data &, const Data &> {
+
+    void operator ()(Header &eth_h, Header &fec_h,
+                     const Data &k_d, const Data &h_d) {
+        Packet &packet = get_packet();
+
+        // Stores the serialized packet and ethernet/ip headers in *buff
+        size_t buff_size;
+        u_char *buff = serialize_with_headers(packet, buff_size, {&eth_h});
+
+        struct fec_header *fec = deparse_header<struct fec_header>(fec_h);
+
+        // Retrieves the integers corresponding to k and h
+        uint8_t k = k_d.get<uint8_t>();
+        uint8_t h = h_d.get<uint8_t>();
+
+        // Set up function that will forward the packets
+        auto forwarder = [&](const u_char *payload, size_t len) {
+            sswitch_runtime::get_switch()->output_booster_packet(packet, payload, len);
+        };
+
+        fec_decode_p4_packet(buff, buff_size, fec, k, h, forwarder);
+
+        // Replace the deserialized headers back into the packet
+        replace_headers(packet, buff, {&eth_h});
+        replace_headers(packet, (u_char*)fec, {&fec_h});
+    }
+};
+
+REGISTER_PRIMITIVE(fec_decode);
 
 /**
  * Copy_modified accepts an index, a width, and a value.

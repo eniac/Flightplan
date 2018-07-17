@@ -582,7 +582,7 @@ SimpleSwitch::egress_thread(size_t worker_id) {
   }
 }
 
-std::unique_ptr<Packet> 
+std::unique_ptr<Packet>
 SimpleSwitch::duplicate_modified_packet(Packet &src, const u_char *payload, size_t len) {
     PHV *src_phv = src.get_phv();
     packet_id_t packet_id = src.get_packet_id();
@@ -606,15 +606,15 @@ SimpleSwitch::duplicate_modified_packet(Packet &src, const u_char *payload, size
     return std::move(booster_pkt);
 }
 
-void SimpleSwitch::enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> new_packet) {
-    BMLOG_DEBUG("Searching output buffer");
+void SimpleSwitch::booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> new_packet) {
+    BMLOG_DEBUG("Searching output buffer for id {}", id);
     if (booster_output_buffer.find(id) == booster_output_buffer.end()) {
-       BMLOG_DEBUG("Creating new booster queue");
+       BMLOG_DEBUG("Creating new booster queue for id {}", id);
         booster_output_buffer[id] =
             std::unique_ptr<Queue<std::unique_ptr<Packet> > >(new Queue<std::unique_ptr<Packet> >);
     }
     booster_output_buffer[id]->push_front(std::move(new_packet));
-    BMLOG_DEBUG("Enqueueing new booster packet");
+    BMLOG_DEBUG("Enqueueing new booster packet for id {}", id);
 }
 
 /**
@@ -636,7 +636,7 @@ void SimpleSwitch::enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet
 void SimpleSwitch::enqueue_booster_packet(Packet &src, const u_char *payload, size_t len) {
     auto booster_pkt = duplicate_modified_packet(src, payload, len);
     BMLOG_DEBUG("Enqueueing packet to booster queue");
-    enqueue_booster_packet(packet_id, std::move(booster_pkt));
+    booster_queue_enqueue(src.get_packet_id(), std::move(booster_pkt));
 }
 
 void SimpleSwitch::deparse_booster_packet(Packet &src, const u_char *payload, size_t len) {
