@@ -183,6 +183,7 @@ class copy_modified : public ActionPrimitive<const Data &, const Data &, const D
         if (payload_size <= idx + width) {
             BMLOG_DEBUG("Payload size {} is smaller than max modification index {}",
                         payload_size, idx + width);
+            return;
         }
 
         u_char new_payload[payload_size];
