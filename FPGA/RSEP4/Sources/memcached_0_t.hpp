@@ -2,7 +2,6 @@
 #define SDNET_ENGINE_memcached_0_t
 
 #include "sdnet_lib.hpp"
-#include "Memcore.h"
 #include "MemHLS.h"
 namespace SDNET {
 //#####################################################

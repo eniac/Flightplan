@@ -4,7 +4,6 @@
 
 
 static Cache Memory[MAX_MEMORY_SIZE];
-void alignment(hls::stream<Data_Word> &Data_in, hls::stream<Data_Word> &Data_out, Part_Word &End_word, Part_Word &Align_remained);
 void Extract_Data(hls::stream<packet_interface> &Packet_in, hls::stream<Data_Word> &Data_out, Part_Word &End_word)
 {
 
@@ -14,117 +13,105 @@ void Extract_Data(hls::stream<packet_interface> &Packet_in, hls::stream<Data_Wor
 	{
 		Input = Packet_in.read();
 		End = Input.End_of_frame;
-		if (!End) Data_out.write(Input.Data);
+		Data_out.write(Input.Data);
 	}while(!End);
 	End_word.Data = Input.Data;
 	End_word.len = Input.Count;
 
 }
-
-void Print_Data(hls::stream<Data_Word> &Data_in, Part_Word &End_word)
+void Print_Single_word(Data_Word Data)
+{
+	std::cout << "Word " <<": ";
+	for (int i = 0; i<BYTES_PER_WORD; i++)
+	{
+		Byte Raw_Byte;
+		Raw_Byte = Data.range(63,56);
+		std::cout << (uint8_t) Raw_Byte;
+		Data <<= 8;
+	}
+	std::cout << std::endl;
+}
+void Print_Data(hls::stream<Data_Word> &Data_in, hls::stream<Data_Word> &Data_out)
 {
 	int num = 0;
 	Data_Word buffer;
 	while (!Data_in.empty())
 	{
-		num++;
-		std::cout << "Word "<< num <<": ";
 		buffer = Data_in.read();
-		for (int i = 0; i<BYTES_PER_WORD; i++)
-		{
-			Byte Raw_Byte;
-			Raw_Byte = buffer.range(63,56);
-			std::cout << (uint8_t) Raw_Byte;
-			buffer <<= 8;
-		}
-		std::cout << std::endl;
+		Print_Single_word(buffer);
+		Data_out.write(buffer);
 	}
-	buffer = End_word.Data;
-	std::cout << "Word "<< num <<": ";
-	for (int i = 0; i < End_word.len; i++)
-	{
-		Byte Raw_Byte;
-		Raw_Byte = buffer.range(63,56);
-		std::cout << (int) Raw_Byte;
-		buffer <<= 8;
-	}
+
 }
 
-
-
-void alignment(hls::stream<Data_Word> &Data_in, hls::stream<Data_Word> &Data_out, Part_Word &End_word, Part_Word &Align_remained)
-{
-#pragma HLS inline
-	uint8_t num_remained = Align_remained.len;
-	uint8_t num_aligned = BYTES_PER_WORD - num_remained;
-	Data_Word buffer;
-	Data_Word Word_remained = Align_remained.Data;
-
-	if (num_aligned > 8)
-	{
-		std::cout << "ERROR" << std::endl;
-		return;
-	}
-
-	if (num_aligned == 8 || num_aligned == 0)
-	{
-		buffer = Data_in.read();
-		if (buffer.range(63,56)!=0x0a)
-			while (!Data_in.empty())
-				Data_out.write(Data_in.read());
-		else
-		{
-			num_aligned = 1;
-			num_remained = 7;
-			Word_remained = buffer << 8;
-		}
-	}
-
-
-	while (!Data_in.empty())
-	{
-		buffer = Data_in.read();
-		Data_out.write((buffer>>8*num_remained)|Word_remained);
-		Word_remained = buffer.range(num_remained*8-1,0);
-		Word_remained <<= 8*num_aligned;
-	}
-	if (End_word.len > num_aligned)
-	{
-		End_word.len -= num_aligned;
-		Data_out.write((End_word.Data>>8*num_remained)|Word_remained);
-		End_word.Data <<= 8*num_aligned;
-	}
-	else
-	{
-		End_word.len += num_remained;
-		End_word.Data = (End_word.Data>>8*num_remained) | Word_remained;
-	}
-	Align_remained.len = 0;
-}
-
-Part_Word Parse_Internet_Hdr(hls::stream<Data_Word> &Data_in, enum mem_protocl Protocl)
+void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl Protocl, Part_Word &Align_word)
 {
 	uint8_t offset_len;
 	uint8_t num_remove;
-	Part_Word Need_aligned;
+	packet_interface Input;
 	if (Protocl == UDP_Protocl)
 		offset_len = PAYLOAD_OFFSET_UDP;
 	for (int i = 0; i < offset_len / BYTES_PER_WORD; i++)
 		Data_in.read();
 	num_remove =offset_len % BYTES_PER_WORD;
-	Need_aligned.len = BYTES_PER_WORD - num_remove;
+	Align_word.len = BYTES_PER_WORD - num_remove;
 	if (num_remove !=0)
 	{
-		Need_aligned.Data = Data_in.read();
-		Need_aligned.Data = Need_aligned.Data.range((BYTES_PER_WORD - num_remove) * 8 - 1, 0);
-		Need_aligned.Data <<= 8 * num_remove;
+		Input = Data_in.read();
+		Align_word.Data = Input.Data;
+		Align_word.Data = Align_word.Data.range((BYTES_PER_WORD - num_remove) * 8 - 1, 0);
+		Align_word.Data <<= 8 * num_remove;
+	}
+	else
+	{
+		Align_word.len = 0;
+		Align_word.Data = 0;
 	}
 
-	return Need_aligned;
 }
 
+void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_word, Data_Word &Full_word)
+{
+	packet_interface Input;
+	Data_Word buffer;
+	Input= Data_in.read();
+	buffer = Input.Data;
+	uint8_t len_left = Align_word.len;
+	uint8_t len_required = BYTES_PER_WORD - len_left;
+	Full_word = (buffer >> len_left*8) | Align_word.Data;
+	Align_word.Data = (buffer << len_required * 8);
 
-static enum ascii_cmd Parse_Command(hls::stream<Data_Word> &Data_in, Part_Word &Align_word)
+}
+void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Align_word, Data_Word &Full_word, int num_remove)
+{
+//	std::cout << "Align_word" << std::endl;
+//	Print_Single_word(Align_word.Data);
+//	std::cout << "Align_word length" << Align_word.len << std::endl;
+//	std::cout << "Full word" << std::endl;
+//	Print_Single_word(Full_word);
+//	std::cout << std::endl;
+//	std::cout << std::endl;
+//	std::cout << std::endl;
+
+	Data_Word buffer;
+	Full_word <<= 8*num_remove;
+	buffer = Full_word | (Align_word.Data >>8*(BYTES_PER_WORD - num_remove));
+	//Print_Single_word(buffer);
+	if (Align_word.len < num_remove)
+	{
+		Align_word.len = BYTES_PER_WORD - num_remove + Align_word.len;;
+		Align_word.Data = buffer;
+	}
+	else
+	{
+		Buffer_Stream.write(buffer);
+		Align_word.len -= num_remove;
+		Align_word.Data = Align_word.Data << num_remove * 8;
+	}
+
+
+}
+static enum ascii_cmd Parse_Command(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word)
 {
 
 	Cmd_Word commands[NUM_OF_CMD];
@@ -175,7 +162,8 @@ static enum ascii_cmd Parse_Command(hls::stream<Data_Word> &Data_in, Part_Word &
 	enum ascii_cmd result = UNKNOWN_CMD;
 	uint8_t cmd = NUM_OF_CMD;
 	Data_Word buffer;
-	buffer = Data_in.read();
+	Read_and_Align(Data_in, Align_word, buffer);
+	Print_Single_word(buffer);
 	for (int i = 0; i < NUM_OF_CMD; i++)
 	{
 #pragma HLS unroll
@@ -189,10 +177,8 @@ static enum ascii_cmd Parse_Command(hls::stream<Data_Word> &Data_in, Part_Word &
 	}
 	if (cmd != NUM_OF_CMD)
 	{
-		Align_word.len = BYTES_PER_WORD - commands[cmd].len;
-		Align_word.Data = buffer << commands[cmd].len * 8;
+		Remove_and_Realign(Buffer_Stream, Align_word, buffer, commands[cmd].len);
 		result = commands[cmd].cc;
-
 	}
 	return result;
 }
@@ -210,21 +196,23 @@ int Find_Delimiter(Data_Word Data)
 	return result;
 }
 
-int Parse_Numerical_Field(hls::stream<Data_Word> &Data_in, Part_Word &Align_Word)
+int Parse_Numerical_Field(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> & Buffer_Stream, Part_Word &Align_Word)
 {
 	int result = 0;
-	Data_Word buffer = Data_in.read();
+	Data_Word buffer, Ori;
+	if (Buffer_Stream.empty())
+		Read_and_Align(Data_in, Align_Word, buffer);
+	else
+		buffer = Buffer_Stream.read();
 	int delimiter = Find_Delimiter(buffer);
+	Ori = buffer;
 	for (int i = 0; i < delimiter; i++)
 	{
 		Byte temp = buffer.range(63,56);
-		buffer <<=8;
 		result = result * 10 + (int) temp - (int) '0';
+		buffer <<= 8;
 	}
-	buffer <<=8;
-	if (buffer.range(63,56) == 0x0a) {delimiter++; buffer <<=8;}
-	Align_Word.len = BYTES_PER_WORD -delimiter - 1;
-	Align_Word.Data = buffer;
+	Remove_and_Realign(Buffer_Stream, Align_Word, Ori, delimiter + 1);
 	return result;
 
 }
@@ -242,26 +230,23 @@ uint16_t hash(Data_Word Data)
 	result = (uint16_t) (Data % MAX_MEMORY_SIZE);
 	return result;
 }
-uint16_t Parse_Key(hls::stream<Data_Word> &Data_in, Part_Word &End_Word, Part_Word &Align_Word, hls::stream<Data_Word> &Key_Stream, Part_Word &Key_Remain)
+uint16_t Parse_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_Word, hls::stream<Data_Word> &Key_Stream, Part_Word &Key_Remain)
 {
 	int delimiter = -1;
 	int num = 0;
 	uint16_t hash_result = 0;
 	Data_Word buffer;
+
+	if (Buffer_Stream.empty())
+		Read_and_Align(Data_in, Align_Word, buffer);
+	else
+		buffer = Buffer_Stream.read();
 	while (delimiter==-1)
 	{
-		if (!Data_in.empty()) buffer = Data_in.read();
-		else { buffer = End_Word.Data; End_Word.len = 0;}
+
 		delimiter = Find_Delimiter(buffer);
 		if (delimiter != -1)
 		{
-			Align_Word.len = BYTES_PER_WORD - delimiter - 1;
-			Align_Word.Data = buffer << (delimiter + 1)*8;
-			if (Align_Word.Data.range(63,56) == 0x0a)
-			{
-				Align_Word.len--;
-				Align_Word.Data <<=8;
-			}
 			if (delimiter != 0)
 			{
 				buffer = buffer.range(63,64-delimiter*8);
@@ -271,6 +256,7 @@ uint16_t Parse_Key(hls::stream<Data_Word> &Data_in, Part_Word &End_Word, Part_Wo
 			}
 			Key_Remain.len = delimiter;
 			num += delimiter;
+			Remove_and_Realign(Buffer_Stream, Align_Word, buffer, delimiter + 1);
 		}
 		else
 		{
@@ -278,6 +264,7 @@ uint16_t Parse_Key(hls::stream<Data_Word> &Data_in, Part_Word &End_Word, Part_Wo
 			num += 8;
 			hash_result ^= (hash(buffer) + num);
 			hash_result %= MAX_MEMORY_SIZE;
+			Read_and_Align(Data_in, Align_Word, buffer);
 		}
 	}
 	return hash_result;
@@ -293,25 +280,19 @@ void Save_key(Cache &Mem_Block, hls::stream<Data_Word> &Key_Stream, Part_Word &K
 	Mem_Block.KEY_LEN = count * 8 + Key_Remain.len;
 	Mem_Block.KEY[count] = Key_Remain.Data;
 }
-void Parse_Data(Cache & Mem_Block, hls::stream<Data_Word> &Data_in, Part_Word &End_Word)
+void Parse_Data(Cache & Mem_Block, hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_Word)
 {
-	int count = 0;
-	for (int i = 0; i < Mem_Block.DATA_LEN / BYTES_PER_WORD; i++)
+	int count = 1;
+	if (Buffer_Stream.empty())
+		Read_and_Align(Data_in, Align_Word, Mem_Block.DATA[0]);
+	else
+		Mem_Block.DATA[0] = Buffer_Stream.read();
+	for (int i = 1; i < Mem_Block.DATA_LEN / BYTES_PER_WORD; i++)
 	{
 		count++;
-		if (Data_in.empty()) {std::cout << "ERROR NOT ENOUGH DATA" << std::endl;}
-		Mem_Block.DATA[i] = Data_in.read();
+		Read_and_Align(Data_in, Align_Word, Mem_Block.DATA[i]);
 	}
-	if (End_Word.len - 2 == Mem_Block.DATA_LEN % BYTES_PER_WORD)
-		Mem_Block.DATA[count + 1] = End_Word.Data;
-	else if (End_Word.len -2 > Mem_Block.DATA_LEN % BYTES_PER_WORD)
-	{
-		std::cout << "ERROR EXTRA DATA CONTAINED" << std::endl;
-	}
-	else
-	{
-		std::cout << "ERROR NOT ENOUGH DATA" << std::endl;
-	}
+	Mem_Block.DATA[count + 1] = Align_Word.Data;
 }
 
 void Print_Memory(int index)
@@ -361,40 +342,41 @@ void Print_Memory(int index)
 	}
 	std::cout << std::endl;
 }
-void Mem_Parse_Set(hls::stream<Data_Word> &Data_after_CMD, Part_Word &End_word)
+void Mem_Parse_Set(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word)
 {
-	Part_Word  Key_remained, Align_remained;
+	Part_Word  Key_remained;
+	Data_Word buffer;
 	static hls::stream<Data_Word> Key_Stream;
 #pragma HLS STREAM variable=Key_Stream depth=Key_Stream_Size
-	static hls::stream<Data_Word> Data_after_KEY;
-#pragma HLS STREAM variable=Data_after_KEY depth=Data_Stream_Size
-	static hls::stream<Data_Word> Data_after_FLAG;
-#pragma HLS STREAM variable=Data_after_FLAG depth=Data_Stream_Size
-	static hls::stream<Data_Word> Data_after_EXPERT;
-#pragma HLS STREAM variable=Data_after_EXPERT depth=Data_Stream_Size
-	static hls::stream<Data_Word> Data_after_BYTE;
-#pragma HLS STREAM variable=Data_after_BYTE depth=Data_Stream_Size
 
-	uint16_t index = Parse_Key(Data_after_CMD, End_word, Align_remained, Key_Stream, Key_remained);
+	uint16_t index = Parse_Key(Data_in, Buffer_Stream, Align_word, Key_Stream, Key_remained);
 	Memory[index].VALID = 1;
-	alignment(Data_after_CMD, Data_after_KEY, End_word, Align_remained);
 	Save_key(Memory[index],Key_Stream, Key_remained);
-	int flag = Parse_Numerical_Field(Data_after_KEY, Align_remained);
-	alignment(Data_after_KEY, Data_after_FLAG, End_word, Align_remained);
-	int expert = Parse_Numerical_Field(Data_after_FLAG, Align_remained);
-	alignment(Data_after_FLAG, Data_after_EXPERT, End_word, Align_remained);
-	Memory[index].DATA_LEN = Parse_Numerical_Field(Data_after_EXPERT, Align_remained);
-	alignment(Data_after_EXPERT, Data_after_BYTE, End_word, Align_remained);
-	Parse_Data(Memory[index],Data_after_BYTE,End_word);
+	int flag = Parse_Numerical_Field(Data_in,Buffer_Stream, Align_word);
+	int expert = Parse_Numerical_Field(Data_in,Buffer_Stream, Align_word);
+	std::cout<< "Finish expert Parse" << std::endl;
+	std::cout << "The expert is " << expert << std::endl;
+	Memory[index].DATA_LEN = Parse_Numerical_Field(Data_in,Buffer_Stream, Align_word) + 2;
+	if (Buffer_Stream.empty())
+			Read_and_Align(Data_in, Align_word, buffer);
+		else
+			buffer = Buffer_Stream.read();
+	Remove_and_Realign(Buffer_Stream, Align_word, buffer, 1);
+
+	std::cout<< "Finish LEN Parse" << std::endl;
+	std::cout << "The LEN is " << Memory[index].DATA_LEN << std::endl;
+	Parse_Data(Memory[index],Data_in, Buffer_Stream, Align_word);
+	std::cout<< "Finish Data Parse" << std::endl;
+	Print_Memory(index);
 
 }
 
-int Mem_Parse_Get(hls::stream<Data_Word> &Data_after_CMD, Part_Word &End_word)
+int Mem_Parse_Get(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word)
 {
-	Part_Word  Key_remained, Align_remained;
+	Part_Word  Key_remained;
 	static hls::stream<Data_Word> Key_Stream;
 #pragma HLS STREAM variable=Key_Stream depth=Key_Stream_Size
-	uint16_t index = Parse_Key(Data_after_CMD, End_word, Align_remained, Key_Stream, Key_remained);
+	uint16_t index = Parse_Key(Data_in, Buffer_Stream, Align_word, Key_Stream, Key_remained);
 	Save_key(Memory[index],Key_Stream, Key_remained);
 	return index;
 }
@@ -596,15 +578,12 @@ void Mem_Action_Get(hls::stream<packet_interface> & Packet_output, enum mem_prot
 		resp_word = _SPACE;
 		Add_Resp_Word(Word_output, Left_word, resp_word);
 
-		Add_Numerical_Word(Word_output,Left_word, Memory[index].DATA_LEN);
+		Add_Numerical_Word(Word_output,Left_word, Memory[index].DATA_LEN - 2);
 
 		resp_word = _END_OF_LINE;
 		Add_Resp_Word(Word_output, Left_word, resp_word);
 
 		Add_Resp_Data(Word_output,Left_word, index);
-
-		resp_word = _END_OF_LINE;
-		Add_Resp_Word(Word_output, Left_word, resp_word);
 
 		resp_word = _END;
 		Add_Resp_Word(Word_output, Left_word, resp_word);
@@ -630,30 +609,29 @@ void Mem_Action_Get(hls::stream<packet_interface> & Packet_output, enum mem_prot
 
 void Mem_Parser(hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output, output_tuples & tuple_out)
 {
-	Part_Word Align_remained, End_word;
-	static hls::stream<Data_Word> Raw_Word;
-#pragma HLS STREAM variable=Raw_Word depth=Data_Stream_Size
-	static hls::stream<Data_Word> Data_after_HDR;
-#pragma HLS STREAM variable=Data_after_HDR depth=Data_Stream_Size
-	static hls::stream<Data_Word> Data_after_CMD;
-#pragma HLS STREAM variable=Data_after_CMD depth=Data_Stream_Size
-	Extract_Data(Packet_input,Raw_Word,End_word);
+	Part_Word Align_word, End_word;
+//	static hls::stream<Data_Word> Data_in;
+//#pragma HLS STREAM variable=Data_in depth=Data_Stream_Size
+	static hls::stream<Data_Word> Buffer_Stream;
+#pragma HLS STREAM variable=Buffer_Stream depth=5
+//	Extract_Data(Packet_input,Data_in,End_word);
+	std::cout << "Finish Extraction" << std::endl;
 	enum mem_protocl Protocl;
 	enum ascii_cmd Command;
 	Protocl = UDP_Protocl;
-	Align_remained = Parse_Internet_Hdr(Raw_Word, Protocl);
-	alignment(Raw_Word,Data_after_HDR,End_word, Align_remained);
-	Command = Parse_Command(Data_after_HDR, Align_remained);
-	alignment(Data_after_HDR, Data_after_CMD, End_word, Align_remained);
-
+	Parse_Internet_Hdr(Packet_input, Protocl, Align_word);
+	Command = Parse_Command(Packet_input, Buffer_Stream, Align_word);
+	std::cout<< "Finish CMD Parse" << std::endl;
+	std::cout << "The Command is " << Command << std::endl;
+	std::cout << std::endl;
 	switch (Command)
 	{
 		case SET_CMD:
-			Mem_Parse_Set(Data_after_CMD, End_word);
+			Mem_Parse_Set(Packet_input, Buffer_Stream, Align_word);
 			Mem_Action_Set(Packet_output, Protocl, tuple_out);
 			break;
 		case GET_CMD:
-			int index =	Mem_Parse_Get(Data_after_CMD, End_word);
+			int index =	Mem_Parse_Get(Packet_input, Buffer_Stream, Align_word);
 			Mem_Action_Get(Packet_output, Protocl, index, tuple_out);
 			break;
 	}
