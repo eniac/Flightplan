@@ -4,34 +4,37 @@ P4C:=p4c-bm2-ss
 
 BMV2_REPO_M:=$(BMV2_REPO)#FILL IN BEHAVIORAL-MODEL REPO LOCATION
 
+BLD=build/
+
 ifeq ($(BMV2_REPO_M),)
 ifeq ($(MAKECMDGOALS),run)
 $(error Must set BMV2_REPO to run mininet with makefile)
 endif
 endif
 
-All: Encoder Decoder Dropper Sample
+DEPS=Makefile Sources/FEC.p4 Sources/FecBM.p4
 
-Encoder: Encoder.json
+All: $(BLD) BM Sample
 
-Sample: Sample.json
+Sample: $(BLD)/Sample.json
 
-Decoder: Decoder.json
-
-Dropper: Dropper.json
+BM: $(BLD)/EncoderBM.json $(BLD)/DecoderBM.json $(BLD)/Dropper.json
 
 run: All
 	sudo python fec_demo.py \
 		--behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch \
-		--encoder-json Encoder.json \
-		--decoder-json Decoder.json \
-		--dropper-json Dropper.json \
-		--pcap-dump dump
+		--encoder-json $(BLD)/EncoderBM.json \
+		--decoder-json $(BLD)/DecoderBM.json \
+		--dropper-json $(BLD)/Dropper.json \
+		--pcap-dump 1 # "1" does nothing here, but flag is necessary
 
-run-%: %.json
+$(BLD):
+	mkdir -p $(BLD)
+
+run-%: $(BLD)/%.json
 	sudo python $(BMV2_REPO_M)/mininet/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump dump.pcap
 
-%.json: Sources/%.p4 Makefile
+$(BLD)/%.json: Sources/%.p4 $(DEPS) $(BLD)
 	p4c-bm2-ss --emit-externs -I  ../../FPGA/RSEVivadoHLS/ $< -o $@ --target bmv2 --arch v1model
 
 clean:

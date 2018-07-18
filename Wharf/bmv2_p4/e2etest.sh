@@ -2,6 +2,7 @@
 
 if [[ $# != 1 ]]; then
     echo "Usage $0 <test_file.pcap>"
+    exit
 fi
 
 BMV2_REPO_M=$BMV2_REPO
@@ -19,9 +20,9 @@ cd $OUTDIR
 
 sudo python $THISDIR/fec_demo.py \
 		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
-		--encoder-json $THISDIR/Encoder.json \
-		--decoder-json $THISDIR/Decoder.json \
-		--dropper-json $THISDIR/Dropper.json \
+		--encoder-json $THISDIR/build/EncoderBM.json \
+		--decoder-json $THISDIR/build/DecoderBM.json \
+		--dropper-json $THISDIR/build/Dropper.json \
 		--pcap-dump dump \
 		--e2e $INPUT_PCAP
 
