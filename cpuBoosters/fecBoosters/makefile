@@ -6,18 +6,37 @@ COMPILED_RSE=$(VENCORE_CODE)
 
 FLAGS=-g -Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -I. -O2 -DWHARF_DEBUGGING
 
+FEC_BOOSTER_SWITCH_DIR=../bmv2/booster_switch/
+FEC_BOOSTER_SWITCH_FEC_DIR=$(FEC_BOOSTER_SWITCH_DIR)fecBoosters/
+
+P4BOOSTERS_REPO=$(realpath ../../)
+
 # For Configuration.h
 OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
 PCAP_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.o fecPcap/fecPcap.c
 PCAP_DEPS=$(PCAP_INPUTS) $(VENCORE_CODE)/rse.h fecPcap/fecPcap.h makefile fecBooster.h
 
-P4_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecP4/fecEncodeBooster.o fecP4/fecDecodeBooster.o
+P4_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecP4/fecEncodeBooster.o fecP4/fecDecodeBooster.o fecP4/fecP4.o
 P4_DEPS=$(P4_INPUTS) $(PCAP_DEPS)
+
+ifeq ($(MAKECMDGOALS), bmv2)
+ifeq ($(BMV2_REPO),)
+    $(error Must set env BMV2_REPO to 'make bmv2')
+endif
+endif
+
+BMV2_BOOSTER_SWITCH_DIR=$(BMV2_REPO)/targets/booster_switch/
 
 all: pcap p4
 
 pcap: fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
+
+bmv2: p4
+	-mkdir $(FEC_BOOSTER_SWITCH_FEC_DIR) $(BMV2_BOOSTER_SWITCH_DIR)
+	cp -pr ./* $(FEC_BOOSTER_SWITCH_FEC_DIR) 
+	cp -pr $(FEC_BOOSTER_SWITCH_DIR)/* $(BMV2_BOOSTER_SWITCH_DIR)
+	cd $(BMV2_BOOSTER_SWITCH_DIR) && make P4BOOSTERS_REPO=$(P4BOOSTERS_REPO)
 
 fecBoosterApi.o: fecBoosterApi.c
 	g++ $(FLAGS) -c $<
@@ -37,7 +56,7 @@ forwardingNonbooster: fecPcap/forwardingNonbooster.c $(PCAP_DEPS)
 boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
 	g++ $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c -DNO_FBK
 
-p4: fecBoosterP4lib.a
+p4: fecBoosterP4lib.a fecP4/fecP4.hpp
 
 fecP4/%.o: fecP4/%.cpp fecBooster.h
 	g++ $(FLAGS) --std=c++11 -o $@ -c $<
