@@ -654,3 +654,9 @@ void SimpleSwitch::output_booster_packet(Packet &src, const u_char *payload, siz
     BMLOG_DEBUG("Enqueuing packet directly to output");
     output_buffer.push_front(std::move(booster_pkt));
 }
+
+void SimpleSwitch::recirculate_booster_packet(Packet &src, const u_char *payload, size_t len) {
+    auto booster_pkt = duplicate_modified_packet(src, payload, len);
+    BMLOG_DEBUG("Recircuilating booster packet to input")
+    input_buffer.push_front(std::move(booster_pkt));
+}

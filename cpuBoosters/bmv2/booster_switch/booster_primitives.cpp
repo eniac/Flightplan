@@ -184,7 +184,7 @@ class fec_decode : public ActionPrimitive<Header &, Header &,
 
         // Set up function that will forward the packets
         auto forwarder = [&](const u_char *payload, size_t len) {
-            sswitch_runtime::get_switch()->output_booster_packet(packet, payload, len);
+            sswitch_runtime::get_switch()->recirculate_booster_packet(packet, payload, len);
         };
 
         fec_decode_p4_packet(buff, buff_size, fec, k, h, forwarder);

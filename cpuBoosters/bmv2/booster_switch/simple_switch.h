@@ -70,6 +70,7 @@ class SimpleSwitch : public Switch {
   void enqueue_booster_packet(Packet &src, const u_char *payload, size_t len);
   void deparse_booster_packet(Packet &src, const u_char *payload, size_t len);
   void output_booster_packet(Packet &src, const u_char *payload, size_t len);
+  void recirculate_booster_packet(Packet &src, const u_char *payload, size_t len);
 
   using mirror_id_t = int;
 
