@@ -7,6 +7,11 @@ fi
 
 BMV2_REPO_M=$BMV2_REPO
 
+if [[ $BMV2_REPO_M == "" ]]; then
+    echo "Must set BMV2_REPO before running this test!"
+    exit
+fi
+
 INPUT_PCAP=`realpath $1`
 
 TESTDIR=test_output
@@ -34,7 +39,7 @@ IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
 cp $INPUT_PCAP $IN_PCAP
-cp $OUTDIR/s2-eth1_in.pcap $OUT_PCAP
+cp $OUTDIR/s2-eth2_in.pcap $OUT_PCAP
 
 sleep 2
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt

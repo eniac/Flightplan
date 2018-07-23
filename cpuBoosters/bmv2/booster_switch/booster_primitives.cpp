@@ -10,9 +10,10 @@
 #include <bm/spdlog/spdlog.h>
 
 #include "simple_switch.h"
-#include "fec_boosters/fecP4/fecEncodeBooster.hpp"
-#include "fec_boosters/fecP4/fecDecodeBooster.hpp"
-#include "fec_boosters/fecBooster.h"
+#include "fecBoosters/fecP4/fecEncodeBooster.hpp"
+#include "fecBoosters/fecP4/fecDecodeBooster.hpp"
+#include "fecBoosters/fecBooster.h"
+#include "fecBoosters/fecP4/fecP4.hpp"
 
 /**
  * NOTE: the booster switch provides three functions for creating new packets:
@@ -84,6 +85,29 @@ class get_fec_state : public ActionPrimitive<const Data &, Data &, Data &> {
 
 REGISTER_PRIMITIVE(get_fec_state);
 
+class set_port_status : public ActionPrimitive<const Data &> {
+    void operator ()(const Data &port_d) {
+        uint8_t port = port_d.get<uint8_t>();
+
+        BMLOG_DEBUG("Setting port status for port {}", port);
+        set_fec_port_status(port);
+    }
+};
+
+REGISTER_PRIMITIVE(set_port_status);
+
+class get_port_status: public ActionPrimitive<const Data &, Data &> {
+    void operator ()(const Data &port_d, Data &faulty_d) {
+        uint8_t port = port_d.get<uint8_t>();
+
+        bool faulty = get_fec_port_status(port);
+        faulty_d.set(faulty);
+        BMLOG_DEBUG("Port status for port {} is {}", port, faulty)
+    }
+};
+
+REGISTER_PRIMITIVE(get_port_status);
+
 u_char *serialize_with_headers(const Packet &packet, size_t &size, std::vector<Header *>headers) {
     size_t payload_size = packet.get_data_size();
     size = payload_size;
@@ -133,15 +157,15 @@ T get_field_by_name(const Header &hdr, const std::string field_name) {
     return hdr.get_field(offset).get<T>();
 }
 
-class fec_encode : public ActionPrimitive<Header &, Header &, Header &,
+class fec_encode : public ActionPrimitive<Header &, Header &, Header &, Header &,
                                           const Data &, const Data &> {
-    void operator ()(Header &eth_h, Header &ip_h, Header &fec_h,
+    void operator ()(Header &eth_h, Header &ip_h, Header &proto_h, Header &fec_h,
                      const Data &k_d, const Data &h_d) {
         Packet &packet = get_packet();
 
         // Stores the serialized packet and ethernet/ip headers in `*buff`
         size_t buff_size;
-        u_char *buff = serialize_with_headers(packet, buff_size, {&eth_h, &ip_h});
+        u_char *buff = serialize_with_headers(packet, buff_size, {&eth_h, &ip_h, &proto_h});
 
         struct fec_header *fec = deparse_header<struct fec_header>(fec_h);
 
@@ -157,13 +181,12 @@ class fec_encode : public ActionPrimitive<Header &, Header &, Header &,
         fec_encode_p4_packet(buff, buff_size, fec, k, h, forwarder);
 
         // Replaces the deserialized headers back to the packet
-        replace_headers(packet, buff, {&eth_h, &ip_h});
+        replace_headers(packet, buff, {&eth_h, &ip_h, &proto_h});
         replace_headers(packet, (u_char*)fec, {&fec_h});
     }
 };
 
 REGISTER_PRIMITIVE(fec_encode);
-
 
 class fec_decode : public ActionPrimitive<Header &, Header &,
                                           const Data &, const Data &> {

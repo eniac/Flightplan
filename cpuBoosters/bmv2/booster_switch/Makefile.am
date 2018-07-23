@@ -64,7 +64,7 @@ AM_CPPFLAGS += \
 -I$(builddir)/gen-cpp \
 -I$(p4boosters_repo)/RSECode \
 -I$(p4boosters_repo)/FPGA/RSEVivadoHLS \
--Ifec_boosters/
+-I./fecBoosters/
 
 libsimpleswitch_la_SOURCES += thrift/src/SimpleSwitch_server.cpp
 
@@ -75,7 +75,7 @@ $(top_builddir)/src/bm_runtime/libbmruntime.la \
 $(top_builddir)/thrift_src/libruntimestubs.la \
 libsimpleswitch.la \
 libsimpleswitch_thrift.la  \
-fec_boosters/fecBoosterP4lib.a
+fecBoosters/fecBoosterP4lib.a
 
 simple_switch_SOURCES = main.cpp
 simple_switch_LDFLAGS =

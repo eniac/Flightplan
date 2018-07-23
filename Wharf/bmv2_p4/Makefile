@@ -38,4 +38,4 @@ $(BLD)/%.json: Sources/%.p4 $(DEPS) $(BLD)
 	p4c-bm2-ss --emit-externs -I  ../../FPGA/RSEVivadoHLS/ $< -o $@ --target bmv2 --arch v1model
 
 clean:
-	rm -fr Encoder.sdnet Encoder.json Sample.json Decoder.json
+	rm -fr $(BLD)

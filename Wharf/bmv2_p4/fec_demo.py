@@ -60,7 +60,8 @@ class FecTopo(Topo):
                                            json_path = json,
                                            thrift_port = port,
                                            pcap_dump = pcap_dump,
-                                           log_console=True))
+                                           log_console=True,
+                                           verbose=True))
 
         hosts = []
         for i in range(2):
@@ -104,7 +105,7 @@ def main():
     print "Ready !"
 
     if args.e2e:
-        h1 = net.get('h%d' % (n + 1))
+        h1 = net.get('h%d' % (1))
         h1.cmd('tcpreplay -p 100 -i eth0 {}'.format(args.e2e))
         sleep(2)
     else:

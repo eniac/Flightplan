@@ -32,7 +32,7 @@
 #include <string>
 #include <vector>
 
-#include "fec_boosters/fecBooster.h"
+#include "fecBooster.h"
 #include "simple_switch.h"
 
 namespace {
