@@ -38,29 +38,33 @@ parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap file
                     type=str, action="store", required=False, default=False)
 parser.add_argument('--e2e', help='Provide a pcap file to be sent through',
                     type=str, action='store', required=False, default=False)
+parser.add_argument('--log-console', help='Log console to this directory',
+                    type=str, action='store', required=False, default=None)
 
 args = parser.parse_args()
 
 class FecTopo(Topo):
 
-    def __init__(self, bm, encoder_json, decoder_json, dropper_json, pcap_dump, **opts):
+    def __init__(self, bm, encoder_json, decoder_json, dropper_json, pcap_dump, log_console, **opts):
         Topo.__init__(self, **opts)
 
         params = (
-                ('enc', encoder_json, 9090),
-                ('drp', dropper_json, 9091),
-                ('dec', decoder_json, 9092)
+                ('encoder', encoder_json, 9090),
+                ('dropper', dropper_json, 9091),
+                ('decoder', decoder_json, 9092)
         )
 
         switches = []
 
         for i, (name, json, port) in enumerate(params):
+            if log_console:
+                console_log = '{}/{}.log'.format(log_console, name)
             switches.append(self.addSwitch('s%d' % i,
                                            sw_path = bm,
                                            json_path = json,
                                            thrift_port = port,
                                            pcap_dump = pcap_dump,
-                                           log_console=True,
+                                           log_console = console_log,
                                            verbose=True))
 
         hosts = []
@@ -79,7 +83,8 @@ def main():
                    args.encoder_json,
                    args.decoder_json,
                    args.dropper_json,
-                   args.pcap_dump)
+                   args.pcap_dump,
+                   args.log_console)
     net = Mininet(topo = topo,
                   host = P4Host,
                   switch = P4Switch,

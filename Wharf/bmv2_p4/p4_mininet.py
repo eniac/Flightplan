@@ -113,7 +113,7 @@ class P4Switch(Switch):
             if not intf.IP():
                 args.extend(['-i', str(port) + "@" + intf.name])
         if self.pcap_dump:
-            args.append("--pcap")
+            args.extend(["--pcap", self.pcap_dump])
             # args.append("--useFiles")
         if self.thrift_port:
             args.extend(['--thrift-port', str(self.thrift_port)])
@@ -126,7 +126,10 @@ class P4Switch(Switch):
             args.append("--debugger")
         if self.log_console:
             args.append("--log-console")
-        logfile = "/tmp/p4s.{}.log".format(self.name)
+        if isinstance(self.log_console, str):
+            logfile = self.log_console
+        else:
+            logfile = "/tmp/p4s.{}.log".format(self.name)
         info(' '.join(args) + "\n")
 
         pid = None

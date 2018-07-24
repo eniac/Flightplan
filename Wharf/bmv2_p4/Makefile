@@ -14,6 +14,8 @@ endif
 
 DEPS=Makefile Sources/FEC.p4 Sources/FecBM.p4
 
+USER=$(shell logname)
+
 All: $(BLD) BM Sample
 
 Sample: $(BLD)/Sample.json
@@ -21,12 +23,15 @@ Sample: $(BLD)/Sample.json
 BM: $(BLD)/EncoderBM.json $(BLD)/DecoderBM.json $(BLD)/Dropper.json
 
 run: All
-	sudo python fec_demo.py \
+	-mkdir -p pcap_output log_files
+	-sudo python fec_demo.py \
 		--behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch \
 		--encoder-json $(BLD)/EncoderBM.json \
 		--decoder-json $(BLD)/DecoderBM.json \
 		--dropper-json $(BLD)/Dropper.json \
-		--pcap-dump 1 # "1" does nothing here, but flag is necessary
+		--pcap-dump pcap_output/ \
+		--log-console log_files/
+	-sudo chown -R $(USER) pcap_output/ log_files/
 
 $(BLD):
 	mkdir -p $(BLD)

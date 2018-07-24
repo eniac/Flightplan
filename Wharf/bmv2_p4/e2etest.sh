@@ -12,36 +12,44 @@ if [[ $BMV2_REPO_M == "" ]]; then
     exit
 fi
 
+USER=`logname`
 INPUT_PCAP=`realpath $1`
 
 TESTDIR=test_output
 BASENAME=$(basename $INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
-mkdir -p $OUTDIR
+PCAP_DUMPS=$OUTDIR/pcap_dump/
+LOG_DUMPS=$OUTDIR/log_files/
+mkdir -p $PCAP_DUMPS
+mkdir -p $LOG_DUMPS
 
-THISDIR=`pwd`
-
-cd $OUTDIR
-
-sudo python $THISDIR/fec_demo.py \
-		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
-		--encoder-json $THISDIR/build/EncoderBM.json \
-		--decoder-json $THISDIR/build/DecoderBM.json \
-		--dropper-json $THISDIR/build/Dropper.json \
-		--pcap-dump dump \
-		--e2e $INPUT_PCAP
+echo "Encoder log:"
+echo tail -f `realpath $LOG_DUMPS/encoder.log`
+echo "Decoder log:"
+echo tail -f `realpath $LOG_DUMPS/decoder.log`
+echo "Dropper log:"
+echo tail -f `realpath $LOG_DUMPS/dropper.log`
 
 sleep 2
 
-cd $THISDIR
+sudo python ./fec_demo.py \
+		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
+		--encoder-json build/EncoderBM.json \
+		--decoder-json build/DecoderBM.json \
+		--dropper-json build/Dropper.json \
+		--pcap-dump $PCAP_DUMPS \
+		--e2e $INPUT_PCAP \
+        --log-console $LOG_DUMPS
+
+sleep 2
 
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
 cp $INPUT_PCAP $IN_PCAP
-cp $OUTDIR/s2-eth2_in.pcap $OUT_PCAP
+cp $PCAP_DUMPS/s2-eth2_in.pcap $OUT_PCAP
 
-sleep 2
+sleep 1
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
 IN_TXT=$OUTDIR/${BASENAME}_in.txt
 
@@ -57,6 +65,11 @@ OUTLINES=$(cat $OUT_TXT | wc -l)
 sort $IN_TXT > $IN_SRT
 sort $OUT_TXT > $OUT_SRT
 
+sudo chown -R $USER:$USER $OUTDIR
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
