@@ -618,7 +618,7 @@ void SimpleSwitch::booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet>
 }
 
 /**
- * NOTE: the booster switch provides three functions for creating new packets:
+ * NOTE: the booster switch provides four functions for creating new packets:
  *
  * - enqueue_booster_packet(src, buffer, len) Ties the new packet to the source packet,
  *   so it will be send out immediately preceding the source.
@@ -630,6 +630,10 @@ void SimpleSwitch::booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet>
  *
  * - deparse_booster_packet(src, buffer, len) Copies the headers from the source packet,
  *   and sends the new packet to the deparser.
+ *   Buffer must *not* contain a copy of the headers
+ *
+ * - recirculate_booster_packet(src, payload, len) Copies headers from the source packet,
+ *   and recirculates the packet back to ingress
  *   Buffer must *not* contain a copy of the headers
  */
 
