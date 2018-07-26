@@ -34,8 +34,8 @@ sleep 2
 
 sudo python ./fec_demo.py \
 		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
-		--encoder-json build/EncoderBM.json \
-		--decoder-json build/DecoderBM.json \
+		--encoder-json build/Encoder.json \
+		--decoder-json build/Decoder.json \
 		--dropper-json build/Dropper.json \
 		--pcap-dump $PCAP_DUMPS \
 		--e2e $INPUT_PCAP \
