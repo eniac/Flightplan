@@ -157,15 +157,15 @@ T get_field_by_name(const Header &hdr, const std::string field_name) {
     return hdr.get_field(offset).get<T>();
 }
 
-class fec_encode : public ActionPrimitive<Header &, Header &, Header &, Header &,
-                                          const Data &, const Data &> {
-    void operator ()(Header &eth_h, Header &ip_h, Header &proto_h, Header &fec_h,
-                     const Data &k_d, const Data &h_d) {
+class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
+                                          Header &, Header &, Header &, Header &> {
+    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d,
+                     Header &eth_h, Header &ip_h, Header &proto1_h, Header &proto2_h) {
         Packet &packet = get_packet();
 
         // Stores the serialized packet and ethernet/ip headers in `*buff`
         size_t buff_size;
-        u_char *buff = serialize_with_headers(packet, buff_size, {&eth_h, &ip_h, &proto_h});
+        u_char *buff = serialize_with_headers(packet, buff_size, {&eth_h, &ip_h, &proto1_h, &proto2_h});
 
         struct fec_header *fec = deparse_header<struct fec_header>(fec_h);
 
@@ -181,7 +181,7 @@ class fec_encode : public ActionPrimitive<Header &, Header &, Header &, Header &
         fec_encode_p4_packet(buff, buff_size, fec, k, h, forwarder);
 
         // Replaces the deserialized headers back to the packet
-        replace_headers(packet, buff, {&eth_h, &ip_h, &proto_h});
+        replace_headers(packet, buff, {&eth_h, &ip_h, &proto1_h, &proto2_h});
         replace_headers(packet, (u_char*)fec, {&fec_h});
     }
 };

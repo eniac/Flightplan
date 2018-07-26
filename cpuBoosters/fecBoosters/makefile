@@ -33,10 +33,8 @@ all: pcap p4
 pcap: fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
 
 bmv2: p4
-	-mkdir $(FEC_BOOSTER_SWITCH_FEC_DIR) $(BMV2_BOOSTER_SWITCH_DIR)
-	cp -pr ./* $(FEC_BOOSTER_SWITCH_FEC_DIR) 
-	cp -pr $(FEC_BOOSTER_SWITCH_DIR)/* $(BMV2_BOOSTER_SWITCH_DIR)
-	cd $(BMV2_BOOSTER_SWITCH_DIR) && make P4BOOSTERS_REPO=$(P4BOOSTERS_REPO)
+	rsync -av --exclude='test_output' ./* $(FEC_BOOSTER_SWITCH_FEC_DIR)
+	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make
 
 fecBoosterApi.o: fecBoosterApi.c
 	g++ $(FLAGS) -c $<

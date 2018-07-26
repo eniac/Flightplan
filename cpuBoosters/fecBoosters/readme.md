@@ -5,30 +5,11 @@ by listening to a pcap interface, or running within the P4 behavioral model.
 
 ## Building for P4 Behavioral Model
 
-To build this code and incorporate it into the P4 behavioral model, perform the following steps
+To build this code and incorporate it into the P4 behavioral model, set the environment variable
+`$BMV2_REPO` to the path of a cloned copy of p4's `behavioral_model` repository
 
-Note:
-assumes the variable `$BMV2_REPO` is the path to a cloned copy of p4's `behavioral_model` repository
-and that `$P4BOOSTERS_REPO` is the path to a cloned copy of this repository
-
-```shell
-cd $P4BOOSTERS_REPO/cpuBoosters/fecBoosters
-make # Builds the fecBoosters core code
-cp -r . ../bmv2/booster_switch/fecBoosters
-cp -r ../bmv2/booster_switch $BMV2_REPO/targets
-```
-Then modify `$BMV2_REPO/configure.ac` to add the line:
-```
-        targets/booster_switch/Makefile
-```
-to the variable  `AC_CONFIG_FILES` (~line 274)
-
-Finally, configure and build the `booster_switch` repo:
-```
-cd $BMV2_REPO
-./configure
-make
-```
+Running `make bmv2` should copy and patch in the necessary files to build the `booster_switch`
+target.
 
 At that point, the sample p4 file should be able to be run with
 ```shell

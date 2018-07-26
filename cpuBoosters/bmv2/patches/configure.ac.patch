@@ -1,0 +1,8 @@
+@@ -292,6 +292,7 @@
+ 		targets/simple_switch/Makefile
+ 		targets/simple_switch/tests/Makefile
+ 		targets/simple_switch/tests/CLI_tests/Makefile
++		targets/booster_switch/Makefile
+ 		targets/psa_switch/Makefile
+ 		targets/psa_switch/tests/Makefile
+ 		tests/Makefile
