@@ -40,6 +40,8 @@ parser.add_argument('--e2e', help='Provide a pcap file to be sent through',
                     type=str, action='store', required=False, default=False)
 parser.add_argument('--log-console', help='Log console to this directory',
                     type=str, action='store', required=False, default=None)
+parser.add_argument('--dropper-pcap', help="Provide a pcap file to send from dropper to encoder",
+                    type=str, action='store', required=False, default=None)
 
 args = parser.parse_args()
 
@@ -71,7 +73,8 @@ class FecTopo(Topo):
         for i in range(2):
             hosts.append(self.addHost('h{}'.format(i+1),
                                       ip = '10.0.{}.1/24'.format(i),
-                                      mac = '00:04:00:00:00:{:x}'.format(i)))
+                                      mac = '00:04:00:00:00:{:x}'.format(i),
+                                      pcap_dump = pcap_dump))
 
         nodes = [hosts[0]] + switches + [hosts[1]]
 
@@ -109,10 +112,20 @@ def main():
 
     print "Ready !"
 
+    if args.dropper_pcap:
+        s1 = net.get('s1')
+        s1.cmd('tcpreplay -i s1-eth1 {}'.format(args.dropper_pcap))
+        sleep(1)
+
     if args.e2e:
-        h1 = net.get('h%d' % (1))
+        h1 = net.get('h1')
+        h2 = net.get('h2')
+        h1.cmd('tcpdump -Q out -i eth0 -w {}/h1_out.pcap &'.format(args.pcap_dump))
+        h2.cmd('tcpdump -Q in -i eth0 -w {}/h2_in.pcap &'.format(args.pcap_dump))
         h1.cmd('tcpreplay -p 100 -i eth0 {}'.format(args.e2e))
         sleep(2)
+        h1.cmd('killall tcpdump')
+        h2.cmd('killall tcpdump')
     else:
         CLI( net )
 

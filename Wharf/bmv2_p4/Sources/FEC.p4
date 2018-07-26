@@ -73,7 +73,7 @@ control FecEncode(inout headers_t hdr, inout metadata_t meta) {
         bit<1> faulty = 1;
 
         // TODO: Commenting out next line until lldp packets are tested
-        //get_port_status(meta.ingress_port, faulty);
+        get_port_status(meta.egress_spec, faulty);
         if (faulty == 1) {
             if (hdr.tcp.isValid()) {
                 proto_and_port = hdr.ipv4.proto ++ hdr.tcp.dport;

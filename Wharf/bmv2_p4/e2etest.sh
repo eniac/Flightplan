@@ -38,16 +38,17 @@ sudo python ./fec_demo.py \
 		--decoder-json build/Decoder.json \
 		--dropper-json build/Dropper.json \
 		--pcap-dump $PCAP_DUMPS \
+        --log-console $LOG_DUMPS \
+        --dropper-pcap lldp_enable_fec.pcap \
 		--e2e $INPUT_PCAP \
-        --log-console $LOG_DUMPS
 
 sleep 2
 
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-cp $INPUT_PCAP $IN_PCAP
-cp $PCAP_DUMPS/s2-eth2_in.pcap $OUT_PCAP
+cp $PCAP_DUMPS/h1_out.pcap $IN_PCAP
+cp $PCAP_DUMPS/h2_in.pcap $OUT_PCAP
 
 sleep 1
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt

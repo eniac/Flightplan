@@ -29,8 +29,8 @@ run: All
 	-mkdir -p pcap_output log_files
 	-sudo python fec_demo.py \
 		--behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch \
-		--encoder-json $(BLD)/EncoderBM.json \
-		--decoder-json $(BLD)/DecoderBM.json \
+		--encoder-json $(BLD)/Encoder.json \
+		--decoder-json $(BLD)/Decoder.json \
 		--dropper-json $(BLD)/Dropper.json \
 		--pcap-dump pcap_output/ \
 		--log-console log_files/
