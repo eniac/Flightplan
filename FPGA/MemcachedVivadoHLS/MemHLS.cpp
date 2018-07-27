@@ -72,6 +72,7 @@ void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl
 
 void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_word, Data_Word &Full_word)
 {
+#pragma HLS inline
 	packet_interface Input;
 	Data_Word buffer;
 	Input= Data_in.read();
@@ -84,19 +85,10 @@ void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_wor
 }
 void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Align_word, Data_Word &Full_word, int num_remove)
 {
-//	std::cout << "Align_word" << std::endl;
-//	Print_Single_word(Align_word.Data);
-//	std::cout << "Align_word length" << Align_word.len << std::endl;
-//	std::cout << "Full word" << std::endl;
-//	Print_Single_word(Full_word);
-//	std::cout << std::endl;
-//	std::cout << std::endl;
-//	std::cout << std::endl;
 
 	Data_Word buffer;
 	Full_word <<= 8*num_remove;
 	buffer = Full_word | (Align_word.Data >>8*(BYTES_PER_WORD - num_remove));
-	//Print_Single_word(buffer);
 	if (Align_word.len < num_remove)
 	{
 		Align_word.len = BYTES_PER_WORD - num_remove + Align_word.len;;
@@ -163,17 +155,12 @@ static enum ascii_cmd Parse_Command(hls::stream<packet_interface> &Data_in, hls:
 	uint8_t cmd = NUM_OF_CMD;
 	Data_Word buffer;
 	Read_and_Align(Data_in, Align_word, buffer);
-	Print_Single_word(buffer);
 	for (int i = 0; i < NUM_OF_CMD; i++)
 	{
-#pragma HLS unroll
-		for (int j = 0; j < commands[i].len; j++)
-		{
-			Byte raw_byte = buffer.range((BYTES_PER_WORD - j)*8 - 1,  (BYTES_PER_WORD - j - 1)*8);
-			if (raw_byte != commands[i].cmd[j]) break;
-			if (j == commands[i].len - 1) cmd = i;
-		}
-
+#pragma HLS pipeline II=1
+		Byte byte_1 = buffer.range(63,56);
+		Byte byte_end = buffer.range((BYTES_PER_WORD - commands[i].len + 1)*8, (BYTES_PER_WORD - commands[i].len)*8);
+		if (byte_1 == commands[i].cmd[0] && byte_end == 0x20) cmd = i;
 	}
 	if (cmd != NUM_OF_CMD)
 	{
@@ -185,12 +172,15 @@ static enum ascii_cmd Parse_Command(hls::stream<packet_interface> &Data_in, hls:
 
 int Find_Delimiter(Data_Word Data)
 {
+#pragma HLS inline
 	int result = -1;
 	for (int i = 7; i >= 0; i--)
 	{
+#pragma HLS unroll
+#pragma HLS loop_tripcount min=1 max=8 avg=4
 		Byte temp;
 		temp = Data.range((BYTES_PER_WORD - i)*8-1, (BYTES_PER_WORD - i - 1)*8);
-		if (temp == 13 || temp == 32) { result = i;  }
+		if (temp == 10 || temp == 32) { result = i;  }
 	}
 	return result;
 }
@@ -205,8 +195,10 @@ int Parse_Numerical_Field(hls::stream<packet_interface> &Data_in, hls::stream<Da
 		buffer = Buffer_Stream.read();
 	int delimiter = Find_Delimiter(buffer);
 	Ori = buffer;
-	for (int i = 0; i < delimiter; i++)
+	for (int i = 0; i < delimiter-1; i++)
 	{
+#pragma HLS pipeline
+#pragma HLS loop_tripcount min=1 max=8 avg=4
 		Byte temp = buffer.range(63,56);
 		result = result * 10 + (int) temp - (int) '0';
 		buffer <<= 8;
@@ -242,7 +234,8 @@ uint16_t Parse_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 		buffer = Buffer_Stream.read();
 	while (delimiter==-1)
 	{
-
+#pragma HLS pipeline II=1
+#pragma HLS loop_tripcount min=1 max=33 avg=8
 		delimiter = Find_Delimiter(buffer);
 		if (delimiter != -1)
 		{
@@ -251,6 +244,7 @@ uint16_t Parse_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 				buffer = buffer.range(63,64-delimiter*8);
 				Key_Remain.Data = buffer;
 				hash_result ^= (hash(buffer) + num);
+				hash_result ^= buffer.range(16,0);
 				hash_result %= MAX_MEMORY_SIZE;
 			}
 			Key_Remain.len = delimiter;
@@ -262,6 +256,7 @@ uint16_t Parse_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 			Key_Stream.write(buffer);
 			num += 8;
 			hash_result ^= (hash(buffer) + num);
+			hash_result ^= buffer.range(16,0);
 			hash_result %= MAX_MEMORY_SIZE;
 			if (Align_Word.Data.range(63,56) == 0x0d)
 			{
@@ -279,6 +274,7 @@ void Save_key(Cache &Mem_Block, hls::stream<Data_Word> &Key_Stream, Part_Word &K
 	int count = 0;
 	while (!Key_Stream.empty())
 	{
+#pragma HLS loop_tripcount min=1 max=33 avg=8
 		Mem_Block.KEY[count] = Key_Stream.read();
 		count++;
 	}
@@ -294,6 +290,7 @@ void Parse_Data(Cache & Mem_Block, hls::stream<packet_interface> &Data_in, hls::
 		Mem_Block.DATA[0] = Buffer_Stream.read();
 	for (int i = 1; i < Mem_Block.DATA_LEN / BYTES_PER_WORD; i++)
 	{
+#pragma HLS loop_tripcount min=8 max=256 avg=128
 		count++;
 		Read_and_Align(Data_in, Align_Word, Mem_Block.DATA[i]);
 	}
@@ -362,12 +359,6 @@ void Mem_Parse_Set(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 	std::cout<< "Finish expert Parse" << std::endl;
 	std::cout << "The expert is " << expert << std::endl;
 	Memory[index].DATA_LEN = Parse_Numerical_Field(Data_in,Buffer_Stream, Align_word) + 2;
-	if (Buffer_Stream.empty())
-			Read_and_Align(Data_in, Align_word, buffer);
-		else
-			buffer = Buffer_Stream.read();
-	Remove_and_Realign(Buffer_Stream, Align_word, buffer, 1);
-
 	std::cout<< "Finish LEN Parse" << std::endl;
 	std::cout << "The LEN is " << Memory[index].DATA_LEN << std::endl;
 	Parse_Data(Memory[index],Data_in, Buffer_Stream, Align_word);
@@ -449,6 +440,7 @@ void Add_Resp_Key(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, i
 	int remain = Memory[index].KEY_LEN % BYTES_PER_WORD;
 	for (int i = 0; i < count; i++)
 	{
+#pragma HLS loop_tripcount min=8 max=32 avg=16
 		Word_output.write(Merge_Full_and_Part(Memory[index].KEY[i],Left_word));
 	}
 	if (remain != 0)
@@ -465,6 +457,8 @@ void Add_Resp_Data(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, 
 	int remain = Memory[index].DATA_LEN % BYTES_PER_WORD;
 	for (int i = 0; i < count; i++)
 	{
+#pragma HLS pipeline II=1
+#pragma HLS loop_tripcount min=8 max=256 avg=64
 		Word_output.write(Merge_Full_and_Part(Memory[index].DATA[i],Left_word));
 	}
 	if (remain != 0)
@@ -481,6 +475,7 @@ Part_Word Generate_Word_for_Number(int number)
 	result.len = 0;
 	do
 	{
+#pragma HLS loop_tripcount min=1 max=8 avg=2
 #pragma HLS pipeline
 		result.Data >>= 8;
 		ap_uint<8> temp = (number % 10) + 48;
@@ -514,6 +509,8 @@ uint16_t Output_packets(hls::stream<packet_interface> & Packet_output, hls::stre
 	Output.End_of_frame = 0;
 	while(!Word_output.empty())
 	{
+#pragma HLS loop_tripcount min=8 max=256 avg=64
+
 		Output.End_of_frame = 0;
 		Packet_output.write(Output);
 		count +=8;
@@ -535,6 +532,7 @@ uint16_t Output_packets(hls::stream<packet_interface> & Packet_output, hls::stre
 			uint16_t temp = count;
 			while (MINIMUM_ETH_LEN > count + BYTES_PER_WORD)
 			{
+#pragma HLS loop_tripcount min=1 max=2
 				Output.End_of_frame = 0;
 				Output.Start_of_frame = 0;
 				Output.Data = 0;
@@ -709,16 +707,10 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 	{
 		while(!Packet_input.empty())
 		{
+#pragma HLS loop_tripcount min=8 max=512 avg=64
 			packet_interface Input;
 			Input = Packet_input.read();
 			Packet_output.write(Input);
-			std::cout << "Count: " << Input.Count << std::endl;
-			std::cout << "Start: " << Input.Start_of_frame << std::endl;
-			std::cout << "Error: " << Input.Error << std::endl;
-			std::cout << "End :" << Input.End_of_frame << std::endl;
-			std::cout << std::endl;
-			std::cout << std::endl;
-
 		}
 
 	}
