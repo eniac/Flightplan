@@ -1,6 +1,6 @@
 All: DecoderVivadoHLS
 
-DecoderVivadoHLS: MemHLS.cpp MemHLS.h Memcore.h
+MemcachedVivadoHLS: MemHLS.cpp MemHLS.h 
 	@mkdir -p Batch
 	cd Batch && vivado_hls ../Synthesize.tcl
 

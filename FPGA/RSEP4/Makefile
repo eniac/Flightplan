@@ -22,7 +22,6 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
 	@ln -s ../../../Sources/memcached_0_t.v Encoder/XilinxSwitch/memcached_0_t.HDL/memcached_0_t.v
 	@ln -s ../../../MemcachedP4/Scripts/run_C.sh Encoder/XilinxSwitch/run_C.sh
 	@ln -s ../../../MemcachedP4/Scripts/run_RTL.sh Encoder/XilinxSwitch/run_RTL.sh
-	@ln -s ../../../../MemcachedVivadoHLS/Memcore.h Encoder/XilinxSwitch/XilinxSwitch.TB/Memcore.h
 	@ln -s ../../../../MemcachedVivadoHLS/MemHLS.h Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS.h
 	@ln -s ../../../../MemcachedVivadoHLS/MemHLS.cpp Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS.cpp
 #	@cp ../RSEVivadoHLS/Batch/RSEVivadoHLS/solution1/syn/vhdl/*.vhd Encoder/XilinxSwitch/fec_0_t.HDL
