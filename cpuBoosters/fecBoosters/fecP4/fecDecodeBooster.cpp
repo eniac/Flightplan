@@ -6,15 +6,16 @@
  */
 struct tclass_state {
     bool empty;
-	int block_id;
-	int packet_idx;
-	/** After each second, this value is decremented. If it == 0, block is forwarded */
+    int block_id;
+    int packet_idx;
+    bool forwarded;
 };
 
 static struct tclass_state tclasses[TCLASS_MAX + 1];
 
 static void reset_decoder(tclass_type tclass, int block_id) {
     tclasses[tclass].empty = true;
+    tclasses[tclass].forwarded = true;
     mark_pkts_absent(tclass, block_id);
 }
 
@@ -59,6 +60,16 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
 
     tclass_type tclass = fec->class_id;
 
+    // If it's the start of a new block, mark that it hasn't been forwarded yet
+    if (fec->block_id != tclasses[tclass].block_id ||
+            fec->index < tclasses[tclass].packet_idx) {
+        tclasses[tclass].forwarded = false;
+    } else if (tclasses[tclass].forwarded) {
+        LOG_INFO("Already forwarded. Skipping insertion of packet");
+        // Otherwise, if the block is already forwarded, there's nothing to do
+        return;
+    }
+
     // TODO: This shouldn't have to be done every time this is called
     set_fec_params(tclass, k, h);
 
@@ -75,23 +86,12 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
         LOG_ERR("Received duplicate packet! Not buffering");
     }
 
-
-    if (fec->block_id != tclasses[tclass].block_id ||
-            fec->index < tclasses[tclass].packet_idx ||
-            fec->index == (k + h - 1)) {
-        decode_and_forward(tclass, forward, tclasses[tclass].block_id, k, h);
-
-        if (fec->index == (k + h - 1)) {
-            tclasses[tclass].block_id = (fec->block_id + 1) % MAX_BLOCK;
-            tclasses[tclass].packet_idx = 0;
-        } else {
-            tclasses[tclass].block_id = fec->block_id;
-            tclasses[tclass].packet_idx = fec->index;
-        }
-
-    } else {
-        tclasses[tclass].packet_idx = fec->index;
+    if (can_decode(tclass, fec->block_id)) {
+        decode_and_forward(tclass, forward, fec->block_id, k, h);
     }
+
+    tclasses[tclass].block_id = fec->block_id;
+    tclasses[tclass].packet_idx = fec->index;
 
     if (pkt_size == sizeof(struct ether_header)) {
         LOG_INFO("Empty packet received -- too small to forward");

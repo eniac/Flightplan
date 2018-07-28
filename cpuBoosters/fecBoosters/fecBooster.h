@@ -103,4 +103,7 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size);
 
 uint8_t get_fec_block_id(tclass_type tclass);
 uint8_t get_fec_frame_idx(tclass_type tclass);
+
+/** Checks if enough data + parity packets have been received to forward a block */
+bool can_decode(tclass_type tclass, int block_id);
 #endif // FEC_BOOSTER_H_

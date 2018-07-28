@@ -522,3 +522,32 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size) {
 	return packet + offset;
 }
 
+static int n_missing_data(struct tclass_buffer *tcb, int block_id, int k) {
+    int n = 0;
+    for (int i=0; i < k; i++) {
+        if (tcb->status[block_id][i] == PACKET_ABSENT) {
+            n++;
+        }
+    }
+    return n;
+}
+
+static int n_present_parity(struct tclass_buffer *tcb, int block_id, int k, int h) {
+    int n = 0;
+    for (int i=k; i < (k + h); i++) {
+        if (tcb->status[block_id][i] == PACKET_PRESENT) {
+            n++;
+        }
+    }
+    return n;
+}
+
+
+bool can_decode(tclass_type tclass, int block_id) {
+    int missing = n_missing_data(&tclasses[tclass], block_id, tclasses[tclass].k);
+    int parity = n_present_parity(&tclasses[tclass], block_id,
+                                  tclasses[tclass].k, tclasses[tclass].h);
+    LOG_INFO("Missing %d packets, received %d parity : can_decode = %d",
+             missing, parity, missing <= parity);
+    return missing <= parity;
+}
