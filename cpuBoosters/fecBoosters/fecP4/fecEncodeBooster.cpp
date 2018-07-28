@@ -1,8 +1,23 @@
 #include "fecBooster.h"
 #include "fecEncodeBooster.hpp"
+#include <chrono>
+#include <mutex>
 
 static void encode_and_forward(tclass_type tclass, forward_fn_t forward,
                                int block_id, int k, int h) {
+
+    size_t empty_size = WHARF_TAG_SIZE;
+    u_char empty_packet[empty_size];
+    for (int i=0; i < k; i++) {
+        if (!pkt_already_inserted(tclass, block_id, i)) {
+            // Already advances packet index
+            wharf_tag_data(tclass, NULL, 0, empty_packet, &empty_size);
+            LOG_INFO("Forwarding empty packet size %zu", empty_size);
+            forward(empty_packet, empty_size);
+            insert_into_pkt_buffer(tclass, block_id, i, empty_size, empty_packet);
+        }
+    }
+
     populate_fec_blk_data(tclass, block_id);
     encode_block();
 
@@ -21,11 +36,42 @@ static void encode_and_forward(tclass_type tclass, forward_fn_t forward,
     }
 }
 
+using std::chrono::steady_clock;
+
+static steady_clock::time_point timeouts[TCLASS_MAX + 1];
+
+static steady_clock::time_point zero_time = timeouts[0];
+
+static std::mutex encoder_mutex;
+
+void fec_encode_timeout_handler(forward_fn_t forward) {
+    // Lock encoding while checking timeouts
+    std::lock_guard<std::mutex> lock(encoder_mutex);
+
+    LOG_INFO("Timeout handler called!");
+    for (int tclass = 0; tclass <= TCLASS_MAX; tclass++) {
+        if (timeouts[tclass] != zero_time && timeouts[tclass] < steady_clock::now()) {
+            LOG_INFO("Timeout reached for class %d", tclass);
+            timeouts[tclass] = zero_time;
+            int block_id = get_fec_block_id(tclass);
+            fec_sym k, h;
+            get_fec_params(tclass, &k, &h);
+            encode_and_forward(tclass, forward, block_id, k, h);
+            mark_pkts_absent(tclass, block_id);
+            // Packet index advanced in encode_and_forward, so no need to advance block idx here
+            // advance_block_id(tclass);
+        }
+    }
+}
+
 void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
                           const struct fec_header *fec,
-                          int k, int h,
+                          int k, int h, int t,
                           forward_fn_t forward) {
-    LOG_INFO("Fec_encode called for packet %d: %d.%d", 
+    // Lock while encoding in progress
+    std::lock_guard<std::mutex> lock(encoder_mutex);
+
+    LOG_INFO("Fec_encode called for packet %d: %d.%d",
              (int)fec->class_id, (int)fec->block_id, (int)fec->index);
 
     tclass_type tclass = fec->class_id;
@@ -37,8 +83,11 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
     insert_into_pkt_buffer(tclass, fec->block_id, fec->index, pkt_size, pkt);
 
     // If advancing the packet index starts a new block
-    if (advance_packet_idx(tclass) == 0) {
+    int new_idx = advance_packet_idx(tclass);
+    if (new_idx == 0) {
         LOG_INFO("Encoding and forwarding block");
         encode_and_forward(tclass, forward, fec->block_id, k, h);
+    } else if (new_idx == 1) {
+        timeouts[tclass] = steady_clock::now() + std::chrono::milliseconds(t);
     }
 }

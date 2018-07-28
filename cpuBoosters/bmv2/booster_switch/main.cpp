@@ -102,9 +102,6 @@ SimpleSwitchParser *simple_switch_parser;
 namespace sswitch_runtime {
 shared_ptr<SimpleSwitchIf> get_handler(SimpleSwitch *sw);
 
-SimpleSwitch *get_switch() {
-    return simple_switch;
-}
 }  // namespace sswitch_runtime
 
 int
@@ -115,7 +112,7 @@ main(int argc, char* argv[]) {
       exit(-1);
   }
 
-  simple_switch = new SimpleSwitch();
+  simple_switch = SimpleSwitch::get_instance();
   simple_switch_parser = new SimpleSwitchParser();
   int status = simple_switch->init_from_command_line_options(
       argc, argv, simple_switch_parser);

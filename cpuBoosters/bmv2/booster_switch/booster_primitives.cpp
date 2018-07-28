@@ -53,10 +53,6 @@ using bm::RegisterArray;
 using bm::NamedCalculation;
 using bm::HeaderStack;
 
-namespace sswitch_runtime {
-    SimpleSwitch *get_switch();
-} // namespace sswitch_runtime
-
 namespace {
 
 void printHeader(const Header &hdr) {
@@ -93,7 +89,7 @@ class set_port_status : public ActionPrimitive<const Data &> {
     void operator ()(const Data &port_d) {
         uint8_t port = port_d.get<uint8_t>();
 
-        BMLOG_DEBUG("Setting port status for port {}", port);
+        BMLOG_DEBUG("Setting port status for port {:1d}", port);
         set_fec_port_status(port);
     }
 };
@@ -106,7 +102,7 @@ class get_port_status: public ActionPrimitive<const Data &, Data &> {
 
         bool faulty = get_fec_port_status(port);
         faulty_d.set(faulty);
-        BMLOG_DEBUG("Port status for port {} is {}", port, faulty)
+        BMLOG_DEBUG("Port status for port {:1d} is {:1d}", port, faulty)
     }
 };
 
@@ -163,9 +159,20 @@ T get_field_by_name(const Header &hdr, const std::string field_name) {
 
 class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
                                           Header &, Header &, Header &, Header &> {
+
+    static int egress_port; 
+
+    static void timeout_forwarder(const u_char *payload, size_t len) {
+        if (egress_port >= 0) {
+            SimpleSwitch::get_instance()->output_booster_packet(egress_port, payload, len);
+        }
+    }
+
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d,
                      Header &eth_h, Header &ip_h, Header &proto1_h, Header &proto2_h) {
         Packet &packet = get_packet();
+        PHV *phv = packet.get_phv();
+        fec_encode::egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
 
         // Stores the serialized packet and ethernet/ip headers in `*buff`
         size_t buff_size;
@@ -179,16 +186,22 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
 
         // Set up the function that will forwaard the packet
         auto forwarder = [&](const u_char *payload, size_t len) {
-            sswitch_runtime::get_switch()->enqueue_booster_packet(packet, payload, len);
+            SimpleSwitch::get_instance()->enqueue_booster_packet(packet, payload, len);
         };
         // Does the actual external work
-        fec_encode_p4_packet(buff, buff_size, fec, k, h, forwarder);
+        fec_encode_p4_packet(buff, buff_size, fec, k, h, 5000, forwarder);
 
         // Replaces the deserialized headers back to the packet
         replace_headers(packet, buff, {&eth_h, &ip_h, &proto1_h, &proto2_h});
         replace_headers(packet, (u_char*)fec, {&fec_h});
     }
+
+    REGISTER_PERIODIC_CALL(fec_encode_timeout_handler, timeout_forwarder);
+
 };
+
+int fec_encode::egress_port = -1;
+
 
 REGISTER_PRIMITIVE(fec_encode);
 
@@ -211,7 +224,7 @@ class fec_decode : public ActionPrimitive<Header &, Header &,
 
         // Set up function that will forward the packets
         auto forwarder = [&](const u_char *payload, size_t len) {
-            sswitch_runtime::get_switch()->recirculate_booster_packet(packet, payload, len);
+            SimpleSwitch::get_instance()->recirculate_booster_packet(packet, payload, len);
         };
 
         fec_decode_p4_packet(buff, buff_size, fec, k, h, forwarder);
@@ -252,7 +265,7 @@ class copy_modified : public ActionPrimitive<const Data &, const Data &, const D
         memcpy(&new_payload[idx], value.c_str(), width);
 
         // Send the new packet to the deparser for output
-        sswitch_runtime::get_switch()->deparse_booster_packet(packet, new_payload, payload_size);
+        SimpleSwitch::get_instance()->deparse_booster_packet(packet, new_payload, payload_size);
     }
 };
 

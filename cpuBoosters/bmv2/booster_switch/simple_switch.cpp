@@ -132,9 +132,6 @@ SimpleSwitch::receive_(port_t port_num, const char *buffer, int len) {
   // setting standard metadata
   phv->get_field("standard_metadata.ingress_port").set(port_num);
 
-  // set metadata for boosters
-  //phv->get_field("booster_metadata.booster_spec").set(0);
-
   // using packet register 0 to store length, this register will be updated for
   // each add_header / remove_header primitive call
   packet->set_register(PACKET_LENGTH_REG_IDX, len);
@@ -151,6 +148,30 @@ SimpleSwitch::receive_(port_t port_num, const char *buffer, int len) {
   return 0;
 }
 
+SimpleSwitch *SimpleSwitch::get_instance() {
+    static SimpleSwitch ss;
+    return &ss;
+}
+
+bool SimpleSwitch::register_periodic_call(periodic_fn call, forward_fn forwarder, std::string call_name) {
+    auto input = std::make_tuple(call, forwarder, call_name);
+    periodic_calls.push_back(input);
+    return true;
+}
+
+void SimpleSwitch::periodic_thread() {
+    while (!exiting) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        BMLOG_DEBUG("Checking periodics");
+        for (auto &call_signature : periodic_calls) {
+            BMLOG_DEBUG("Calling periodics {}", std::get<2>(call_signature));
+            auto forwarder = std::get<1>(call_signature);
+            auto call = std::get<0>(call_signature);
+            call(forwarder);
+        }
+    }
+}
+
 void
 SimpleSwitch::start_and_return_() {
   check_queueing_metadata();
@@ -160,6 +181,7 @@ SimpleSwitch::start_and_return_() {
     threads_.push_back(std::thread(&SimpleSwitch::egress_thread, this, i));
   }
   threads_.push_back(std::thread(&SimpleSwitch::transmit_thread, this));
+  threads_.push_back(std::thread(&SimpleSwitch::periodic_thread, this));
 }
 
 SimpleSwitch::~SimpleSwitch() {
@@ -172,6 +194,7 @@ SimpleSwitch::~SimpleSwitch() {
 #endif
   }
   output_buffer.push_front(nullptr);
+  exiting = true;
   for (auto& thread_ : threads_) {
     thread_.join();
   }
@@ -606,6 +629,21 @@ SimpleSwitch::duplicate_modified_packet(Packet &src, const u_char *payload, size
     return std::move(booster_pkt);
 }
 
+std::unique_ptr<Packet>
+SimpleSwitch::create_packet(int egress_port, const u_char *payload, size_t len) {
+
+    BMLOG_DEBUG("Creating output packet out of thin air");
+    auto booster_pkt = new_packet_ptr(0, 0, len,
+                                      bm::PacketBuffer(len + 512, (char *)payload, len));
+    BMLOG_DEBUG("Setting headers");
+    PHV *phv = booster_pkt->get_phv();
+    phv->get_field("standard_metadata.packet_length").set(len);
+    booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
+    booster_pkt->set_egress_port(egress_port);
+
+    return std::move(booster_pkt);
+}
+
 void SimpleSwitch::booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> new_packet) {
     BMLOG_DEBUG("Searching output buffer for id {}", id);
     if (booster_output_buffer.find(id) == booster_output_buffer.end()) {
@@ -663,4 +701,10 @@ void SimpleSwitch::recirculate_booster_packet(Packet &src, const u_char *payload
     auto booster_pkt = duplicate_modified_packet(src, payload, len);
     BMLOG_DEBUG("Recircuilating booster packet to input")
     input_buffer.push_front(std::move(booster_pkt));
+}
+
+void SimpleSwitch::output_booster_packet(int egress_port, const u_char *payload, size_t len) {
+    auto booster_pkt = create_packet(egress_port, payload, len);
+    BMLOG_DEBUG("Enqueueing NEW packet directly to output");
+    output_buffer.push_front(std::move(booster_pkt));
 }

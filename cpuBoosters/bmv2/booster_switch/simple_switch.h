@@ -70,6 +70,7 @@ class SimpleSwitch : public Switch {
   void enqueue_booster_packet(Packet &src, const u_char *payload, size_t len);
   void deparse_booster_packet(Packet &src, const u_char *payload, size_t len);
   void output_booster_packet(Packet &src, const u_char *payload, size_t len);
+  void output_booster_packet(int engress_port, const u_char *payload, size_t len);
   void recirculate_booster_packet(Packet &src, const u_char *payload, size_t len);
 
   using mirror_id_t = int;
@@ -79,10 +80,23 @@ class SimpleSwitch : public Switch {
 
  private:
   using clock = std::chrono::high_resolution_clock;
+  std::unique_ptr<Packet> create_packet(int engress_port, const u_char *payload, size_t len);
   std::unique_ptr<Packet> duplicate_modified_packet(Packet &src, const u_char *payload, size_t len);
+
+  // BOOSTER
   void booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> packet);
 
+  using forward_fn = std::function<void(const u_char*, size_t)>;
+  using periodic_fn =  std::function<void(forward_fn)>;
+
+  std::vector<std::tuple<periodic_fn, forward_fn, std::string> > periodic_calls;
+
  public:
+
+  // BOOSTER
+  bool register_periodic_call(periodic_fn call, forward_fn forwarder, std::string call_name);
+  static SimpleSwitch *get_instance();
+
   // by default, swapping is off
   explicit SimpleSwitch(port_t max_port = 256, bool enable_swap = false);
 
@@ -152,6 +166,11 @@ class SimpleSwitch : public Switch {
   };
 
  private:
+
+  //BOOSTER
+  std::atomic<bool> exiting;
+  void periodic_thread();
+
   void ingress_thread();
   void egress_thread(size_t worker_id);
   void transmit_thread();
@@ -197,5 +216,11 @@ class SimpleSwitch : public Switch {
 
   void check_booster_queue(packet_id_t id);
 };
+
+#define REGISTER_PERIODIC_CALL(fn_call, forwarder)                   \
+  bool fn_call##_create_ =                                         \
+      SimpleSwitch::get_instance()->register_periodic_call(             \
+          fn_call, forwarder, #fn_call \
+      );
 
 #endif  // SIMPLE_SWITCH_SIMPLE_SWITCH_H_
