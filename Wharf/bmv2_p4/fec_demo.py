@@ -122,8 +122,8 @@ def main():
         h2 = net.get('h2')
         h1.cmd('tcpdump -Q out -i eth0 -w {}/h1_out.pcap &'.format(args.pcap_dump))
         h2.cmd('tcpdump -Q in -i eth0 -w {}/h2_in.pcap &'.format(args.pcap_dump))
-        h1.cmd('tcpreplay -p 100 -i eth0 {}'.format(args.e2e))
-        sleep(2)
+        h1.cmd('tcpreplay -p 1000 -i eth0 {}'.format(args.e2e))
+        sleep(5)
         h1.cmd('killall tcpdump')
         h2.cmd('killall tcpdump')
     else:

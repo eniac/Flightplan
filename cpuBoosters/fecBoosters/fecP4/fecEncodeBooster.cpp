@@ -5,16 +5,18 @@
 
 static void encode_and_forward(tclass_type tclass, forward_fn_t forward,
                                int block_id, int k, int h) {
+    size_t template_size = sizeof(struct ether_header);
+    u_char template_packet[template_size];
 
     size_t empty_size = WHARF_TAG_SIZE;
     u_char empty_packet[empty_size];
     for (int i=0; i < k; i++) {
         if (!pkt_already_inserted(tclass, block_id, i)) {
             // Already advances packet index
-            wharf_tag_data(tclass, NULL, 0, empty_packet, &empty_size);
+            wharf_tag_data(tclass, template_packet, template_size, empty_packet, &empty_size);
             LOG_INFO("Forwarding empty packet size %zu", empty_size);
             forward(empty_packet, empty_size);
-            insert_into_pkt_buffer(tclass, block_id, i, empty_size, empty_packet);
+            insert_into_pkt_buffer(tclass, block_id, i, template_size, template_packet);
         }
     }
 
@@ -62,6 +64,7 @@ void fec_encode_timeout_handler(forward_fn_t forward) {
             // advance_block_id(tclass);
         }
     }
+    LOG_INFO("End timeout handler");
 }
 
 void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
@@ -88,6 +91,7 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
         LOG_INFO("Encoding and forwarding block");
         encode_and_forward(tclass, forward, fec->block_id, k, h);
     } else if (new_idx == 1) {
+        LOG_INFO("Resetting tclass %d timer", tclass);
         timeouts[tclass] = steady_clock::now() + std::chrono::milliseconds(t);
     }
 }

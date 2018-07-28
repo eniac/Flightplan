@@ -160,7 +160,7 @@ T get_field_by_name(const Header &hdr, const std::string field_name) {
 class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
                                           Header &, Header &, Header &, Header &> {
 
-    static int egress_port; 
+    static int egress_port;
 
     static void timeout_forwarder(const u_char *payload, size_t len) {
         if (egress_port >= 0) {
@@ -189,7 +189,7 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
             SimpleSwitch::get_instance()->enqueue_booster_packet(packet, payload, len);
         };
         // Does the actual external work
-        fec_encode_p4_packet(buff, buff_size, fec, k, h, 5000, forwarder);
+        fec_encode_p4_packet(buff, buff_size, fec, k, h, 2000, forwarder);
 
         // Replaces the deserialized headers back to the packet
         replace_headers(packet, buff, {&eth_h, &ip_h, &proto1_h, &proto2_h});
@@ -227,7 +227,16 @@ class fec_decode : public ActionPrimitive<Header &, Header &,
             SimpleSwitch::get_instance()->recirculate_booster_packet(packet, payload, len);
         };
 
-        fec_decode_p4_packet(buff, buff_size, fec, k, h, forwarder);
+        auto dropper = [&]() {
+            // Mark to drop
+            get_field("standard_metadata.egress_spec").set(511);
+            if (get_phv().has_field("intrinsic_metadata.mcast_grp")) {
+                get_field("intrinsic_metadata.mcast_grp").set(0);
+            }
+            BMLOG_DEBUG("Marked to drop decoded packet");
+        };
+
+        fec_decode_p4_packet(buff, buff_size, fec, k, h, forwarder, dropper);
 
         // Replace the deserialized headers back into the packet
         replace_headers(packet, buff, {&eth_h});
@@ -270,6 +279,35 @@ class copy_modified : public ActionPrimitive<const Data &, const Data &, const D
 };
 
 REGISTER_PRIMITIVE(copy_modified);
+
+class random_drop : public ActionPrimitive<const Data &> {
+
+    int packet_idx = 0;
+    int drop_idx = 0;
+
+    void operator ()(const Data &n_d) {
+        int n = n_d.get_int();
+
+        if (packet_idx == 0) {
+            drop_idx = rand() % n;
+            BMLOG_DEBUG("Setting drop index to {}/{}", drop_idx, n);
+        }
+
+        if (drop_idx == packet_idx) {
+            // Mark to drop
+            get_field("standard_metadata.egress_spec").set(511);
+            if (get_phv().has_field("intrinsic_metadata.mcast_grp")) {
+                get_field("intrinsic_metadata.mcast_grp").set(0);
+            }
+            BMLOG_DEBUG("Dropping packet {}", packet_idx);
+        }
+
+        packet_idx = (packet_idx + 1) % n;
+    }
+};
+
+REGISTER_PRIMITIVE(random_drop);
+
 
 // dummy function, which ensures that this unit is not discarded by the linker
 // it is being called by the constructor of SimpleSwitch

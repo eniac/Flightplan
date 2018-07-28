@@ -20,6 +20,8 @@ BASENAME=$(basename $INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files/
+rm -f $OUTDIR/*.pcap
+rm -f $OUTDIR/pcap_dump/*.pcap
 mkdir -p $PCAP_DUMPS
 mkdir -p $LOG_DUMPS
 
@@ -30,7 +32,7 @@ echo tail -f `realpath $LOG_DUMPS/decoder.log`
 echo "Dropper log:"
 echo tail -f `realpath $LOG_DUMPS/dropper.log`
 
-sleep 2
+sleep 1
 
 sudo python ./fec_demo.py \
 		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
@@ -42,7 +44,7 @@ sudo python ./fec_demo.py \
         --dropper-pcap lldp_enable_fec.pcap \
 		--e2e $INPUT_PCAP \
 
-sleep 2
+sleep 4
 
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap

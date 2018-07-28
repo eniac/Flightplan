@@ -37,6 +37,11 @@ struct tclass_buffer {
 
 static struct tclass_buffer tclasses[TCLASS_MAX + 1];
 
+void get_fec_params(tclass_type tclass, fec_sym *k, fec_sym *h) {
+	*k = tclasses[tclass].k;
+	*h = tclasses[tclass].h;
+}
+
 /** Sets the parameters k and h for a given traffic class within the fbk */
 void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h) {
 	tclasses[tclass].k = k;
@@ -431,25 +436,33 @@ int wharf_tag_data(tclass_type tclass,
 	}
 
 	/* Space for the new headers */
-	size_t new_size = size_in + sizeof(struct fec_header);
+	size_t new_size;
+
+	if (packet == NULL) {
+		new_size = WHARF_TAG_SIZE;
+	} else {
+		new_size = size_in + sizeof(struct fec_header);
+	}
 	if (*size_out < new_size) {
 		LOG_ERR("Buffer not large enough for wharf tag");
 		return -1;
 	}
 
-	struct ether_header *eth_orig = (struct ether_header *)packet;
-
-	/* Copy the original ether header and replace the ether_type with wharf_ethertype */
 	struct ether_header *eth_out = (struct ether_header *)out;
-	*eth_out = *eth_orig;
+	struct fec_header *fec = (struct fec_header *)(out + sizeof(struct ether_header));
+
+	if (packet != NULL) {
+		/* Copy the original ether header and replace the ether_type with wharf_ethertype */
+		struct ether_header *eth_orig = (struct ether_header *)packet;
+		*eth_out = *eth_orig;
+		fec->orig_ethertype = eth_orig->ether_type;
+	}
 	eth_out->ether_type = htons(WHARF_ETHERTYPE);
 
 	/* Populate the wharf tag with the block_id, packet_id, class, & packetsize */
-	struct fec_header *fec = (struct fec_header *)(out + sizeof(struct ether_header));
 	fec->class_id = tclass;
 	fec->block_id = tclasses[tclass].block_id;
 	fec->index = tclasses[tclass].frame_idx;
-	fec->orig_ethertype = eth_orig->ether_type;
 
 	// Skip copying the ether_header to the new packet
 	// (if it's not a dummy packet)

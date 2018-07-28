@@ -3,6 +3,7 @@
 #include <functional>
 
 typedef std::function<void(const u_char *, size_t)> forward_fn_t;
+typedef std::function<void()> drop_fn_t;
 
 bool get_fec_port_status(uint8_t port);
 void set_fec_port_status(uint8_t port);

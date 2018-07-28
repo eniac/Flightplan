@@ -4,6 +4,10 @@
 #include "Forwarding.p4"
 struct bmv2_meta_t {}
 
+#define DROP_RATE 6
+
+extern void random_drop(bit<8> drop_rate);
+
 parser BMParser(packet_in pkt, out headers_t hdr,
                 inout bmv2_meta_t m, inout metadata_t meta) { 
     state start {
@@ -18,14 +22,7 @@ control DropProcess(inout headers_t hdr, inout bmv2_meta_t meta, inout metadata_
 
     apply {
         Forwarder.apply(smd);
-        if (hdr.fec.isValid()) {
-
-            FecClassParams.apply(hdr.fec.traffic_class, k, h);
-            if (hdr.fec.packet_index == k - 1){
-                mark_to_drop();
-                return;
-            }
-        }
+        random_drop(DROP_RATE);
     }
 }
 

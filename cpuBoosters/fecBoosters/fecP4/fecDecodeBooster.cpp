@@ -38,7 +38,7 @@ static void decode_and_forward(tclass_type tclass, forward_fn_t forward,
             FRAME_SIZE_TYPE size;
             u_char *pkt = retrieve_from_pkt_buffer(tclass, block_id, i, &size);
 
-            if (size > 0) {
+            if (size > sizeof(struct ether_header)) {
                 LOG_INFO("Forwarding packet of size %d", (int)size);
                 forward(pkt, size);
             }
@@ -53,7 +53,7 @@ static void decode_and_forward(tclass_type tclass, forward_fn_t forward,
 void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
                           const struct fec_header *fec,
                           int k, int h,
-                          forward_fn_t forward) {
+                          forward_fn_t forward, drop_fn_t drop) {
     LOG_INFO("Fec_decode called for packet %d: %d.%d",
              (int)fec->class_id, (int)fec->block_id, (int)fec->index);
 
@@ -80,6 +80,7 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
             fec->index < tclasses[tclass].packet_idx ||
             fec->index == (k + h - 1)) {
         decode_and_forward(tclass, forward, tclasses[tclass].block_id, k, h);
+
         if (fec->index == (k + h - 1)) {
             tclasses[tclass].block_id = (fec->block_id + 1) % MAX_BLOCK;
             tclasses[tclass].packet_idx = 0;
@@ -87,8 +88,14 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
             tclasses[tclass].block_id = fec->block_id;
             tclasses[tclass].packet_idx = fec->index;
         }
+
     } else {
         tclasses[tclass].packet_idx = fec->index;
+    }
+
+    if (pkt_size == sizeof(struct ether_header)) {
+        LOG_INFO("Empty packet received -- too small to forward");
+        drop();
     }
 }
 
