@@ -153,8 +153,8 @@ SimpleSwitch *SimpleSwitch::get_instance() {
     return &ss;
 }
 
-bool SimpleSwitch::register_periodic_call(periodic_fn call, forward_fn forwarder, std::string call_name) {
-    auto input = std::make_tuple(call, forwarder, call_name);
+bool SimpleSwitch::register_periodic_call(periodic_fn call, std::string call_name) {
+    auto input = std::make_tuple(call, call_name);
     periodic_calls.push_back(input);
     return true;
 }
@@ -164,10 +164,9 @@ void SimpleSwitch::periodic_thread() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         BMLOG_DEBUG("Checking periodics");
         for (auto &call_signature : periodic_calls) {
-            BMLOG_DEBUG("Calling periodics {}", std::get<2>(call_signature));
-            auto forwarder = std::get<1>(call_signature);
+            BMLOG_DEBUG("Calling periodics {}", std::get<1>(call_signature));
             auto call = std::get<0>(call_signature);
-            call(forwarder);
+            call();
         }
     }
 }

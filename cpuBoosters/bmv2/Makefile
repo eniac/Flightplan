@@ -6,7 +6,7 @@ endif
 
 ifeq ($(P4BOOSTERS_REPO),)
 P4BOOSTERS_REPO=$(realpath ../..)
-$(warning Guessing P4BOOSTERS_REPO is $(P4BOOSTERS_REPO))
+$(info Guessing P4BOOSTERS_REPO is $(P4BOOSTERS_REPO))
 endif
 
 BOOSTER_TARGET=booster_switch

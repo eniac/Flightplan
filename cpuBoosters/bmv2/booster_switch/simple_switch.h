@@ -86,15 +86,14 @@ class SimpleSwitch : public Switch {
   // BOOSTER
   void booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> packet);
 
-  using forward_fn = std::function<void(const u_char*, size_t)>;
-  using periodic_fn =  std::function<void(forward_fn)>;
+  using periodic_fn =  std::function<void()>;
 
-  std::vector<std::tuple<periodic_fn, forward_fn, std::string> > periodic_calls;
+  std::vector<std::tuple<periodic_fn, std::string> > periodic_calls;
 
  public:
 
   // BOOSTER
-  bool register_periodic_call(periodic_fn call, forward_fn forwarder, std::string call_name);
+  bool register_periodic_call(periodic_fn call, std::string call_name);
   static SimpleSwitch *get_instance();
 
   // by default, swapping is off
@@ -217,10 +216,10 @@ class SimpleSwitch : public Switch {
   void check_booster_queue(packet_id_t id);
 };
 
-#define REGISTER_PERIODIC_CALL(fn_call, forwarder)                   \
-  bool fn_call##_create_ =                                         \
-      SimpleSwitch::get_instance()->register_periodic_call(             \
-          fn_call, forwarder, #fn_call \
+#define REGISTER_PERIODIC_CALL(fn_call   )                   \
+  bool fn_call##_create_ =                                   \
+      SimpleSwitch::get_instance()->register_periodic_call(  \
+          fn_call, #fn_call \
       );
 
 #endif  // SIMPLE_SWITCH_SIMPLE_SWITCH_H_

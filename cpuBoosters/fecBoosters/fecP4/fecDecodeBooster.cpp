@@ -11,33 +11,34 @@ struct tclass_state {
     bool forwarded;
 };
 
-static struct tclass_state tclasses[TCLASS_MAX + 1];
+static struct tclass_state tclasses[TCLASS_MAX + 1][MAX_PORT + 1];
 
-static void reset_decoder(tclass_type tclass, int block_id) {
-    tclasses[tclass].empty = true;
-    tclasses[tclass].forwarded = true;
-    mark_pkts_absent(tclass, block_id);
+static void reset_decoder(tclass_type tclass, int ingress_port, int block_id) {
+    tclasses[tclass][ingress_port].empty = true;
+    tclasses[tclass][ingress_port].forwarded = true;
+    mark_pkts_absent(tclass, ingress_port, block_id);
 }
 
-static void decode_and_forward(tclass_type tclass, forward_fn_t forward,
+static void decode_and_forward(tclass_type tclass, int ingress_port, decode_forward_fn forward,
                                int block_id, int k, int h) {
-    if (tclasses[tclass].empty || is_all_data_pkts_recieved_for_block(tclass, block_id)) {
-        reset_decoder(tclass, block_id);
+    if (tclasses[tclass][ingress_port].empty ||
+            is_all_data_pkts_recieved_for_block(tclass, ingress_port, block_id)) {
+        reset_decoder(tclass, ingress_port, block_id);
         LOG_INFO("All data packets received for %d:%d. Skipping decode",
                  (int)tclass, block_id);
         return;
     }
 
-    populate_fec_blk_data_and_parity(tclass, block_id);
-    decode_block(tclass, block_id);
+    populate_fec_blk_data_and_parity(tclass, ingress_port, block_id);
+    decode_block(tclass, ingress_port, block_id);
 
     int num_recovered = 0;
     for (int i=0; i < k; i++) {
-        if (pkt_recovered(tclass, block_id, i)) {
+        if (pkt_recovered(tclass, ingress_port, block_id, i)) {
             num_recovered += 1;
 
             FRAME_SIZE_TYPE size;
-            u_char *pkt = retrieve_from_pkt_buffer(tclass, block_id, i, &size);
+            u_char *pkt = retrieve_from_pkt_buffer(tclass, ingress_port, block_id, i, &size);
 
             if (size > sizeof(struct ether_header)) {
                 LOG_INFO("Forwarding packet of size %d", (int)size);
@@ -48,23 +49,23 @@ static void decode_and_forward(tclass_type tclass, forward_fn_t forward,
 
     LOG_INFO("Recovered %d packets", num_recovered);
 
-    reset_decoder(tclass, block_id);
+    reset_decoder(tclass, ingress_port, block_id);
 }
 
 void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
-                          const struct fec_header *fec,
+                          const struct fec_header *fec, int ingress_port,
                           int k, int h,
-                          forward_fn_t forward, drop_fn_t drop) {
+                          decode_forward_fn forward, drop_fn_t drop) {
     LOG_INFO("Fec_decode called for packet %d: %d.%d",
              (int)fec->class_id, (int)fec->block_id, (int)fec->index);
 
     tclass_type tclass = fec->class_id;
 
     // If it's the start of a new block, mark that it hasn't been forwarded yet
-    if (fec->block_id != tclasses[tclass].block_id ||
-            fec->index < tclasses[tclass].packet_idx) {
-        tclasses[tclass].forwarded = false;
-    } else if (tclasses[tclass].forwarded) {
+    if (fec->block_id != tclasses[tclass][ingress_port].block_id ||
+            fec->index < tclasses[tclass][ingress_port].packet_idx) {
+        tclasses[tclass][ingress_port].forwarded = false;
+    } else if (tclasses[tclass][ingress_port].forwarded) {
         LOG_INFO("Already forwarded. Skipping insertion of packet");
         // Otherwise, if the block is already forwarded, there's nothing to do
         return;
@@ -79,19 +80,19 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
     }
 
     LOG_INFO("Inserting pkt of tclass %d size %zu into buffer",(int)tclass, pkt_size);
-    if (!pkt_already_inserted(tclass, fec->block_id, fec->index)) {
-        insert_into_pkt_buffer(tclass, fec->block_id, fec->index, pkt_size, pkt);
-        tclasses[tclass].empty = false;
+    if (!pkt_already_inserted(tclass, ingress_port, fec->block_id, fec->index)) {
+        insert_into_pkt_buffer(tclass, ingress_port, fec->block_id, fec->index, pkt_size, pkt);
+        tclasses[tclass][ingress_port].empty = false;
     } else {
         LOG_ERR("Received duplicate packet! Not buffering");
     }
 
-    if (can_decode(tclass, fec->block_id)) {
-        decode_and_forward(tclass, forward, fec->block_id, k, h);
+    if (can_decode(tclass, ingress_port, fec->block_id)) {
+        decode_and_forward(tclass, ingress_port, forward, fec->block_id, k, h);
     }
 
-    tclasses[tclass].block_id = fec->block_id;
-    tclasses[tclass].packet_idx = fec->index;
+    tclasses[tclass][ingress_port].block_id = fec->block_id;
+    tclasses[tclass][ingress_port].packet_idx = fec->index;
 
     if (pkt_size == sizeof(struct ether_header)) {
         LOG_INFO("Empty packet received -- too small to forward");

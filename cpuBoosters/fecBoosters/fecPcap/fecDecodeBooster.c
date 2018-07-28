@@ -23,33 +23,33 @@ static struct tclass_state tclasses[TCLASS_MAX + 1];
 
 inline void reset_decoder (tclass_type tclass, const int block_id) {
 	tclasses[tclass].nothing_to_decode = true;
-	mark_pkts_absent(tclass, block_id);
+	mark_pkts_absent(tclass, DEFAULT_PORT, block_id);
 	tclasses[tclass].timeout = 0;
 }
 
 // Try to decode new packets, and forward them on.
 void decode_and_forward(tclass_type tclass, const int block_id) {
 	if (tclasses[tclass].nothing_to_decode ||
-			is_all_data_pkts_recieved_for_block(tclass, block_id)) {
+			is_all_data_pkts_recieved_for_block(tclass, DEFAULT_PORT, block_id)) {
 		reset_decoder(tclass, block_id);
 		LOG_INFO("Received all data packets for blockID :: %d Skipping calling decode", block_id);
 		return;
 	}
 
-	populate_fec_blk_data_and_parity(tclass, block_id);
+	populate_fec_blk_data_and_parity(tclass, DEFAULT_PORT, block_id);
 
 	// Decode inserts the packets directly into the packet buffer
-	decode_block(tclass, block_id);
+	decode_block(tclass, DEFAULT_PORT, block_id);
 
 #if WHARF_DEBUGGING
 	int num_recovered_packets = 0;
 #endif // WHARF_DEBUGGING
 	for (int i = 0; i < wharf_get_k(tclass); i++) {
-		if (pkt_recovered(tclass, block_id, i)) {
+		if (pkt_recovered(tclass, DEFAULT_PORT, block_id, i)) {
 			num_recovered_packets += 1;
 
 			FRAME_SIZE_TYPE size;
-			u_char *pkt = retrieve_from_pkt_buffer(tclass, block_id, i, &size);
+			u_char *pkt = retrieve_from_pkt_buffer(tclass, DEFAULT_PORT, block_id, i, &size);
 
 			// Recovered packet may have a length of 0, if it was filler
 			// In this case, no need to forward
@@ -160,10 +160,11 @@ void my_packet_handler(
 	}
 
 	// Buffer data and parity packets in case need to decode.
-	if (!pkt_already_inserted(tclass, fecHeader.block_id, fecHeader.index)) {
+	if (!pkt_already_inserted(tclass, DEFAULT_PORT, fecHeader.block_id, fecHeader.index)) {
 		tclass_status->nothing_to_decode = false;
 		LOG_INFO("Inserting packet %d.%d with size %d", (int)fecHeader.block_id, (int)fecHeader.index, size);
-		insert_into_pkt_buffer(fecHeader.class_id, fecHeader.block_id, fecHeader.index, size, stripped);
+		insert_into_pkt_buffer(fecHeader.class_id, DEFAULT_PORT, fecHeader.block_id,
+                               fecHeader.index, size, stripped);
 	}
 	else {
 		LOG_ERR("Not buffering duplicate packet");

@@ -38,17 +38,18 @@ static void encode_and_forward_block(tclass_type tclass, int currBlockID,
 	u_char empty_packet[empty_size];
 	/* Loop over data packets, filling in missing packets with 0-length frames */
 	for (int i=0; i < k; i++) {
-		if (!pkt_already_inserted(tclass, currBlockID, i)) {
-			wharf_tag_data(tclass, last_packet, sizeof(struct ether_header), empty_packet, &empty_size);
+		if (!pkt_already_inserted(tclass, DEFAULT_PORT, currBlockID, i)) {
+			wharf_tag_data(tclass, currBlockID, i, last_packet,
+                           sizeof(struct ether_header), empty_packet, &empty_size);
 			LOG_INFO("Forwarding empty packet size %zu", empty_size);
 			forward_frame(empty_packet, empty_size);
-			insert_into_pkt_buffer(tclass, currBlockID, i, 0, last_packet);
+			insert_into_pkt_buffer(tclass, DEFAULT_PORT, currBlockID, i, 0, last_packet);
 		}
 		LOG_INFO("Packet %d already inserted", i);
 	}
 
 	/* Populate the global fec structure for rse encoder and call the encode */
-	populate_fec_blk_data(tclass, currBlockID);
+	populate_fec_blk_data(tclass, DEFAULT_PORT, currBlockID);
 
 	/* Encoder */
 	encode_block();
@@ -88,8 +89,8 @@ void booster_timeout_handler() {
 				LOG_INFO("Encode and forward due to timeout %d=0", i);
 				// Force the data to be encoded and forwarded
 				encode_and_forward_block(i, lastBlockId[i], &last_eth_header[i]);
-				lastBlockId[i] = advance_block_id(i);
-				mark_pkts_absent(i, lastBlockId[i]);
+				lastBlockId[i] = advance_block_id(i, DEFAULT_PORT);
+				mark_pkts_absent(i, DEFAULT_PORT, lastBlockId[i]);
 			}
 		}
 	}
@@ -119,8 +120,12 @@ void my_packet_handler(
 	size_t new_size = header->len + sizeof(struct fec_header);
 	u_char new_packet[new_size];
 
+    uint8_t block_id = get_fec_block_id(tclass, DEFAULT_PORT);
+    uint8_t packet_idx = get_fec_frame_idx(tclass, DEFAULT_PORT);
+
 	// Tagging the packet also advances the packet index
-	wharf_tag_data(tclass, packet, header->len, new_packet, &new_size);
+	wharf_tag_data(tclass, block_id, packet_idx, packet, header->len, new_packet, &new_size);
+    advance_packet_idx(tclass, DEFAULT_PORT);
 
 	/* Forward the data packet nowm, then buffer it below for the encoder */
 	forward_frame(new_packet, new_size);
@@ -129,8 +134,8 @@ void my_packet_handler(
 
 	// If it's the start of a new block
 	if (fec->index == 0) {
-		mark_pkts_absent(tclass, fec->block_id);
-		lastBlockId[tclass] = fec->block_id;
+		mark_pkts_absent(tclass, DEFAULT_PORT, block_id);
+		lastBlockId[tclass] = block_id;
 
 		int t = wharf_get_t(tclass);
 		if (t > 0) {
@@ -139,8 +144,8 @@ void my_packet_handler(
 	}
 
 
-	if (!pkt_already_inserted(tclass, fec->block_id, fec->index)) {
-		insert_into_pkt_buffer(tclass, fec->block_id, fec->index, header->len, packet);
+	if (!pkt_already_inserted(tclass, DEFAULT_PORT, block_id, packet_idx)) {
+		insert_into_pkt_buffer(tclass, DEFAULT_PORT, block_id, packet_idx, header->len, packet);
 	} else {
 		fprintf(stderr, "Tagging produced a duplicate index: %d/%d\n", fec->block_id, fec->index);
 		exit(1);
