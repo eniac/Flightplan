@@ -1,18 +1,25 @@
 # P4 Behavioral Model - wharf and sample p4 files
 
-Sample and fec booster bmv2 inputs can both be built with `make`
+## Dependencies
 
-- Sources/FEC.p4 : General code for FEC-enabled p4 switches. Handles parsing and calling of FEC externs
-- Sources/FecBM.p4 : Wrappers to FEC.p4 code specifically for being called the v1model of bmv2
-- Sources/EncoderBM.p4 : Fec encoder for bmv2. Output is suitable for passing into decoder.
-  - Run in mininet with `make run-EncoderBM`
-- Sources/DecoderBM.p4 : Fec decoder for bmv2. Can decode the output of the Encoder.
-  - Run in mininet with `make run-DecoderBM`
-- Sources/Dropper.p4 : Inspects the ethernet and fec headers. If it is a fec packet, the dropper
-  will drop packet (k - 1) of each block.
+Building the p4 files for bmv2 requires global installation of p4c (https://github.com/p4lang/p4c)
+
+## Building for bmv2
+
+Sample and fec booster bmv2 inputs can both be built with `make bmv2`
+
+- Sources/targets.h : Target-specific definitions used by fec encoder and decoder
+- Sources/FEC.p4 : Calls to encode, decode, or retrieve parameters based on fec encoding
+- Sources/Forwarding.p4 : Determines the egress port out of which a packet should be sent
+- Sources/Parsing.p4 : Parsing and deparsing of packets
+- Sources/LLDP.p4 : Activation of FEC on ports through LLDP
+- Sources/Encoder.p4 : Definition of `main` switch target for encoder
+  - Run in mininet with `make run-Encoder`
+- Sources/Decoder.p4 : Definition of `main` switch target for decoder
+  - Run in mininet with `make run-Decoder`
+- Sources/Dropper.p4 : A `main` target that will drop a configurable number of packets
   - Run in mininet with `make run-Dropper`
-- Sources/Sample.p4 : an example of extern usage
-  - Creates copy of incoming packets with specified bytes of payload modified
+- Sources/Sample.p4 : Sample use of a simple exetern that creates a modified copy of a packet
   - Run in mininet with `make run-Sample`
 
 Executing `make run` will start up a network:
