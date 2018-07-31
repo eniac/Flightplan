@@ -142,6 +142,7 @@ static void Encode_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   }
 
   Output_tuple->Packet_index = Packet_index;
+  Output_tuple->Block_index = Block_index;
 
   Packet_index++;
 }
@@ -213,6 +214,7 @@ void RSE_core(input_tuple Input_tuple, output_tuple * Output_tuple, packet_inter
     packet_interface Output_packet[(FEC_MAX_PACKET_SIZE + 7) / 8])
 {
 #pragma HLS DATA_PACK variable=Input_tuple
+#pragma HLS DATA_PACK variable=Output_tuple
 #pragma HLS DATA_PACK variable=Input_packet
 #pragma HLS DATA_PACK variable=Output_packet
 #pragma HLS INTERFACE ap_vld port=Input_tuple
