@@ -44,6 +44,8 @@ extern void fec_decode(
 #define metadata_t switch_metadata_t
 #define SET_EGRESS(meta, port) meta.egress_port = port
 
+// We need at least space for one packet or the encoder will deadlock.
+@Xilinx_MaxLatency(200)
 extern void fec_encode(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
                        out bit<FEC_PACKET_INDEX_WIDTH> packet_index);
 #define FEC_ENCODE(fec, k, h, ...) \
