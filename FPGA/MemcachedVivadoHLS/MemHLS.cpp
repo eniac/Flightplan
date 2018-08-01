@@ -46,7 +46,6 @@ void Print_Data(hls::stream<Data_Word> &Data_in, hls::stream<Data_Word> &Data_ou
 
 void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl Protocl, Part_Word &Align_word)
 {
-#pragma HLS dataflow
 	uint8_t offset_len;
 	uint8_t num_remove;
 	packet_interface Input;
@@ -106,7 +105,6 @@ void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Alig
 }
 void Parse_Command(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word, enum ascii_cmd &result)
 {
-#pragma HLS dataflow
 	Cmd_Word commands[NUM_OF_CMD];
 	commands[0].cmd[0] ='g';
 	commands[0].cmd[1] ='e';
