@@ -46,6 +46,7 @@ void Print_Data(hls::stream<Data_Word> &Data_in, hls::stream<Data_Word> &Data_ou
 
 void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl Protocl, Part_Word &Align_word)
 {
+#pragma HLS dataflow
 	uint8_t offset_len;
 	uint8_t num_remove;
 	packet_interface Input;
@@ -59,7 +60,7 @@ void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl
 	{
 		Input = Data_in.read();
 		Align_word.Data = Input.Data;
-		Align_word.Data = Align_word.Data.range((BYTES_PER_WORD - num_remove) * 8 - 1, 0);
+		//Align_word.Data.range(63, 64 - Align_word.len * 8) = Align_word.Data.range((BYTES_PER_WORD - num_remove) * 8 - 1, 0);
 		Align_word.Data <<= 8 * num_remove;
 	}
 	else
@@ -85,7 +86,7 @@ void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_wor
 }
 void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Align_word, Data_Word &Full_word, int num_remove)
 {
-
+#pragma HLS inline
 	Data_Word buffer;
 	Full_word <<= 8*num_remove;
 	buffer = Full_word | (Align_word.Data >>8*(BYTES_PER_WORD - num_remove));
@@ -103,9 +104,9 @@ void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Alig
 
 
 }
-static enum ascii_cmd Parse_Command(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word)
+void Parse_Command(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word, enum ascii_cmd &result)
 {
-
+#pragma HLS dataflow
 	Cmd_Word commands[NUM_OF_CMD];
 	commands[0].cmd[0] ='g';
 	commands[0].cmd[1] ='e';
@@ -151,13 +152,13 @@ static enum ascii_cmd Parse_Command(hls::stream<packet_interface> &Data_in, hls:
 	commands[4].cc = DELETED_RESP;
 	commands[4].len = 8;
 
-	enum ascii_cmd result = UNKNOWN_CMD;
+	result = UNKNOWN_CMD;
 	uint8_t cmd = NUM_OF_CMD;
 	Data_Word buffer;
 	Read_and_Align(Data_in, Align_word, buffer);
-	for (int i = 0; i < NUM_OF_CMD; i++)
+	for (int i = 0; i < NUM_OF_CMD - 1; i++)
 	{
-#pragma HLS pipeline II=1
+#pragma HLS unroll
 		Byte byte_1 = buffer.range(63,56);
 		Byte byte_end = buffer.range((BYTES_PER_WORD - commands[i].len + 1)*8, (BYTES_PER_WORD - commands[i].len)*8);
 		if (byte_1 == commands[i].cmd[0] && byte_end == 0x20) cmd = i;
@@ -167,7 +168,6 @@ static enum ascii_cmd Parse_Command(hls::stream<packet_interface> &Data_in, hls:
 		Remove_and_Realign(Buffer_Stream, Align_word, buffer, commands[cmd].len);
 		result = commands[cmd].cc;
 	}
-	return result;
 }
 
 int Find_Delimiter(Data_Word Data)
@@ -177,10 +177,9 @@ int Find_Delimiter(Data_Word Data)
 	for (int i = 7; i >= 0; i--)
 	{
 #pragma HLS unroll
-#pragma HLS loop_tripcount min=1 max=8 avg=4
 		Byte temp;
 		temp = Data.range((BYTES_PER_WORD - i)*8-1, (BYTES_PER_WORD - i - 1)*8);
-		if (temp == 10 || temp == 32) { result = i;  }
+		if (temp == 13 || temp == 32) { result = i;  }
 	}
 	return result;
 }
@@ -195,14 +194,14 @@ int Parse_Numerical_Field(hls::stream<packet_interface> &Data_in, hls::stream<Da
 		buffer = Buffer_Stream.read();
 	int delimiter = Find_Delimiter(buffer);
 	Ori = buffer;
-	for (int i = 0; i < delimiter-1; i++)
+	for (int i = 0; i < delimiter; i++)
 	{
 #pragma HLS pipeline
-#pragma HLS loop_tripcount min=1 max=8 avg=4
 		Byte temp = buffer.range(63,56);
 		result = result * 10 + (int) temp - (int) '0';
 		buffer <<= 8;
 	}
+	if (buffer.range(63,56) == 0x0d) delimiter++;
 	Remove_and_Realign(Buffer_Stream, Align_Word, Ori, delimiter + 1);
 	return result;
 
@@ -232,41 +231,35 @@ uint16_t Parse_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 		Read_and_Align(Data_in, Align_Word, buffer);
 	else
 		buffer = Buffer_Stream.read();
+	delimiter = Find_Delimiter(buffer);
 	while (delimiter==-1)
 	{
 #pragma HLS pipeline II=1
 #pragma HLS loop_tripcount min=1 max=33 avg=8
+		Key_Stream.write(buffer);
+		num += 8;
+		hash_result ^= (hash(buffer) + num);
+		hash_result ^= buffer.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+		Read_and_Align(Data_in, Align_Word, buffer);
 		delimiter = Find_Delimiter(buffer);
-		if (delimiter != -1)
-		{
-			if (delimiter != 0)
-			{
-				buffer = buffer.range(63,64-delimiter*8);
-				Key_Remain.Data = buffer;
-				hash_result ^= (hash(buffer) + num);
-				hash_result ^= buffer.range(16,0);
-				hash_result %= MAX_MEMORY_SIZE;
-			}
-			Key_Remain.len = delimiter;
-			num += delimiter;
-			Remove_and_Realign(Buffer_Stream, Align_Word, buffer, delimiter + 1);
-		}
-		else
-		{
-			Key_Stream.write(buffer);
-			num += 8;
-			hash_result ^= (hash(buffer) + num);
-			hash_result ^= buffer.range(16,0);
-			hash_result %= MAX_MEMORY_SIZE;
-			if (Align_Word.Data.range(63,56) == 0x0d)
-			{
-				Align_Word.Data <<=2;
-				Align_Word.len -=2;
-				delimiter = 0;
-			}
-			else Read_and_Align(Data_in, Align_Word, buffer);
-		}
 	}
+	if (delimiter != 0)
+	{
+		Data_Word temp_key;
+		temp_key = buffer.range(63,64-delimiter*8);
+		Key_Remain.Data = temp_key;
+		hash_result ^= (hash(temp_key) + num);
+		hash_result ^= temp_key.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+	}
+	Key_Remain.len = delimiter;
+	num += delimiter;
+	if (buffer.range(63 - delimiter*8, 56 - delimiter *8) != 0x0d)
+		Remove_and_Realign(Buffer_Stream, Align_Word, buffer, delimiter + 1);
+	else if (delimiter == 7) Read_and_Align(Data_in, Align_Word, buffer);
+
+
 	return hash_result;
 }
 void Save_key(Cache &Mem_Block, hls::stream<Data_Word> &Key_Stream, Part_Word &Key_Remain)
@@ -475,7 +468,6 @@ Part_Word Generate_Word_for_Number(int number)
 	result.len = 0;
 	do
 	{
-#pragma HLS loop_tripcount min=1 max=8 avg=2
 #pragma HLS pipeline
 		result.Data >>= 8;
 		ap_uint<8> temp = (number % 10) + 48;
@@ -668,7 +660,7 @@ void Mem_Parser(hls::stream<packet_interface> & Packet_input, hls::stream<packet
 	enum ascii_cmd Command;
 	Protocl = UDP_Protocl;
 	Parse_Internet_Hdr(Packet_input, Protocl, Align_word);
-	Command = Parse_Command(Packet_input, Buffer_Stream, Align_word);
+	Parse_Command(Packet_input, Buffer_Stream, Align_word, Command);
 	std::cout<< "Finish CMD Parse" << std::endl;
 	std::cout << "The Command is " << Command << std::endl;
 	std::cout << std::endl;
