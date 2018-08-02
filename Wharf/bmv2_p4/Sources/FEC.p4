@@ -53,13 +53,13 @@ control FecEncode(inout headers_t hdr, inout metadata_t meta) {
     apply {
 
         if (!hdr.eth.isValid()) {
-            DROP(meta);
+            drop();
         }
 
         bit<1> is_ctrl;
         FECController.apply(hdr, meta, is_ctrl);
         if (is_ctrl == 1) {
-            DROP(meta);
+            drop();
             return;
         }
 
@@ -102,7 +102,7 @@ control FecDecode(inout headers_t hdr, inout metadata_t meta) {
             hdr.eth.type = hdr.fec.orig_ethertype;
             FEC_DECODE(hdr.eth, hdr.fec, k, h);
             if (hdr.fec.packet_index >= k) {
-                DROP(meta);
+                drop();
             }
             hdr.fec.setInvalid();
         }

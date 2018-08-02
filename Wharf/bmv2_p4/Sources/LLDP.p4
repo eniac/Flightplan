@@ -8,6 +8,8 @@ extern void set_port_status(in bit<PORT_SIZE> port_number);
 @Xilinx_MaxLatency(100) // FIXME fudge
 extern void get_port_status(in bit<PORT_SIZE> port_number, out bit<1> faulty);
 
+extern void drop();
+
 control FECController(inout headers_t hdr, in metadata_t smd, out bit<1> acted) {
 
     apply {
@@ -15,7 +17,7 @@ control FECController(inout headers_t hdr, in metadata_t smd, out bit<1> acted) 
         if (hdr.lldp_tlv_chassis_id.isValid()) {
             if (hdr.lldp_activate_fec.isValid()) {
                 set_port_status(smd.ingress_port);
-                mark_to_drop();
+                drop();
             }
             acted = 1;
         }

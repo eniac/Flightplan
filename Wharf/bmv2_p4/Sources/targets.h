@@ -29,8 +29,6 @@ extern void fec_decode(
 #define FEC_DECODE(eth, fec, k, h) \
     fec_decode(eth, fec, k, h)
 
-#define DROP(meta) mark_to_drop()
-
 
 /**********
  * IF THE TARGET IS SDNET
