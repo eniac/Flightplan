@@ -4,6 +4,13 @@
 
 Building the p4 files for bmv2 requires global installation of p4c (https://github.com/p4lang/p4c)
 
+## Building for SDNet
+
+SDNet build is not yet added to the makefile.
+
+Building for SDNet requires adding `-DTARGET_SDNET` to to `p4c` command to enable the
+appropriate target-specific code.
+
 ## Building for bmv2
 
 Sample and fec booster bmv2 inputs can both be built with `make bmv2`
