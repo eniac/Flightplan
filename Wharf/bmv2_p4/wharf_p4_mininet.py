@@ -22,6 +22,30 @@ import os
 import tempfile
 import socket
 
+try:
+    from runtime_CLI import thrift_connect, load_json_config, RuntimeAPI
+    has_api = True
+except Exception as e:
+    print("Cannot import RUNTIME_CLI: %s", e)
+    has_api = False
+
+def send_commands(thrift_port, json, commands):
+    if not has_api:
+        print("Commands requested, but Runtime CLI not present! Ensure $BMV2_REPO/tools is on PYTHONPATH")
+        raise Exception("Could not execute commands: Runtime API not present")
+
+    standard_client, mc_client = thrift_connect(
+            'localhost', thrift_port,
+            RuntimeAPI.get_thrift_services('SimplePre')
+    )
+
+    load_json_config(standard_client, json)
+
+    api = RuntimeAPI('SimplePre', standard_client, mc_client)
+
+    for command in commands:
+        api.onecmd(command)
+
 class P4Host(Host):
     def config(self, **params):
         r = super(Host, self).config(**params)

@@ -6,6 +6,7 @@ if [[ $# != 1 ]]; then
 fi
 
 BMV2_REPO_M=$BMV2_REPO
+RUNTIME_CLI_DIR=$BMV2_REPO_M/tools
 
 if [[ $BMV2_REPO_M == "" ]]; then
     echo "Must set BMV2_REPO before running this test!"
@@ -34,14 +35,16 @@ echo tail -f `realpath $LOG_DUMPS/dropper.log`
 
 sleep 1
 
-sudo python ./fec_demo.py \
+
+sudo PYTHONPATH=$RUNTIME_CLI_DIR python ./fec_demo.py \
 		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
-		--encoder-json build/Encoder.json \
-		--decoder-json build/Decoder.json \
-		--dropper-json build/Dropper.json \
+		--encoder-json build/bmv2/Encoder.json \
+		--decoder-json build/bmv2/Decoder.json \
+		--dropper-json build/bmv2/Dropper.json \
 		--pcap-dump $PCAP_DUMPS \
         --log-console $LOG_DUMPS \
         --dropper-pcap lldp_enable_fec.pcap \
+		--command-file forwarding_commands.txt \
 		--e2e $INPUT_PCAP \
 
 sleep 4

@@ -15,11 +15,6 @@ control Forwarder(inout metadata_t meta) {
         }
         actions = { set_egress; NoAction; }
         default_action = NoAction;
-
-        const entries = {
-            1 : set_egress(2);
-            2 : set_egress(1);
-        }
     }
 
     apply {

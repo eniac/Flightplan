@@ -20,7 +20,7 @@ from mininet.topo import Topo
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 
-from p4_mininet import P4Switch, P4Host
+from wharf_p4_mininet import P4Switch, P4Host, send_commands
 
 import argparse
 from time import sleep
@@ -42,6 +42,8 @@ parser.add_argument('--log-console', help='Log console to this directory',
                     type=str, action='store', required=False, default=None)
 parser.add_argument('--dropper-pcap', help="Provide a pcap file to send from dropper to encoder",
                     type=str, action='store', required=False, default=None)
+parser.add_argument('--command-file', help='Initial commands.txt file to pass over thrift port to all switches',
+                    type=str, action='store', required=False, default=None)
 
 args = parser.parse_args()
 
@@ -50,7 +52,7 @@ class FecTopo(Topo):
     def __init__(self, bm, encoder_json, decoder_json, dropper_json, pcap_dump, log_console, **opts):
         Topo.__init__(self, **opts)
 
-        params = (
+        self.switch_params = (
                 ('encoder', encoder_json, 9090),
                 ('dropper', dropper_json, 9091),
                 ('decoder', decoder_json, 9092)
@@ -58,7 +60,7 @@ class FecTopo(Topo):
 
         switches = []
 
-        for i, (name, json, port) in enumerate(params):
+        for i, (name, json, port) in enumerate(self.switch_params):
             if log_console:
                 console_log = '{}/{}.log'.format(log_console, name)
             switches.append(self.addSwitch('s%d' % i,
@@ -117,12 +119,18 @@ def main():
         s1.cmd('tcpreplay -i s1-eth1 {}'.format(args.dropper_pcap))
         sleep(1)
 
+    if args.command_file is not None:
+        commands = open(args.command_file).readlines()
+        for name, json, port in topo.switch_params:
+            print("Sending %d commands to %s", len(commands), name)
+            send_commands(port, json, commands)
+
     if args.e2e:
         h1 = net.get('h1')
         h2 = net.get('h2')
         h1.cmd('tcpdump -Q out -i eth0 -w {}/h1_out.pcap &'.format(args.pcap_dump))
         h2.cmd('tcpdump -Q in -i eth0 -w {}/h2_in.pcap &'.format(args.pcap_dump))
-        h1.cmd('tcpreplay -p 1000 -i eth0 {}'.format(args.e2e))
+        h1.cmd('tcpreplay -p 200 -i eth0 {}'.format(args.e2e))
         sleep(5)
         h1.cmd('killall tcpdump')
         h2.cmd('killall tcpdump')
