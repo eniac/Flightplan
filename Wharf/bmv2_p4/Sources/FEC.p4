@@ -4,6 +4,7 @@
 #include "Forwarding.p4"
 
 
+@Xilinx_MaxLatency(200)
 extern void get_fec_state(in tclass_t class, out bindex_t block_index, out pindex_t packet_index);
 
 control FecClassParams(in tclass_t tclass, out bit<FEC_K_WIDTH> k, out bit<FEC_H_WIDTH> h) {
@@ -21,6 +22,7 @@ control FecClassParams(in tclass_t tclass, out bit<FEC_K_WIDTH> k, out bit<FEC_H
         actions = { set_k_h; }
         default_action = set_k_h(0,0);
 
+/* NOTE not supported by SDNet */
         const entries = {
             0 : set_k_h(5, 1);
         }
@@ -42,14 +44,17 @@ control FecEncode(inout headers_t hdr, inout metadata_t meta) {
         hdr.fec.traffic_class = tclass;
     }
 
+    // NOTE adding this line sends sdnet into tailspin during RTL simulation @Xilinx_ExternallyConnected
     table classification {
         key = {
             proto_and_port : exact;
         }
 
         actions = {classify; NoAction;}
+        size = 64; // FIXME fudge
         default_action = classify(0);
 
+/* NOTE not supported by SDNet *.
         const entries = {
             ((bit<8>)TCP_PROTOCOL ++ (bit<16>)0) : classify(0);
             ((bit<8>)UDP_PROTOCOL ++ (bit<16>)0) : classify(0);

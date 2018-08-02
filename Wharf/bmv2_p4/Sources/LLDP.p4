@@ -3,7 +3,9 @@
 #include "Parsing.p4"
 #include "targets.h"
 
+@Xilinx_MaxLatency(100) // FIXME fudge
 extern void set_port_status(in bit<PORT_SIZE> port_number);
+@Xilinx_MaxLatency(100) // FIXME fudge
 extern void get_port_status(in bit<PORT_SIZE> port_number, out bit<1> faulty);
 
 control FECController(inout headers_t hdr, in metadata_t smd, out bit<1> acted) {

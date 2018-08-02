@@ -98,6 +98,7 @@ struct headers_t {
 }
 
 
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser FecParser(packet_in pkt, out headers_t hdr) {
     state start {
         transition parse_eth;
@@ -111,7 +112,6 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
             ETHERTYPE_LLDP: parse_lldp;
             default : accept;
         }
-
     }
 
     state parse_fec {
@@ -164,6 +164,7 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
     }
 }
 
+@Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control FecDeparser(packet_out pkt, in headers_t hdr) {
     apply {
         pkt.emit(hdr.eth);
