@@ -162,9 +162,7 @@ bool SimpleSwitch::register_periodic_call(periodic_fn call, std::string call_nam
 void SimpleSwitch::periodic_thread() {
     while (!exiting) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        BMLOG_DEBUG("Checking periodics");
         for (auto &call_signature : periodic_calls) {
-            BMLOG_DEBUG("Calling periodics {}", std::get<1>(call_signature));
             auto call = std::get<0>(call_signature);
             call();
         }
