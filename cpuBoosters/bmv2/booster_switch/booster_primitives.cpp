@@ -285,17 +285,18 @@ class copy_modified : public ActionPrimitive<const Data &, const Data &, const D
 
 REGISTER_PRIMITIVE(copy_modified);
 
-class random_drop : public ActionPrimitive<const Data &> {
+class random_drop : public ActionPrimitive<const Data &, const Data &> {
 
     int packet_idx = 0;
     int drop_idx = 0;
 
-    void operator ()(const Data &n_d) {
-        int n = n_d.get_int();
+    void operator ()(const Data &n1_d, const Data &n2_d) {
+        int n1 = n1_d.get_int();
+        int n2 = n2_d.get_int();
 
         if (packet_idx == 0) {
-            drop_idx = rand() % n;
-            BMLOG_DEBUG("Setting drop index to {}/{}", drop_idx, n);
+            drop_idx = rand() % n1;
+            BMLOG_DEBUG("Setting drop index to {}/{}", drop_idx, n1 + n2);
         }
 
         if (drop_idx == packet_idx) {
@@ -307,7 +308,7 @@ class random_drop : public ActionPrimitive<const Data &> {
             BMLOG_DEBUG("Dropping packet {}", packet_idx);
         }
 
-        packet_idx = (packet_idx + 1) % n;
+        packet_idx = (packet_idx + 1) % (n1 + n2);
     }
 };
 
