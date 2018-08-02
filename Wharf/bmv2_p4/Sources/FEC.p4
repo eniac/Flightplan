@@ -21,11 +21,6 @@ control FecClassParams(in tclass_t tclass, out bit<FEC_K_WIDTH> k, out bit<FEC_H
 
         actions = { set_k_h; }
         default_action = set_k_h(0,0);
-
-/* NOTE not supported by SDNet */
-        const entries = {
-            0 : set_k_h(5, 1);
-        }
     }
 
     apply {
@@ -53,12 +48,6 @@ control FecEncode(inout headers_t hdr, inout metadata_t meta) {
         actions = {classify; NoAction;}
         size = 64; // FIXME fudge
         default_action = classify(0);
-
-/* NOTE not supported by SDNet *.
-        const entries = {
-            ((bit<8>)TCP_PROTOCOL ++ (bit<16>)0) : classify(0);
-            ((bit<8>)UDP_PROTOCOL ++ (bit<16>)0) : classify(0);
-        }
     }
 
     apply {
