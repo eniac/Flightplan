@@ -37,7 +37,7 @@ struct tclass {
 	/** Offset used when calculating cbi of parity (always 0?) */
 	fec_sym o;
 
-    struct tclass_buffer buffers[MAX_EGRESS_PORT + 1];
+    struct tclass_buffer buffers[MAX_PORT + 1];
 };
 
 static struct tclass tclasses[TCLASS_MAX + 1];
@@ -209,7 +209,9 @@ u_char *retrieve_encoded_packet(tclass_type tclass, int i, size_t *sz_out) {
  * Retrieves the current block ID for the given traffic class
  */
 uint8_t get_fec_block_id(tclass_type tclass, int port) {
-    return get_tclass_buffer(tclass, port)->block_id;
+    uint8_t block = get_tclass_buffer(tclass, port)->block_id;
+    LOG_INFO("Block ID for tclass %d port %d is %d", tclass, port, (int)block);
+    return block;
 }
 
 /**

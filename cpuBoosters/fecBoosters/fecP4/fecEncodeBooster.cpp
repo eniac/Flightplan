@@ -41,9 +41,9 @@ static void encode_and_forward(tclass_type tclass, int egress_port, encode_forwa
 
 using std::chrono::steady_clock;
 
-static steady_clock::time_point timeouts[TCLASS_MAX + 1];
+static steady_clock::time_point timeouts[TCLASS_MAX + 1][MAX_PORT + 1];
 
-static steady_clock::time_point zero_time = timeouts[0];
+static steady_clock::time_point zero_time = timeouts[0][0];
 
 static std::mutex encoder_mutex;
 
@@ -51,13 +51,14 @@ void fec_encode_timeout_handler(encode_forward_fn forward) {
     // Lock encoding while checking timeouts
     std::lock_guard<std::mutex> lock(encoder_mutex);
 
-    LOG_INFO("Timeout handler called!");
     for (int egress_port = 0; egress_port <= MAX_PORT; egress_port++) {
         for (int tclass = 0; tclass <= TCLASS_MAX; tclass++) {
-            if (timeouts[tclass] != zero_time && timeouts[tclass] < steady_clock::now()) {
-                LOG_INFO("Timeout reached for class %d", tclass);
-                timeouts[tclass] = zero_time;
-                int block_id = get_fec_block_id(egress_port, tclass);
+            if (timeouts[tclass][egress_port] != zero_time &&
+                    timeouts[tclass][egress_port] < steady_clock::now()) {
+                timeouts[tclass][egress_port] = zero_time;
+                int block_id = get_fec_block_id(tclass, egress_port);
+                LOG_INFO("Timeout reached for class %d port %d block %d",
+                         tclass, egress_port, block_id);
                 fec_sym k, h;
                 get_fec_params(tclass, &k, &h);
                 encode_and_forward(tclass, egress_port, forward, block_id, k, h);
@@ -66,7 +67,6 @@ void fec_encode_timeout_handler(encode_forward_fn forward) {
             }
         }
     }
-    LOG_INFO("End timeout handler");
 }
 
 void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
@@ -84,7 +84,8 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
     // TODO: This shouldn't have to be done every time this is called
     set_fec_params(tclass, k, h);
 
-    LOG_INFO("Inserting pkt of tclass %d size %zu into buffer", (int)tclass, pkt_size);
+    LOG_INFO("Inserting pkt of tclass %d size %zu into buffer (block %d)",
+            (int)tclass, pkt_size, (int)fec->block_id);
     insert_into_pkt_buffer(tclass, egress_port, fec->block_id, fec->index, pkt_size, pkt);
 
     // If advancing the packet index starts a new block
@@ -92,8 +93,10 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
     if (new_idx == 0) {
         LOG_INFO("Encoding and forwarding block");
         encode_and_forward(tclass, egress_port, forward, fec->block_id, k, h);
+        timeouts[tclass][egress_port] = zero_time;
+        mark_pkts_absent(tclass, egress_port, fec->block_id);
     } else if (new_idx == 1) {
         LOG_INFO("Resetting tclass %d timer", tclass);
-        timeouts[tclass] = steady_clock::now() + std::chrono::milliseconds(t);
+        timeouts[tclass][egress_port] = steady_clock::now() + std::chrono::milliseconds(t);
     }
 }

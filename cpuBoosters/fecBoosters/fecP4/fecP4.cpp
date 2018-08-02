@@ -7,13 +7,13 @@ using std::chrono::steady_clock;
 
 static std::unordered_map<uint8_t, steady_clock::time_point> port_statuses;
 
-#define PORT_TIMEOUT_S 10
+#define PORT_TIMEOUT_S 9999
 
 bool get_fec_port_status(uint8_t port) {
     auto it = port_statuses.find(port);
     if (it == port_statuses.end()) {
         LOG_INFO("Port %d not in port statuses", (int)port);
-        return true;
+        return false;
     }
     steady_clock::time_point start = it->second;
     auto now = steady_clock::now();
