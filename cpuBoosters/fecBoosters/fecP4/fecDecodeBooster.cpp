@@ -63,7 +63,11 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
 
     // If it's the start of a new block, mark that it hasn't been forwarded yet
     if (fec->block_id != tclasses[tclass][ingress_port].block_id ||
-            fec->index < tclasses[tclass][ingress_port].packet_idx) {
+            fec->index <= tclasses[tclass][ingress_port].packet_idx) {
+        if (!tclasses[tclass][ingress_port].forwarded) {
+            LOG_ERR("Recieved start of next block before forwarding previous block!");
+        }
+        reset_decoder(tclass, ingress_port, fec->block_id);
         tclasses[tclass][ingress_port].forwarded = false;
     } else if (tclasses[tclass][ingress_port].forwarded) {
         LOG_INFO("Already forwarded. Skipping insertion of packet");
@@ -84,7 +88,8 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
         insert_into_pkt_buffer(tclass, ingress_port, fec->block_id, fec->index, pkt_size, pkt);
         tclasses[tclass][ingress_port].empty = false;
     } else {
-        LOG_ERR("Received duplicate packet! Not buffering");
+        LOG_ERR("Received duplicate: tclass %d; block %d index %d; ingress %d! Not buffering",
+                (int)tclass, (int)fec->block_id, (int)fec->index, ingress_port);
     }
 
     if (can_decode(tclass, ingress_port, fec->block_id)) {
