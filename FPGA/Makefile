@@ -7,7 +7,7 @@ RSE: RSEVivado
 Memcached: MemcachedVivado
 
 MemcachedVivado: MemcachedP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
-	cd RSEVivado && make
+	cd RSEVivado && make Memcached
 
 RSEVivado: RSEP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
 	cd RSEVivado && make
