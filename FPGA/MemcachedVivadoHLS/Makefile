@@ -1,4 +1,4 @@
-All: DecoderVivadoHLS
+All: MemcachedVivadoHLS
 
 MemcachedVivadoHLS: MemHLS.cpp MemHLS.h 
 	@mkdir -p Batch
