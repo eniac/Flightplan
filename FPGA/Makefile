@@ -4,6 +4,11 @@ All: RSE
 
 RSE: RSEVivado
 
+Memcached: MemcachedVivado
+
+MemcachedVivado: MemcachedP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
+	cd RSEVivado && make
+
 RSEVivado: RSEP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
 	cd RSEVivado && make
 
@@ -32,6 +37,7 @@ clean:
 	cd RSEVivado && make clean
 	cd RSEVivadoHLS && make clean
 	cd MemcachedVivadoHLS && make clean
+	cd MemcachedP4 && make clean
 	cd RSEP4 && make clean
 	cd TupleGeneratorVivado && make clean
 	cd RSEInputBufferVivado && make clean
