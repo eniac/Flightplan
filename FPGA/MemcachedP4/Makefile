@@ -13,11 +13,8 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
          Sources/memcached_0_t.hpp Sources/memcached_0_t.v
 	@rm -fr Encoder
 	sdnet Encoder.sdnet -busType axi -busWidth 64 -UE -clk_line -lineClock 156.25 -workDir Encoder
+NOTE these relative paths don't seem to square up -- need fixing.
 	@ln -s ../../Scripts/Generate_packets.sh Encoder/XilinxSwitch/Generate_packets.sh
-#	@ln -s ../../../Sources/fec_0_t.hpp Encoder/XilinxSwitch/fec_0_t.TB/fec_0_t.hpp
-#	@ln -s ../../../Sources/rse.cpp Encoder/XilinxSwitch/fec_0_t.TB/rse.cpp
-#	@ln -s ../../../Sources/rse.h Encoder/XilinxSwitch/fec_0_t.TB/rse.h
-#	@ln -s ../../../Sources/fec_0_t.v Encoder/XilinxSwitch/fec_0_t.HDL/fec_0_t.v
 	@ln -s ../../../Sources/memcached_0_t.hpp Encoder/XilinxSwitch/memcached_0_t.TB/memcached_0_t.hpp
 	@ln -s ../../../Sources/memcached_0_t.v Encoder/XilinxSwitch/memcached_0_t.HDL/memcached_0_t.v
 	@ln -s ../../../MemcachedP4/Scripts/run_C.sh Encoder/XilinxSwitch/run_C.sh
@@ -29,11 +26,7 @@ Encoder: Encoder.sdnet Scripts/Generate_packets.sh Scripts/Patch_backpressure.pl
 	@cp ../MemcachedVivadoHLS/Batch/MemcachedVivadoHLS/solution2/syn/verilog/*.v Encoder/XilinxSwitch/memcached_0_t.HDL
 	@echo "Patches/Encoder.patch has been adapted for memcached -- needs editing to work with FEC too"
 	patch -p0 < Patches/Encoder.patch
-# Convert configuration file to Verilog.
-#	@sed -e 's/^#/`/' -e 's://.*$$::' ../RSEConfig/Configuration.h > Encoder/XilinxSwitch/fec_0_t.HDL/Configuration.v
-# Fix backpressure.
 	@echo "./Scripts/Patch_backpressure.pl given 'memcached' parameter -- needs editing to work with FEC too"
-#	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl -i Encoder/XilinxSwitch/XilinxSwitch.v -d 3 -p fec -t fec_0_t -m fec_0 > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
 	@FILE=$$(mktemp) && ./Scripts/Patch_backpressure.pl -i Encoder/XilinxSwitch/XilinxSwitch.v -d 3 -p memcached -t memcached_0_t -m memcached_0 > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
 
 Encoder.sdnet: Sources/Encoder.p4
