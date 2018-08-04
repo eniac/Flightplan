@@ -53,8 +53,6 @@ using bm::RegisterArray;
 using bm::NamedCalculation;
 using bm::HeaderStack;
 
-namespace {
-
 void printHeader(const Header &hdr) {
     for (int i=0; i < hdr.get_header_type().get_num_fields(); i++) {
         BMLOG_DEBUG("{}, {}", i, hdr.get_header_type().get_num_fields());
@@ -66,8 +64,6 @@ void printHeader(const Header &hdr) {
         BMLOG_DEBUG("Hdr field {}, name {}, val {}", i, name, hexstr);
     }
 }
-
-} // namespace
 
 class get_fec_state : public ActionPrimitive<const Data &, Data &, Data &> {
     void operator ()(const Data &tclass_d, Data &block_id_d, Data &packet_idx_d) {
@@ -109,23 +105,32 @@ class get_port_status: public ActionPrimitive<const Data &, Data &> {
 
 REGISTER_PRIMITIVE(get_port_status);
 
-u_char *serialize_with_headers(const Packet &packet, size_t &size, std::vector<Header *>headers) {
+char *serialize_headers(char *buff) { return buff; }
+
+template <typename T = Header&, typename... H>
+char *serialize_headers(char *buff, T &hdr1, H&... h) {
+    if (hdr1.is_valid()) {
+        hdr1.deparse(buff);
+        buff += hdr1.get_nbytes_packet();
+    }
+    return serialize_headers(buff, h...);
+}
+
+size_t hdr_size() { return 0; }
+
+template <typename T = Header &, typename... H>
+size_t hdr_size(T &hdr1, H&...h) {
+    size_t hdr1_size = hdr1.is_valid() ? hdr1.get_nbytes_packet() : 0;
+    return hdr1_size + hdr_size(h...);
+}
+
+template <typename T = Header&, typename... H>
+u_char *serialize_with_headers(const Packet &packet, size_t &size, H&... h) {
     size_t payload_size = packet.get_data_size();
-    size = payload_size;
-    for (auto h : headers) {
-        if (h->is_valid()) {
-            size += h->get_nbytes_packet();
-        }
-    }
+    size = payload_size + hdr_size(h...);
     u_char *buff = new u_char[size];
-    char *hdr_buff = (char*)buff;
-    for (auto h : headers) {
-        if (h->is_valid()) {
-            h->deparse(hdr_buff);
-            hdr_buff += h->get_nbytes_packet();
-        }
-    }
-    memcpy(hdr_buff, packet.data(), payload_size);
+    char *payload = serialize_headers((char*)buff, h...);
+    memcpy(payload, packet.data(), payload_size);
     return buff;
 }
 
@@ -140,15 +145,22 @@ T *deparse_header(Header &header) {
     return (T*)buff;
 }
 
-void replace_headers(Packet &packet, u_char *buff, std::vector<Header *> headers) {
-    PHV *phv = packet.get_phv();
-    char *hdr_buff = (char*)buff;
-    for (auto h : headers) {
-        if (h->is_valid()) {
-            h->extract(hdr_buff, *phv);
-            hdr_buff += h->get_nbytes_packet();
-        }
+void replace_header(PHV *, char *){}
+
+template <typename T = Header &, typename ... H>
+void replace_header(PHV *phv, char *buff, T &hdr1, H &...h) {
+    if (hdr1.is_valid()) {
+        hdr1.extract(buff, *phv);
+        buff += hdr1.get_nbytes_packet();
     }
+    replace_header(phv, buff, h...);
+}
+
+template <typename ... Hdrs>
+void replace_headers(Packet &packet, u_char *buff, Hdrs& ... h) {
+    PHV *phv = packet.get_phv();
+    char *hdr_buff = (char *)buff;
+    replace_header(phv, hdr_buff, h...);
     delete[] buff;
 }
 
@@ -158,19 +170,20 @@ T get_field_by_name(const Header &hdr, const std::string field_name) {
     return hdr.get_field(offset).get<T>();
 }
 
-class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
-                                          Header &, Header &, Header &, Header &> {
+/**
+ * Version of fec_encode extern that can accept variable numbers of headers as arguments
+ */
+template <typename... Arguments>
+class var_fec_encode : public ActionPrimitive<Header &, const Data &, const Data &, Arguments...> {
 
-
-    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d,
-                     Header &eth_h, Header &ip_h, Header &proto1_h, Header &proto2_h) {
-        Packet &packet = get_packet();
+    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d, Arguments... headers) {
+        Packet &packet = this->get_packet();
         PHV *phv = packet.get_phv();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
 
         // Stores the serialized packet and ethernet/ip headers in `*buff`
         size_t buff_size;
-        u_char *buff = serialize_with_headers(packet, buff_size, {&eth_h, &ip_h, &proto1_h, &proto2_h});
+        u_char *buff = serialize_with_headers(packet, buff_size, headers...);
 
         struct fec_header *fec = deparse_header<struct fec_header>(fec_h);
 
@@ -188,8 +201,8 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
         fec_encode_p4_packet(buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
 
         // Replaces the deserialized headers back to the packet
-        replace_headers(packet, buff, {&eth_h, &ip_h, &proto1_h, &proto2_h});
-        replace_headers(packet, (u_char*)fec, {&fec_h});
+        replace_headers(packet, buff, headers...);
+        replace_headers(packet, (u_char*)fec, fec_h);
     }
 
     static void timeout_forwarder(const u_char *payload, size_t len, int egress_port) {
@@ -203,8 +216,10 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &,
     // Placing this call inside the class only registers it only
     // when the class is instantiated (i.e. only if the extern is used)
     REGISTER_PERIODIC_CALL(timeout_handler);
-
 };
+
+/** Specialization of fec_encode extern to accept exactly four headers */
+using fec_encode = var_fec_encode<Header &, Header &, Header &, Header&>;
 
 REGISTER_PRIMITIVE(fec_encode);
 
@@ -219,7 +234,7 @@ class fec_decode : public ActionPrimitive<Header &, Header &,
 
         // Stores the serialized packet and ethernet/ip headers in *buff
         size_t buff_size;
-        u_char *buff = serialize_with_headers(packet, buff_size, {&eth_h});
+        u_char *buff = serialize_with_headers(packet, buff_size, eth_h);
 
         struct fec_header *fec = deparse_header<struct fec_header>(fec_h);
 
@@ -244,8 +259,8 @@ class fec_decode : public ActionPrimitive<Header &, Header &,
         fec_decode_p4_packet(buff, buff_size, fec, ingress_port, k, h, forwarder, dropper);
 
         // Replace the deserialized headers back into the packet
-        replace_headers(packet, buff, {&eth_h});
-        replace_headers(packet, (u_char*)fec, {&fec_h});
+        replace_headers(packet, buff, eth_h);
+        replace_headers(packet, (u_char*)fec, fec_h);
     }
 };
 
