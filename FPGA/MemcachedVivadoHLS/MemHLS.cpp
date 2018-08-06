@@ -75,8 +75,8 @@ void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_wor
 #pragma HLS inline
 	packet_interface Input;
 	Data_Word buffer;
-	Input= Data_in.read();
-	buffer = Input.Data;
+	if (!Data_in.empty()) { Input= Data_in.read(); 	buffer = Input.Data;}
+	else buffer = 0;
 	uint8_t len_left = Align_word.len;
 	uint8_t len_required = BYTES_PER_WORD - len_left;
 	Full_word = (buffer >> len_left*8) | Align_word.Data;
@@ -194,7 +194,7 @@ int Parse_Numerical_Field(hls::stream<packet_interface> &Data_in, hls::stream<Da
 	Ori = buffer;
 	for (int i = 0; i < delimiter; i++)
 	{
-#pragma HLS pipeline
+#pragma HLS pipeline II=1
 		Byte temp = buffer.range(63,56);
 		result = result * 10 + (int) temp - (int) '0';
 		buffer <<= 8;
@@ -279,20 +279,20 @@ void Parse_Data(Cache & Mem_Block, hls::stream<packet_interface> &Data_in, hls::
 		Read_and_Align(Data_in, Align_Word, Mem_Block.DATA[0]);
 	else
 		Mem_Block.DATA[0] = Buffer_Stream.read();
-	for (int i = 1; i < Mem_Block.DATA_LEN / BYTES_PER_WORD; i++)
+	count = Mem_Block.DATA_LEN / BYTES_PER_WORD;
+	for (int i = 1; i < count; i++)
 	{
 #pragma HLS loop_tripcount min=8 max=256 avg=128
-		count++;
 		Read_and_Align(Data_in, Align_Word, Mem_Block.DATA[i]);
 	}
-	Mem_Block.DATA[count + 1] = Align_Word.Data;
+	Mem_Block.DATA[count] = Align_Word.Data;
 }
 
 void Print_Memory(int index)
 {
 	Data_Word buffer;
 	std::cout << "The No." << index << " Memory block has " << Memory[index].KEY_LEN << " Bytes key and " << Memory[index].DATA_LEN << " Bytes Data." << std::endl;
-	std::cout << "The OKey is: "<< std::endl;
+	std::cout << "The Key is: "<< std::endl;
 	for (int i = 0; i < Memory[index].KEY_LEN/BYTES_PER_WORD; i++)
 	{
 		buffer = Memory[index].KEY[i];
@@ -462,11 +462,14 @@ void Add_Resp_Data(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, 
 }
 Part_Word Generate_Word_for_Number(int number)
 {
+#pragma HLS inline
 	Part_Word result;
 	result.len = 0;
+	result.Data = 0;
 	do
 	{
-#pragma HLS pipeline
+//#pragma HLS pipeline
+#pragma HLS loop_tripcount min = 1 max = 8
 		result.Data >>= 8;
 		ap_uint<8> temp = (number % 10) + 48;
 		result.len++;
@@ -665,13 +668,25 @@ void Mem_Parser(hls::stream<packet_interface> & Packet_input, hls::stream<packet
 	switch (Command)
 	{
 		case SET_CMD:
-			Mem_Parse_Set(Packet_input, Buffer_Stream, Align_word);
-			Mem_Action_Set(Packet_output, Protocl, tuple_out);
-			break;
+			{
+				Mem_Parse_Set(Packet_input, Buffer_Stream, Align_word);
+				Mem_Action_Set(Packet_output, Protocl, tuple_out);
+				break;
+			}
+
 		case GET_CMD:
-			int index =	Mem_Parse_Get(Packet_input, Buffer_Stream, Align_word);
-			Mem_Action_Get(Packet_output, Protocl, index, tuple_out);
-			break;
+			{
+				int index =	Mem_Parse_Get(Packet_input, Buffer_Stream, Align_word);
+				Mem_Action_Get(Packet_output, Protocl, index, tuple_out);
+				break;
+			}
+
+		case DELETE_CMD:
+			{
+				int index_delete =	Mem_Parse_Get(Packet_input, Buffer_Stream, Align_word);
+				Memory[index_delete].VALID = 0;
+				break;
+			}
 	}
 
 }
