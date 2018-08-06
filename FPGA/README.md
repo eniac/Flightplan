@@ -1,4 +1,5 @@
-#Build
+#Generate Vivado Project
 
-*RSE  default build
-*Memcached use option Memcached to build MemcachedVivado (Project still under folder RSEVivado)
+*RSE  use command 'make' to build RSEVivado
+*Memcached use 'make Memcached' to build MemcachedVivado (Project still under folder RSEVivado)
+
