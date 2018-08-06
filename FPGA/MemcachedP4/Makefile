@@ -24,7 +24,9 @@ Encoder: Encoder.sdnet ../RSEP4/Scripts/Patch_backpressure.pl \
 	patch -p0 < Patches/Encoder.patch
 	@echo "../RSEP4/Scripts/Patch_backpressure.pl given 'memcached' parameter -- needs editing to work with FEC too"
 	@FILE=$$(mktemp) && ../RSEP4/Scripts/Patch_backpressure.pl -i Encoder/XilinxSwitch/XilinxSwitch.v -d 3 -p memcached -t memcached_0_t -m memcached_0 > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
-
+	@echo "Copy temporary test packets"
+	cp ../../MemPacket/set16.pcap Encoder/XilinxSwitch/Packet.user
+	cp ../../MemPacket/set16_standard.pcap Encoder/XilinxSwitch/Packet_to_Compare.pcap
 Encoder.sdnet: Sources/Encoder.p4
 	p4c-sdnet -I ../RSEVivadoHLS -I ../MemcachedP4 Sources/Encoder.p4 -o Encoder.sdnet
 	patch Encoder.sdnet Patches/Encoder.sdnet.patch
