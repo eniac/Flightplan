@@ -6,7 +6,7 @@ THRIFT_IDL = $(srcdir)/thrift/simple_switch.thrift
 
 noinst_LTLIBRARIES = libsimpleswitch.la
 
-libsimpleswitch_la_SOURCES = simple_switch.cpp simple_switch.h primitives.cpp booster_primitives.cpp
+libsimpleswitch_la_SOURCES = simple_switch.cpp simple_switch.h primitives.cpp fec_booster_primitives.cpp
 
 libsimpleswitch_la_LIBADD = \
 $(top_builddir)/src/bm_sim/libbmsim.la \
@@ -64,7 +64,8 @@ AM_CPPFLAGS += \
 -I$(builddir)/gen-cpp \
 -I$(p4boosters_repo)/RSECode \
 -I$(p4boosters_repo)/FPGA/RSEVivadoHLS \
--I./fecBoosters/
+-I./fecBoosters/ \
+-DFEC_BOOSTERS
 
 libsimpleswitch_la_SOURCES += thrift/src/SimpleSwitch_server.cpp
 

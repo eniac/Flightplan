@@ -16,18 +16,17 @@
 #define metadata_t standard_metadata_t
 #define SET_EGRESS(meta, port) meta.egress_spec = port
 
-extern void fec_encode<T1,T2>(
-          in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
-          in eth_h eth, in ipv4_h ip, in T1 proto1, in T2 proto2
+extern void fec_encode(
+          in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h
 );
-#define FEC_ENCODE(fec, k, h, ...) \
-    fec_encode(fec, k, h, __VA_ARGS__)
+#define FEC_ENCODE(fec, k, h) \
+    fec_encode(fec, k, h)
 
 extern void fec_decode(
-        in eth_h eth, in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h
+        in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h
 );
-#define FEC_DECODE(eth, fec, k, h) \
-    fec_decode(eth, fec, k, h)
+#define FEC_DECODE(fec, k, h) \
+    fec_decode(fec, k, h)
 
 
 /**********
@@ -46,8 +45,8 @@ extern void fec_decode(
 @Xilinx_MaxLatency(200)
 extern void fec_encode(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
                        out bit<FEC_PACKET_INDEX_WIDTH> packet_index);
-#define FEC_ENCODE(fec, k, h, ...) \
-    fec_encode(k, h, fec)
+#define FEC_ENCODE(fec, k, h) \
+    fec_encode(k, h, fec.packet_index)
 
 #else // defined(TARGET_XILINX)
 #error("No target defined")

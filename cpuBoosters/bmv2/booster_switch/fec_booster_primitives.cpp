@@ -1,3 +1,5 @@
+#ifdef FEC_BOOSTERS
+
 #include <bm/bm_sim/actions.h>
 #include <bm/bm_sim/calculations.h>
 #include <bm/bm_sim/core/primitives.h>
@@ -9,6 +11,7 @@
 #include <bm/bm_sim/logger.h>
 #include <bm/spdlog/spdlog.h>
 
+#include "booster_primitives.hpp"
 #include "simple_switch.h"
 #include "fecBoosters/fecP4/fecEncodeBooster.hpp"
 #include "fecBoosters/fecP4/fecDecodeBooster.hpp"
@@ -54,14 +57,18 @@ using bm::NamedCalculation;
 using bm::HeaderStack;
 
 void printHeader(const Header &hdr) {
+    auto &type = hdr.get_header_type();
+    bool meta = hdr.is_metadata();
+
     for (int i=0; i < hdr.get_header_type().get_num_fields(); i++) {
         BMLOG_DEBUG("{}, {}", i, hdr.get_header_type().get_num_fields());
         std::string name = hdr.get_field_name(i);
-        const Field &field = hdr.get_field(i);
-        std::stringstream ss;
-        ss << std::setw(16) << std::setfill('0') << std::hex << field.get_uint64();
-        std::string hexstr = ss.str();;
-        BMLOG_DEBUG("Hdr field {}, name {}, val {}", i, name, hexstr);
+        //const Field &field = hdr.get_field(i);
+        //std::stringstream ss;
+        //ss << std::setw(16) << std::setfill('0') << std::hex << field.get_uin64();
+        //std::string hexstr = ss.str();;
+        BMLOG_DEBUG("Hdr field {}, name {}, valid {}, hidden {}, meta {}",
+                    i, name, hdr.is_valid(), type.get_finfo(i).is_hidden, meta);//, hexstr);
     }
 }
 
@@ -105,87 +112,31 @@ class get_port_status: public ActionPrimitive<const Data &, Data &> {
 
 REGISTER_PRIMITIVE(get_port_status);
 
-char *serialize_headers(char *buff) { return buff; }
-
-template <typename T = Header&, typename... H>
-char *serialize_headers(char *buff, T &hdr1, H&... h) {
-    if (hdr1.is_valid()) {
-        hdr1.deparse(buff);
-        buff += hdr1.get_nbytes_packet();
-    }
-    return serialize_headers(buff, h...);
-}
-
-size_t hdr_size() { return 0; }
-
-template <typename T = Header &, typename... H>
-size_t hdr_size(T &hdr1, H&...h) {
-    size_t hdr1_size = hdr1.is_valid() ? hdr1.get_nbytes_packet() : 0;
-    return hdr1_size + hdr_size(h...);
-}
-
-template <typename T = Header&, typename... H>
-u_char *serialize_with_headers(const Packet &packet, size_t &size, H&... h) {
-    size_t payload_size = packet.get_data_size();
-    size = payload_size + hdr_size(h...);
-    u_char *buff = new u_char[size];
-    char *payload = serialize_headers((char*)buff, h...);
-    memcpy(payload, packet.data(), payload_size);
-    return buff;
-}
-
-template <typename T>
-T *deparse_header(Header &header) {
-    size_t size = header.get_nbytes_packet();
-    if (size != sizeof(T)) {
-        BMLOG_DEBUG("WARNING: Sizes do not match for deparsed header");
-    }
-    char *buff = new char[size];
-    header.deparse(buff);
-    return (T*)buff;
-}
-
-void replace_header(PHV *, char *){}
-
-template <typename T = Header &, typename ... H>
-void replace_header(PHV *phv, char *buff, T &hdr1, H &...h) {
-    if (hdr1.is_valid()) {
-        hdr1.extract(buff, *phv);
-        buff += hdr1.get_nbytes_packet();
-    }
-    replace_header(phv, buff, h...);
-}
-
-template <typename ... Hdrs>
-void replace_headers(Packet &packet, u_char *buff, Hdrs& ... h) {
-    PHV *phv = packet.get_phv();
-    char *hdr_buff = (char *)buff;
-    replace_header(phv, hdr_buff, h...);
-    delete[] buff;
-}
-
-template <typename T>
-T get_field_by_name(const Header &hdr, const std::string field_name) {
-    int offset = hdr.get_header_type().get_field_offset(field_name);
-    return hdr.get_field(offset).get<T>();
-}
-
 /**
- * Version of fec_encode extern that can accept variable numbers of headers as arguments
+ * Version of fec_encode extern which automatically finds headers
  */
-template <typename... Arguments>
-class var_fec_encode : public ActionPrimitive<Header &, const Data &, const Data &, Arguments...> {
+class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> {
 
-    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d, Arguments... headers) {
+    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
         Packet &packet = this->get_packet();
         PHV *phv = packet.get_phv();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
 
-        // Stores the serialized packet and ethernet/ip headers in `*buff`
-        size_t buff_size;
-        u_char *buff = serialize_with_headers(packet, buff_size, headers...);
+        bool is_fec_valid = fec_h.is_valid();
+        fec_h.mark_invalid();
+        // Retrieve the headers which are valid and not metadata
+        std::vector<Header *>hdrs;
+        boosters::get_valid_headers(packet, hdrs);
+        if (is_fec_valid) {
+            fec_h.mark_valid();
+        }
 
-        struct fec_header *fec = deparse_header<struct fec_header>(fec_h);
+        // Stores the serialized packet and valid headers in `*buff`
+        size_t buff_size;
+        u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
+
+        // Deparses the fec header so it can be read in c++
+        struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
 
         // Retrieves the integers corresponding to the passed-in values
         uint8_t k = k_d.get<uint8_t>();
@@ -199,10 +150,12 @@ class var_fec_encode : public ActionPrimitive<Header &, const Data &, const Data
         };
         // Does the actual external work
         fec_encode_p4_packet(buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
-
+    
+        BMLOG_DEBUG("Fec index {:d}", fec->index);
         // Replaces the deserialized headers back to the packet
-        replace_headers(packet, buff, headers...);
-        replace_headers(packet, (u_char*)fec, fec_h);
+        boosters::replace_headers(packet, buff, hdrs);
+        boosters::replace_headers(packet, (u_char*)fec, fec_h);
+        BMLOG_DEBUG("Fec index after: {:d}", phv->get_field("fec.packet_index").get_int());
     }
 
     static void timeout_forwarder(const u_char *payload, size_t len, int egress_port) {
@@ -218,31 +171,38 @@ class var_fec_encode : public ActionPrimitive<Header &, const Data &, const Data
     REGISTER_PERIODIC_CALL(timeout_handler);
 };
 
-/** Specialization of fec_encode extern to accept exactly four headers */
-using fec_encode = var_fec_encode<Header &, Header &, Header &, Header&>;
-
 REGISTER_PRIMITIVE(fec_encode);
 
-class fec_decode : public ActionPrimitive<Header &, Header &,
-                                          const Data &, const Data &> {
+class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> {
 
-    void operator ()(Header &eth_h, Header &fec_h,
-                     const Data &k_d, const Data &h_d) {
+    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
         Packet &packet = get_packet();
         PHV *phv = packet.get_phv();
         int ingress_port = phv->get_field("standard_metadata.ingress_port").get_int();
 
-        // Stores the serialized packet and ethernet/ip headers in *buff
-        size_t buff_size;
-        u_char *buff = serialize_with_headers(packet, buff_size, eth_h);
+        bool is_fec_valid = fec_h.is_valid();
+        fec_h.mark_invalid();
+        // Retrieve the headers which are valid and not metadata
+        std::vector<Header *>hdrs;
+        boosters::get_valid_headers(packet, hdrs);
+        if (is_fec_valid) {
+            fec_h.mark_valid();
+        }
 
-        struct fec_header *fec = deparse_header<struct fec_header>(fec_h);
+        // Stores the serialized packet and valid headers in `*buff`
+        size_t buff_size;
+        u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
+
+        BMLOG_DEBUG("Fec index before: {:d}", phv->get_field("fec.packet_index").get_int());
+        // Deparses the fec header so it can be read in c++
+        struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
+        BMLOG_DEBUG("Fec index {:d}", fec->index);
 
         // Retrieves the integers corresponding to k and h
         uint8_t k = k_d.get<uint8_t>();
         uint8_t h = h_d.get<uint8_t>();
 
-        // Set up function that will forward the packets (egress port is unused here)
+        // Set up function that will forward the packets 
         auto forwarder = [&](const u_char *payload, size_t len) {
             SimpleSwitch::get_instance()->recirculate_booster_packet(packet, payload, len);
         };
@@ -259,8 +219,8 @@ class fec_decode : public ActionPrimitive<Header &, Header &,
         fec_decode_p4_packet(buff, buff_size, fec, ingress_port, k, h, forwarder, dropper);
 
         // Replace the deserialized headers back into the packet
-        replace_headers(packet, buff, eth_h);
-        replace_headers(packet, (u_char*)fec, fec_h);
+        boosters::replace_headers(packet, buff, hdrs);
+        boosters::replace_headers(packet, (u_char*)fec, fec_h);
     }
 };
 
@@ -329,12 +289,27 @@ class random_drop : public ActionPrimitive<const Data &, const Data &> {
 
 REGISTER_PRIMITIVE(random_drop);
 
+class print_headers : public ActionPrimitive<> {
+    void operator ()() {
+        Packet &packet = get_packet();
+        PHV *phv = packet.get_phv();
+        for (auto it = phv->header_begin(); it != phv->header_end(); it++) {
+            printHeader(*it);
+        }
+    }
+};
+
+REGISTER_PRIMITIVE(print_headers);
+
+#endif //FEC_BOOSTERS
 
 // dummy function, which ensures that this unit is not discarded by the linker
 // it is being called by the constructor of SimpleSwitch
 // the previous alternative was to have all the primitives in a header file (the
 // primitives could also be placed in simple_switch.cpp directly), but I need
 // this dummy function if I want to keep the primitives in their own file
-int import_booster_primitives() {
+int import_fec_booster_primitives() {
   return 0;
 }
+
+

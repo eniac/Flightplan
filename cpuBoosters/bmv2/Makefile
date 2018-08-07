@@ -1,4 +1,4 @@
-.PHONY:booster_switch patches
+.PHONY:booster_switch patches clean
 
 ifeq ($(BMV2_REPO),)
 $(error Must set envronment variable BMV2_REPO)
@@ -29,3 +29,6 @@ $(BOOSTER_TARGET_DIR):
 
 patches:
 	cd patches && bash patch.sh
+
+clean:
+	cd $(BOOSTER_TARGET_DIR) && make clean
