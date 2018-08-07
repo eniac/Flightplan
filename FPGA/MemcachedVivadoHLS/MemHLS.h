@@ -2,10 +2,10 @@
 #define HLS_MEMCACHED
 //Assumptions
 #define REQUEST_LINE_SIZE (500)
-#define MAX_DATA_SIZE (2048)
+#define MAX_DATA_SIZE (1024)
 #define MAX_PACKET_SIZE (REQUEST_LINE_SIZE+MAX_DATA_SIZE)
 #define MAX_KEY_LEN (256)
-#define MAX_MEMORY_SIZE 128
+#define MAX_MEMORY_SIZE (1024)
 #define MAX_CMD_LEN (10)
 #define NUM_OF_CMD (6)
 #define MAX_RESPONSE_LEN (20)

@@ -74,11 +74,13 @@ void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_wor
 {
 #pragma HLS inline
 	packet_interface Input;
-	Data_Word buffer;
+	Data_Word buffer = 0;
 	if (!Data_in.empty()) { Input= Data_in.read(); 	buffer = Input.Data;}
 	else buffer = 0;
 	uint8_t len_left = Align_word.len;
-	uint8_t len_required = BYTES_PER_WORD - len_left;
+	uint8_t len_required = 0;
+	if (Input.End_of_frame == 1) len_required = Input.Count - len_left;
+	else len_required = BYTES_PER_WORD - len_left;
 	Full_word = (buffer >> len_left*8) | Align_word.Data;
 	Align_word.Data = (buffer << len_required * 8);
 
@@ -86,7 +88,7 @@ void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_wor
 void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Align_word, Data_Word &Full_word, int num_remove)
 {
 #pragma HLS inline
-	Data_Word buffer;
+	Data_Word buffer =0;
 	Full_word <<= 8*num_remove;
 	buffer = Full_word | (Align_word.Data >>8*(BYTES_PER_WORD - num_remove));
 	if (Align_word.len < num_remove)
@@ -152,7 +154,7 @@ void Parse_Command(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 
 	result = UNKNOWN_CMD;
 	uint8_t cmd = NUM_OF_CMD;
-	Data_Word buffer;
+	Data_Word buffer = 0;
 	Read_and_Align(Data_in, Align_word, buffer);
 	for (int i = 0; i < NUM_OF_CMD - 1; i++)
 	{
@@ -186,6 +188,8 @@ int Parse_Numerical_Field(hls::stream<packet_interface> &Data_in, hls::stream<Da
 {
 	int result = 0;
 	Data_Word buffer, Ori;
+	buffer =0;
+	Ori = 0;
 	if (Buffer_Stream.empty())
 		Read_and_Align(Data_in, Align_Word, buffer);
 	else
@@ -218,12 +222,12 @@ uint16_t hash(Data_Word Data)
 	result = (uint16_t) (Data % MAX_MEMORY_SIZE);
 	return result;
 }
-uint16_t Parse_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_Word, hls::stream<Data_Word> &Key_Stream, Part_Word &Key_Remain)
+uint16_t Parse_Set_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_Word, hls::stream<Data_Word> &Key_Stream, Part_Word &Key_Remain)
 {
 	int delimiter = -1;
 	int num = 0;
 	uint16_t hash_result = 0;
-	Data_Word buffer;
+	Data_Word buffer = 0;
 
 	if (Buffer_Stream.empty())
 		Read_and_Align(Data_in, Align_Word, buffer);
@@ -253,13 +257,52 @@ uint16_t Parse_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 	}
 	Key_Remain.len = delimiter;
 	num += delimiter;
-	if (buffer.range(63 - delimiter*8, 56 - delimiter *8) != 0x0d)
-		Remove_and_Realign(Buffer_Stream, Align_Word, buffer, delimiter + 1);
-	else if (delimiter == 7) Read_and_Align(Data_in, Align_Word, buffer);
+	Remove_and_Realign(Buffer_Stream, Align_Word, buffer, delimiter + 1);
 
 
 	return hash_result;
 }
+
+uint16_t Parse_Get_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_Word, hls::stream<Data_Word> &Key_Stream, Part_Word &Key_Remain)
+{
+	int delimiter = -1;
+	int num = 0;
+	uint16_t hash_result = 0;
+	Data_Word buffer = 0;
+
+	if (Buffer_Stream.empty())
+		Read_and_Align(Data_in, Align_Word, buffer);
+	else
+		buffer = Buffer_Stream.read();
+	delimiter = Find_Delimiter(buffer);
+	while (delimiter==-1)
+	{
+#pragma HLS pipeline II=1
+#pragma HLS loop_tripcount min=1 max=33 avg=8
+		num += 8;
+		hash_result ^= (hash(buffer) + num);
+		hash_result ^= buffer.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+		Read_and_Align(Data_in, Align_Word, buffer);
+		delimiter = Find_Delimiter(buffer);
+	}
+	if (delimiter != 0)
+	{
+		Data_Word temp_key;
+		temp_key = buffer.range(63,64-delimiter*8);
+		Key_Remain.Data = temp_key;
+		hash_result ^= (hash(temp_key) + num);
+		hash_result ^= temp_key.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+	}
+	Key_Remain.len = delimiter;
+	num += delimiter;
+	if (delimiter == 7 && Align_Word.len == 0) Read_and_Align(Data_in, Align_Word, buffer);
+
+
+	return hash_result;
+}
+
 void Save_key(Cache &Mem_Block, hls::stream<Data_Word> &Key_Stream, Part_Word &Key_Remain)
 {
 	int count = 0;
@@ -285,7 +328,12 @@ void Parse_Data(Cache & Mem_Block, hls::stream<packet_interface> &Data_in, hls::
 #pragma HLS loop_tripcount min=8 max=256 avg=128
 		Read_and_Align(Data_in, Align_Word, Mem_Block.DATA[i]);
 	}
-	Mem_Block.DATA[count] = Align_Word.Data;
+	if (Align_Word.len < Mem_Block.DATA_LEN % BYTES_PER_WORD)
+	{
+		Read_and_Align(Data_in,Align_Word, Mem_Block.DATA[count]);
+	}
+	else
+		Mem_Block.DATA[count] = Align_Word.Data;
 }
 
 void Print_Memory(int index)
@@ -304,7 +352,7 @@ void Print_Memory(int index)
 			buffer <<= 8;
 		}
 	}
-	buffer = Memory[index].KEY[Memory[index].KEY_LEN/BYTES_PER_WORD+1];
+	buffer = Memory[index].KEY[Memory[index].KEY_LEN/BYTES_PER_WORD];
 	for (int j = 0; j< Memory[index].KEY_LEN % BYTES_PER_WORD; j++)
 	{
 		uint8_t temp;
@@ -325,7 +373,7 @@ void Print_Memory(int index)
 			buffer <<= 8;
 		}
 	}
-	buffer = Memory[index].DATA[Memory[index].DATA_LEN/BYTES_PER_WORD+1];
+	buffer = Memory[index].DATA[Memory[index].DATA_LEN/BYTES_PER_WORD];
 	for (int j = 0; j< Memory[index].DATA_LEN % BYTES_PER_WORD; j++)
 	{
 		uint8_t temp;
@@ -338,11 +386,13 @@ void Print_Memory(int index)
 void Mem_Parse_Set(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word)
 {
 	Part_Word  Key_remained;
-	Data_Word buffer;
+	Key_remained.Data = 0;
+	Key_remained.len = 0;
+	Data_Word buffer = 0;
 	static hls::stream<Data_Word> Key_Stream;
 #pragma HLS STREAM variable=Key_Stream depth=Key_Stream_Size
 
-	uint16_t index = Parse_Key(Data_in, Buffer_Stream, Align_word, Key_Stream, Key_remained);
+	uint16_t index = Parse_Set_Key(Data_in, Buffer_Stream, Align_word, Key_Stream, Key_remained);
 	Memory[index].VALID = 1;
 	Save_key(Memory[index],Key_Stream, Key_remained);
 	int flag = Parse_Numerical_Field(Data_in,Buffer_Stream, Align_word);
@@ -361,16 +411,17 @@ void Mem_Parse_Set(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word
 int Mem_Parse_Get(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word)
 {
 	Part_Word  Key_remained;
+	Key_remained.Data = 0;
+	Key_remained.len = 0;
 	static hls::stream<Data_Word> Key_Stream;
 #pragma HLS STREAM variable=Key_Stream depth=Key_Stream_Size
-	uint16_t index = Parse_Key(Data_in, Buffer_Stream, Align_word, Key_Stream, Key_remained);
-	Save_key(Memory[index],Key_Stream, Key_remained);
+	uint16_t index = Parse_Get_Key(Data_in, Buffer_Stream, Align_word, Key_Stream, Key_remained);
 	return index;
 }
 
 void Add_Protocl(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, enum mem_protocl Protocl)
 {
-	int hdr_len;
+	int hdr_len = 0;
 	if (Protocl == UDP_Protocl)
 	{
 		hdr_len = PAYLOAD_OFFSET_UDP;
@@ -385,7 +436,7 @@ void Add_Protocl(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, en
 }
 Data_Word Merge_Full_and_Part(Data_Word & Full_word, Part_Word & Left_word)
 {
-	Data_Word result;
+	Data_Word result = 0;
 	int tot_len = Left_word.len + BYTES_PER_WORD;
 	if (tot_len == BYTES_PER_WORD)
 	{
@@ -651,6 +702,10 @@ void Mem_Action_Get(hls::stream<packet_interface> & Packet_output, enum mem_prot
 void Mem_Parser(hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output, output_tuples & tuple_out)
 {
 	Part_Word Align_word, End_word;
+	Align_word.Data = 0;
+	Align_word.len = 0;
+	End_word.Data = 0;
+	End_word.len = 0;
 //	static hls::stream<Data_Word> Data_in;
 //#pragma HLS STREAM variable=Data_in depth=Data_Stream_Size
 	static hls::stream<Data_Word> Buffer_Stream;
@@ -723,13 +778,6 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 	{
 		Mem_Parser(Packet_input, Packet_output, tuple_out);
 	}
-//	while(!Packet_input.empty())
-//	{
-//		packet_interface Input;
-//		Input = Packet_input.read();
-//		Packet_output.write(Input);
-//	}
-
 	Output_tuples.write(tuple_out);
 
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
