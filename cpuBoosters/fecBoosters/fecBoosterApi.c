@@ -263,11 +263,12 @@ static int parse_rule_opts(char *str, tclass_type *tclass, uint16_t *port, bool 
         LOG_ERR("No port provided");
         return -1;
     }
-    *port = atoi(portc);
-    if (*port <= 0 || *port > 65536) {
+    int port_i = atoi(portc);
+    if (port_i <= 0 || port_i > 65535) {
         LOG_ERR("Invalid port provided: %s", portc);
         return -1;
     }
+    *port = port_i;
     char *is_tcpc = strtok(NULL, " ,");
     if (is_tcpc == NULL) {
         LOG_ERR("No protocol provided");

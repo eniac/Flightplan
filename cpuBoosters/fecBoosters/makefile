@@ -1,3 +1,4 @@
+CC=g++
 VENCORE_CODE=../../RSECode
 
 # To use Vencore's or Hans' implementation of the FEC
@@ -37,27 +38,27 @@ bmv2: p4
 	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make
 
 fecBoosterApi.o: fecBoosterApi.c
-	g++ $(FLAGS) -c $<
+	$(CC) $(FLAGS) -c $<
 
 fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h makefile
-	g++ $(FLAGS) -c fecBooster.c -lpcap
+	$(CC) $(FLAGS) -c fecBooster.c -lpcap
 
 fecEncodeBooster: fecPcap/fecEncodeBooster.c $(PCAP_DEPS)
-	g++ $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
+	$(CC) $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
 
 fecDecodeBooster: fecPcap/fecDecodeBooster.c $(PCAP_DEPS)
-	g++ $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
+	$(CC) $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
 
 forwardingNonbooster: fecPcap/forwardingNonbooster.c $(PCAP_DEPS)
-	g++ $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
+	$(CC) $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
 
 boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
-	g++ $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c -DNO_FBK
+	$(CC) $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c -DNO_FBK
 
 p4: fecBoosterP4lib.a fecP4/fecP4.hpp
 
 fecP4/%.o: fecP4/%.cpp fecBooster.h
-	g++ $(FLAGS) --std=c++11 -o $@ -c $<
+	$(CC) $(FLAGS) --std=c++11 -o $@ -c $<
 
 fecBoosterP4lib.a: $(P4_DEPS)
 	ar cr $@ $(P4_INPUTS)

@@ -1,5 +1,6 @@
 #ifndef FEC_PCAP_H_
 #define FEC_PCAP_H_
+#include <pcap.h>
 
 /** To be called from the pcap loop to handle an expired timer */
 void booster_timeout_handler();
