@@ -1,12 +1,44 @@
 SUBDIRS = .
 
-p4boosters_repo=$(P4BOOSTERS_REPO)# Fill in location of P4Booster repo
+if !P4BOOSTERS_REPO_SET
+$(error MUST set P4BOOSTERS_REPO at time of configuration)
+endif
+
+if !BUILD_FEC_BOOSTER
+if !BUILD_MEMCACHED_BOOSTER
+$(error MUST specify at least one of FEC_BOOSTER=true or MEMCACHED_BOOSTER=true at configuration)
+endif
+endif
 
 THRIFT_IDL = $(srcdir)/thrift/simple_switch.thrift
 
+BOOSTER_INCLUDES=
+BOOSTER_sources=
+BOOSTER_ldadd=
+BOOSTER_DEFINES=
+
+if BUILD_FEC_BOOSTER
+BOOSTER_INCLUDES+=\
+	-I$(P4BOOSTERS_REPO)/RSECode \
+	-I$(P4BOOSTERS_REPO)/FPGA/RSEVivadoHLS \
+	-I./fecBoosters/
+BOOSTER_sources+=fec_booster_primitives.cpp
+BOOSTER_ldadd+=fecBoosters/fecBoosterP4lib.a
+BOOSTER_DEFINES+=-DFEC_BOOSTER
+endif
+
+if BUILD_MEMCACHED_BOOSTER
+BOOSTER_INCLUDES+=\
+	-I$(P4BOOSTERS_REPO)/FPGA/MemcachedVivadoHLS \
+	-I./memcachedBooster
+BOOSTER_sources+=memcached_booster_primitives.cpp
+BOOSTER_ldadd+=memcachedBooster/memcachedP4lib.a
+BOOSTER_DEFINES+=-DMEMCACHED_BOOSTER
+endif
+
 noinst_LTLIBRARIES = libsimpleswitch.la
 
-libsimpleswitch_la_SOURCES = simple_switch.cpp simple_switch.h primitives.cpp fec_booster_primitives.cpp
+libsimpleswitch_la_SOURCES = simple_switch.cpp simple_switch.h primitives.cpp $(BOOSTER_sources)
 
 libsimpleswitch_la_LIBADD = \
 $(top_builddir)/src/bm_sim/libbmsim.la \
@@ -62,10 +94,9 @@ simple_switch_CLI
 AM_CPPFLAGS += \
 -I$(srcdir)/thrift/src/ \
 -I$(builddir)/gen-cpp \
--I$(p4boosters_repo)/RSECode \
--I$(p4boosters_repo)/FPGA/RSEVivadoHLS \
--I./fecBoosters/ \
--DFEC_BOOSTERS
+$(BOOSTER_INCLUDES) \
+$(BOOSTER_DEFINES)
+
 
 libsimpleswitch_la_SOURCES += thrift/src/SimpleSwitch_server.cpp
 
@@ -76,7 +107,7 @@ $(top_builddir)/src/bm_runtime/libbmruntime.la \
 $(top_builddir)/thrift_src/libruntimestubs.la \
 libsimpleswitch.la \
 libsimpleswitch_thrift.la  \
-fecBoosters/fecBoosterP4lib.a
+$(BOOSTER_ldadd)
 
 simple_switch_SOURCES = main.cpp
 simple_switch_LDFLAGS =

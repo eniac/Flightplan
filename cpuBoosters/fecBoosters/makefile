@@ -33,8 +33,10 @@ all: pcap p4
 
 pcap: fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
 
-bmv2: p4
+copy_files: p4
 	rsync -av --exclude='test_output' ./* $(FEC_BOOSTER_SWITCH_FEC_DIR)
+
+bmv2: copy_files
 	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make
 
 fecBoosterApi.o: fecBoosterApi.c

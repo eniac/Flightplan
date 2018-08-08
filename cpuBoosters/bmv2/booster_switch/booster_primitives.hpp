@@ -3,8 +3,22 @@
 
 #include <bm/bm_sim/phv.h>
 #include <bm/bm_sim/packet.h>
+#include <bm/bm_sim/logger.h>
+
+#ifdef FEC_BOOSTER
+#include "rse.h"
+#endif
 
 namespace boosters {
+
+void init_boosters() {
+#ifdef FEC_BOOSTER
+    if (rse_init() != 0) {
+        printf("ERROR Initializing RSE\n");
+        exit(-1);
+    }
+#endif
+}
 
 using bm::PHV;
 using bm::Header;

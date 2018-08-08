@@ -32,7 +32,7 @@
 #include <string>
 #include <vector>
 
-#include "fecBooster.h"
+#include "booster_primitives.hpp"
 #include "simple_switch.h"
 
 namespace {
@@ -107,10 +107,7 @@ shared_ptr<SimpleSwitchIf> get_handler(SimpleSwitch *sw);
 int
 main(int argc, char* argv[]) {
 
-  if (rse_init() != 0) {
-      printf("ERROR\n");
-      exit(-1);
-  }
+  boosters::init_boosters();
 
   simple_switch = SimpleSwitch::get_instance();
   simple_switch_parser = new SimpleSwitchParser();
