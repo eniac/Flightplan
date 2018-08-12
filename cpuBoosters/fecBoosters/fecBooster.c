@@ -429,6 +429,7 @@ int wharf_tag_parity(tclass_type tclass, int block_id, int frame_index,
 	tag->index = frame_index;
 	// TODO: This is also sort-of nonsense
 	tag->orig_ethertype = htons(WHARF_ETHERTYPE);
+	tag->packet_len = size_in;
 
 	memcpy(out + WHARF_TAG_SIZE, packet, size_in);
 
@@ -483,6 +484,7 @@ int wharf_tag_data(tclass_type tclass, int block_id, int frame_idx,
 	fec->class_id = tclass;
 	fec->block_id = block_id;
 	fec->index = frame_idx;
+	fec->packet_len = size_in;
 
 	// Skip copying the ether_header to the new packet
 	// (if it's not a dummy packet)
@@ -522,7 +524,9 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size) {
 
 	struct ether_header *pkt_ether = (struct ether_header *)(packet + sizeof(fec_hdr));
 
-	if (*size == sizeof(fec_hdr) + sizeof(eth_header)) {
+	*size = fec_hdr.packet_len;
+
+	if (*size == sizeof(eth_header)) {
 		*size = 0;
 		return packet + sizeof(fec_hdr) + sizeof(eth_header);
 	}
@@ -535,7 +539,6 @@ const u_char *wharf_strip_frame(const u_char* packet, int *size) {
 		offset += sizeof(struct ether_header);
 	}
 
-	*size = *size - offset;
 	return packet + offset;
 }
 
@@ -567,22 +570,4 @@ bool can_decode(tclass_type tclass, int port, int block_id) {
     LOG_INFO("Missing %d packets, received %d parity : can_decode = %d",
              missing, parity, missing <= parity);
     return missing <= parity;
-}
-
-#define LENGTH_OFFSET sizeof(struct ether_header) + 2 // 3rd byte of IP header
-
-/** IP header starts right after ethernet header. First 4 bits are IP version */
-#define IPV4_OFFSET sizeof(struct ether_header)
-/** Checks that the first four bits are 0x04, ignoring the second four bits */
-#define IS_IPV4(bits) (bits & (0x4)) && !(bits & !(0x4F))
-
-bool is_ipv4(const u_char *packet, uint32_t pkt_len) {
-    if (pkt_len < IPV4_OFFSET) {
-        return false;
-    }
-    return IS_IPV4(packet[IPV4_OFFSET]);
-}
-uint16_t ipv4_packet_length(const u_char *packet) {
-    uint16_t len = *(uint16_t*)(packet + LENGTH_OFFSET);
-    return ntohs(len) + IPV4_OFFSET;
 }

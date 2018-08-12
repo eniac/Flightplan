@@ -14,6 +14,7 @@ struct fec_header {
 	uint8_t class_id : 3; // The class of the packet
 	uint8_t index; // The index or pkt ID of withing the block.
     uint16_t orig_ethertype;
+    uint16_t packet_len;
 };
 
 #define WHARF_ETHERTYPE 0x081C

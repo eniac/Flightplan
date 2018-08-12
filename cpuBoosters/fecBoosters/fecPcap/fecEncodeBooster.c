@@ -108,16 +108,8 @@ void my_packet_handler(
 	const struct pcap_pkthdr *header,
 	const u_char *packet
 ) {
-    // If it's not ipv4, just forward
-    if (!is_ipv4(packet, header->len)) {
-        LOG_INFO("Received non-ipv4 packet");
-        forward_frame(packet, header->len);
-        return;
-    }
 
-
-    // Need a corrected packet length from IPV4
-    uint16_t packet_len = ipv4_packet_length(packet);
+    size_t packet_len = header->len;
 	tclass_type tclass = wharf_query_packet(packet, packet_len);
     LOG_INFO("Got packet of size %d", (int)packet_len);
 
