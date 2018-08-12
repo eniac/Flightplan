@@ -109,4 +109,10 @@ uint8_t get_fec_frame_idx(tclass_type tclass, int port);
 
 /** Checks if enough data + parity packets have been received to forward a block */
 bool can_decode(tclass_type tclass, int port, int block_id);
+
+/** Retrieves the packet length from the ipv4 header */
+uint16_t ipv4_packet_length(const u_char *packet);
+
+bool is_ipv4(const u_char *packet, uint32_t length);
 #endif // FEC_BOOSTER_H_
+

@@ -568,3 +568,21 @@ bool can_decode(tclass_type tclass, int port, int block_id) {
              missing, parity, missing <= parity);
     return missing <= parity;
 }
+
+#define LENGTH_OFFSET sizeof(struct ether_header) + 2 // 3rd byte of IP header
+
+/** IP header starts right after ethernet header. First 4 bits are IP version */
+#define IPV4_OFFSET sizeof(struct ether_header)
+/** Checks that the first four bits are 0x04, ignoring the second four bits */
+#define IS_IPV4(bits) (bits & (0x4)) && !(bits & !(0x4F))
+
+bool is_ipv4(const u_char *packet, uint32_t pkt_len) {
+    if (pkt_len < IPV4_OFFSET) {
+        return false;
+    }
+    return IS_IPV4(packet[IPV4_OFFSET]);
+}
+uint16_t ipv4_packet_length(const u_char *packet) {
+    uint16_t len = *(uint16_t*)(packet + LENGTH_OFFSET);
+    return ntohs(len) + IPV4_OFFSET;
+}

@@ -429,21 +429,6 @@ int wharf_load_from_file(char *filename) {
     return rtn;
 }
 
-
-/** IP header starts right after ethernet header. First 4 bits are IP version */
-#define IPV4_OFFSET sizeof(struct ether_header)
-
-/** Checks that the first four bits are 0x04, ignoring the second four bits */
-#define IS_IPV4(bits) (bits & (0x4)) && !(bits & !(0x4F))
-
-/** Checks if a packet is ipv4 */
-static bool is_ipv4(const u_char *packet, uint32_t pkt_len) {
-    if (pkt_len < IPV4_OFFSET) {
-        return false;
-    }
-    return IS_IPV4(packet[IPV4_OFFSET]);
-}
-
 /** Protocol starts 9 bytes into IP header */
 #define PROTOCOL_OFFSET sizeof(struct ether_header) + 9
 #define TCP_PROTOCOL 0x06
