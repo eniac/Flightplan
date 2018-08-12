@@ -98,7 +98,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 # Set IP repository paths
 set obj [get_filesets sources_1]
 set_property "ip_repo_paths" [ list \
-  "[file normalize "$origin_dir/../RSEP4/Wharf/XilinxSwitch"]"\
+  "[file normalize "$origin_dir/PATH_OF_XILINXSWITCH"]"\
   "[file normalize "$origin_dir/../TupleGeneratorVivado"]"\
   "[file normalize "$origin_dir/../RSEInputBufferVivado"]"\
   "[file normalize "$origin_dir/../RSEOutputBufferVivado"]" ] $obj
