@@ -11,20 +11,19 @@
 
 namespace boosters {
 
-void init_boosters() {
-#ifdef FEC_BOOSTER
-    if (rse_init() != 0) {
-        printf("ERROR Initializing RSE\n");
-        exit(-1);
-    }
-#endif
-}
+void init_boosters();
 
 using bm::PHV;
 using bm::Header;
 using bm::Packet;
+using bm::Field;
 
-char *serialize_headers(char *buff) { return buff; }
+void printHeader(const Header &hdr);
+
+// Necessary for variadic template expansion
+char *serialize_headers(char *buff);
+size_t hdr_size();
+void replace_header(PHV *, char *);
 
 template <typename T = Header&, typename... H>
 char *serialize_headers(char *buff, T &hdr1, H&... h) {
@@ -35,7 +34,6 @@ char *serialize_headers(char *buff, T &hdr1, H&... h) {
     return serialize_headers(buff, h...);
 }
 
-size_t hdr_size() { return 0; }
 
 template <typename T = Header &, typename... H>
 size_t hdr_size(T &hdr1, H&...h) {
@@ -54,51 +52,11 @@ u_char *serialize_with_headers(const Packet &packet, size_t &size, H&... h) {
     return buff;
 }
 
-u_char *serialize_with_headers(const Packet &packet, size_t &size, std::vector<Header *>hdrs) {
-    size_t payload_size = packet.get_data_size();
-    size = payload_size;
-    for (auto hdr : hdrs) {
-        size += hdr->get_nbytes_packet();
-    }
-    u_char *buff = new u_char[size];
-    char *hdr_buff = (char*)buff;
-    for (auto hdr : hdrs) {
-        hdr->deparse(hdr_buff);
-        hdr_buff += hdr->get_nbytes_packet();
-    }
-    memcpy(hdr_buff, packet.data(), payload_size);
-    return buff;
-}
+u_char *serialize_with_headers(const Packet &packet, size_t &size, std::vector<Header *>hdrs);
 
-void get_valid_headers(Packet &packet, std::vector<Header *>&hdrs) {
-    PHV *phv = packet.get_phv();
-    std::map<bm::header_type_id_t, Header *> ids;
-    for (auto it = phv->header_begin(); it != phv->header_end(); it++) {
-        Header &hdr = *it;
-        auto &type = hdr.get_header_type();
-        auto id = type.get_type_id();
+void deserialize_with_headers(Packet &packet,  u_char *buff, std::vector<Header *>hdrs);
 
-        auto id_it = ids.find(id);
-        if (id_it != ids.end()) {
-            if (!hdr.is_valid()) {
-                BMLOG_DEBUG("Removing {} from valid", hdr.get_name());
-                ids.erase(id_it);
-            } else {
-                BMLOG_DEBUG("Duplicate ok hdr: {}", hdr.get_name());
-                // Need to take the second copy of the header!
-                ids[id] = &hdr;
-            }
-        } else {
-            if (hdr.is_valid() && !hdr.is_metadata()) {
-                BMLOG_DEBUG("Hdr {} is valid", hdr.get_name());
-                ids[id] = &hdr;
-            }
-        }
-    }
-    for (auto id_it : ids) {
-        hdrs.push_back(id_it.second);
-    }
-}
+void get_valid_headers(Packet &packet, std::vector<Header *>&hdrs);
 
 template <typename T>
 T *deparse_header(Header &header) {
@@ -111,7 +69,6 @@ T *deparse_header(Header &header) {
     return (T*)buff;
 }
 
-void replace_header(PHV *, char *){}
 
 template <typename T = Header &, typename ... H>
 void replace_header(PHV *phv, char *buff, T &hdr1, H &...h) {
@@ -130,15 +87,7 @@ void replace_headers(Packet &packet, u_char *buff, Header &h1, Hdrs& ... h) {
     delete[] buff;
 }
 
-void replace_headers(Packet &packet, u_char *buff, std::vector<Header *>hdrs) {
-    PHV *phv = packet.get_phv();
-    char *hdr_buff = (char*)buff;
-    for (auto hdr : hdrs) {
-        hdr->extract(hdr_buff, *phv);
-        hdr_buff += hdr->get_nbytes_packet();
-    }
-    delete[] buff;
-}
+void replace_headers(Packet &packet, u_char *buff, std::vector<Header *>hdrs);
 
 template <typename T>
 T get_field_by_name(const Header &hdr, const std::string field_name) {
