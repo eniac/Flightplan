@@ -2,7 +2,7 @@
 #define HLS_MEMCACHED
 //Assumptions
 #define REQUEST_LINE_SIZE (500)
-#define MAX_DATA_SIZE (1024)
+#define MAX_DATA_SIZE (1024 + 2)
 #define MAX_PACKET_SIZE (REQUEST_LINE_SIZE+MAX_DATA_SIZE)
 #define MAX_KEY_LEN (256)
 #define MAX_MEMORY_SIZE (1024)
@@ -13,7 +13,7 @@
 //Some consts in the hdr
 #define IPV4_LEN_FIELD (16)
 #define UDP_LEN_FIELD (38)
-#define PAYLOAD_OFFSET_UDP (50) //Payload location under UDP include 8 bytes memcached header
+#define PAYLOAD_OFFSET_UDP (42) //Payload location under UDP include 8 bytes memcached header
 #define MEMCACHED_UDP_HEADER (8)
 #define ETH_HDR_LEN (14)
 #define IPV4_HDR_LEN (20)
@@ -48,9 +48,9 @@ typedef struct Incomplete_Data_Word{
 }Part_Word;
 
 typedef struct Cache_Memory{
-  Data_Word KEY[MAX_KEY_LEN/BYTES_PER_WORD];
+  Data_Word KEY[MAX_KEY_LEN/BYTES_PER_WORD +1];
   int KEY_LEN;
-  Data_Word DATA[MAX_DATA_SIZE/BYTES_PER_WORD];
+  Data_Word DATA[MAX_DATA_SIZE/BYTES_PER_WORD + 1];
   long DATA_LEN;
   bool VALID;
 }Cache;
@@ -155,7 +155,7 @@ typedef struct standard_command
 
 
 
-const Part_Word Standard_Response[NUM_OF_RESPONSE]={ 0x53544F5245442000, 7,
+const Part_Word Standard_Response[NUM_OF_RESPONSE]={ 0x53544F5245442000, 6,
 													 0x56414C5545200000, 6,
 											         0x454E440000000000, 3,
 											         0x44454C4554454420, 8,
