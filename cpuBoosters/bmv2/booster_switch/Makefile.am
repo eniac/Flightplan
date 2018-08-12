@@ -13,7 +13,7 @@ endif
 THRIFT_IDL = $(srcdir)/thrift/simple_switch.thrift
 
 BOOSTER_INCLUDES=
-BOOSTER_sources=
+BOOSTER_sources=booster_primitives.cpp
 BOOSTER_ldadd=
 BOOSTER_DEFINES=
 

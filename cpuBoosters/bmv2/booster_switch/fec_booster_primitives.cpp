@@ -56,21 +56,6 @@ using bm::RegisterArray;
 using bm::NamedCalculation;
 using bm::HeaderStack;
 
-void printHeader(const Header &hdr) {
-    auto &type = hdr.get_header_type();
-    bool meta = hdr.is_metadata();
-
-    for (int i=0; i < hdr.get_header_type().get_num_fields(); i++) {
-        BMLOG_DEBUG("{}, {}", i, hdr.get_header_type().get_num_fields());
-        std::string name = hdr.get_field_name(i);
-        //const Field &field = hdr.get_field(i);
-        //std::stringstream ss;
-        //ss << std::setw(16) << std::setfill('0') << std::hex << field.get_uin64();
-        //std::string hexstr = ss.str();;
-        BMLOG_DEBUG("Hdr field {}, name {}, valid {}, hidden {}, meta {}",
-                    i, name, hdr.is_valid(), type.get_finfo(i).is_hidden, meta);//, hexstr);
-    }
-}
 
 class get_fec_state : public ActionPrimitive<const Data &, Data &, Data &> {
     void operator ()(const Data &tclass_d, Data &block_id_d, Data &packet_idx_d) {
@@ -294,7 +279,7 @@ class print_headers : public ActionPrimitive<> {
         Packet &packet = get_packet();
         PHV *phv = packet.get_phv();
         for (auto it = phv->header_begin(); it != phv->header_end(); it++) {
-            printHeader(*it);
+            boosters::printHeader(*it);
         }
     }
 };
