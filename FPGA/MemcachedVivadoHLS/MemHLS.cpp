@@ -44,7 +44,46 @@ void Print_Data(hls::stream<Data_Word> &Data_in, hls::stream<Data_Word> &Data_ou
 
 }
 
-void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl Protocl, Part_Word &Align_word)
+
+void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_word, Data_Word &Full_word)
+{
+#pragma HLS inline
+	packet_interface Input;
+	Data_Word buffer = 0;
+	if (!Data_in.empty()) { Input= Data_in.read(); 	buffer = Input.Data;}
+	else buffer = 0;
+	//buffer.range(63, 64 - Input.Count *8) = Input.Data.range(63, 64 - Input.Count *8);
+	uint8_t len_left = Align_word.len;
+	uint8_t len_required = 0;
+	len_required =BYTES_PER_WORD - len_left;
+	Full_word = (buffer >> len_left*8) | Align_word.Data;
+	//Align_word.Data = (buffer << len_required * 8);
+	if (len_left !=0) Align_word.Data.range(63, 64 - len_left * 8) = buffer.range(63 - len_required*8, 0);
+	if (Input.End_of_frame) Input.Data.range(31, 0) = 0x1122334455;
+
+
+}
+void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Align_word, Data_Word &Full_word, int num_remove)
+{
+#pragma HLS inline
+	Data_Word buffer =0;
+	Full_word <<= 8*num_remove;
+	buffer = Full_word | (Align_word.Data >>8*(BYTES_PER_WORD - num_remove));
+	if (Align_word.len < num_remove)
+	{
+		Align_word.len = BYTES_PER_WORD - num_remove + Align_word.len;;
+		Align_word.Data.range(63, 64 - Align_word.len * 8) = buffer.range(63, 64 - Align_word.len * 8);
+	}
+	else
+	{
+		Buffer_Stream.write(buffer);
+		Align_word.len -= num_remove;
+		Align_word.Data = Align_word.Data << num_remove * 8;
+	}
+
+
+}
+void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl Protocl, Part_Word &Align_word, Data_Word &Memcached_Hdr)
 {
 	uint8_t offset_len;
 	uint8_t num_remove;
@@ -67,44 +106,11 @@ void Parse_Internet_Hdr(hls::stream<packet_interface> &Data_in, enum mem_protocl
 		Align_word.len = 0;
 		Align_word.Data = 0;
 	}
-
-}
-
-void Read_and_Align(hls::stream<packet_interface> &Data_in, Part_Word &Align_word, Data_Word &Full_word)
-{
-#pragma HLS inline
-	packet_interface Input;
-	Data_Word buffer = 0;
-	if (!Data_in.empty()) { Input= Data_in.read(); 	buffer = Input.Data;}
-	else buffer = 0;
-	uint8_t len_left = Align_word.len;
-	uint8_t len_required = 0;
-	if (Input.End_of_frame == 1) len_required = Input.Count - len_left;
-	else len_required = BYTES_PER_WORD - len_left;
-	Full_word = (buffer >> len_left*8) | Align_word.Data;
-	Align_word.Data = (buffer << len_required * 8);
-
-}
-void Remove_and_Realign(hls::stream<Data_Word> & Buffer_Stream, Part_Word & Align_word, Data_Word &Full_word, int num_remove)
-{
-#pragma HLS inline
-	Data_Word buffer =0;
-	Full_word <<= 8*num_remove;
-	buffer = Full_word | (Align_word.Data >>8*(BYTES_PER_WORD - num_remove));
-	if (Align_word.len < num_remove)
-	{
-		Align_word.len = BYTES_PER_WORD - num_remove + Align_word.len;;
-		Align_word.Data = buffer;
-	}
-	else
-	{
-		Buffer_Stream.write(buffer);
-		Align_word.len -= num_remove;
-		Align_word.Data = Align_word.Data << num_remove * 8;
-	}
+	Read_and_Align(Data_in, Align_word, Memcached_Hdr);
 
 
 }
+
 void Parse_Command(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word> &Buffer_Stream, Part_Word &Align_word, enum ascii_cmd &result)
 {
 	Cmd_Word commands[NUM_OF_CMD];
@@ -246,17 +252,17 @@ uint16_t Parse_Set_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_
 		Read_and_Align(Data_in, Align_Word, buffer);
 		delimiter = Find_Delimiter(buffer);
 	}
+	num += delimiter;
 	if (delimiter != 0)
 	{
 		Data_Word temp_key;
-		temp_key = buffer.range(63,64-delimiter*8);
+		temp_key.range(63,64-delimiter*8) = buffer.range(63,64-delimiter*8);
 		Key_Remain.Data = temp_key;
 		hash_result ^= (hash(temp_key) + num);
 		hash_result ^= temp_key.range(16,0);
 		hash_result %= MAX_MEMORY_SIZE;
 	}
 	Key_Remain.len = delimiter;
-	num += delimiter;
 	Remove_and_Realign(Buffer_Stream, Align_Word, buffer, delimiter + 1);
 
 
@@ -267,37 +273,100 @@ uint16_t Parse_Get_Key(hls::stream<packet_interface> &Data_in, hls::stream<Data_
 {
 	int delimiter = -1;
 	int num = 0;
+	uint8_t tempnum;
 	uint16_t hash_result = 0;
 	Data_Word buffer = 0;
+	packet_interface Input;
 
 	if (Buffer_Stream.empty())
 		Read_and_Align(Data_in, Align_Word, buffer);
 	else
 		buffer = Buffer_Stream.read();
-	delimiter = Find_Delimiter(buffer);
-	while (delimiter==-1)
+	bool pktcomplete;
+	pktcomplete = false;
+	num = 0;
+	while (!pktcomplete)
 	{
-#pragma HLS pipeline II=1
+#pragma HLS pipeline II = 1
 #pragma HLS loop_tripcount min=1 max=33 avg=8
 		num += 8;
 		hash_result ^= (hash(buffer) + num);
 		hash_result ^= buffer.range(16,0);
 		hash_result %= MAX_MEMORY_SIZE;
-		Read_and_Align(Data_in, Align_Word, buffer);
-		delimiter = Find_Delimiter(buffer);
+		Data_in.read(Input);
+		pktcomplete = Input.End_of_frame;
+		buffer = (Input.Data >> Align_Word.len * 8) | Align_Word.Data;
+		Align_Word.Data.range(63, 64 - 8 * Align_Word.len) = Input.Data.range(8*Align_Word.len-1,0);
+
 	}
-	if (delimiter != 0)
+	tempnum = Input.Count + Align_Word.len;
+	if (tempnum == 9)
 	{
-		Data_Word temp_key;
-		temp_key = buffer.range(63,64-delimiter*8);
-		Key_Remain.Data = temp_key;
-		hash_result ^= (hash(temp_key) + num);
-		hash_result ^= temp_key.range(16,0);
+		num += 7;
+		buffer.range(7,0) = 0;
+		hash_result ^= (hash(buffer) + num);
+		hash_result ^= buffer.range(16,0);
 		hash_result %= MAX_MEMORY_SIZE;
 	}
-	Key_Remain.len = delimiter;
-	num += delimiter;
-	if (delimiter == 7 && Align_Word.len == 0) Read_and_Align(Data_in, Align_Word, buffer);
+	else if (tempnum  == 10)
+	{
+		num +=8;
+		hash_result ^= (hash(buffer) + num);
+		hash_result ^= buffer.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+
+	}
+	else if (tempnum  > 10)
+	{
+		num +=8;
+		hash_result ^= (hash(buffer) + num);
+		hash_result ^= buffer.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+		tempnum -=8;
+		num += tempnum  - 2;
+		//Align_Word.Data.range(79- 8*tempnum, 64 - 8*tempnum) = 0;
+		//buffer = Align_Word.Data;
+		buffer = 0;
+		buffer.range(63, 64 - (tempnum-2) * 8) = Align_Word.Data.range(63, 64 - (tempnum-2) * 8);
+		hash_result ^= (hash(buffer) + num);
+		hash_result ^= buffer.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+
+	}
+	else if (tempnum > 2)
+	{
+		num += (tempnum - 2);
+		//buffer.range(79- 8*tempnum, 64 - 8*tempnum) = 0;
+		Data_Word temp = buffer;
+		buffer = 0;
+		buffer.range(63, 64 - (tempnum-2) * 8) = temp.range(63, 64 - (tempnum-2) * 8);
+		hash_result ^= (hash(buffer) + num);
+		hash_result ^= buffer.range(16,0);
+		hash_result %= MAX_MEMORY_SIZE;
+	}
+//	while (delimiter==-1)
+//	{
+//#pragma HLS pipeline II=1
+//#pragma HLS loop_tripcount min=1 max=33 avg=8
+//		num += 8;
+//		hash_result ^= (hash(buffer) + num);
+//		hash_result ^= buffer.range(16,0);
+//		hash_result %= MAX_MEMORY_SIZE;
+//		Read_and_Align(Data_in, Align_Word, buffer);
+//		delimiter = Find_Delimiter(buffer);
+//	}
+//	if (delimiter != 0)
+//	{
+//		Data_Word temp_key;
+//		temp_key.range(63,64-delimiter*8) = buffer.range(63,64-delimiter*8);
+//		Key_Remain.Data = temp_key;
+//		hash_result ^= (hash(temp_key) + num);
+//		hash_result ^= temp_key.range(16,0);
+//		hash_result %= MAX_MEMORY_SIZE;
+//	}
+//	Key_Remain.len = delimiter;
+//	num += delimiter;
+//	if (delimiter == 7 && Align_Word.len == 0) Read_and_Align(Data_in, Align_Word, buffer);
 
 
 	return hash_result;
@@ -328,7 +397,8 @@ void Parse_Data(Cache & Mem_Block, hls::stream<packet_interface> &Data_in, hls::
 #pragma HLS loop_tripcount min=8 max=256 avg=128
 		Read_and_Align(Data_in, Align_Word, Mem_Block.DATA[i]);
 	}
-	if (Align_Word.len < Mem_Block.DATA_LEN % BYTES_PER_WORD)
+	int remain = Mem_Block.DATA_LEN % BYTES_PER_WORD;
+	if (Align_Word.len < remain)
 	{
 		Read_and_Align(Data_in,Align_Word, Mem_Block.DATA[count]);
 	}
@@ -419,7 +489,7 @@ int Mem_Parse_Get(hls::stream<packet_interface> &Data_in, hls::stream<Data_Word>
 	return index;
 }
 
-void Add_Protocl(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, enum mem_protocl Protocl)
+void Add_Protocl(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, enum mem_protocl Protocl, Data_Word &Memcached_hdr)
 {
 	int hdr_len = 0;
 	if (Protocl == UDP_Protocl)
@@ -430,10 +500,14 @@ void Add_Protocl(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, en
 	{
 		Word_output.write(0);
 	}
+	Data_Word buffer = 0;
 	Left_word.len = hdr_len % BYTES_PER_WORD;
+	buffer.range(47, 0) =  Memcached_hdr.range(63, 16);
+	Word_output.write(buffer);
 	Left_word.Data = 0;
 
 }
+
 Data_Word Merge_Full_and_Part(Data_Word & Full_word, Part_Word & Left_word)
 {
 	Data_Word result = 0;
@@ -507,6 +581,7 @@ void Add_Resp_Data(hls::stream<Data_Word> & Word_output, Part_Word & Left_word, 
 	{
 		Part_Word DATA_word;
 		DATA_word.len = remain;
+		Memory[index].DATA[count].range(63 - 8*remain, 0) = 0;
 		DATA_word.Data = Memory[index].DATA[count];
 		Merge_Part_and_Part(Left_word, DATA_word, Word_output);
 	}
@@ -627,14 +702,14 @@ void Swap_Hdr_address(output_tuples &tuple_out)
 	tuple_out.Hdr.Udp.sport = tuple_out.Hdr.Udp.dport;
 	tuple_out.Hdr.Udp.dport = udp_temp;
 }
-void Mem_Action_Set(hls::stream<packet_interface> & Packet_output, enum mem_protocl Protocl, output_tuples & tuple_out)
+void Mem_Action_Set(hls::stream<packet_interface> & Packet_output, enum mem_protocl Protocl, output_tuples & tuple_out, Data_Word &Memcached_hdr)
 {
 	Part_Word Left_word;
 	enum resp_index resp_word;
 	static hls::stream<Data_Word> Word_output;
 #pragma HLS STREAM variable=Word_output depth=Data_Stream_Size
 
-	Add_Protocl(Word_output, Left_word, Protocl);
+	Add_Protocl(Word_output, Left_word, Protocl, Memcached_hdr);
 
 	resp_word = _STORED;
 	Add_Resp_Word(Word_output, Left_word, resp_word);
@@ -647,13 +722,15 @@ void Mem_Action_Set(hls::stream<packet_interface> & Packet_output, enum mem_prot
 	Swap_Hdr_address(tuple_out);
 }
 
-void Mem_Action_Get(hls::stream<packet_interface> & Packet_output, enum mem_protocl Protocl, int index, output_tuples & tuple_out)
+void Mem_Action_Get(hls::stream<packet_interface> & Packet_output, enum mem_protocl Protocl, int index, output_tuples & tuple_out , Data_Word &Memcached_hdr)
 {
 	Part_Word Left_word;
 	enum resp_index resp_word;
 	static hls::stream<Data_Word> Word_output;
 #pragma HLS STREAM variable=Word_output depth=Data_Stream_Size
-	Add_Protocl(Word_output, Left_word, Protocl);
+	Add_Protocl(Word_output, Left_word, Protocl, Memcached_hdr);
+	std::cout << index << std::endl;
+	std::cout << "VALID " << Memory[index].VALID << std::endl;
 	if (Memory[index].VALID)
 	{
 		resp_word = _VALUE;
@@ -676,8 +753,12 @@ void Mem_Action_Get(hls::stream<packet_interface> & Packet_output, enum mem_prot
 
 		Add_Resp_Data(Word_output,Left_word, index);
 
-		resp_word = _END;
-		Add_Resp_Word(Word_output, Left_word, resp_word);
+		//resp_word = _END;
+		//Add_Resp_Word(Word_output, Left_word, resp_word);
+		Part_Word Resp_Word ={0x454E440000000000, 3};
+		Merge_Part_and_Part(Left_word, Resp_Word, Word_output);
+
+
 
 		resp_word = _END_OF_LINE;
 		Add_Resp_Word(Word_output, Left_word, resp_word);
@@ -706,6 +787,7 @@ void Mem_Parser(hls::stream<packet_interface> & Packet_input, hls::stream<packet
 	Align_word.len = 0;
 	End_word.Data = 0;
 	End_word.len = 0;
+	Data_Word Memcached_hdr;
 //	static hls::stream<Data_Word> Data_in;
 //#pragma HLS STREAM variable=Data_in depth=Data_Stream_Size
 	static hls::stream<Data_Word> Buffer_Stream;
@@ -715,7 +797,7 @@ void Mem_Parser(hls::stream<packet_interface> & Packet_input, hls::stream<packet
 	enum mem_protocl Protocl;
 	enum ascii_cmd Command;
 	Protocl = UDP_Protocl;
-	Parse_Internet_Hdr(Packet_input, Protocl, Align_word);
+	Parse_Internet_Hdr(Packet_input, Protocl, Align_word, Memcached_hdr);
 	Parse_Command(Packet_input, Buffer_Stream, Align_word, Command);
 	std::cout<< "Finish CMD Parse" << std::endl;
 	std::cout << "The Command is " << Command << std::endl;
@@ -725,14 +807,14 @@ void Mem_Parser(hls::stream<packet_interface> & Packet_input, hls::stream<packet
 		case SET_CMD:
 			{
 				Mem_Parse_Set(Packet_input, Buffer_Stream, Align_word);
-				Mem_Action_Set(Packet_output, Protocl, tuple_out);
+				Mem_Action_Set(Packet_output, Protocl, tuple_out, Memcached_hdr);
 				break;
 			}
 
 		case GET_CMD:
 			{
 				int index =	Mem_Parse_Get(Packet_input, Buffer_Stream, Align_word);
-				Mem_Action_Get(Packet_output, Protocl, index, tuple_out);
+				Mem_Action_Get(Packet_output, Protocl, index, tuple_out, Memcached_hdr);
 				break;
 			}
 
