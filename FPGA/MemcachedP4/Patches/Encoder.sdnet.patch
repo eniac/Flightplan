@@ -1,0 +1,72 @@
+--- Encoder.sdnet.original	2018-05-23 09:45:13.265805590 -0400
++++ Encoder.sdnet	2018-05-23 09:45:24.769889385 -0400
+@@ -194,6 +194,35 @@
+     method move_to_section = done(0);
+     method increment_offset = 0; } }
+ class memcached_0_t::UserEngine(200, 0) {
++
++  Packet_input packet_in;
++  Packet_output packet_out;
++
++  class CheckCache_fl_t::Tuple(inout) {
++    struct {
++      forward_1 : 1 } }
++  class hdr_t_0::Tuple(inout) {
++    struct {
++      eth : eth_h,
++      fec : fec_h,
++      ipv4 : ipv4_t,
++      udp : udp_h } }
++  class ioports_t::Tuple(inout) {
++    struct {
++      ingress_port : 4,
++      egress_port : 4 } }
++  class local_state_t::Tuple(inout) {
++    struct {
++      id : 16 } }
++  class Parser_extracts_t::Tuple(inout) {
++    struct {
++      size : 32 } }
++  CheckCache_fl_t CheckCache_fl;
++  hdr_t_0 hdr;
++  ioports_t ioports;
++  local_state_t local_state;
++  Parser_extracts_t Parser_extracts;
++
+   class memcached_input_t::Tuple(in) {
+     struct {
+       stateful_valid : 1 } }
+@@ -348,17 +377,26 @@
+     CheckCache_lvl_0.hdr = CheckCache_lvl.hdr,
+     CheckCache_lvl_0.ioports = CheckCache_lvl.ioports,
+     CheckCache_lvl_0.local_state = CheckCache_lvl.local_state,
+-    CheckCache_lvl_1.CheckCache_fl = CheckCache_lvl_0.CheckCache_fl,
+-    CheckCache_lvl_1.hdr = CheckCache_lvl_0.hdr,
+-    CheckCache_lvl_1.ioports = CheckCache_lvl_0.ioports,
+-    CheckCache_lvl_1.local_state = CheckCache_lvl_0.local_state,
++
++    CheckCache_lvl_1.CheckCache_fl = memcached_0.CheckCache_fl,
++    CheckCache_lvl_1.hdr = memcached_0.hdr,
++    CheckCache_lvl_1.ioports = memcached_0.ioports,
++    CheckCache_lvl_1.local_state = memcached_0.local_state,
++
+     memcached_0.memcached_input = CheckCache_lvl_0.memcached_input,
++    memcached_0.CheckCache_fl = CheckCache_lvl_0.CheckCache_fl,
++    memcached_0.hdr = CheckCache_lvl_0.hdr,
++    memcached_0.ioports = CheckCache_lvl_0.ioports,
++    memcached_0.local_state = CheckCache_lvl_0.local_state,
++
+     CheckCache_lvl_1.memcached_output = memcached_0.memcached_output,
+     CheckCache_lvl.hdr = Parser.hdr,
+     Deparser.hdr = CheckCache_lvl_1.hdr,
+     CheckCache_lvl.ioports = ioports,
+     ioports = CheckCache_lvl_1.ioports,
+     Parser.packet_in = packet_in,
+-    Deparser.packet_in = Parser.packet_out,
++    memcached_0.packet_in = Parser.packet_out,
++    Deparser.packet_in = memcached_0.packet_out,
+     packet_out = Deparser.packet_out,
+-    Deparser.Deparser_extracts = Parser.Parser_extracts } }
+\ No newline at end of file
++    memcached_0.Parser_extracts = Parser.Parser_extracts,
++    Deparser.Deparser_extracts = memcached_0.Parser_extracts } }
