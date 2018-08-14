@@ -35,10 +35,10 @@ mkdir -p $OUTDIR
 
 echo Outputting to $OUTDIR
 
+CLEAN_PCAP=$OUTDIR/${INPUT_BASENAME}_out_clean.pcap
 OUT_PCAP=$OUTDIR/${INPUT_BASENAME}_out.pcap
 ENC_PCAP=$OUTDIR/${INPUT_BASENAME}_enc.pcap
 IN_PCAP=$OUTDIR/${INPUT_BASENAME}_in.pcap
-cp $INPUT_PCAP $IN_PCAP
 
 OUT_TXT=$OUTDIR/${INPUT_BASENAME}_out.txt
 IN_TXT=$OUTDIR/${INPUT_BASENAME}_in.txt
@@ -78,6 +78,7 @@ rm $OUT_PCAP
 tcpdump -Q in -i backVeth2 -w $ENC_PCAP &
 tcpdump -Q in -i backVeth4 -w $OUT_PCAP &
 
+
 for i in `seq 1 $REPETITIONS`; do
     echo "Starting tcpreplay $i of $INPUT_PCAP"
     tcpreplay --preload-pcap -p $MAX_SPEED --loop=1 -i frontVeth1 $INPUT_PCAP
@@ -107,10 +108,13 @@ ip link delete frontVeth4
 chown $real_user:$real_user -R $TEST_DIR
 
 rm $IN_TXT
+python pcap_clean.py $INPUT_PCAP $IN_PCAP
 for i in `seq 1 $REPETITIONS`; do
-    tcpdump -XXtenr $INPUT_PCAP >> $IN_TXT
+    tcpdump -XXtenr $IN_PCAP >> $IN_TXT
 done
-tcpdump -XXtenr $OUT_PCAP > $OUT_TXT
+
+python pcap_clean.py $OUT_PCAP $CLEAN_PCAP
+tcpdump -XXtenr $CLEAN_PCAP > $OUT_TXT
 
 INLINES=$(cat $IN_TXT | wc -l)
 OUTLINES=$(cat $OUT_TXT | wc -l)
