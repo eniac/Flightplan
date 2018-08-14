@@ -69,14 +69,12 @@ void fec_encode_timeout_handler(encode_forward_fn forward) {
     }
 }
 
-void fec_encode_p4_packet(const u_char *pkt,
+void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
                           const struct fec_header *fec, int egress_port,
                           int k, int h, int t,
                           encode_forward_fn forward) {
     // Lock while encoding in progress
     std::lock_guard<std::mutex> lock(encoder_mutex);
-
-    size_t pkt_size = fec->packet_len;
 
     LOG_INFO("Fec_encode called for packet %d: %d.%d",
              (int)fec->class_id, (int)fec->block_id, (int)fec->index);

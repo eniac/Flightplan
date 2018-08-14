@@ -33,6 +33,7 @@ echo tail -f `realpath $LOG_DUMPS/decoder.log`
 echo "Dropper log:"
 echo tail -f `realpath $LOG_DUMPS/dropper.log`
 
+sudo mn -c 
 sleep 1
 
 
@@ -52,8 +53,8 @@ sleep 4
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-cp $PCAP_DUMPS/h1_out.pcap $IN_PCAP
-cp $PCAP_DUMPS/h2_in.pcap $OUT_PCAP
+python pcap_clean.py  $PCAP_DUMPS/h1_out.pcap $IN_PCAP
+python pcap_clean.py $PCAP_DUMPS/h2_in.pcap $OUT_PCAP
 
 sleep 1
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt

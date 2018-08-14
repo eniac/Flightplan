@@ -23,6 +23,7 @@ header fec_h
     bindex_t block_index;
     pindex_t packet_index;
     bit<16> orig_ethertype;
+    bit<16> packet_len;
 }
 
 header ipv4_h {
