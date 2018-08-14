@@ -64,7 +64,7 @@ REGISTER_HASH(bmv2_hash);
 
 extern int import_primitives();
 
-#ifdef FEC_BOOSTERS
+#ifdef FEC_BOOSTER
 extern int import_fec_booster_primitives();
 #endif
 
@@ -107,7 +107,7 @@ SimpleSwitch::SimpleSwitch(port_t max_port, bool enable_swap)
 
   import_primitives();
 
-#ifdef FEC_BOOSTERS
+#ifdef FEC_BOOSTER
   import_fec_booster_primitives();
 #endif
 }
