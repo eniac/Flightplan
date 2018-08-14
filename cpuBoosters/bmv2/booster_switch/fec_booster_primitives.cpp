@@ -1,4 +1,4 @@
-#ifdef FEC_BOOSTERS
+#ifdef FEC_BOOSTER
 
 #include <bm/bm_sim/actions.h>
 #include <bm/bm_sim/calculations.h>
@@ -119,6 +119,11 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
         // Stores the serialized packet and valid headers in `*buff`
         size_t buff_size;
         u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
+        int packet_len_offset = fec_h.get_header_type().get_field_offset("packet_len");
+        auto packet_len_f = fec_h.get_field(packet_len_offset);
+        uint16_t buff_size_16 = buff_size;
+        packet_len_f.set_bytes((char*)&buff_size_16, (int)sizeof(uint16_t));
+
 
         // Deparses the fec header so it can be read in c++
         struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
@@ -134,8 +139,8 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
             SimpleSwitch::get_instance()->enqueue_booster_packet(packet, payload, len);
         };
         // Does the actual external work
-        fec_encode_p4_packet(buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
-    
+        fec_encode_p4_packet(buff, fec, egress_port, k, h, 2000, forwarder);
+
         BMLOG_DEBUG("Fec index {:d}", fec->index);
         // Replaces the deserialized headers back to the packet
         boosters::replace_headers(packet, buff, hdrs);
@@ -201,7 +206,7 @@ class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> 
             BMLOG_DEBUG("Marked to drop decoded packet");
         };
 
-        fec_decode_p4_packet(buff, buff_size, fec, ingress_port, k, h, forwarder, dropper);
+        fec_decode_p4_packet(buff, fec, ingress_port, k, h, forwarder, dropper);
 
         // Replace the deserialized headers back into the packet
         boosters::replace_headers(packet, buff, hdrs);

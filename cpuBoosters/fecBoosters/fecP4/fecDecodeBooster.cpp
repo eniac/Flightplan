@@ -52,10 +52,12 @@ static void decode_and_forward(tclass_type tclass, int ingress_port, decode_forw
     reset_decoder(tclass, ingress_port, block_id);
 }
 
-void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
+void fec_decode_p4_packet(const u_char *pkt,
                           const struct fec_header *fec, int ingress_port,
                           int k, int h,
                           decode_forward_fn forward, drop_fn_t drop) {
+    size_t pkt_size = fec->packet_len;
+
     LOG_INFO("Fec_decode called for packet %d: %d.%d",
              (int)fec->class_id, (int)fec->block_id, (int)fec->index);
 
