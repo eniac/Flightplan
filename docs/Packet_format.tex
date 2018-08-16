@@ -47,7 +47,7 @@
         1 octet & Frame number ($\ge k$) \\
         2 octets & Original EtherType \\
 	2 bits & Reserved \\
-        14 bits & Payload size in octets (size of original Ethernet frame) \\
+        14 bits & Payload size in octets (size of original Ethernet frame, MSB first) \\
         ? octets & Encoded payload (entire Ethernet frame) \\
       \bottomrule
     \end{tabular}

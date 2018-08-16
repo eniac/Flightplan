@@ -234,13 +234,7 @@ static void Preprocess_headers(hls::stream<data_word> & Input_FIFO,
       unsigned Bytes_per_packet = Info.Bytes_per_packet;
       unsigned Words_per_packet = DIVIDE_AND_ROUND_UP(Bytes_per_packet, BYTES_PER_WORD);
 
-      ap_uint<FEC_PACKET_LENGTH_WIDTH> Length = Bytes_per_packet - HEADER_SIZE / 8;
-      ap_uint<2 * FEC_AXI_BUS_WIDTH> Data = 0;
-      for (unsigned Byte_offset = 0; Byte_offset < FEC_PACKET_LENGTH_WIDTH / 8; Byte_offset++)
-      {
-        Data = (Data << 8) | (Length & 0xFF);
-        Length >>= 8;
-      }
+      ap_uint<2 * FEC_AXI_BUS_WIDTH> Data = Bytes_per_packet - HEADER_SIZE / 8;
 
       unsigned Count = Info.Data_packet ? FEC_PACKET_LENGTH_WIDTH / 8 : 0;
       unsigned Offset = 0;
@@ -355,16 +349,7 @@ static void Decode_packets(data_word Input_buffer[FEC_MAX_K][PING_PONG_BUFFER_SI
         data_word Output = Matrix_multiply_word(Input, Coefficients, k);
 
         if (Offset == 0)
-        {
-          ap_uint<FEC_PACKET_LENGTH_WIDTH> Length = Output
-              >> (FEC_AXI_BUS_WIDTH - FEC_PACKET_LENGTH_WIDTH);
-          Info.Bytes_per_packet = 0;
-          for (int Byte_offset = 0; Byte_offset < FEC_PACKET_LENGTH_WIDTH / 8; Byte_offset++)
-          {
-            Info.Bytes_per_packet = (Info.Bytes_per_packet << 8) | (Length & 0xFF);
-            Length >>= 8;
-          }
-        }
+      	  Info.Bytes_per_packet = Output >> (FEC_AXI_BUS_WIDTH - FEC_PACKET_LENGTH_WIDTH);
 
         Output_data.write(Output);
       }

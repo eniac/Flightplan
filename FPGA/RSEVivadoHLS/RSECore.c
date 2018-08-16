@@ -175,7 +175,7 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
         Input_byte = Header[Offset];
       else if (Offset < PAYLOAD_OFFSET)
       {
-        unsigned Length_offset = 1/*FIXME hacky way to switch to endianness to agree with Vencore's output*/ - (Offset - LENGTH_OFFSET);
+        unsigned Length_offset = FEC_PACKET_LENGTH_WIDTH / 8 - 1 - (Offset - LENGTH_OFFSET);
         Input_byte = Packet_length_parity[Length_offset][Packet_index - Input_tuple.k];
       }
       else if (Offset < Packet_length)
