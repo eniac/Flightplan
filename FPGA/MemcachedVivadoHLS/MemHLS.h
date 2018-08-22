@@ -1,8 +1,8 @@
 #ifndef HLS_MEMCACHED
 #define HLS_MEMCACHED
 //Assumptions
-#define REQUEST_LINE_SIZE (500)
-#define MAX_DATA_SIZE (1024 + 2)
+#define REQUEST_LINE_SIZE (300)
+#define MAX_DATA_SIZE (1200)
 #define MAX_PACKET_SIZE (REQUEST_LINE_SIZE+MAX_DATA_SIZE)
 #define MAX_KEY_LEN (256)
 #define MAX_MEMORY_SIZE (1024)
@@ -26,6 +26,9 @@
 #define MEM_AXI_BUS_WIDTH (64)
 #define BYTES_PER_WORD (MEM_AXI_BUS_WIDTH / 8)
 
+#define PACKET_END (9)
+
+
 #include <hls_stream.h>
 #include <ap_int.h>
 #include <stdint.h>
@@ -44,15 +47,18 @@ typedef struct
 
 typedef struct Incomplete_Data_Word{
 	Data_Word Data;
-	ap_uint<8> len;
+	ap_uint<4> len;
+	ap_uint<1> End;
 }Part_Word;
 
 typedef struct Cache_Memory{
-  Data_Word KEY[MAX_KEY_LEN/BYTES_PER_WORD +1];
+  Data_Word KEY[MAX_KEY_LEN/BYTES_PER_WORD];
   int KEY_LEN;
-  Data_Word DATA[MAX_DATA_SIZE/BYTES_PER_WORD + 1];
+  Data_Word DATA[MAX_DATA_SIZE/BYTES_PER_WORD];
   long DATA_LEN;
   bool VALID;
+  Part_Word DATA_LEN_WORD;
+
 }Cache;
 
 typedef struct
@@ -120,7 +126,43 @@ typedef struct
 // For Hash Function
 #define MAGIC_NUM (31)
 
-enum ascii_cmd {
+enum Parser_State{
+//	IDLE,
+//	Parse_Hdr,
+//	Parse_CMD,
+//	Parse_SET_KEY,
+//	Parse_GET_KEY,
+//	Parse_KEY,
+//	Parse_EXPERT,
+//	Parse_FLAG,
+//	Parse_LEN,
+//	Parse_DATA,
+//	Parse_LastWord,
+//	Read_LastByte,
+//	Next,
+//	FINISH,
+//	ERROR
+	Consumption,
+	Alignment,
+	Not_Alignment
+};
+typedef struct
+{
+	uint16_t index;
+	ap_uint<3> response;
+	Data_Word MemHdr;
+}instr;
+
+typedef struct
+{
+	uint16_t index;
+	ap_uint<3> cmd;
+	Data_Word MemHdr;
+	uint8_t keylen;
+	uint16_t Datalen;
+}metadata;
+
+enum Ascii_cmd {
   GET_CMD,
   SET_CMD,
   DELETE_CMD,
@@ -150,19 +192,24 @@ typedef struct standard_command
 {
 	char cmd[MAX_CMD_LEN];
 	int len;
-	enum ascii_cmd cc;
+	enum Ascii_cmd cc;
 }Cmd_Word;
 
+typedef ap_uint<4> Command_line;
+typedef struct Instruction_Collection
+{
+	ap_uint<4> cmd;
+	uint16_t index;
+}Instruction;
 
-
-const Part_Word Standard_Response[NUM_OF_RESPONSE]={ 0x53544F5245442000, 6,
-													 0x56414C5545200000, 6,
-											         0x454E440000000000, 3,
-											         0x44454C4554454420, 8,
-											         0x4E4F542000000000, 4,
-											         0x464F554E44200000, 6,
-											         0x2000000000000000, 1,
-											         0x0D0A000000000000, 2};
+//const Part_Word Standard_Response[NUM_OF_RESPONSE]={ 0x53544F5245442000, 7,
+//													 0x56414C5545200000, 6,
+//											         0x454E440000000000, 3,
+//											         0x44454C4554454420, 8,
+//											         0x4E4F542000000000, 4,
+//											         0x464F554E44200000, 6,
+//											         0x2000000000000000, 1,
+//											         0x0D0A000000000000, 2};
 
 
 
