@@ -22,6 +22,10 @@ control FecClassParams(in tclass_t tclass, out bit<FEC_K_WIDTH> k, out bit<FEC_H
 
         actions = { set_k_h; }
         default_action = set_k_h(0,0);
+
+        const entries = {
+            0 : set_k_h(5, 1);
+        }
     }
 
     apply {

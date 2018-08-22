@@ -29,6 +29,7 @@ static int timeouts[TCLASS_MAX + 1];
  */
 static void encode_and_forward_block(tclass_type tclass, int currBlockID,
                               struct ether_header *packet_eth_header) {
+    packet_eth_header->ether_type = 0;
 	u_char *last_packet = (u_char *)packet_eth_header;
 
 	fec_sym k, h;

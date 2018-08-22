@@ -110,7 +110,8 @@ libsimpleswitch_thrift.la  \
 $(BOOSTER_ldadd)
 
 simple_switch_SOURCES = main.cpp
-simple_switch_LDFLAGS =
+# Must add these paths to rpath to be able to run with suid bit
+simple_switch_LDFLAGS = -rpath `realpath -s ../../thrift_src/.libs/` -rpath `realpath -s ./.libs`
 if ENABLE_MODULES
 simple_switch_LDFLAGS += -rdynamic
 endif

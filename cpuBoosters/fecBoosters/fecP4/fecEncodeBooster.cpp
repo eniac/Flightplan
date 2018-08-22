@@ -7,6 +7,8 @@ static void encode_and_forward(tclass_type tclass, int egress_port, encode_forwa
                                int block_id, int k, int h) {
     size_t template_size = sizeof(struct ether_header);
     u_char template_packet[template_size];
+    struct ether_header *template_header = (struct ether_header *)template_packet;
+    template_header->ether_type = 0;
 
     size_t empty_size = WHARF_TAG_SIZE;
     u_char empty_packet[empty_size];

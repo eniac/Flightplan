@@ -15,8 +15,7 @@ struct tclass_state {
 	bool nothing_to_decode;
 	int lastBlockId;
 	int lastPacketIdx;
-	/** After each second, this value is decremented. If it == 0, block is forwarded */
-	int timeout;
+    bool forwarded;
 };
 
 static struct tclass_state tclasses[TCLASS_MAX + 1];
@@ -24,7 +23,7 @@ static struct tclass_state tclasses[TCLASS_MAX + 1];
 inline void reset_decoder (tclass_type tclass, const int block_id) {
 	tclasses[tclass].nothing_to_decode = true;
 	mark_pkts_absent(tclass, DEFAULT_PORT, block_id);
-	tclasses[tclass].timeout = 0;
+	tclasses[tclass].forwarded = true;
 }
 
 // Try to decode new packets, and forward them on.
@@ -69,16 +68,6 @@ void decode_and_forward(tclass_type tclass, const int block_id) {
 
 
 void booster_timeout_handler() {
-	for (int i=0; i < TCLASS_MAX; i++) {
-		if (tclasses[i].timeout > 0) {
-			tclasses[i].timeout--;
-			// If the timeout counter transitioned to 0 on this iteration
-			if (tclasses[i].timeout == 0) {
-				LOG_INFO("Decode-and-forward due to timer %d expiry", i);
-				decode_and_forward(i, tclasses[i].lastBlockId);
-			}
-		}
-	}
 }
 
 /**
@@ -128,15 +117,15 @@ void my_packet_handler(
 	struct tclass_state *tclass_status = &tclasses[tclass];
 
 	if (fecHeader.block_id != tclass_status->lastBlockId ||
-			fecHeader.index < tclass_status->lastPacketIdx) {
-		decode_and_forward(tclass, tclass_status->lastBlockId);
-		tclass_status->lastBlockId = fecHeader.block_id;
-
-		int t = wharf_get_t(tclass);
-		if (t > 0) {
-			// TODO: +1 to the decoder timeout to avoid decoding before encoding finished
-			tclass_status->timeout = t + 1;
+			fecHeader.index <= tclass_status->lastPacketIdx) {
+		if (!tclass_status->forwarded) {
+			LOG_ERR("Recieved start of next block before forwarding previous block!");
 		}
+		reset_decoder(tclass, fecHeader.block_id);
+		tclass_status->forwarded = false;
+	} else if (tclass_status->forwarded) {
+		LOG_INFO("Already forwarded. Skipping packet insertion");
+		return;
 	}
 	tclass_status->lastPacketIdx = fecHeader.index;
 
@@ -147,7 +136,7 @@ void my_packet_handler(
 	// Forward data packets immediately
 	if (fecHeader.index < wharf_get_k(tclass)) {
 		// If there is no data outside of the wharf frame, no need to forward (packet was filler)
-		if (header->len > WHARF_ORIG_FRAME_OFFSET) {
+		// if (fecHeader.orig_ethertype != 0) {
 #ifdef CHECK_TABLE_ON_DECODE
 			tclass_type tclass = wharf_query_packet(stripped, size);
 			if (tclass == (tclass_type) fecHeader.class_id) {
@@ -165,9 +154,16 @@ void my_packet_handler(
 		tclass_status->nothing_to_decode = false;
 		LOG_INFO("Inserting packet %d.%d with size %d", (int)fecHeader.block_id, (int)fecHeader.index, size);
 		insert_into_pkt_buffer(fecHeader.class_id, DEFAULT_PORT, fecHeader.block_id,
-                               fecHeader.index, size, stripped);
+							   fecHeader.index, size, stripped);
 	}
 	else {
 		LOG_ERR("Not buffering duplicate packet");
 	}
+
+	if (can_decode(tclass, DEFAULT_PORT, fecHeader.block_id)) {
+		decode_and_forward(tclass, fecHeader.block_id);
+	}
+
+	tclass_status->lastBlockId = fecHeader.block_id;
+	tclass_status->lastPacketIdx = fecHeader.index;
 }
