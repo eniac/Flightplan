@@ -31,13 +31,13 @@ BMV2_BOOSTER_SWITCH_DIR=$(BMV2_REPO)/targets/booster_switch/
 
 all: pcap p4
 
-pcap: fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
+pcap: fecDecodeBooster fecEncodeBooster forwardingNonbooster
 
 copy_files: p4
 	rsync -av --exclude='test_output' ./* $(FEC_BOOSTER_SWITCH_FEC_DIR)
 
 bmv2: copy_files
-	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make
+	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make configure all BOOSTERS=FEC
 
 fecBoosterApi.o: fecBoosterApi.c
 	$(CC) $(FLAGS) -c $<
@@ -54,8 +54,8 @@ fecDecodeBooster: fecPcap/fecDecodeBooster.c $(PCAP_DEPS)
 forwardingNonbooster: fecPcap/forwardingNonbooster.c $(PCAP_DEPS)
 	$(CC) $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
 
-boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
-	$(CC) $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c -DNO_FBK
+#boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c fecBooster.c
+#	$(CC) $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c fecBooster.c -DNO_FBK
 
 p4: fecBoosterP4lib.a fecP4/fecP4.hpp
 

@@ -1,5 +1,3 @@
-.PHONY:booster_switch patches clean
-
 ifeq ($(BMV2_REPO),)
 $(error Must set envronment variable BMV2_REPO)
 endif
@@ -44,7 +42,9 @@ CONFIG_FLAGS+=MEMCACHED_BOOSTER=true
 $(info Attempting build of memcached boosters)
 endif
 
-all: patches copy_files $(BMV2_CONFIGURE) booster_switch
+.PHONY:booster_switch patches clean copy_files configure
+
+all: patches copy_files booster_switch
 
 copy_files: $(BOOSTER_TARGET_DIR)
 	rsync -av $(BOOSTER_TARGET)/* $(BOOSTER_TARGET_DIR)
@@ -61,15 +61,20 @@ booster_switch: copy_files  $(BOOSTER_DEPS)
 $(BOOSTER_TARGET_DIR):
 	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
 
-$(BMV2_CONFIGURE): Makefile
+configure: $(BMV2_CONFIGURE) all
+
+${BMV2_CONFIGURE}: .FORCE
 	cd $(BMV2_REPO) && ./configure P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) \
 		$(CONFIG_FLAGS) && autoconf
-	# Hacky way to recognize that configuration is newer than makefile
-	# Might be causing configuration to be run twice on first go-through...
-	touch $(BMV2_CONFIGURE)
+
+.FORCE:
 
 patches:
 	cd patches && bash patch.sh
 
 clean:
 	cd $(BOOSTER_TARGET_DIR) && make clean
+
+FORCE:
+
+

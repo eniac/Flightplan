@@ -100,6 +100,7 @@ void my_packet_handler(
     const struct pcap_pkthdr *header,
     const u_char *packet
 ) {
+
 	struct ether_header *eth_header = (struct ether_header *)packet;
 	// If not a wharf packet, just forward
 	if (WHARF_ETHERTYPE != ntohs(eth_header->ether_type)) {

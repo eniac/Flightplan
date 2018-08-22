@@ -1,4 +1,4 @@
-#ifdef FEC_BOOSTERS
+#ifdef FEC_BOOSTER
 
 #include <bm/bm_sim/actions.h>
 #include <bm/bm_sim/calculations.h>
@@ -10,6 +10,7 @@
 #include <bm/bm_sim/switch.h>
 #include <bm/bm_sim/logger.h>
 #include <bm/spdlog/spdlog.h>
+#include <arpa/inet.h>
 
 #include "booster_primitives.hpp"
 #include "simple_switch.h"
@@ -119,8 +120,7 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
         // Stores the serialized packet and valid headers in `*buff`
         size_t buff_size;
         u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
-
-        // Deparses the fec header so it can be read in c++
+        // Deparses the fec header so it can be read in c++;
         struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
 
         // Retrieves the integers corresponding to the passed-in values
@@ -135,12 +135,26 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
         };
         // Does the actual external work
         fec_encode_p4_packet(buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
-    
+
         BMLOG_DEBUG("Fec index {:d}", fec->index);
         // Replaces the deserialized headers back to the packet
         boosters::replace_headers(packet, buff, hdrs);
         boosters::replace_headers(packet, (u_char*)fec, fec_h);
         BMLOG_DEBUG("Fec index after: {:d}", phv->get_field("fec.packet_index").get_int());
+
+        /* For some reason setting directly in the header doesn't work. Must be done through phv
+        int packet_len_offset = fec_h.get_header_type().get_field_offset("packet_len");
+        if (packet_len_offset < 0) {
+            BMLOG_DEBUG("Cannot find packet_len field in FEC header!");
+            boosters::printHeader(fec_h);
+            return;
+        }
+        auto packet_len_f = fec_h.get_field(packet_len_offset);
+        packet_len_f.set(htons(buff_size_16));
+        */
+        uint16_t buff_size_16 = buff_size;
+        BMLOG_DEBUG("Set packet length to {:d}", buff_size_16);
+        phv->get_field("fec.packet_len").set(htons(buff_size_16));
     }
 
     static void timeout_forwarder(const u_char *payload, size_t len, int egress_port) {
@@ -201,7 +215,16 @@ class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> 
             BMLOG_DEBUG("Marked to drop decoded packet");
         };
 
-        fec_decode_p4_packet(buff, buff_size, fec, ingress_port, k, h, forwarder, dropper);
+        int packet_len_offset = fec_h.get_header_type().get_field_offset("packet_len");
+        if (packet_len_offset < 0) {
+            BMLOG_DEBUG("Cannot find packet_len field in FEC header!");
+            boosters::printHeader(fec_h);
+            return;
+        }
+        auto packet_len_f = fec_h.get_field(packet_len_offset);
+        uint16_t pkt_len = ntohs(packet_len_f.get<uint16_t>());
+
+        fec_decode_p4_packet(buff, (size_t)pkt_len, fec, ingress_port, k, h, forwarder, dropper);
 
         // Replace the deserialized headers back into the packet
         boosters::replace_headers(packet, buff, hdrs);
