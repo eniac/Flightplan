@@ -24,6 +24,8 @@ typedef uint64_t uint64;
 
 typedef CONCATENATE(uint, FEC_PACKET_INDEX_WIDTH) packet_index_type;
 typedef CONCATENATE(uint, FEC_BLOCK_INDEX_WIDTH) block_index_type;
+typedef CONCATENATE(uint, FEC_TRAFFIC_CLASS_WIDTH) traffic_class_type;
+typedef CONCATENATE(uint, FEC_ETHER_TYPE_WIDTH) packet_type_type;
 typedef CONCATENATE(uint, FEC_K_WIDTH) k_type;
 typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
 
@@ -32,18 +34,25 @@ typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
 
 typedef struct
 {
-  // Note the reverse order with respect to parameter order in external function
-  // declaration.
-  h_type h;
-  k_type k;
-  uint1 Valid;
-} input_tuple;
+    packet_type_type Original_type;
+    packet_index_type Packet_index;
+    block_index_type Block_index;
+    traffic_class_type Traffic_class;
+    uint1 Is_valid;
+} fec_header;
 
 typedef struct
 {
   // Note the reverse order with respect to parameter order in external function
   // declaration.
-  block_index_type  Block_index;
+  h_type h;
+  k_type k;
+  fec_header fec;
+  uint1 Valid;
+} input_tuple;
+
+typedef struct
+{
   packet_index_type Packet_index;
 } output_tuple;
 
@@ -64,7 +73,6 @@ static fec_sym Parity_buffer[FEC_MAX_PACKET_SIZE][FEC_MAX_H];
 static fec_sym Packet_length_parity[FEC_PACKET_LENGTH_WIDTH / 8][FEC_MAX_H];
 
 static packet_index_type Packet_index;
-static block_index_type  Block_index;
 
 static unsigned Maximum_packet_length;
 
@@ -142,7 +150,6 @@ static void Encode_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   }
 
   Output_tuple->Packet_index = Packet_index;
-  Output_tuple->Block_index = Block_index;
 
   Packet_index++;
 }
@@ -200,14 +207,10 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   while (!End);
 
   Output_tuple->Packet_index = Packet_index;
-  Output_tuple->Block_index = Block_index;
 
   Packet_index++;
   if (Packet_index == Input_tuple.k + Input_tuple.h)
-  {
     Packet_index = 0;
-    Block_index++;
-  }
 }
 
 void RSE_core(input_tuple Input_tuple, output_tuple * Output_tuple, packet_interface * Input_packet,
