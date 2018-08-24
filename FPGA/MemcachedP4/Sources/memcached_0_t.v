@@ -260,9 +260,9 @@ assign tuple_fifo_din = tuple_in_hdr_DATA;
 assign tuple_fifo_rd_en = mem_tuple_input_v_read;
 
 defparam packet_fifo.WRITE_DATA_WIDTH = `MEM_AXI_BUS_WIDTH + 7;
-defparam packet_fifo.FIFO_WRITE_DEPTH = 512;
-defparam packet_fifo.PROG_FULL_THRESH = 287;
-defparam packet_fifo.PROG_EMPTY_THRESH = 287;
+defparam packet_fifo.FIFO_WRITE_DEPTH = 2048;
+defparam packet_fifo.PROG_FULL_THRESH = 1024;
+defparam packet_fifo.PROG_EMPTY_THRESH = 1024;
 defparam packet_fifo.READ_MODE = "fwft";
 defparam packet_fifo.WR_DATA_COUNT_WIDTH = 9;
 defparam packet_fifo.RD_DATA_COUNT_WIDTH = 9;
@@ -302,7 +302,7 @@ assign packet_in_packet_in_RDY = 1;
 
 assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_out_DAT,
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = mem_packet_output_v;
-assign packet_out_packet_out_VAL = mem_packet_output_v_ap_vld;
+assign packet_out_packet_out_VAL = mem_packet_output_v_ap_vld & ~backpressure_in;
 
 assign tuple_out_hdr_DATA = mem_tuple_output_v;
 assign tuple_out_control_DATA =  tuple_in_control_DATA;

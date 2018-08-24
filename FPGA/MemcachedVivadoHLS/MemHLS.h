@@ -11,8 +11,6 @@
 #define MAX_RESPONSE_LEN (20)
 #define NUM_OF_RESPONSE (8)
 //Some consts in the hdr
-#define IPV4_LEN_FIELD (16)
-#define UDP_LEN_FIELD (38)
 #define PAYLOAD_OFFSET_UDP (42) //Payload location under UDP include 8 bytes memcached header
 #define MEMCACHED_UDP_HEADER (8)
 #define ETH_HDR_LEN (14)

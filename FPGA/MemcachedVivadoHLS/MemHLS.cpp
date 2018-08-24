@@ -4,7 +4,7 @@
 
 
 static Cache Memory[MAX_MEMORY_SIZE];
-static uint16_t Packet_num;
+//static uint16_t Packet_num;
 uint16_t hash(Data_Word Data)
 {
 #pragma HLS inline
@@ -48,7 +48,10 @@ void Print_Data(hls::stream<Part_Word> & Data_in)
 	}while (!Input.End);
 }
 
-void Extract_Data(hls::stream<packet_interface> &Packet_input, hls::stream<Part_Word> &Data_out)
+void Extract_Data(hls::stream<input_tuples> &tuple_in,
+				  hls::stream<input_tuples> &tuple_out,
+				  //input_tuples &tuple_out,
+		          hls::stream<packet_interface> &Packet_input, hls::stream<Part_Word> &Data_out)
 {
 	bool pktcomplete;
 	pktcomplete = false;
@@ -64,6 +67,13 @@ void Extract_Data(hls::stream<packet_interface> &Packet_input, hls::stream<Part_
 		tempout.End = tempin.End_of_frame;
 		Data_out.write(tempout);
 	}while (!tempin.End_of_frame);
+	input_tuples Tuple = tuple_in.read();
+	//output_tuples Tuple_out;
+	//Tuple_out.Hdr = Tuple.Hdr;
+	//tuple_out.write(Tuple_out);
+	//tuple_out = Tuple;
+	tuple_out.write(Tuple);
+
 
 }
 void Parse_Eth_Hdr(hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out)
@@ -123,7 +133,6 @@ void Parse_Eth_Hdr(hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data
 	 }while(!pktcomplete);
 	 if (tempin.len > Hdrlength)
 		 Data_out.write(remainword);
-
 }
 void Parse_Memcached_Hdr(hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out, hls::stream<metadata> &Metadata)
 {
@@ -339,6 +348,8 @@ void Parse_Key(hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out
 }
 
 void Process_Key(hls::stream<Part_Word> &Key_in, hls::stream<Part_Word> &Key_out,
+				 hls::stream<input_tuples> &tuple_in,
+				 hls::stream<input_tuples> & tuple_out,
 				 hls::stream<metadata> &Metain, hls::stream<instr> &instrout1, hls::stream<instr> &instrout2)
 {
 	bool keycomplete;
@@ -390,6 +401,8 @@ void Process_Key(hls::stream<Part_Word> &Key_in, hls::stream<Part_Word> &Key_out
 		instrout1.write(Instruction);
 		instrout2.write(Instruction);
 	}
+	input_tuples tuple = tuple_in.read();
+	tuple_out.write(tuple);
 }
 void Remove(hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out,
 		    hls::stream<metadata> &metain, hls::stream<metadata> &metaout)
@@ -551,7 +564,9 @@ void ConvertDatalen(hls::stream<Part_Word> & Datalen, hls::stream<metadata> &met
 	}
 
 }
-void Parse_Data(hls::stream<Part_Word> &Data_in,
+void Parse_Data(hls::stream<input_tuples> &tuple_in,
+		 	 	hls::stream<input_tuples> & tuple_out,
+				hls::stream<Part_Word> &Data_in,
 				hls::stream<metadata> & metain, hls::stream<instr> &Instr_in,
 				hls::stream<Part_Word> &Data_out)
 {
@@ -616,8 +631,13 @@ void Parse_Data(hls::stream<Part_Word> &Data_in,
 		dataoutput.len = remainnum;
 		Data_out.write(dataoutput);
 	}
+	input_tuples tuple = tuple_in.read();
+	tuple_out.write(tuple);
 }
-void Output_Packet(hls::stream<packet_interface> &Packet_out, hls::stream<instr> &Instruction,
+void Generate_output(
+		 	 	 	hls::stream<input_tuples> &tuple_in,
+		 	 	 	hls::stream<input_tuples> & tuple_out,
+					hls::stream<packet_interface> &Packet_out, hls::stream<instr> &Instruction,
 				   hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Key_in,
 				   hls::stream<Part_Word> &Datalen_in)
 {
@@ -647,7 +667,7 @@ void Output_Packet(hls::stream<packet_interface> &Packet_out, hls::stream<instr>
 		Packet_out.write(output);
 		output.Count = 2;
 		output.Data = 0;
-		output.Data.range(63, 48) = 0x0d0a;
+		output.Data.range(63, 32) = 0x0d0a0000;
 		output.End_of_frame =1;
 		Packet_out.write(output);
 	}
@@ -780,12 +800,51 @@ void Output_Packet(hls::stream<packet_interface> &Packet_out, hls::stream<instr>
 			Packet_out.write(output);
 		}
 	}
-
+	input_tuples tuple = tuple_in.read();
+	tuple_out.write(tuple);
 
 }
 
+void Output_packets(//input_tuples Input_tuple,
+					hls::stream<input_tuples> & Input_tuples,
+					hls::stream<output_tuples> & Output_tuples,
+					hls::stream<packet_interface> &Packet_in, hls::stream<packet_interface> &Packet_out)
+{
+	packet_interface input;
+	input_tuples tuple_in;
+	output_tuples tuple_out;
+	uint16_t len;
+	len = 0;
+	bool End = false;
+	do
+	{
+#pragma HLS pipeline II=1
+		input = Packet_in.read();
+		End = input.End_of_frame;
+		len += input.Count;
+		Packet_out.write(input);
+	}while(!End);
+	//tuple_in = Input_tuples.read();
+	tuple_in = Input_tuples.read();
+	tuple_out.Hdr = tuple_in.Hdr;
+	Output_tuples.write(tuple_out);
+	tuple_out.Hdr.Ipv4.totallen = len - ETH_HDR_LEN;
+	tuple_out.Hdr.Udp.len = len - ETH_HDR_LEN - IPV4_HDR_LEN;
 
+}
+void Output_packets1(hls::stream<packet_interface> &Packet_in, hls::stream<packet_interface> &Packet_out)
+{
+	packet_interface input;
 
+	bool End = false;
+	do
+	{
+		input = Packet_in.read();
+		End = input.End_of_frame;
+		Packet_out.write(input);
+	}while(!End);
+
+}
 
 void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples> & Output_tuples,
 			 hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output)
@@ -800,7 +859,8 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS INTERFACE ap_hs port=Packet_output
 
 #pragma HLS dataflow
-	uint16_t DATA_FIFO_SIZE = (MAX_PACKET_SIZE/BYTES_PER_WORD);
+	int DATA_FIFO_SIZE = 150;
+	int INST_FIFO_SIZE = 200;
 	static hls::stream<Part_Word> Extracted_Data;
 #pragma HLS STREAM variable=Extracted_Data depth=DATA_FIFO_SIZE
 	static hls::stream<Part_Word> Data_after_EthHdr;
@@ -819,9 +879,9 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS STREAM variable=Data_Stream depth=DATA_FIFO_SIZE
 
 	static hls::stream<Part_Word> Datalen2Convert;
-#pragma HLS STREAM variable=Datalen2Convert depth=5
+#pragma HLS STREAM variable=Datalen2Convert depth=INST_FIFO_SIZE
 	static hls::stream<Part_Word> Datalen2Output;
-#pragma HLS STREAM variable=Datalen2Output depth=5
+#pragma HLS STREAM variable=Datalen2Output depth=INST_FIFO_SIZE
 
 	static hls::stream<Part_Word> Key_Stream;
 #pragma HLS STREAM variable=Key_Stream depth=DATA_FIFO_SIZE
@@ -829,46 +889,68 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS STREAM variable=Key2Output depth=DATA_FIFO_SIZE
 
 	static hls::stream<metadata> Metadata;
-#pragma HLS STREAM variable=Metadata depth=5
+#pragma HLS STREAM variable=Metadata depth=INST_FIFO_SIZE
 	static hls::stream<metadata> Metadata_with_CMD;
-#pragma HLS STREAM variable=Metadata_with_CMD depth=5
+#pragma HLS STREAM variable=Metadata_with_CMD depth=INST_FIFO_SIZE
 	static hls::stream<metadata> Metadata2ProcessKey;
-#pragma HLS STREAM variable=Metadata2ProcessKey depth=5
+#pragma HLS STREAM variable=Metadata2ProcessKey depth=INST_FIFO_SIZE
 	static hls::stream<metadata> Metadata2Remove;
-#pragma HLS STREAM variable=Metadata2Remove depth=5
+#pragma HLS STREAM variable=Metadata2Remove depth=INST_FIFO_SIZE
 	static hls::stream<metadata> Metadata2ParseDatalen;
-#pragma HLS STREAM variable=Metadata2ParseDatalen depth=5
+#pragma HLS STREAM variable=Metadata2ParseDatalen depth=INST_FIFO_SIZE
 	static hls::stream<metadata> Metadata2ConvertDatalen;
-#pragma HLS STREAM variable=Metadata2ConvertDatalen depth=5
+#pragma HLS STREAM variable=Metadata2ConvertDatalen depth=INST_FIFO_SIZE
 	static hls::stream<metadata> Metadata2ParseData;
-#pragma HLS STREAM variable=Metadata2ParseData depth=5
+#pragma HLS STREAM variable=Metadata2ParseData depth=INST_FIFO_SIZE
 
 	static hls::stream<instr> Instr2ParseData;
-#pragma HLS STREAM variable=Instr2ParseData depth=5
+#pragma HLS STREAM variable=Instr2ParseData depth=INST_FIFO_SIZE
 	static hls::stream<instr> Instr2Output;
-#pragma HLS STREAM variable=Instr2Output depth=5
+#pragma HLS STREAM variable=Instr2Output depth=INST_FIFO_SIZE
 
-std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
-std::cout << "The No. "<< Packet_num << "Packet"  << std::endl;
-Packet_num ++;
+
+	static hls::stream<packet_interface> Packet2OutputPacket;
+#pragma HLS STREAM variable=Packet2OutputPacket depth=DATA_FIFO_SIZE
+
+	static hls::stream<input_tuples> Tuple2output;
+#pragma HLS STREAM variable=Tuple2output depth=1
+#pragma HLS DATA_PACK variable=Tuple2output
+	static hls::stream<input_tuples> Tuple2ETH;
+#pragma HLS STREAM variable=Tuple2ETH depth=1
+	static hls::stream<input_tuples> Tuple2PData;
+#pragma HLS STREAM variable=Tuple2PData depth=1
+	static hls::stream<input_tuples> Tuple2Goutput;
+#pragma HLS STREAM variable=Tuple2Goutput depth=1
+#pragma HLS DATA_PACK variable=Tuple2ETH
+#pragma HLS DATA_PACK variable=Tuple2PData
+#pragma HLS DATA_PACK variable=Tuple2Goutput
+#pragma HLS DATA_PACK variable=Tuple2output
+
+//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
+//std::cout << "The No. "<< Packet_num << "Packet"  << std::endl;
+//Packet_num ++;
 
 #pragma HLS dependence variable=Memory inter
-	 input_tuples tuple_in = Input_tuples.read();
-	 output_tuples tuple_out;
-	 tuple_out.Hdr = tuple_in.Hdr;
-	 Output_tuples.write(tuple_out);
-	 Extract_Data(Packet_input, Extracted_Data);
+//	 input_tuples tuple_in = Input_tuples.read();
+//	 output_tuples tuple_out;
+//	 tuple_out.Hdr = tuple_in.Hdr;
+//	 Output_tuples.write(tuple_out);
+	 //Tuple_in.write(tuple_in);
+	 input_tuples Tuple;
+	 Extract_Data(Input_tuples, Tuple2ETH, Packet_input, Extracted_Data);
 	 Parse_Eth_Hdr(Extracted_Data, Data_after_EthHdr);
 	 Parse_Memcached_Hdr(Data_after_EthHdr, Data_after_MemHdr, Metadata);
 	 Parse_CMD(Data_after_MemHdr, Data_after_cmd, Metadata, Metadata_with_CMD);
 
 	 Parse_Key(Data_after_cmd, Data_after_Key, Metadata_with_CMD, Metadata2ProcessKey, Metadata2Remove, Key_Stream);
-	 Process_Key(Key_Stream, Key2Output, Metadata2ProcessKey, Instr2Output, Instr2ParseData);
+	 Process_Key(Key_Stream, Key2Output, Tuple2ETH, Tuple2PData,Metadata2ProcessKey, Instr2Output, Instr2ParseData);
 	 Remove(Data_after_Key, Data_after_Remove, Metadata2Remove, Metadata2ParseDatalen);
 	 Parse_Datalen(Data_after_Remove, Data_after_len, Datalen2Convert, Datalen2Output, Metadata2ParseDatalen, Metadata2ConvertDatalen);
 	 ConvertDatalen(Datalen2Convert, Metadata2ConvertDatalen, Metadata2ParseData);
-	 Parse_Data(Data_after_len, Metadata2ParseData, Instr2ParseData, Data_Stream);
-	 Output_Packet(Packet_output,Instr2Output, Data_Stream, Key2Output, Datalen2Output);
+	 Parse_Data(Tuple2PData, Tuple2Goutput,Data_after_len, Metadata2ParseData, Instr2ParseData, Data_Stream);
+	 Generate_output(Tuple2Goutput, Tuple2output,Packet2OutputPacket,Instr2Output, Data_Stream, Key2Output, Datalen2Output);
+	 Output_packets(Tuple2output, Output_tuples, Packet2OutputPacket, Packet_output);
+	 //Output_packets1(Packet2OutputPacket, Packet_output);
 
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
 
