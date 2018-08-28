@@ -1,6 +1,6 @@
---- Encoder.sdnet.original	2018-08-22 14:24:58.836489296 -0400
-+++ Encoder.sdnet	2018-08-22 13:47:53.145284138 -0400
-@@ -214,6 +214,32 @@
+--- Encoder.sdnet.original	2018-08-28 14:31:46.097847680 -0400
++++ Encoder.sdnet	2018-08-28 13:51:02.648981143 -0400
+@@ -213,6 +213,31 @@
      method move_to_section = local_end_0;
      method increment_offset = 0; } }
  class fec_encode_0_t::UserEngine(200, 0) {
@@ -9,8 +9,7 @@
 +  class Update_fl_t::Tuple(inout) {
 +    struct {
 +      k_1 : 8,
-+      h_1 : 8,
-+      tmp_2 : 8 } }
++      h_1 : 8 } }
 +  class hdr_t_0::Tuple(inout) {
 +    struct {
 +      eth : eth_h,
@@ -33,7 +32,7 @@
    class fec_encode_input_t::Tuple(in) {
      struct {
        stateful_valid : 1,
-@@ -332,17 +358,23 @@
+@@ -337,17 +362,23 @@
      Update_lvl_1.local_state = Update_lvl_0.local_state,
      update_fec_state_0.update_fec_state_input = Update_lvl_0.update_fec_state_input,
      Update_lvl_1.update_fec_state_output = update_fec_state_0.update_fec_state_output,

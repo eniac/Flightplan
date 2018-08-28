@@ -1,6 +1,6 @@
 Encoder/XilinxSwitch/vivado_sim.bash
---- Encoder.original/XilinxSwitch/vivado_sim.bash	2018-08-22 14:25:07.348503199 -0400
-+++ Encoder/XilinxSwitch/vivado_sim.bash	2018-08-22 14:24:16.628417176 -0400
+--- Encoder.original/XilinxSwitch/vivado_sim.bash	2018-08-28 14:31:55.453690951 -0400
++++ Encoder/XilinxSwitch/vivado_sim.bash	2018-08-28 13:52:09.624921933 -0400
 @@ -1,14 +1,19 @@
  #!/bin/bash
 +[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
@@ -29,8 +29,8 @@ Encoder/XilinxSwitch/vivado_sim.bash
 +${XILINX_VIVADO}/bin/xsim --runall XilinxSwitch_tb
 +
 Encoder/XilinxSwitch/vivado_sim_waveform.bash
---- Encoder.original/XilinxSwitch/vivado_sim_waveform.bash	2018-08-22 14:25:07.348503199 -0400
-+++ Encoder/XilinxSwitch/vivado_sim_waveform.bash	2018-08-22 14:24:16.632417183 -0400
+--- Encoder.original/XilinxSwitch/vivado_sim_waveform.bash	2018-08-28 14:31:55.453690951 -0400
++++ Encoder/XilinxSwitch/vivado_sim_waveform.bash	2018-08-28 13:52:09.624921933 -0400
 @@ -1,14 +1,19 @@
  #!/bin/bash
 +[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
@@ -59,8 +59,8 @@ Encoder/XilinxSwitch/vivado_sim_waveform.bash
 +${XILINX_VIVADO}/bin/xsim XilinxSwitch_tb_sim -gui -wdb work.XilinxSwitch_tb_tb.wdb  
 +
 Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
---- Encoder.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-08-22 14:25:07.452503367 -0400
-+++ Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-08-22 14:24:16.632417183 -0400
+--- Encoder.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-08-28 14:31:55.557689219 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-08-28 13:52:09.624921933 -0400
 @@ -1,4 +1,5 @@
  #!/bin/bash
  set -euo pipefail
@@ -69,8 +69,8 @@ Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
 +g++ -g -O0 -I. -I ../../../../RSEConfig -std=c++11 $(find .. -name '*.cpp') -o XilinxSwitch -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1
 +
 Encoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
---- Encoder.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-08-22 14:25:07.348503199 -0400
-+++ Encoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-08-22 14:24:16.632417183 -0400
+--- Encoder.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-08-28 14:31:55.453690951 -0400
++++ Encoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-08-28 13:52:09.624921933 -0400
 @@ -47,7 +47,7 @@
  wire [7:0] tuple_in_ioports_DATA ;
  wire [0:0] enable_processing ;
@@ -101,8 +101,8 @@ Encoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
      stim_file = 1;
      check_file = 1;
 Encoder/XilinxSwitch/Testbench/TB_System_Stim.v
---- Encoder.original/XilinxSwitch/Testbench/TB_System_Stim.v	2018-08-22 14:25:07.348503199 -0400
-+++ Encoder/XilinxSwitch/Testbench/TB_System_Stim.v	2018-08-22 14:24:16.632417183 -0400
+--- Encoder.original/XilinxSwitch/Testbench/TB_System_Stim.v	2018-08-28 14:31:55.453690951 -0400
++++ Encoder/XilinxSwitch/Testbench/TB_System_Stim.v	2018-08-28 13:52:09.624921933 -0400
 @@ -71,6 +71,10 @@
  reg [7:0] packet_in_packet_in_TKEEP ;
  reg [63:0] packet_in_packet_in_TDATA ;
@@ -176,8 +176,8 @@ Encoder/XilinxSwitch/Testbench/TB_System_Stim.v
  	end
  end
 Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
---- Encoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-08-22 14:25:07.432503335 -0400
-+++ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-08-22 14:24:16.632417183 -0400
+--- Encoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-08-28 14:31:55.529689686 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-08-28 13:52:09.624921933 -0400
 @@ -76,7 +76,7 @@
  		Deparser("Deparser") { }
  
@@ -206,8 +206,8 @@ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
  };
  //######################################################
 Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
---- Encoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-08-22 14:25:07.432503335 -0400
-+++ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-08-22 14:24:16.632417183 -0400
+--- Encoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-08-28 14:31:55.529689686 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-08-28 13:52:09.624921933 -0400
 @@ -98,14 +98,18 @@
  			// format input and inout tuples
  			_tuple_in_stream << ((_LV<8>)_DUT.ioports).to_hex() << ' ';
@@ -236,8 +236,8 @@ Encoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
  		// close files
  		_packet_in_pcap.close();
 Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
---- Encoder.original/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-08-22 14:25:07.296503115 -0400
-+++ Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-08-22 14:24:16.632417183 -0400
+--- Encoder.original/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-08-28 14:31:55.385692083 -0400
++++ Encoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-08-28 13:52:09.628921930 -0400
 @@ -1,4 +1,4 @@
 -create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xcvu095-ffva2104-2-e
 +create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xczu9eg-ffvb1156-2-i

@@ -38,13 +38,13 @@
 `define FEC_HDR_WIDTH  `FEC_TRAFFIC_CLASS_WIDTH + `FEC_BLOCK_INDEX_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_ETHER_TYPE_WIDTH + `FEC_PACKET_LENGTH_WIDTH
 
 `define TUPLE_CONTROL_WIDTH          22
-`define TUPLE_UPDATE_FL_WIDTH        `FEC_K_WIDTH + `FEC_H_WIDTH + 8
+`define TUPLE_UPDATE_FL_WIDTH        `FEC_K_WIDTH + `FEC_H_WIDTH
 `define TUPLE_HDR_WIDTH              `FEC_ETH_HEADER_SIZE + `FEC_HDR_WIDTH + 2
 `define TUPLE_IOPORTS_WIDTH          8
 `define TUPLE_LOCAL_STATE_WIDTH      16
 `define TUPLE_PARSER_EXTRACTS_WIDTH  32
 `define TUPLE_ENCODER_INPUT_WIDTH    `FEC_K_WIDTH + `FEC_H_WIDTH + `FEC_HDR_WIDTH + 2
-`define TUPLE_ENCODER_OUTPUT_WIDTH   `FEC_PACKET_INDEX_WIDTH + `FEC_PACKET_LENGTH_WIDTH
+`define TUPLE_ENCODER_OUTPUT_WIDTH   `FEC_HDR_WIDTH + 1
 
 `define INPUT_TUPLES_WIDTH   `TUPLE_CONTROL_WIDTH + `TUPLE_UPDATE_FL_WIDTH + `TUPLE_HDR_WIDTH + `TUPLE_IOPORTS_WIDTH + `TUPLE_LOCAL_STATE_WIDTH + `TUPLE_PARSER_EXTRACTS_WIDTH + `TUPLE_ENCODER_INPUT_WIDTH
 `define OUTPUT_TUPLES_WIDTH  `TUPLE_ENCODER_OUTPUT_WIDTH
@@ -187,8 +187,10 @@ wire core_idle;
 wire core_ready;
 wire [`TUPLE_ENCODER_INPUT_WIDTH - 1:0] core_input_tuple;
 reg core_input_tuple_ap_vld;
-wire [`OUTPUT_TUPLES_WIDTH - 1:0] core_output_tuple;
-wire core_output_tuple_ap_vld;
+wire [`OUTPUT_TUPLES_WIDTH - 1:0] core_output_tuple_in;
+reg core_output_tuple_in_ap_vld;
+wire [`OUTPUT_TUPLES_WIDTH - 1:0] core_output_tuple_out;
+wire core_output_tuple_out_ap_vld;
 wire [70:0] core_input_packet_dout;
 wire core_input_packet_empty_n;
 wire core_input_packet_read;
@@ -287,8 +289,10 @@ RSE_core core
   .ap_ready(core_ready),
   .Input_tuple(core_input_tuple),
   .Input_tuple_ap_vld(core_input_tuple_ap_vld),
-  .Output_tuple(core_output_tuple),
-  .Output_tuple_ap_vld(core_output_tuple_ap_vld),
+  .Output_tuple_FEC_header_i(core_output_tuple_in),
+  .Output_tuple_FEC_header_i_ap_vld(core_output_tuple_in_ap_vld),
+  .Output_tuple_FEC_header_o(core_output_tuple_out),
+  .Output_tuple_FEC_header_o_ap_vld(core_output_tuple_out_ap_vld),
   .Input_packet_dout(core_input_packet_dout),
   .Input_packet_empty_n(core_input_packet_empty_n),
   .Input_packet_read(core_input_packet_read),
@@ -317,10 +321,11 @@ assign core_start = 1;
 assign core_input_packet_dout = packet_fifo_dout;
 assign core_input_packet_empty_n = ~packet_fifo_empty;
 assign core_output_packet_ap_ack = ~backpressure_in;
+assign core_output_tuple_in = tuple_out_hdr_DATA;
 
 assign k = core_input_tuple[`FEC_K_WIDTH + `FEC_H_WIDTH - 1:`FEC_H_WIDTH];
 assign h = core_input_tuple[`FEC_H_WIDTH - 1:0];
-assign packet_index = core_output_tuple[`FEC_PACKET_INDEX_WIDTH + `FEC_PACKET_LENGTH_WIDTH - 1:`FEC_PACKET_LENGTH_WIDTH];
+assign packet_index = core_output_tuple_out[`FEC_PACKET_INDEX_WIDTH + `FEC_ETHER_TYPE_WIDTH + `FEC_PACKET_LENGTH_WIDTH - 1:`FEC_ETHER_TYPE_WIDTH + `FEC_PACKET_LENGTH_WIDTH];
 
 always @( posedge clk_line ) begin
 	if ( rst ) begin
@@ -332,9 +337,10 @@ always @( posedge clk_line ) begin
 end
 
 always @(state, tuple_fifo_empty, core_done, packet_index, k, h,
-         core_output_tuple_ap_vld) begin
+         core_output_tuple_out_ap_vld) begin
 	tuple_fifo_rd_en                <= 0;
 	core_input_tuple_ap_vld         <= 0;
+	core_output_tuple_in_ap_vld     <= 0;
 	tuple_out_control_VALID         <= 0;
 	tuple_out_Update_fl_VALID       <= 0;
 	tuple_out_hdr_VALID             <= 0;
@@ -353,6 +359,7 @@ always @(state, tuple_fifo_empty, core_done, packet_index, k, h,
 
 		`STATE_OUTPUT_TUPLE : begin
 			core_input_tuple_ap_vld         <= 1;
+			core_output_tuple_in_ap_vld     <= 1;
 			tuple_out_control_VALID         <= 1;
 			tuple_out_Update_fl_VALID       <= 1;
 			tuple_out_hdr_VALID             <= 1;
@@ -363,7 +370,7 @@ always @(state, tuple_fifo_empty, core_done, packet_index, k, h,
 		end
 
 		`STATE_WAIT_FOR_OUTPUT : begin
-			if ( core_output_tuple_ap_vld ) begin
+			if ( core_output_tuple_out_ap_vld ) begin
 				if ( packet_index >= k - 1 && packet_index < k + h - 1 ) begin
 					next_state <= `STATE_GENERATE_PACKET;
 				end
@@ -393,8 +400,8 @@ assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = core_output_packet;
 assign packet_out_packet_out_VAL = core_output_packet_ap_vld & ~backpressure_in;
 
-assign tuple_out_fec_encode_output_VALID = core_output_tuple_ap_vld;
-assign tuple_out_fec_encode_output_DATA = core_output_tuple;
+assign tuple_out_fec_encode_output_VALID = core_output_tuple_out_ap_vld;
+assign tuple_out_fec_encode_output_DATA = core_output_tuple_out;
 
 endmodule
 

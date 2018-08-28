@@ -57,8 +57,7 @@ typedef struct
 
 typedef struct
 {
-  packet_length_type Packet_length;
-  packet_index_type Packet_index;
+  fec_header FEC_header;
 } output_tuple;
 
 typedef struct
@@ -154,8 +153,8 @@ static void Encode_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
         Packet_index == 0);
   }
 
-  Output_tuple->Packet_index = Packet_index;
-  Output_tuple->Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
+  Output_tuple->FEC_header.Packet_index = Packet_index;
+  Output_tuple->FEC_header.Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
 
   Packet_index++;
 }
@@ -212,8 +211,8 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   }
   while (!End);
 
-  Output_tuple->Packet_index = Packet_index;
-  Output_tuple->Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
+  Output_tuple->FEC_header.Packet_index = Packet_index;
+  Output_tuple->FEC_header.Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
 
   Packet_index++;
   if (Packet_index == Input_tuple.k + Input_tuple.h)

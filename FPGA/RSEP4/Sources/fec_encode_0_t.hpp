@@ -18,26 +18,23 @@ public:
 
 	// tuple types
 	struct Update_fl_t {
-		static const size_t _SIZE = 24;
+		static const size_t _SIZE = 16;
 		_LV<8> k_1;
 		_LV<8> h_1;
-		_LV<8> tmp_2;
-		Update_fl_t& operator=(_LV<24> _x) {
-			k_1 = _x.slice(23,16);
-			h_1 = _x.slice(15,8);
-			tmp_2 = _x.slice(7,0);
+		Update_fl_t& operator=(_LV<16> _x) {
+			k_1 = _x.slice(15,8);
+			h_1 = _x.slice(7,0);
 			return *this;
 		}
-		_LV<24> get_LV() { return (k_1,h_1,tmp_2); }
-		operator _LV<24>() { return get_LV(); } 
+		_LV<16> get_LV() { return (k_1,h_1); }
+		operator _LV<16>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tk_1 = " + k_1.to_string() + "\n" + "\t\th_1 = " + h_1.to_string() + "\n" + "\t\ttmp_2 = " + tmp_2.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tk_1 = " + k_1.to_string() + "\n" + "\t\th_1 = " + h_1.to_string() + "\n" + "\t)";
 		}
 		Update_fl_t() {} 
-		Update_fl_t( _LV<8> _k_1, _LV<8> _h_1, _LV<8> _tmp_2) {
+		Update_fl_t( _LV<8> _k_1, _LV<8> _h_1) {
 			k_1 = _k_1;
 			h_1 = _h_1;
-			tmp_2 = _tmp_2;
 		}
 	};
 	struct hdr_t_0 {
@@ -231,23 +228,52 @@ public:
 		}
 	};
 	struct fec_encode_output_t {
-		static const size_t _SIZE = 24;
-		_LV<8> packet_index;
-		_LV<16> packet_length;
-		fec_encode_output_t& operator=(_LV<24> _x) {
-			packet_index = _x.slice(23,16);
-			packet_length = _x.slice(15,0);
+		static const size_t _SIZE = 49;
+		struct _struct_fec {
+			static const size_t _SIZE = 49;
+			_LV<1> isValid;
+			_LV<3> traffic_class;
+			_LV<5> block_index;
+			_LV<8> packet_index;
+			_LV<16> original_type;
+			_LV<16> packet_length;
+			_struct_fec& operator=(_LV<49> _x) {
+				isValid = _x.slice(48,48);
+				traffic_class = _x.slice(47,45);
+				block_index = _x.slice(44,40);
+				packet_index = _x.slice(39,32);
+				original_type = _x.slice(31,16);
+				packet_length = _x.slice(15,0);
+				return *this;
+			}
+			_LV<49> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type,packet_length); }
+			operator _LV<49>() { return get_LV(); } 
+			std::string to_string() const {
+				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t\tpacket_length = " + packet_length.to_string() + "\n" + "\t)";
+			}
+			_struct_fec() {} 
+			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type, _LV<16> _packet_length) {
+				isValid = _isValid;
+				traffic_class = _traffic_class;
+				block_index = _block_index;
+				packet_index = _packet_index;
+				original_type = _original_type;
+				packet_length = _packet_length;
+			}
+		};
+		_struct_fec fec;
+		fec_encode_output_t& operator=(_LV<49> _x) {
+			fec = _x.slice(48,0);
 			return *this;
 		}
-		_LV<24> get_LV() { return (packet_index,packet_length); }
-		operator _LV<24>() { return get_LV(); } 
+		_LV<49> get_LV() { return (fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,fec.packet_length); }
+		operator _LV<49>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\tpacket_length = " + packet_length.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tfec = " + fec.to_string() + "\n" + "\t)";
 		}
 		fec_encode_output_t() {} 
-		fec_encode_output_t( _LV<8> _packet_index, _LV<16> _packet_length) {
-			packet_index = _packet_index;
-			packet_length = _packet_length;
+		fec_encode_output_t( _LV<49> _fec) {
+			fec = _fec;
 		}
 	};
 	struct CONTROL_STRUCT {
@@ -329,6 +355,7 @@ public:
 		bool generate_packet = false;
 
 		packet_out = packet_in;
+		fec_encode_output.fec = fec_encode_input.fec;
 
 		if (fec_encode_input.stateful_valid.to_ulong() == 1)
 		{
@@ -381,7 +408,7 @@ public:
 					fec_block_print(FB_INDEX);
 				}
 
-				fec_encode_output.packet_length = packet_in.size() + FEC_HDR_WIDTH / 8;
+				fec_encode_output.fec.packet_length = packet_in.size() + FEC_HDR_WIDTH / 8;
 			}
 			else
 			{
@@ -391,12 +418,12 @@ public:
 					packet_out.push_back(packet[i]);
 				for (int i = 0; i<maximum_packet_size; i++)
 					packet_out.push_back(packet[i]);
-				fec_encode_output.packet_length = packet_out.size() + FEC_HDR_WIDTH / 8;
+				fec_encode_output.fec.packet_length = packet_out.size() + FEC_HDR_WIDTH / 8;
 			}
 
 			generate_packet = packet_index >= k - 1 && packet_index < k + h - 1;
 
-			fec_encode_output.packet_index = packet_index;
+			fec_encode_output.fec.packet_index = packet_index;
 
 			packet_index = (packet_index + 1) % (k + h);
 		}
