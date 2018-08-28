@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="com.autoesl.autopilot.project" name="RSEVivadoHLS" top="RSE_core">
   <files>
-    <file name="../RSE_core_test.c" sc="0" tb="1" cflags=" "/>
-    <file name="../RSE_core_test.h" sc="0" tb="1" cflags=" "/>
-    <file name="../rse.c" sc="0" tb="1" cflags=" "/>
     <file name="../rsetest.c" sc="0" tb="1" cflags=" "/>
-    <file name="RSEVivadoHLS/Configuration.h" sc="0" tb="false" cflags=""/>
-    <file name="RSEVivadoHLS/Encoder.c" sc="0" tb="false" cflags="-std=c99"/>
-    <file name="RSEVivadoHLS/Encoder.h" sc="0" tb="false" cflags=""/>
-    <file name="RSEVivadoHLS/RSECore.c" sc="0" tb="false" cflags="-std=c99"/>
+    <file name="../rse.c" sc="0" tb="1" cflags=" "/>
+    <file name="../RSE_core_test.h" sc="0" tb="1" cflags=" "/>
+    <file name="../RSE_core_test.c" sc="0" tb="1" cflags=" "/>
     <file name="RSEVivadoHLS/rse.h" sc="0" tb="false" cflags=""/>
+    <file name="RSEVivadoHLS/RSECore.c" sc="0" tb="false" cflags="-std=c99"/>
+    <file name="RSEVivadoHLS/Encoder.h" sc="0" tb="false" cflags=""/>
+    <file name="RSEVivadoHLS/Encoder.c" sc="0" tb="false" cflags="-std=c99"/>
+    <file name="RSEVivadoHLS/Configuration.h" sc="0" tb="false" cflags=""/>
   </files>
   <solutions>
     <solution name="solution1" status="active"/>

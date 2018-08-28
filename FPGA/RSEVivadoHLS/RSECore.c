@@ -13,6 +13,8 @@ typedef uint64_t uint64;
 
 #include "Encoder.h"
 
+#define FEC_HDR_WIDTH (FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH + FEC_PACKET_LENGTH_WIDTH)
+
 #define HEADER_SIZE (FEC_ETH_HEADER_SIZE / 8)
 #define LENGTH_SIZE (FEC_PACKET_LENGTH_WIDTH / 8)
 
@@ -26,6 +28,7 @@ typedef CONCATENATE(uint, FEC_PACKET_INDEX_WIDTH) packet_index_type;
 typedef CONCATENATE(uint, FEC_BLOCK_INDEX_WIDTH) block_index_type;
 typedef CONCATENATE(uint, FEC_TRAFFIC_CLASS_WIDTH) traffic_class_type;
 typedef CONCATENATE(uint, FEC_ETHER_TYPE_WIDTH) packet_type_type;
+typedef CONCATENATE(uint, FEC_PACKET_LENGTH_WIDTH) packet_length_type;
 typedef CONCATENATE(uint, FEC_K_WIDTH) k_type;
 typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
 
@@ -34,6 +37,7 @@ typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
 
 typedef struct
 {
+    packet_length_type Packet_length;
     packet_type_type Original_type;
     packet_index_type Packet_index;
     block_index_type Block_index;
@@ -53,6 +57,7 @@ typedef struct
 
 typedef struct
 {
+  packet_length_type Packet_length;
   packet_index_type Packet_index;
 } output_tuple;
 
@@ -150,6 +155,7 @@ static void Encode_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   }
 
   Output_tuple->Packet_index = Packet_index;
+  Output_tuple->Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
 
   Packet_index++;
 }
@@ -162,6 +168,7 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   unsigned Word_offset = 0;
   unsigned Input_finished = 0;
   unsigned End = 0;
+  unsigned Packet_length = Maximum_packet_length + HEADER_SIZE + LENGTH_SIZE;
   do
   {
 #pragma HLS LOOP_TRIPCOUNT min=8 max=190
@@ -169,7 +176,6 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
 
     const packet_interface Empty = {0, 0, 0, 1, 0};
 
-    unsigned Packet_length = Maximum_packet_length + HEADER_SIZE + LENGTH_SIZE;
     End = Word_offset == (Packet_length - 1) / 8;
 
     packet_interface Output;
@@ -207,6 +213,7 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   while (!End);
 
   Output_tuple->Packet_index = Packet_index;
+  Output_tuple->Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
 
   Packet_index++;
   if (Packet_index == Input_tuple.k + Input_tuple.h)

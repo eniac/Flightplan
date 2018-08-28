@@ -65,7 +65,7 @@
         <DownStreamTool name="vivado"/>
     </downStreamTool>
     <clockList>
-        <clock name="default" default="false" period="6.4"/>
+        <clock default="false" name="default" period="6.4"/>
     </clockList>
 </solution>
 

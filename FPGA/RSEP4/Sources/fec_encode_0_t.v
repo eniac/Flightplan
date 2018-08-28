@@ -35,7 +35,7 @@
 
 `include "Configuration.v"
 
-`define FEC_HDR_WIDTH  `FEC_TRAFFIC_CLASS_WIDTH + `FEC_BLOCK_INDEX_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_ETHER_TYPE_WIDTH
+`define FEC_HDR_WIDTH  `FEC_TRAFFIC_CLASS_WIDTH + `FEC_BLOCK_INDEX_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_ETHER_TYPE_WIDTH + `FEC_PACKET_LENGTH_WIDTH
 
 `define TUPLE_CONTROL_WIDTH          22
 `define TUPLE_UPDATE_FL_WIDTH        `FEC_K_WIDTH + `FEC_H_WIDTH + 8
@@ -44,7 +44,7 @@
 `define TUPLE_LOCAL_STATE_WIDTH      16
 `define TUPLE_PARSER_EXTRACTS_WIDTH  32
 `define TUPLE_ENCODER_INPUT_WIDTH    `FEC_K_WIDTH + `FEC_H_WIDTH + `FEC_HDR_WIDTH + 2
-`define TUPLE_ENCODER_OUTPUT_WIDTH   `FEC_PACKET_INDEX_WIDTH
+`define TUPLE_ENCODER_OUTPUT_WIDTH   `FEC_PACKET_INDEX_WIDTH + `FEC_PACKET_LENGTH_WIDTH
 
 `define INPUT_TUPLES_WIDTH   `TUPLE_CONTROL_WIDTH + `TUPLE_UPDATE_FL_WIDTH + `TUPLE_HDR_WIDTH + `TUPLE_IOPORTS_WIDTH + `TUPLE_LOCAL_STATE_WIDTH + `TUPLE_PARSER_EXTRACTS_WIDTH + `TUPLE_ENCODER_INPUT_WIDTH
 `define OUTPUT_TUPLES_WIDTH  `TUPLE_ENCODER_OUTPUT_WIDTH
@@ -287,8 +287,8 @@ RSE_core core
   .ap_ready(core_ready),
   .Input_tuple(core_input_tuple),
   .Input_tuple_ap_vld(core_input_tuple_ap_vld),
-  .Output_tuple_Packet_index(core_output_tuple),
-  .Output_tuple_Packet_index_ap_vld(core_output_tuple_ap_vld),
+  .Output_tuple(core_output_tuple),
+  .Output_tuple_ap_vld(core_output_tuple_ap_vld),
   .Input_packet_dout(core_input_packet_dout),
   .Input_packet_empty_n(core_input_packet_empty_n),
   .Input_packet_read(core_input_packet_read),
@@ -320,7 +320,7 @@ assign core_output_packet_ap_ack = ~backpressure_in;
 
 assign k = core_input_tuple[`FEC_K_WIDTH + `FEC_H_WIDTH - 1:`FEC_H_WIDTH];
 assign h = core_input_tuple[`FEC_H_WIDTH - 1:0];
-assign packet_index = core_output_tuple;
+assign packet_index = core_output_tuple[`FEC_PACKET_INDEX_WIDTH + `FEC_PACKET_LENGTH_WIDTH - 1:`FEC_PACKET_LENGTH_WIDTH];
 
 always @( posedge clk_line ) begin
 	if ( rst ) begin

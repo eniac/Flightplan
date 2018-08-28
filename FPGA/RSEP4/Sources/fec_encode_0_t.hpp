@@ -10,6 +10,7 @@
 namespace SDNET {
 
 #define BUFFER_SIZE (FEC_MAX_PACKET_SIZE + FEC_PACKET_LENGTH_WIDTH / 8)
+#define FEC_HDR_WIDTH (FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH + FEC_PACKET_LENGTH_WIDTH)
 
 //######################################################
 class fec_encode_0_t { // UserEngine
@@ -40,7 +41,7 @@ public:
 		}
 	};
 	struct hdr_t_0 {
-		static const size_t _SIZE = 146;
+		static const size_t _SIZE = 162;
 		struct _struct_eth {
 			static const size_t _SIZE = 113;
 			_LV<1> isValid;
@@ -69,47 +70,50 @@ public:
 		};
 		_struct_eth eth;
 		struct _struct_fec {
-			static const size_t _SIZE = 33;
+			static const size_t _SIZE = 49;
 			_LV<1> isValid;
 			_LV<3> traffic_class;
 			_LV<5> block_index;
 			_LV<8> packet_index;
 			_LV<16> original_type;
-			_struct_fec& operator=(_LV<33> _x) {
-				isValid = _x.slice(32,32);
-				traffic_class = _x.slice(31,29);
-				block_index = _x.slice(28,24);
-				packet_index = _x.slice(23,16);
-				original_type = _x.slice(15,0);
+			_LV<16> packet_length;
+			_struct_fec& operator=(_LV<49> _x) {
+				isValid = _x.slice(48,48);
+				traffic_class = _x.slice(47,45);
+				block_index = _x.slice(44,40);
+				packet_index = _x.slice(39,32);
+				original_type = _x.slice(31,16);
+				packet_length = _x.slice(15,0);
 				return *this;
 			}
-			_LV<33> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type); }
-			operator _LV<33>() { return get_LV(); } 
+			_LV<49> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type,packet_length); }
+			operator _LV<49>() { return get_LV(); } 
 			std::string to_string() const {
-				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t)";
+				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t\tpacket_length = " + packet_length.to_string() + "\n" + "\t)";
 			}
 			_struct_fec() {} 
-			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type) {
+			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type, _LV<16> _packet_length) {
 				isValid = _isValid;
 				traffic_class = _traffic_class;
 				block_index = _block_index;
 				packet_index = _packet_index;
 				original_type = _original_type;
+				packet_length = _packet_length;
 			}
 		};
 		_struct_fec fec;
-		hdr_t_0& operator=(_LV<146> _x) {
-			eth = _x.slice(145,33);
-			fec = _x.slice(32,0);
+		hdr_t_0& operator=(_LV<162> _x) {
+			eth = _x.slice(161,49);
+			fec = _x.slice(48,0);
 			return *this;
 		}
-		_LV<146> get_LV() { return (eth.isValid,eth.dst,eth.src,eth.type,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type); }
-		operator _LV<146>() { return get_LV(); } 
+		_LV<162> get_LV() { return (eth.isValid,eth.dst,eth.src,eth.type,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,fec.packet_length); }
+		operator _LV<162>() { return get_LV(); } 
 		std::string to_string() const {
 			return std::string("(\n")  + "\t\teth = " + eth.to_string() + "\n" + "\t\tfec = " + fec.to_string() + "\n" + "\t)";
 		}
 		hdr_t_0() {} 
-		hdr_t_0( _LV<113> _eth, _LV<33> _fec) {
+		hdr_t_0( _LV<113> _eth, _LV<49> _fec) {
 			eth = _eth;
 			fec = _fec;
 		}
@@ -169,54 +173,57 @@ public:
 		}
 	};
 	struct fec_encode_input_t {
-		static const size_t _SIZE = 50;
+		static const size_t _SIZE = 66;
 		_LV<1> stateful_valid;
 		struct _struct_fec {
-			static const size_t _SIZE = 33;
+			static const size_t _SIZE = 49;
 			_LV<1> isValid;
 			_LV<3> traffic_class;
 			_LV<5> block_index;
 			_LV<8> packet_index;
 			_LV<16> original_type;
-			_struct_fec& operator=(_LV<33> _x) {
-				isValid = _x.slice(32,32);
-				traffic_class = _x.slice(31,29);
-				block_index = _x.slice(28,24);
-				packet_index = _x.slice(23,16);
-				original_type = _x.slice(15,0);
+			_LV<16> packet_length;
+			_struct_fec& operator=(_LV<49> _x) {
+				isValid = _x.slice(48,48);
+				traffic_class = _x.slice(47,45);
+				block_index = _x.slice(44,40);
+				packet_index = _x.slice(39,32);
+				original_type = _x.slice(31,16);
+				packet_length = _x.slice(15,0);
 				return *this;
 			}
-			_LV<33> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type); }
-			operator _LV<33>() { return get_LV(); } 
+			_LV<49> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type,packet_length); }
+			operator _LV<49>() { return get_LV(); } 
 			std::string to_string() const {
-				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t)";
+				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t\tpacket_length = " + packet_length.to_string() + "\n" + "\t)";
 			}
 			_struct_fec() {} 
-			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type) {
+			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type, _LV<16> _packet_length) {
 				isValid = _isValid;
 				traffic_class = _traffic_class;
 				block_index = _block_index;
 				packet_index = _packet_index;
 				original_type = _original_type;
+				packet_length = _packet_length;
 			}
 		};
 		_struct_fec fec;
 		_LV<8> k;
 		_LV<8> h;
-		fec_encode_input_t& operator=(_LV<50> _x) {
-			stateful_valid = _x.slice(49,49);
-			fec = _x.slice(48,16);
+		fec_encode_input_t& operator=(_LV<66> _x) {
+			stateful_valid = _x.slice(65,65);
+			fec = _x.slice(64,16);
 			k = _x.slice(15,8);
 			h = _x.slice(7,0);
 			return *this;
 		}
-		_LV<50> get_LV() { return (stateful_valid,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,k,h); }
-		operator _LV<50>() { return get_LV(); } 
+		_LV<66> get_LV() { return (stateful_valid,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,fec.packet_length,k,h); }
+		operator _LV<66>() { return get_LV(); } 
 		std::string to_string() const {
 			return std::string("(\n")  + "\t\tstateful_valid = " + stateful_valid.to_string() + "\n" + "\t\tfec = " + fec.to_string() + "\n" + "\t\tk = " + k.to_string() + "\n" + "\t\th = " + h.to_string() + "\n" + "\t)";
 		}
 		fec_encode_input_t() {} 
-		fec_encode_input_t( _LV<1> _stateful_valid, _LV<33> _fec, _LV<8> _k, _LV<8> _h) {
+		fec_encode_input_t( _LV<1> _stateful_valid, _LV<49> _fec, _LV<8> _k, _LV<8> _h) {
 			stateful_valid = _stateful_valid;
 			fec = _fec;
 			k = _k;
@@ -224,20 +231,23 @@ public:
 		}
 	};
 	struct fec_encode_output_t {
-		static const size_t _SIZE = 8;
+		static const size_t _SIZE = 24;
 		_LV<8> packet_index;
-		fec_encode_output_t& operator=(_LV<8> _x) {
-			packet_index = _x.slice(7,0);
+		_LV<16> packet_length;
+		fec_encode_output_t& operator=(_LV<24> _x) {
+			packet_index = _x.slice(23,16);
+			packet_length = _x.slice(15,0);
 			return *this;
 		}
-		_LV<8> get_LV() { return (packet_index); }
-		operator _LV<8>() { return get_LV(); } 
+		_LV<24> get_LV() { return (packet_index,packet_length); }
+		operator _LV<24>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\tpacket_length = " + packet_length.to_string() + "\n" + "\t)";
 		}
 		fec_encode_output_t() {} 
-		fec_encode_output_t( _LV<8> _packet_index) {
+		fec_encode_output_t( _LV<8> _packet_index, _LV<16> _packet_length) {
 			packet_index = _packet_index;
+			packet_length = _packet_length;
 		}
 	};
 	struct CONTROL_STRUCT {
@@ -370,6 +380,8 @@ public:
 
 					fec_block_print(FB_INDEX);
 				}
+
+				fec_encode_output.packet_length = packet_in.size() + FEC_HDR_WIDTH / 8;
 			}
 			else
 			{
@@ -379,6 +391,7 @@ public:
 					packet_out.push_back(packet[i]);
 				for (int i = 0; i<maximum_packet_size; i++)
 					packet_out.push_back(packet[i]);
+				fec_encode_output.packet_length = packet_out.size() + FEC_HDR_WIDTH / 8;
 			}
 
 			generate_packet = packet_index >= k - 1 && packet_index < k + h - 1;
