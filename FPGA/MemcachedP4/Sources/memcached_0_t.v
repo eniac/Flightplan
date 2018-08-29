@@ -32,8 +32,8 @@
 */
 
 `timescale 1 ps / 1 ps
-`define INPUT_TUPLES_WIDTH 372
-`define OUTPUT_TUPLES_WIDTH 372
+`define INPUT_TUPLES_WIDTH 453 
+`define OUTPUT_TUPLES_WIDTH 453 
 `define MEM_AXI_BUS_WIDTH 64
 module memcached_0_t (
 	clk_line,
@@ -83,7 +83,6 @@ module memcached_0_t (
 	backpressure_in,
 	backpressure_out
 );
-
 input clk_line /* unused */ ;
 (* polarity = "high" *) input rst /* unused */ ;
 input packet_in_packet_in_SOF /* unused */ ;
@@ -130,7 +129,6 @@ output tuple_out_memcached_output_VALID /* undriven */ ;
 output tuple_out_memcached_output_DATA /* undriven */ ;
 input backpressure_in ;
 output backpressure_out ;
-
 wire packet_in_packet_in_RDY /* undriven */ ;
 wire packet_out_packet_out_SOF /* undriven */ ;
 wire packet_out_packet_out_EOF /* undriven */ ;
@@ -197,12 +195,12 @@ Memcore mem
         .ap_done(mem_ap_done),
         .ap_idle(mem_ap_idle),
         .ap_ready(mem_ap_ready),
-        .Input_tuples_V_Hdr_dout(mem_tuple_input_v_dout),
-        .Input_tuples_V_Hdr_empty_n(mem_tuple_input_v_empty_n),
-        .Input_tuples_V_Hdr_read(mem_tuple_input_v_read),
-        .Output_tuples_V_Hdr(mem_tuple_output_v),
-        .Output_tuples_V_Hdr_ap_vld(mem_tuple_output_v_ap_vld),
-        .Output_tuples_V_Hdr_ap_ack(mem_tuple_output_v_ap_ack),
+        .Input_tuples_V_dout(mem_tuple_input_v_dout),
+        .Input_tuples_V_empty_n(mem_tuple_input_v_empty_n),
+        .Input_tuples_V_read(mem_tuple_input_v_read),
+        .Output_tuples_V(mem_tuple_output_v),
+        .Output_tuples_V_ap_vld(mem_tuple_output_v_ap_vld),
+        .Output_tuples_V_ap_ack(mem_tuple_output_v_ap_ack),
         .Packet_input_V_dout(mem_packet_input_v_dout),
         .Packet_input_V_empty_n(mem_packet_input_v_empty_n),
         .Packet_input_V_read(mem_packet_input_v_read),
@@ -256,7 +254,7 @@ xpm_fifo_sync tuple_fifo (
 );
 
 assign tuple_fifo_wr_en = tuple_in_hdr_VALID;
-assign tuple_fifo_din = tuple_in_hdr_DATA;
+assign tuple_fifo_din ={tuple_in_memcached_input_DATA, tuple_in_Parser_extracts_DATA, tuple_in_local_state_DATA, tuple_in_ioports_DATA, tuple_in_hdr_DATA, tuple_in_CheckCache_fl_DATA, tuple_in_control_DATA};
 assign tuple_fifo_rd_en = mem_tuple_input_v_read;
 
 defparam packet_fifo.WRITE_DATA_WIDTH = `MEM_AXI_BUS_WIDTH + 7;
@@ -304,13 +302,9 @@ assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = mem_packet_output_v;
 assign packet_out_packet_out_VAL = mem_packet_output_v_ap_vld & ~backpressure_in;
 
-assign tuple_out_hdr_DATA = mem_tuple_output_v;
-assign tuple_out_control_DATA =  tuple_in_control_DATA;
-assign tuple_out_CheckCache_fl_DATA = tuple_in_CheckCache_fl_DATA;
-assign tuple_out_local_state_DATA = tuple_in_local_state_DATA;
-assign tuple_out_ioports_DATA = tuple_in_ioports_DATA;
-assign tuple_out_Parser_extracts_DATA = tuple_in_Parser_extracts_DATA;
-assign tuple_out_memcached_output_DATA = tuple_in_memcached_input_DATA;
+assign {tuple_out_memcached_output_DATA, tuple_out_Parser_extracts_DATA, 
+        tuple_out_local_state_DATA, tuple_out_ioports_DATA, 
+        tuple_out_hdr_DATA, tuple_out_CheckCache_fl_DATA, tuple_out_control_DATA} = mem_tuple_output_v;
 
 assign tuple_out_hdr_VALID = mem_tuple_output_v_ap_vld;
 assign tuple_out_control_VALID = mem_tuple_output_v_ap_vld;
