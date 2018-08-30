@@ -11,8 +11,6 @@
 #define MAX_RESPONSE_LEN (20)
 #define NUM_OF_RESPONSE (8)
 //Some consts in the hdr
-#define IPV4_LEN_FIELD (16)
-#define UDP_LEN_FIELD (38)
 #define PAYLOAD_OFFSET_UDP (42) //Payload location under UDP include 8 bytes memcached header
 #define MEMCACHED_UDP_HEADER (8)
 #define ETH_HDR_LEN (14)
@@ -35,6 +33,7 @@
 
 typedef ap_uint<MEM_AXI_BUS_WIDTH> Data_Word;
 typedef ap_uint<8> Byte;
+typedef ap_uint<1> MemcachedPkt;
 
 typedef struct
 {
@@ -61,6 +60,37 @@ typedef struct Cache_Memory{
 
 }Cache;
 
+typedef struct
+{
+    ap_uint<4> Egress_port;
+    ap_uint<4> Ingress_port;
+} tuple_ioports;
+
+typedef struct
+{
+    ap_uint<16> Id;
+} tuple_local_state;
+
+typedef struct
+{
+    ap_uint<32> Size;
+} tuple_Parser_extracts;
+
+typedef struct
+{
+    ap_uint<22> Control;
+} tuple_control;
+
+typedef struct
+{
+    ap_uint<1> Stateful_valid;
+} tuple_memcached_input;
+
+typedef struct
+{
+	ap_uint<1> forward;
+
+} tuple_checkcache;
 typedef struct
 {
 
@@ -115,12 +145,24 @@ typedef struct
 
 typedef struct
 {
-    tuple_hdr Hdr;
+	tuple_control Control;
+	tuple_checkcache Checkcache;
+	tuple_hdr Hdr;
+	tuple_ioports Ioports;
+    tuple_local_state Local_state;
+    tuple_Parser_extracts Parser_extracts;
+    tuple_memcached_input Memcached_input;
 } input_tuples;
 
 typedef struct
 {
-    tuple_hdr Hdr;
+	tuple_control Control;//23
+	tuple_checkcache Checkcache; //1
+	tuple_hdr Hdr; //372
+	tuple_ioports Ioports; //8
+    tuple_local_state Local_state; //16
+    tuple_Parser_extracts Parser_extracts; //32
+    tuple_memcached_input Memcached_output; //1
 } output_tuples;
 
 // For Hash Function

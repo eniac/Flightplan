@@ -390,6 +390,12 @@ public:
 		Tuple.Hdr.Udp.isValid = hdr.udp.isValid.to_ulong();
 		Tuple.Hdr.Udp.len = hdr.udp.len.to_ulong();
 		Tuple.Hdr.Udp.sport = hdr.udp.sport.to_ulong();
+		Tuple.Memcached_input.Stateful_valid = memcached_input.stateful_valid.to_ulong();
+		Tuple.Ioports.Egress_port = ioports.egress_port.to_ulong();
+		Tuple.Ioports.Ingress_port = ioports.ingress_port.to_ulong();
+		Tuple.Local_state.Id = local_state.id.to_ulong();
+		Tuple.Parser_extracts.Size = Parser_extracts.size.to_ulong();
+		Tuple.Checkcache.forward = CheckCache_fl.forward_1.to_ulong();
 		Input_tuples.write(Tuple);
 
 		hls::stream<packet_interface> Packet_input;
@@ -463,6 +469,7 @@ public:
 		hdr.udp.isValid = Tuple_out.Hdr.Udp.isValid.to_uint();
 		hdr.udp.len = Tuple_out.Hdr.Udp.len.to_uint();
 		hdr.udp.sport = Tuple_out.Hdr.Udp.sport.to_uint();
+		
 		/*		
 		//write input
 		for (int i = 0; i< MAX_DATA_SIZE; i++)
