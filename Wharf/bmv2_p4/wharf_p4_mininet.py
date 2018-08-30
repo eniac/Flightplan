@@ -18,6 +18,7 @@ from mininet.node import Switch, Host
 from mininet.log import setLogLevel, info, error, debug
 from mininet.moduledeps import pathCheck
 from sys import exit
+import traceback
 import os
 import tempfile
 import socket
@@ -26,7 +27,7 @@ try:
     from runtime_CLI import thrift_connect, load_json_config, RuntimeAPI
     has_api = True
 except Exception as e:
-    print("Cannot import RUNTIME_CLI: %s", e)
+    print("Cannot import RUNTIME_CLI: %s" % traceback.print_exc())
     has_api = False
 
 def send_commands(thrift_port, json, commands):
