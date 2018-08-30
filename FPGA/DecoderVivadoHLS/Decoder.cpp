@@ -122,7 +122,8 @@ static void Collect_packets(bool Bypass, unsigned Traffic_class, unsigned Block_
     hls::stream<packet_interface> & Packet_input,
     hls::stream<data_word> Data_FIFOs[TRAFFIC_CLASS_COUNT],
     hls::stream<packet_info> Info_FIFOs[TRAFFIC_CLASS_COUNT], command & Command,
-    unsigned & Packet_count, bool Wait_for_data, hls::stream<packet_interface> & Bypass_FIFO)
+    unsigned & Packet_count, bool Wait_for_data, hls::stream<packet_interface> & Bypass_FIFO,
+    hls::stream<k_type> & k_FIFO, hls::stream<traffic_class> & Traffic_class_FIFO)
 {
   bool New_block = Block_index != Current_blocks[Traffic_class];
   bool Data_packet = Packet_index < k;
@@ -181,16 +182,21 @@ static void Collect_packets(bool Bypass, unsigned Traffic_class, unsigned Block_
       Data_packet_counts[Traffic_class]++;
     Current_blocks[Traffic_class] = Block_index;
   }
+
+  k_FIFO.write(k);
+  Traffic_class_FIFO.write(Traffic_class);
 }
 
-static void Select_packets(unsigned Traffic_class,
-    hls::stream<data_word> Input_FIFOs[TRAFFIC_CLASS_COUNT],
-    hls::stream<packet_info> Input_info_FIFOs[TRAFFIC_CLASS_COUNT], unsigned k, command Command,
+static void Select_packets(hls::stream<data_word> Input_FIFOs[TRAFFIC_CLASS_COUNT],
+    hls::stream<packet_info> Input_info_FIFOs[TRAFFIC_CLASS_COUNT], unsigned & k, command Command,
     unsigned Packet_count, hls::stream<data_word> & Output_raw_data_FIFO,
     hls::stream<data_word> & Output_encoded_data_FIFO,
     hls::stream<packet_info> & Output_raw_info_FIFO,
-    hls::stream<packet_info> & Output_encoded_info_FIFO, unsigned & Output_packet_count)
+    hls::stream<packet_info> & Output_encoded_info_FIFO, unsigned & Output_packet_count,
+    hls::stream<k_type> & k_FIFO, hls::stream<traffic_class> & Traffic_class_FIFO)
 {
+  k = k_FIFO.read();
+  traffic_class Traffic_class = Traffic_class_FIFO.read();
   if (Command == COMMAND_DECODE || Command == COMMAND_OUTPUT_DATA)
   {
     unsigned Count = Command == COMMAND_DECODE ? k : Packet_count;
@@ -349,7 +355,7 @@ static void Decode_packets(data_word Input_buffer[FEC_MAX_K][PING_PONG_BUFFER_SI
         data_word Output = Matrix_multiply_word(Input, Coefficients, k);
 
         if (Offset == 0)
-      	  Info.Bytes_per_packet = Output >> (FEC_AXI_BUS_WIDTH - FEC_PACKET_LENGTH_WIDTH);
+          Info.Bytes_per_packet = Output >> (FEC_AXI_BUS_WIDTH - FEC_PACKET_LENGTH_WIDTH);
 
         Output_data.write(Output);
       }
@@ -610,7 +616,7 @@ void Decode(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> 
   static hls::stream<packet_info> Info_streams[TRAFFIC_CLASS_COUNT];
 #pragma HLS STREAM variable=Info_streams depth=Info_stream_size
   hls::stream<data_word> Encoded_data_stream;
-#pragma HLS STREAM variable=Encoded_data_stream depth=Data_stream_size
+#pragma HLS STREAM variable=Encoded_data_stream depth=Data_stream_size // WHY IS THE VALUE Data_stream_size NOT OKAY??????
   hls::stream<data_word> Preprocessed_data_stream;
 #pragma HLS STREAM variable=Preprocessed_data_stream depth=Data_stream_size
   hls::stream<data_word> Decoded_data_stream;
@@ -633,6 +639,10 @@ void Decode(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> 
 #pragma HLS STREAM variable=Raw_info_stream depth=Info_stream_size
   hls::stream<packet_interface> Bypass_stream;
 #pragma HLS STREAM variable=Bypass_stream depth=Data_stream_size
+  hls::stream<k_type> k_stream;
+#pragma HLS STREAM variable=k_stream depth=Packets_needed
+  hls::stream<traffic_class> Traffic_class_stream;
+#pragma HLS STREAM variable=Traffic_class_stream depth=Packets_needed
   command Command;
   unsigned Packet_count;
   unsigned Output_packet_count;
@@ -642,23 +652,24 @@ void Decode(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> 
   tuple_fec Header;
   unsigned k;
   unsigned h;
+  unsigned k2;
 
   Extract_parameters(Tuple_input, Input_tuples, Bypass, Header, k, h);
   Collect_packets(Bypass, Header.Traffic_class, Header.Block_index, Header.Packet_index,
       Header.Original_type, k, Packet_input, Data_streams, Info_streams, Command, Packet_count,
-      Wait_for_data, Bypass_stream);
-  Select_packets(Header.Traffic_class, Data_streams, Info_streams, k, Command, Packet_count,
+      Wait_for_data, Bypass_stream, k_stream, Traffic_class_stream);
+  Select_packets(Data_streams, Info_streams, k2, Command, Packet_count,
       Raw_data_stream, Encoded_data_stream, Raw_info_stream, Encoded_info_stream,
-      Output_packet_count);
-  Preprocess_headers(Encoded_data_stream, Encoded_info_stream, k, Command, Preprocessed_data_stream,
+      Output_packet_count, k_stream, Traffic_class_stream);
+  Preprocess_headers(Encoded_data_stream, Encoded_info_stream, k2, Command, Preprocessed_data_stream,
       Preprocessed_info_stream);
-  Reorder_packets(Preprocessed_data_stream, Preprocessed_info_stream, Command, k, Ping_pong_buffer,
+  Reorder_packets(Preprocessed_data_stream, Preprocessed_info_stream, Command, k2, Ping_pong_buffer,
       Reordered_info_stream, Packet_indices);
-  Decode_packets(Ping_pong_buffer, Reordered_info_stream, Packet_indices, Command, k, h,
+  Decode_packets(Ping_pong_buffer, Reordered_info_stream, Packet_indices, Command, k2, h,
       Decoded_data_stream, Decoded_info_stream);
-  Postprocess_headers(Decoded_data_stream, Decoded_info_stream, k, Command,
+  Postprocess_headers(Decoded_data_stream, Decoded_info_stream, k2, Command,
       Postprocessed_data_stream, Postprocessed_info_stream);
   Output_packets(Input_tuples, Tuple_output, Postprocessed_data_stream, Raw_data_stream,
-      Postprocessed_info_stream, Raw_info_stream, Output_packet_count, Command, k, Packet_output,
+      Postprocessed_info_stream, Raw_info_stream, Output_packet_count, Command, k2, Packet_output,
       Bypass_stream);
 }
