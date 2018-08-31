@@ -151,6 +151,14 @@ bool call_memcached(char *packet, size_t packet_size, mcd_forward_fn forward) {
     std::cout << "UDP Dst " << udp.dport.to_string(16) << std::endl;
     std::cout << "UDP Src " << udp.sport.to_string(16) << std::endl;
     std::cout << "UDP Len " << udp.len.to_string(16) << std::endl;
+
+    input_tuple.Memcached_input.Stateful_valid = 1;
+	input_tuple.Ioports.Egress_port = 0;
+	input_tuple.Ioports.Ingress_port = 0;
+	input_tuple.Local_state.Id = 0;
+	input_tuple.Parser_extracts.Size = 0;
+	input_tuple.Checkcache.forward = 0;
+
     hls::stream<input_tuples> input_tuple_stream;
     input_tuple_stream.write(input_tuple);
 

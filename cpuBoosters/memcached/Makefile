@@ -30,7 +30,7 @@ copy_files: p4
 	rsync -av --exclude='test_output' ./* $(BOOSTER_SWITCH_MEMCD_DIR)
 
 bmv2: copy_files
-	cd $(BOOSTER_SWITCH_DIR)/.. && make BOOSTERS=MEMCACHED
+	cd $(BOOSTER_SWITCH_DIR)/.. && make configure all BOOSTERS=MEMCACHED
 
 memcached.o: memcached.cpp
 	$(CC) $(FLAGS) -c $<
