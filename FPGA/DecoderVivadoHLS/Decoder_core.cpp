@@ -230,7 +230,8 @@ void Lookup_coefficients(fec_sym Coefficients[FEC_MAX_K], unsigned k, unsigned h
     for (unsigned Input_packet = 0; Input_packet < FEC_MAX_K; Input_packet++)
     {
 #pragma HLS pipeline
-      Coefficients[Input_packet] = Matrices_k_50_h_1[Missing_packet][Output_packet][Input_packet];
+      fec_sym Value = Matrices_k_50_h_1[Missing_packet][Output_packet][Input_packet];
+      Coefficients[Input_packet] = Input_packet < 50 ? Value : 0;
     }
   }
   else
