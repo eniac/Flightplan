@@ -30,19 +30,13 @@
 
 #include "Configuration.h"
 
-// We need at least space for one packet or the encoder will deadlock.
-@Xilinx_MaxLatency(200)
-extern void fec(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
-    out bit<FEC_PACKET_INDEX_WIDTH> packet_index,
-    out bit<FEC_BLOCK_INDEX_WIDTH> block_index);
-
 typedef bit<48> MacAddress;
 
 header eth_h
 {
-	MacAddress	dst;
-	MacAddress	src;
-	bit<16>		type;
+	MacAddress			dst;
+	MacAddress			src;
+	bit<FEC_ETHER_TYPE_WIDTH>	type;
 }
 
 header fec_h
@@ -50,13 +44,24 @@ header fec_h
 	bit<FEC_TRAFFIC_CLASS_WIDTH>	traffic_class;
 	bit<FEC_BLOCK_INDEX_WIDTH>	block_index;
 	bit<FEC_PACKET_INDEX_WIDTH>	packet_index;
-	bit<16>				original_type;
+	bit<FEC_ETHER_TYPE_WIDTH>	original_type;
+	bit<FEC_PACKET_LENGTH_WIDTH>	packet_length;
 }
 
 struct headers_t {
 	eth_h	eth;
 	fec_h	fec;
 }
+
+@Xilinx_MaxLatency(1)
+extern void update_fec_state(in bit<FEC_TRAFFIC_CLASS_WIDTH> traffic_class,
+                             in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
+                             out bit<FEC_BLOCK_INDEX_WIDTH> block_index,
+                             out bit<FEC_PACKET_INDEX_WIDTH> packet_index);
+
+// We need at least space for one packet or the encoder will deadlock.
+@Xilinx_MaxLatency(200)
+extern void fec_encode(inout fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h);
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser Parser(packet_in pkt, out headers_t hdr)
@@ -70,8 +75,8 @@ parser Parser(packet_in pkt, out headers_t hdr)
 
 control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 {
-	bit<FEC_K_WIDTH>		k;
-	bit<FEC_H_WIDTH>		h;
+	bit<FEC_K_WIDTH>	k;
+	bit<FEC_H_WIDTH>	h;
 
 	apply
 	{
@@ -98,7 +103,10 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 		hdr.fec.setValid();
 		hdr.eth.type = 0x81C;
 
-		fec(k, h, hdr.fec.packet_index, hdr.fec.block_index);
+		update_fec_state(hdr.fec.traffic_class, k, h,
+                                 hdr.fec.block_index, hdr.fec.packet_index);
+
+		fec_encode(hdr.fec, k, h);
 	}
 }
 

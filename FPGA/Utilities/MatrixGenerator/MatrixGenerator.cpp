@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 
 #include "rse.h"
 
@@ -244,16 +245,21 @@ static void Output_matrices(std::ostream & Stream, unsigned k)
 
   Precompute_matrices_h_1(Matrices, k);
 
-  Stream << "static fec_sym Matrices_k_" << k << "_h_1[" << k + 1 << "][" << k << "][" << k << "] =\n{\n";
+  int Size = 1 << static_cast<int>(ceil(log(k) / log(2)));
+
+  Stream << "static fec_sym Matrices_k_" << k << "_h_1[" << k + 1 << "][" << Size << "][" << Size << "] =\n{\n";
   for (unsigned i = 0; i <= k; i++)
   {
     Stream << "  {\n";
-    for (unsigned j = 0; j < k; j++)
+    for (unsigned j = 0; j < Size; j++)
     {
       Stream << "    {";
-      for (unsigned l = 0; l < k; l++)
-        Stream << static_cast<unsigned>(Matrices[i][j][l]) << (l != k - 1 ? ", " : "}");
-      Stream << (j < k - 1 ? ",\n" : "\n");
+      for (unsigned l = 0; l < Size; l++)
+      {
+        unsigned Value = (j < k && l < k) ? Matrices[i][j][l] : 0;
+        Stream << Value << (l != Size - 1 ? ", " : "}");
+      }
+      Stream << (j < Size - 1 ? ",\n" : "\n");
     }
     Stream << "  }" << (i < k ? "," : "") << "\n";
   }

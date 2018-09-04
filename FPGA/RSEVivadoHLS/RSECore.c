@@ -13,6 +13,8 @@ typedef uint64_t uint64;
 
 #include "Encoder.h"
 
+#define FEC_HDR_WIDTH (FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH + FEC_PACKET_LENGTH_WIDTH)
+
 #define HEADER_SIZE (FEC_ETH_HEADER_SIZE / 8)
 #define LENGTH_SIZE (FEC_PACKET_LENGTH_WIDTH / 8)
 
@@ -24,6 +26,9 @@ typedef uint64_t uint64;
 
 typedef CONCATENATE(uint, FEC_PACKET_INDEX_WIDTH) packet_index_type;
 typedef CONCATENATE(uint, FEC_BLOCK_INDEX_WIDTH) block_index_type;
+typedef CONCATENATE(uint, FEC_TRAFFIC_CLASS_WIDTH) traffic_class_type;
+typedef CONCATENATE(uint, FEC_ETHER_TYPE_WIDTH) packet_type_type;
+typedef CONCATENATE(uint, FEC_PACKET_LENGTH_WIDTH) packet_length_type;
 typedef CONCATENATE(uint, FEC_K_WIDTH) k_type;
 typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
 
@@ -32,19 +37,27 @@ typedef CONCATENATE(uint, FEC_H_WIDTH) h_type;
 
 typedef struct
 {
-  // Note the reverse order with respect to parameter order in external function
-  // declaration.
-  h_type h;
-  k_type k;
-  uint1 Valid;
-} input_tuple;
+    packet_length_type Packet_length;
+    packet_type_type Original_type;
+    packet_index_type Packet_index;
+    block_index_type Block_index;
+    traffic_class_type Traffic_class;
+    uint1 Is_valid;
+} fec_header;
 
 typedef struct
 {
   // Note the reverse order with respect to parameter order in external function
   // declaration.
-  block_index_type  Block_index;
-  packet_index_type Packet_index;
+  h_type h;
+  k_type k;
+  fec_header fec;
+  uint1 Valid;
+} input_tuple;
+
+typedef struct
+{
+  fec_header FEC_header;
 } output_tuple;
 
 typedef struct
@@ -64,7 +77,6 @@ static fec_sym Parity_buffer[FEC_MAX_PACKET_SIZE][FEC_MAX_H];
 static fec_sym Packet_length_parity[FEC_PACKET_LENGTH_WIDTH / 8][FEC_MAX_H];
 
 static packet_index_type Packet_index;
-static block_index_type  Block_index;
 
 static unsigned Maximum_packet_length;
 
@@ -141,8 +153,8 @@ static void Encode_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
         Packet_index == 0);
   }
 
-  Output_tuple->Packet_index = Packet_index;
-  Output_tuple->Block_index = Block_index;
+  Output_tuple->FEC_header.Packet_index = Packet_index;
+  Output_tuple->FEC_header.Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
 
   Packet_index++;
 }
@@ -155,6 +167,7 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   unsigned Word_offset = 0;
   unsigned Input_finished = 0;
   unsigned End = 0;
+  unsigned Packet_length = Maximum_packet_length + HEADER_SIZE + LENGTH_SIZE;
   do
   {
 #pragma HLS LOOP_TRIPCOUNT min=8 max=190
@@ -162,7 +175,6 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
 
     const packet_interface Empty = {0, 0, 0, 1, 0};
 
-    unsigned Packet_length = Maximum_packet_length + HEADER_SIZE + LENGTH_SIZE;
     End = Word_offset == (Packet_length - 1) / 8;
 
     packet_interface Output;
@@ -175,7 +187,7 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
         Input_byte = Header[Offset];
       else if (Offset < PAYLOAD_OFFSET)
       {
-        unsigned Length_offset = 1/*FIXME hacky way to switch to endianness to agree with Vencore's output*/ - (Offset - LENGTH_OFFSET);
+        unsigned Length_offset = FEC_PACKET_LENGTH_WIDTH / 8 - 1 - (Offset - LENGTH_OFFSET);
         Input_byte = Packet_length_parity[Length_offset][Packet_index - Input_tuple.k];
       }
       else if (Offset < Packet_length)
@@ -199,15 +211,12 @@ void Output_parity_packet(input_tuple Input_tuple, output_tuple * Output_tuple,
   }
   while (!End);
 
-  Output_tuple->Packet_index = Packet_index;
-  Output_tuple->Block_index = Block_index;
+  Output_tuple->FEC_header.Packet_index = Packet_index;
+  Output_tuple->FEC_header.Packet_length = Packet_length + FEC_HDR_WIDTH / 8;
 
   Packet_index++;
   if (Packet_index == Input_tuple.k + Input_tuple.h)
-  {
     Packet_index = 0;
-    Block_index++;
-  }
 }
 
 void RSE_core(input_tuple Input_tuple, output_tuple * Output_tuple, packet_interface * Input_packet,

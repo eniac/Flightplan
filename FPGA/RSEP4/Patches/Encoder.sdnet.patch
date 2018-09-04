@@ -1,9 +1,9 @@
---- Encoder.sdnet.original	2018-05-03 12:18:58.308517707 -0400
-+++ Encoder.sdnet	2018-05-03 12:12:43.295084351 -0400
-@@ -141,6 +141,31 @@
-     method move_to_section = done(0);
+--- Encoder.sdnet.original	2018-08-28 14:31:46.097847680 -0400
++++ Encoder.sdnet	2018-08-28 13:51:02.648981143 -0400
+@@ -213,6 +213,31 @@
+     method move_to_section = local_end_0;
      method increment_offset = 0; } }
- class fec_0_t::UserEngine(200, 0) {
+ class fec_encode_0_t::UserEngine(200, 0) {
 +  Packet_input packet_in;
 +  Packet_output packet_out;
 +  class Update_fl_t::Tuple(inout) {
@@ -29,37 +29,37 @@
 +  ioports_t ioports;
 +  local_state_t local_state;
 +  Parser_extracts_t Parser_extracts;
-   class fec_input_t::Tuple(in) {
+   class fec_encode_input_t::Tuple(in) {
      struct {
        stateful_valid : 1,
-@@ -249,17 +274,23 @@
-     Update_lvl_0.hdr = Update_lvl.hdr,
-     Update_lvl_0.ioports = Update_lvl.ioports,
-     Update_lvl_0.local_state = Update_lvl.local_state,
--    Update_lvl_1.Update_fl = Update_lvl_0.Update_fl,
--    Update_lvl_1.hdr = Update_lvl_0.hdr,
--    Update_lvl_1.ioports = Update_lvl_0.ioports,
--    Update_lvl_1.local_state = Update_lvl_0.local_state,
-+    Update_lvl_1.Update_fl = fec_0.Update_fl,
-+    Update_lvl_1.hdr = fec_0.hdr,
-+    Update_lvl_1.ioports = fec_0.ioports,
-+    Update_lvl_1.local_state = fec_0.local_state,
-     fec_0.fec_input = Update_lvl_0.fec_input,
-+    fec_0.Update_fl = Update_lvl_0.Update_fl,
-+    fec_0.hdr = Update_lvl_0.hdr,
-+    fec_0.ioports = Update_lvl_0.ioports,
-+    fec_0.local_state = Update_lvl_0.local_state,
-     Update_lvl_1.fec_output = fec_0.fec_output,
+@@ -337,17 +362,23 @@
+     Update_lvl_1.local_state = Update_lvl_0.local_state,
+     update_fec_state_0.update_fec_state_input = Update_lvl_0.update_fec_state_input,
+     Update_lvl_1.update_fec_state_output = update_fec_state_0.update_fec_state_output,
+-    Update_lvl_2.Update_fl = Update_lvl_1.Update_fl,
+-    Update_lvl_2.hdr = Update_lvl_1.hdr,
+-    Update_lvl_2.ioports = Update_lvl_1.ioports,
+-    Update_lvl_2.local_state = Update_lvl_1.local_state,
++    Update_lvl_2.Update_fl = fec_encode_0.Update_fl,
++    Update_lvl_2.hdr = fec_encode_0.hdr,
++    Update_lvl_2.ioports = fec_encode_0.ioports,
++    Update_lvl_2.local_state = fec_encode_0.local_state,
+     fec_encode_0.fec_encode_input = Update_lvl_1.fec_encode_input,
++    fec_encode_0.Update_fl = Update_lvl_1.Update_fl,
++    fec_encode_0.hdr = Update_lvl_1.hdr,
++    fec_encode_0.ioports = Update_lvl_1.ioports,
++    fec_encode_0.local_state = Update_lvl_1.local_state,
+     Update_lvl_2.fec_encode_output = fec_encode_0.fec_encode_output,
      Update_lvl.hdr = Parser.hdr,
-     Deparser.hdr = Update_lvl_1.hdr,
+     Deparser.hdr = Update_lvl_2.hdr,
      Update_lvl.ioports = ioports,
-     ioports = Update_lvl_1.ioports,
+     ioports = Update_lvl_2.ioports,
      Parser.packet_in = packet_in,
 -    Deparser.packet_in = Parser.packet_out,
-+    fec_0.packet_in = Parser.packet_out,
-+    Deparser.packet_in = fec_0.packet_out,
++    fec_encode_0.packet_in = Parser.packet_out,
++    Deparser.packet_in = fec_encode_0.packet_out,
      packet_out = Deparser.packet_out,
 -    Deparser.Deparser_extracts = Parser.Parser_extracts } }
 \ No newline at end of file
-+    fec_0.Parser_extracts = Parser.Parser_extracts,
-+    Deparser.Deparser_extracts = fec_0.Parser_extracts } }
++    fec_encode_0.Parser_extracts = Parser.Parser_extracts,
++    Deparser.Deparser_extracts = fec_encode_0.Parser_extracts } }

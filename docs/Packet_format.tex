@@ -25,6 +25,7 @@
         5 bits & Block number \\
         1 octet & Frame number ($< k$) \\
         2 octets & Original EtherType \\
+        2 octets & Length in octets of entire data packet \\
         ? octets & Original payload \\
       \bottomrule
     \end{tabular}
@@ -46,8 +47,9 @@
         5 bits & Block number \\
         1 octet & Frame number ($\ge k$) \\
         2 octets & Original EtherType \\
+        2 octets & Length in octets of entire parity packet \\
 	2 bits & Reserved \\
-        14 bits & Payload size in octets (size of original Ethernet frame) \\
+        14 bits & Payload size in octets (size of original Ethernet frame, MSB first) \\
         ? octets & Encoded payload (entire Ethernet frame) \\
       \bottomrule
     \end{tabular}

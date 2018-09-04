@@ -22,12 +22,13 @@ import traceback
 import os
 import tempfile
 import socket
+import traceback
 
 try:
     from runtime_CLI import thrift_connect, load_json_config, RuntimeAPI
     has_api = True
 except Exception as e:
-    print("Cannot import RUNTIME_CLI: %s" % traceback.print_exc())
+    print("Cannot import RUNTIME_CLI: %s" % traceback.format_exc())
     has_api = False
 
 def send_commands(thrift_port, json, commands):

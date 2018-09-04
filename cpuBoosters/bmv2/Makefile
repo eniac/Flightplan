@@ -64,8 +64,8 @@ $(BOOSTER_TARGET_DIR):
 configure: $(BMV2_CONFIGURE) all
 
 ${BMV2_CONFIGURE}: .FORCE
-	cd $(BMV2_REPO) && ./configure P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) \
-		$(CONFIG_FLAGS) && autoconf
+	cd $(BMV2_REPO) && ./configure --disable-logging-macros \
+	   	P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf
 
 .FORCE:
 
