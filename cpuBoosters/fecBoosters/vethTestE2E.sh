@@ -25,7 +25,7 @@ ENCODER_NAME=fecEncodeBooster
 FORWARD_NAME=forwardingNonbooster
 DECODER_NAME=fecDecodeBooster
 
-MAX_SPEED=2000
+MAX_SPEED=1000
 
 INPUT_BASENAME=$(basename $INPUT_PCAP .pcap)
 

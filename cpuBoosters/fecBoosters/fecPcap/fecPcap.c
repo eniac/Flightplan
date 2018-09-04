@@ -82,17 +82,27 @@ int main (int argc, char** argv) {
 	}
 
 	char input_error_buffer[PCAP_ERRBUF_SIZE];
-	input_handle = pcap_open_live(
-				inputInterface,
-				BUFSIZ,
-				1, // set device to promiscous 
-				0, // Timeout of 0
-				input_error_buffer
-			);
+
+
+	input_handle = pcap_create(inputInterface, input_error_buffer);
+
 	if (input_handle == NULL) {
-		LOG_ERR("Could not open device %s: %s\n", inputInterface, input_error_buffer);
+		LOG_ERR("Could not create pcap handle");
 		exit(1);
 	}
+	if (pcap_set_promisc(input_handle, 1) != 0) {
+		LOG_ERR("Could not set promisc");
+		return -1;
+	}
+	if (pcap_set_immediate_mode(input_handle, 1) != 0) {
+		LOG_ERR("Could not set immediate");
+		return -1;
+	}
+
+	if (pcap_activate(input_handle) != 0) {
+		return -1;
+	}
+
 
 	// Alarm handler will signal the pcap loop to break
 	signal(SIGALRM, sigalrm_handler);

@@ -9,14 +9,15 @@
 #include "fecDefs.h"
 #include "rse.h"
 
-#ifndef LOG_ERR
+#ifndef NO_LOG_ERR
 #define LOG_ERR(s, ...) fprintf(stderr, "[%s:%s()::%d] ERROR: " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
+#else
+#define LOG_ERR(s, ...)
 #endif
 
-#ifndef LOG_INFO
+
+#ifndef NO_LOG_INFO
 #define LOG_INFO(s, ...) fprintf(stderr, "[%s:%s()::%d] " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
-#endif
-
 #define LOG_HEX(buff, len) \
     for (int _i_=0; _i_ < len; _i_++) { \
         fprintf(stderr, "%02x", ((char*)buff)[_i_] & 0xff); \
@@ -25,6 +26,10 @@
         } \
     } \
     fprintf(stderr, "\n");
+#else
+#define LOG_INFO(s, ...)
+#define LOG_HEX(buff, len)
+#endif
 
 #define SIZE_ETHERNET sizeof(struct ether_header)
 #define WHARF_TAG_SIZE sizeof(struct ether_header) + sizeof(struct fec_header)
