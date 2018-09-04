@@ -36,7 +36,7 @@ public:
 		}
 	};
 	struct hdr_t_0 {
-		static const size_t _SIZE = 146;
+		static const size_t _SIZE = 162;
 		struct _struct_eth {
 			static const size_t _SIZE = 113;
 			_LV<1> isValid;
@@ -65,47 +65,50 @@ public:
 		};
 		_struct_eth eth;
 		struct _struct_fec {
-			static const size_t _SIZE = 33;
+			static const size_t _SIZE = 49;
 			_LV<1> isValid;
 			_LV<3> traffic_class;
 			_LV<5> block_index;
 			_LV<8> packet_index;
 			_LV<16> original_type;
-			_struct_fec& operator=(_LV<33> _x) {
-				isValid = _x.slice(32,32);
-				traffic_class = _x.slice(31,29);
-				block_index = _x.slice(28,24);
-				packet_index = _x.slice(23,16);
-				original_type = _x.slice(15,0);
+			_LV<16> packet_length;
+			_struct_fec& operator=(_LV<49> _x) {
+				isValid = _x.slice(48,48);
+				traffic_class = _x.slice(47,45);
+				block_index = _x.slice(44,40);
+				packet_index = _x.slice(39,32);
+				original_type = _x.slice(31,16);
+				packet_length = _x.slice(15,0);
 				return *this;
 			}
-			_LV<33> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type); }
-			operator _LV<33>() { return get_LV(); } 
+			_LV<49> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type,packet_length); }
+			operator _LV<49>() { return get_LV(); } 
 			std::string to_string() const {
-				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t)";
+				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t\tpacket_length = " + packet_length.to_string() + "\n" + "\t)";
 			}
 			_struct_fec() {} 
-			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type) {
+			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type, _LV<16> _packet_length) {
 				isValid = _isValid;
 				traffic_class = _traffic_class;
 				block_index = _block_index;
 				packet_index = _packet_index;
 				original_type = _original_type;
+				packet_length = _packet_length;
 			}
 		};
 		_struct_fec fec;
-		hdr_t_0& operator=(_LV<146> _x) {
-			eth = _x.slice(145,33);
-			fec = _x.slice(32,0);
+		hdr_t_0& operator=(_LV<162> _x) {
+			eth = _x.slice(161,49);
+			fec = _x.slice(48,0);
 			return *this;
 		}
-		_LV<146> get_LV() { return (eth.isValid,eth.dst,eth.src,eth.type,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type); }
-		operator _LV<146>() { return get_LV(); } 
+		_LV<162> get_LV() { return (eth.isValid,eth.dst,eth.src,eth.type,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,fec.packet_length); }
+		operator _LV<162>() { return get_LV(); } 
 		std::string to_string() const {
 			return std::string("(\n")  + "\t\teth = " + eth.to_string() + "\n" + "\t\tfec = " + fec.to_string() + "\n" + "\t)";
 		}
 		hdr_t_0() {} 
-		hdr_t_0( _LV<113> _eth, _LV<33> _fec) {
+		hdr_t_0( _LV<113> _eth, _LV<49> _fec) {
 			eth = _eth;
 			fec = _fec;
 		}
@@ -295,6 +298,7 @@ public:
 			Tuple.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
 			Tuple.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
 			Tuple.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
+			Tuple.Hdr.FEC.Packet_length = hdr.fec.packet_length.to_ulong();
 			Tuple.Update_fl.Packet_count = Update_fl.packet_count_1.to_ulong();
 			Tuple.Update_fl.k = Update_fl.k_1.to_ulong();
 			Tuple.Update_fl.h = Update_fl.h_1.to_ulong();
@@ -365,6 +369,7 @@ public:
 			hdr.fec.block_index = Tuples[0].Hdr.FEC.Block_index.to_uint();
 			hdr.fec.packet_index = Tuples[0].Hdr.FEC.Packet_index.to_uint();
 			hdr.fec.original_type = Tuples[0].Hdr.FEC.Original_type.to_uint();
+			hdr.fec.packet_length = Tuples[0].Hdr.FEC.Packet_length.to_uint();
 			Update_fl.packet_count_1 = Tuples[0].Update_fl.Packet_count.to_uint();
 			Update_fl.k_1 = Tuples[0].Update_fl.k.to_uint();
 			Update_fl.h_1 = Tuples[0].Update_fl.h.to_uint();

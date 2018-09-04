@@ -15,6 +15,7 @@
 typedef ap_uint<FEC_TRAFFIC_CLASS_WIDTH> traffic_class;
 typedef ap_uint<FEC_BLOCK_INDEX_WIDTH> block_index;
 typedef ap_uint<FEC_PACKET_INDEX_WIDTH> packet_index;
+typedef ap_uint<FEC_PACKET_LENGTH_WIDTH> packet_length;
 typedef ap_uint<FEC_ETHER_TYPE_WIDTH> packet_type;
 typedef ap_uint<FEC_K_WIDTH> k_type;
 typedef ap_uint<FEC_H_WIDTH> h_type;
@@ -37,7 +38,8 @@ typedef struct
 
 typedef struct
 {
-    ap_uint<FEC_ETHER_TYPE_WIDTH> Original_type;
+    packet_length Packet_length;
+    packet_type Original_type;
     packet_index Packet_index;
     block_index Block_index;
     traffic_class Traffic_class;

@@ -22,7 +22,7 @@
 #include "Decoder_core.h"
 
 static const unsigned HEADER_SIZE = FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH
-    + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH;
+    + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH + FEC_PACKET_LENGTH_WIDTH;
 static const unsigned TRAFFIC_CLASS_COUNT = 1 << FEC_TRAFFIC_CLASS_WIDTH;
 static const unsigned PING_PONG_BUFFER_SIZE = DIVIDE_AND_ROUND_UP(
     FEC_MAX_PACKET_SIZE + FEC_PACKET_LENGTH_WIDTH / 8, BYTES_PER_WORD);
@@ -129,7 +129,8 @@ static void Collect_packets(hls::stream<input_tuples> & Tuple_input,
   unsigned Traffic_class = Header.Traffic_class;
   unsigned Block_index = Header.Block_index;
   unsigned Packet_index = Header.Packet_index;
-  packet_type Original_type = Header.Original_type;
+  unsigned Original_type = Header.Original_type;
+  unsigned Packet_length = Header.Packet_length;
 
   parameters Parameters;
   Parameters.Input_tuples = Input_tuples;
@@ -139,7 +140,6 @@ static void Collect_packets(hls::stream<input_tuples> & Tuple_input,
   bool Drop = Decide_to_drop(Wait_for_data, Traffic_class, New_block, k);
 
   bool End = false;
-  unsigned Packet_length = 0;
   packet_interface Input;
   do
   {
@@ -154,8 +154,6 @@ static void Collect_packets(hls::stream<input_tuples> & Tuple_input,
       Bypass_FIFO.write(Input);
     else if (!Drop)
       Data_FIFOs[Traffic_class].write(Input.Data);
-
-    Packet_length += Input.Count;
   }
   while (!End);
 
