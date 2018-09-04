@@ -4,7 +4,8 @@ FILES="Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv \
        Decoder/XilinxSwitch/vivado_sim_waveform.bash \
        Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash \
        Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp \
-       Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp"
+       Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp \
+       Decoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl"
 
 function Restore_decoder
 {
