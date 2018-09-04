@@ -1,0 +1,1478 @@
+diff --git a/frontends/p4/flightplan.cpp b/frontends/p4/flightplan.cpp
+new file mode 100644
+index 0000000..f7b4266
+--- /dev/null
++++ b/frontends/p4/flightplan.cpp
+@@ -0,0 +1,297 @@
++/*
++Flightplan
++Nik Sultana, UPenn, July 2018
++*/
++
++#include <assert.h>
++#include <iostream>
++#include <fstream>
++
++#include "externInstance.h"
++
++#include "../common/options.h"
++#include "ir/ir.h"
++#include "ir/visitor.h"
++#include "lib/nullstream.h"
++#include "lib/path.h"
++#include "toP4/toP4.h"
++
++#include "flightplan.h"
++
++namespace P4 {
++
++Split* Split::curr_split = nullptr;
++std::set<Split*> Split::Splits;
++
++const std::string Flightplan::header_comment = "// Flightplan output";
++const std::set<std::string> Flightplan::excluded_blocks = {"Deparser"};
++const std::string Flightplan::landing_type_name = "Landing";
++const std::set<std::string> Flightplan::landing_API = {"flyto"};
++const std::string Flightplan::landing_start = "Flight_Start";
++//std::set<Split*> Flightplan::splits;
++unsigned Flightplan::dot_id = 0;
++FStmt* FlightplanImpl::main = nullptr;
++
++ReferenceMap* Flightplan::FP_refMap;
++TypeMap* Flightplan::FP_typeMap;
++CompilerOptions Flightplan::FP_options;
++
++void FlightplanImpl::end_apply(const IR::Node* node) {
++
++    Split::mark_split(main);
++
++    if (node->is<IR::P4Program>()) {
++        std::cout << "Output files (" << Split::Splits.size() << "): ";
++        for (auto item : Split::Splits) {
++            std::cout << item->output_file << " ";
++        }
++        std::cout << std::endl;
++//        std::cout << "Splits: " << Flightplan::splits.size() << std::endl;
++        print_ctxt();
++
++        std::cout << "Program declarations: " << std::endl;
++        for (auto decl : original_prog->declarations) {
++//            std::cout << decl->toString();
++            std::cout << "  * (" << decl->node_type_name() << ") " << decl->getNode()->toString() << std::endl;
++        }
++
++        std::cout << "Main-block declarations: " << std::endl;
++        for (auto decl : control_decls) {
++            std::cout << "  * (" << decl->node_type_name() << ") " << decl->getNode()->toString() << std::endl;
++        }
++
++        std::cout << "Main-block ID: " << control_ID.name << std::endl;
++
++        std::map<const cstring, IR::BlockStatement> step_map;
++        std::cout << "Emitting splits";
++//        for (auto split : Flightplan::splits) {
++        for (auto split : Split::Splits) {
++            std::cout << ".";
++            if (step_map.find(split->output_file) != step_map.end()) {
++#if 0 // FIXME this code needs reworking, reimplementing toStatement();       
++                step->toStatement(&step_map[step->get_destination()]);
++#endif
++                std::logic_error("Unexpected");
++            } else {
++                IR::BlockStatement bs;
++#if 0 // FIXME this code needs reworking, reimplementing toStatement();       
++                step->toStatement(&bs);
++#endif
++                bs.push_back(split->getBeginning()->toStatement());
++                step_map[split->output_file] = bs;
++
++                if (options.flightplan_DOT_output) {
++                    const cstring destination = std::string(split->output_file) + ".dot";
++                    std::cout << "Writing DOT file:" << destination << std::endl;
++                    if (!destination.isNullOrEmpty()) {
++                        Util::PathName path(destination);
++                        std::ostream *ost = new std::ofstream(path.toString(), std::ios_base::app);
++                        *ost << Flightplan::header_comment << std::endl << std::endl;
++                        Split::effect_split(split);
++                        std::cout << "Generating DOT" << std::endl;
++                        Split::to_dot(ost, split);
++#if 0
++                        *ost << "digraph G {" << std::endl;
++                        *ost << "compound=true;" << std::endl;
++
++//                        step->set_prev(new EntryPoint(step));
++                        EntryPoint ep(std::string(options.flightplanFolder), nullptr);
++                        //ep.set_next(step);
++                        *ost << ep.toDOT() << std::endl;
++                        *ost << ep.DOTid() + " -> " + split->getBeginning()->entryDOTid() + ";" << std::endl;
++
++                        *ost << split->getBeginning()->toDOT() << std::endl;
++                        *ost << "}" << std::endl;
++#endif
++                    } else {
++                        ::error("Null filename?");
++                    }
++                }
++            }
++        }
++        std::cout << std::endl;
++
++        // Show dependencies between splits
++        for (auto split : Split::Splits) {
++#if 0
++            auto split_beginning = split->getCleaved();
++            assert(split_beginning != nullptr);
++            std::set<const FStmt*> ts = StmtFlow::transfers(StmtFlow::TransitClos(split_beginning));
++            for (auto next_stmt : ts) {
++                std::cout << "    " << next_stmt->toString() << std::endl;
++            }
++#endif
++            std::cout << "split = " << split->output_file;
++            std::set<Split*> ts = split->successor_splits;
++            std::cout << " (" << ts.size() << ")" << std::endl;
++            for (auto next_split : ts) {
++//                std::cout << "  * " << next_split->getCleaved()->toString() << std::endl;
++                std::cout << "  * " << next_split->output_file << std::endl;
++            }
++        }
++
++        // Draw split-level topology
++        if (options.flightplan_DOT_output) {
++            const cstring destination = options.flightplanFolder + "/" + "split-topology.dot";
++            std::cout << "Writing split-level topology:" << destination << std::endl;
++            if (!destination.isNullOrEmpty()) {
++                Util::PathName path(destination);
++                std::ostream *ost = new std::ofstream(path.toString(), std::ios_base::app);
++                *ost << Flightplan::header_comment << std::endl << std::endl;
++                Split::splits_dot(ost);
++            }
++        }
++
++        // FIXME experimental    
++        if (options.flightplan_DOT_output) {
++            const cstring destination = options.flightplanFolder + "/" + "cfg.dot";
++            std::cout << "Writing CFG file:" << destination << std::endl;
++            if (!destination.isNullOrEmpty()) {
++                Util::PathName path(destination);
++                std::ostream *ost = new std::ofstream(path.toString(), std::ios_base::app);
++                *ost << Flightplan::header_comment << std::endl << std::endl;
++                *ost << "digraph G {" << std::endl;
++                std::set<const FStmt*> visited;
++                StmtFlow::cfg_dot(ost, FlightplanImpl::main, visited);
++                *ost << "}" << std::endl;
++            } else {
++                ::error("Null filename?");
++            }
++        }
++
++        std::cout << "Writing files:" << std::endl;
++        for (auto step : step_map) {
++            std::cout << "  * " << step.first << " (";
++            IR::BlockStatement bs = step.second;
++            int size = 0;
++            for (auto c : bs.components) {
++                size += 1;
++            }
++            std::cout << size << ")" << std::endl;
++
++            IR::P4Control newctrl = IR::P4Control(control_ID, control->type, control->controlLocals, /*control->body*/&bs);
++            IR::IndexedVector<IR::Node> declarations;
++
++            for (auto decl : original_prog->declarations) {
++                // Preserve order of declarations
++                if (decl->is<IR::IDeclaration>() && decl->as<IR::IDeclaration>().getName() == control_ID)
++                    declarations.push_back(&newctrl);
++                else
++                    declarations.push_back(decl->getNode());
++            }
++
++            IR::P4Program prog = IR::P4Program(declarations);
++            prog.validate();
++
++            FStmt::toFile(options.file, step.first, &prog);
++        }
++    }
++    Inspector::end_apply();
++}
++
++void FlightplanImpl::print_ctxt() const {
++    std::cout << "Ctxt (" << ctxt.size() << "): ";
++    for (auto elem : ctxt) {
++        std::cout << elem->toString() << " ";
++    }
++    std::cout << std::endl;
++}
++
++bool FlightplanImpl::preorder(const IR::P4Program* p) {
++    std::cout << "Program main: " << p->main << std::endl;
++
++    original_prog = p;
++
++    auto main_decl = p->getDeclByName(p->main);
++#if 0
++    std::cout << "Program main contents: " <<
++        main_decl->getNode()->node_type_name()
++        << std::endl;
++#endif
++
++    auto di = main_decl->getNode()->to<IR::Declaration_Instance>();
++
++    for (auto a : *di->arguments) {
++#if 0
++        std::cout << "Arg: " << a->toString() << std::endl;
++        std::cout << "    " << a->getNode()->node_type_name() << std::endl;
++#endif
++
++        auto decl = p->getDeclByName(a->toString());
++
++        bool interesting_control_block = false;
++
++        if (decl->getNode()->is<IR::P4Control>() &&
++               Flightplan::excluded_blocks.find(std::string(a->toString())) == Flightplan::excluded_blocks.end()) {
++            interesting_control_block = true;
++        }
++
++        std::cout << "Arg: " << decl->toString();
++        std::cout << " : " << decl->getNode()->node_type_name();
++        if (interesting_control_block) {
++            control = &decl->getNode()->as<IR::P4Control>();
++            control_ID = decl->getName(); // FIXME redundant
++            std::cout << " (*)";
++        }
++        std::cout << std::endl;
++
++        if (interesting_control_block)
++            visit(decl->getNode());
++    }
++
++    return false;
++}
++
++bool FlightplanImpl::preorder(const IR::PathExpression* expr) {
++    // This is used to accummulate context
++    // FIXME this isn't being done in a principle manner. For one thing,
++    //       the direction of gathering isn't being set appropriately
++    //       (we want a backward analysis).
++    ctxt.insert(expr);
++    return false;
++}
++
++bool FlightplanImpl::preorder(const IR::P4Control* s) {
++    // It's assumed that this is the main P4Control block (not the deparser).
++    std::cout << "P4Control: " << s->externalName() << std::endl;
++
++    for (auto decl : *s->getDeclarations()) {
++        control_decls.push_back(decl);
++    }
++
++#if 0   
++    visit(s->body);
++#endif
++    main = StmtConvert::encapsulate(nullptr, std::string(options.flightplanFolder), s->body, nullptr, nullptr);
++//    steps.push_back(main);
++#if 0
++    for (auto split : main->splits) { // FIXME hack? overlaps with Split::Splits?
++//        Flightplan::splits.insert(split);
++        Split::Splits.insert(split);
++    }
++#endif
++    return false;
++}
++
++bool FlightplanImpl::preorder(const IR::P4Parser*) {
++    // We don't go into parsers
++    return false;
++}
++
++Flightplan::Flightplan(ReferenceMap* refMap, TypeMap* typeMap, const CompilerOptions& options) {
++    CHECK_NULL(refMap);
++    CHECK_NULL(typeMap);
++    setName("Flightplan");
++
++    Flightplan::FP_refMap = refMap;
++    Flightplan::FP_typeMap = typeMap;
++    Flightplan::FP_options = options;
++
++    if (options.flightplan) {
++        std::cout << "Starting Flightplan" << std::endl;
++//        passes.emplace_back(new FlightplanTransf(refMap, typeMap, options));
++        passes.emplace_back(new FlightplanImpl(refMap, typeMap, options));
++    }
++}
++
++}  // namespace P4
+diff --git a/frontends/p4/flightplan.h b/frontends/p4/flightplan.h
+new file mode 100644
+index 0000000..4054e88
+--- /dev/null
++++ b/frontends/p4/flightplan.h
+@@ -0,0 +1,503 @@
++/*
++Flightplan
++Nik Sultana, UPenn, July 2018
++
++NOTE must be executed after RemoveReturns, since we assume they've been removed.
++*/
++
++
++#ifndef _FRONTENDS_P4_FLIGHTPLAN_H_
++#define _FRONTENDS_P4_FLIGHTPLAN_H_
++
++#include <stdexcept>
++#include <string>
++#include <vector>
++
++#include "ir/ir.h"
++#include "frontends/p4/typeChecking/typeChecker.h"
++#include "frontends/common/resolveReferences/resolveReferences.h"
++
++namespace P4 {
++
++class Split;
++
++class Flightplan : public PassManager {
++ public:
++    Flightplan(ReferenceMap* refMap, TypeMap* typeMap, const CompilerOptions&);
++
++    static const std::string header_comment;
++    static const std::set<std::string> excluded_blocks;
++    static const std::string landing_type_name;
++    static const std::set<std::string> landing_API;
++    static const std::string landing_start;
++    static unsigned dot_id;
++//    static std::set<Split*> splits;
++
++    static ReferenceMap* FP_refMap;
++    static TypeMap* FP_typeMap;
++    static CompilerOptions FP_options;
++};
++
++class FStmt;
++class StmtFlow;
++
++class Split final {
++    FStmt *beginning = nullptr;
++    FStmt *cleaved = nullptr;
++
++    Split(std::string name, cstring output_file, FStmt *beginning) : output_file(output_file), beginning(beginning), name(name) {}
++
++    static Split* curr_split;
++
++ public:
++    cstring output_file = nullptr;
++    std::string name;
++    std::set<Split*> successor_splits;
++//    static std::vector<Split*> Splits;
++    static std::set<Split*> Splits;
++    static Split* new_split(std::string dest_path, std::string landing_name, FStmt *beginning) {
++        std::string result = dest_path + "/" + landing_name + ".p4";
++        curr_split = new Split(landing_name, result, beginning); // FIXME automatically deleted on deconstruction?
++        Splits.insert(curr_split);
++        return curr_split;
++    }
++    static Split* current_split(std::string dest_path, FStmt *current) {
++        if (curr_split == nullptr) {
++            curr_split = new_split(dest_path, Flightplan::landing_start, current);
++        }
++        return curr_split;
++    }
++
++    const FStmt* getBeginning() const {
++        return beginning;
++    }
++
++#if 0
++some of these could go in StmtFlow
++
++    const FStmt* getNext(const FStmt* st) const 
++
++    bool isIncluded(FStmt* st) const 
++      true unless st isn't reacheable from this statement via getNext until a TransferPoint or the end of the program.
++
++    unsigned size() const 
++      total number of statements, where "if" = 1 + true + false; similar for "switch"
++      to make it easier, define static class called StmtSize, and call its methods
++
++    IR::Statement* toStatement() const 
++      until a transfer point; stitch together remainder of blocks, including from if/switch.
++
++    static lift -- change Stmt to TransferPoint 
++
++    std::map<name,type> calculateInitialContext() const 
++       FIXME backwards analysis
++#endif
++
++    // FIXME for handover between splits, need to calculate context for latter split in advance, to be carried by the former.
++    static int mark_split(FStmt* main);
++    static void mark_split(FStmt* stmt, Split* split, std::set<const FStmt*> visited);
++    static void to_dot(std::ostream *ost, Split *split);
++    static FStmt* effect_split(Split *split);
++    static bool continue_split(Split *split, FStmt* prev, FStmt* stmt, std::set<FStmt*> &visited, bool pre_cloned, bool ascend);
++    static bool ascend_split(Split *split, FStmt* prev, FStmt* stmt, std::set<FStmt*> &visited);
++
++#if 0
++    // Which splits follow or precede a split; need to know this to work out what state will need tranferring for eventual use.
++    static std::set<Split *> successors(Split *split);
++    static std::set<Split *> predecessors(Split *split);
++#endif
++    // Show how splits connect to one another.
++    static void splits_dot(std::ostream *ost);
++
++#if 0
++    std::set<Split*>* successors();
++#endif
++
++    const FStmt* getCleaved() const {
++        return cleaved;
++    }
++};
++
++class DOT {
++ protected:
++    unsigned dot_id;
++    std::string* clust_id = nullptr;
++ public:
++    DOT(unsigned id) : dot_id(id) {}
++    virtual std::string toDOT() const = 0;
++    virtual std::string DOTid() const {
++        return "n" + std::to_string(dot_id);
++    }
++    virtual std::string* getClustID() const {
++        return clust_id;
++    }
++    virtual std::string entryDOTid() const {
++        return DOTid();
++    }
++};
++
++class FStmt : public DOT {
++ protected:
++    const FStmt* container = nullptr;
++
++    const FStmt* prev = nullptr;
++    const FStmt* next = nullptr;
++
++    void clone_from(FStmt* from_stmt) {
++        container = from_stmt->container;
++        //prev = from_stmt->prev;
++        //next = from_stmt->next;
++        prev = nullptr;
++        next = nullptr;
++        splits.clear();
++        for (auto s : from_stmt->splits) {
++            splits.insert(s);
++        }
++    }
++
++    FStmt (const FStmt* container, unsigned dot_id, const FStmt* prev, const FStmt* next);
++
++ public:
++    std::set<Split*> splits;
++    explicit FStmt (const FStmt* container, std::string dest_path, const FStmt* prev, const FStmt* next);
++
++    // Purge all other splits that this stmt links to, except for one.
++    // For "effected" splits, this is used to purge other split
++    // info from each stmt in a split.
++    void keep_split(Split *split) {
++        assert(split != nullptr);
++        // FIXME these assertions should be switched on
++//        assert(splits.size() > 0);
++//        assert(splits.find(split) != splits.end());
++        splits.clear();
++        splits.insert(split);
++    }
++
++    void set_next (FStmt* next) {
++        this->next = next;
++    }
++
++    void set_prev (FStmt* prev) {
++        this->prev = prev;
++    }
++
++    const FStmt* get_next () const {
++        return this->next;
++    }
++
++    const FStmt* get_prev () const {
++        return this->prev;
++    }
++
++    const FStmt* getContainer() const {
++       return container;
++    }
++
++    std::string link_from_prev() const;
++
++    virtual FStmt* clone() const = 0;
++
++    virtual const IR::StatOrDecl* toStatement() const = 0;
++
++    virtual cstring toString() const = 0;
++
++    static void toString(const std::vector<const FStmt*> &steps) {
++        for (auto s : steps) {
++            std::cout << ":" << s->toString() << std::endl;
++        }
++    }
++
++    static void toFile(cstring inputfile, const cstring destination, const IR::P4Program* prog) {
++        if (!destination.isNullOrEmpty()) {
++            Util::PathName path(destination);
++            std::ostream *ppStream = new std::ofstream(path.toString(), std::ios_base::app);
++            *ppStream << Flightplan::header_comment << std::endl << std::endl;
++            P4::ToP4 top4(ppStream, false, inputfile);
++            (void)prog->apply(top4);
++        } else {
++            ::error("Null filename?");
++        }
++    }
++};
++
++class EntryPoint : public FStmt {
++ public:
++    EntryPoint (std::string dest_path, const FStmt* next) : FStmt (nullptr, dest_path, nullptr, next) {}
++
++    const IR::StatOrDecl* toStatement() const override {
++        return new IR::EmptyStatement();
++    }
++    cstring toString() const override {
++        return std::string("");
++    }
++    std::string toDOT() const override {
++      std::string result = DOTid() + " [label=\"\",color=white,style=invis];\n";
++      return result;
++    }
++    FStmt* clone() const override {
++        throw std::logic_error("Cannot clone EntryPoint");
++    }
++};
++
++class TransferPoint : public FStmt {
++
++    TransferPoint (const FStmt* container, unsigned dot_id, const FStmt* prev, const FStmt* next) : FStmt (container, dot_id, prev, next) {}
++
++ public:
++    const IR::StatOrDecl* original = nullptr;
++    std::string transfer_to;
++
++    TransferPoint (const FStmt* container, std::string dest_path, const IR::MethodCallStatement* stmt, const FStmt* prev, const FStmt* next);
++    const IR::StatOrDecl* toStatement() const override {
++        return original;
++    }
++    cstring toString() const override;
++    std::string toDOT() const override;
++
++    FStmt* clone() const override;
++
++    // FIXME ensure that types have defined width.
++    static void free_vars(std::map<std::string,std::string/*FIXME use AST objects*/> &context);
++
++    static std::string flyto_target(const std::string& expression);
++};
++
++class Stmt : public FStmt {
++    const IR::StatOrDecl* original = nullptr;
++    Stmt (const FStmt* container, unsigned dot_id, const FStmt* prev, const FStmt* next) : FStmt (container, dot_id, prev, next) {}
++ public:
++    Stmt (const FStmt* container, std::string dest_path, const IR::AssignmentStatement* stmt, const FStmt* prev, const FStmt* next);
++    Stmt (const FStmt* container, std::string dest_path, const IR::MethodCallStatement* stmt, const FStmt* prev, const FStmt* next);
++    Stmt (const FStmt* container, std::string dest_path, const IR::Declaration* stmt, const FStmt* prev, const FStmt* next);
++
++    const IR::StatOrDecl* toStatement() const override;
++    cstring toString() const override;
++    std::string toDOT() const override;
++    FStmt* clone() const override;
++};
++
++class BlockStmt : public FStmt {
++    const IR::BlockStatement* original = nullptr;
++    FStmt* block_entry = nullptr;
++    BlockStmt (const FStmt* container, unsigned dot_id, const FStmt* prev, const FStmt* next) : FStmt (container, dot_id, prev, next) {}
++ public:
++    BlockStmt (const FStmt* container, std::string dest_path, const IR::BlockStatement* stmt, const FStmt* prev, const FStmt* next);
++    BlockStmt (const FStmt* container, std::string dest_path, FStmt* stmt, const FStmt* prev, const FStmt* next);
++
++    const IR::StatOrDecl* toStatement() const override;
++    cstring toString() const override;
++    std::string toDOT() const override;
++    std::string entryDOTid() const override;
++    FStmt* getEntry() const {
++        return block_entry;
++    }
++    void setEntry(FStmt* stmt) {
++        block_entry = stmt;
++    }
++    const FStmt* getLast() const {
++        const FStmt* cursor = block_entry;
++        // Walk to the last entry.
++        while (cursor->get_next() != nullptr) {
++            cursor->get_next();
++        }
++        return cursor;
++    }
++    FStmt* clone() const override;
++
++//    static BlockStmt* block_from (const FStmt* container, std::string dest_path, FStmt* stmt, const FStmt* prev, const FStmt* next);
++};
++
++class IfStmt : public FStmt {
++    const IR::Expression *condition = nullptr;
++    FStmt* ifTrue = nullptr;
++    FStmt* ifFalse = nullptr;
++    IfStmt (const FStmt* container, unsigned dot_id, const FStmt* prev, const FStmt* next) : FStmt (container, dot_id, prev, next) {}
++ public:
++    IfStmt (const FStmt* container, std::string dest_path, const IR::IfStatement* stmt, const FStmt* prev, const FStmt* next);
++
++    const IR::StatOrDecl* toStatement() const override;
++    cstring toString() const override;
++    std::string toDOT() const override;
++
++    const IR::Statement* trueStatement() const;
++    const IR::Statement* falseStatement() const;
++
++    FStmt* get_ifTrue() const {
++        return ifTrue;
++    }
++    FStmt* get_ifFalse() const {
++        return ifFalse;
++    }
++    void set_ifTrue(FStmt* stmt) {
++        ifTrue = stmt;
++    }
++    void set_ifFalse(FStmt* stmt) {
++        ifFalse = stmt;
++    }
++    FStmt* clone() const override;
++};
++
++class SwitchStmt : public FStmt {
++    const IR::Expression *expression = nullptr;
++    SwitchStmt (const FStmt* container, unsigned dot_id, const FStmt* prev, const FStmt* next) : FStmt (container, dot_id, prev, next) {}
++ public:
++    SwitchStmt (const FStmt* container, std::string dest_path, const IR::SwitchStatement* stmt, const FStmt* prev, const FStmt* next);
++
++    const IR::StatOrDecl* toStatement() const override;
++    cstring toString() const override;
++    std::string toDOT() const override;
++
++    class Case final {
++        const FStmt *stmt = nullptr;
++     public:
++        const IR::Expression *label = nullptr;
++        Case (const IR::Expression *label, FStmt *stmt) : label(label), stmt(stmt) {}
++        const FStmt* get_stmt() const {
++            return stmt;
++        }
++        const IR::Statement* get_statement() const {
++            const IR::Statement *result = nullptr;
++            if (stmt != nullptr) {
++                result = &stmt->toStatement()->as<IR::Statement>();
++            }
++            return result;
++        }
++    };
++ private:
++    std::vector<Case> cases;
++ public:
++    std::vector<Case> getCases() const {
++        return cases;
++    }
++    FStmt* clone() const override;
++};
++
++class StmtConvert {
++ public:
++    static FStmt* encapsulate (const FStmt* container, std::string dest_path, const IR::AssignmentStatement* stmt, const FStmt* prev, const FStmt* next) {
++        return new Stmt (container, dest_path, stmt, prev, next);
++    }
++    static FStmt* encapsulate (const FStmt* container, std::string dest_path, const IR::MethodCallStatement* stmt, const FStmt* prev, const FStmt* next);
++    static FStmt* encapsulate (const FStmt* container, std::string dest_path, const IR::BlockStatement* stmt, const FStmt* prev, const FStmt* next) {
++        return new BlockStmt (container, dest_path, stmt, prev, next);
++    }
++
++    static FStmt* encapsulate (const FStmt* container, std::string dest_path, const IR::StatOrDecl* stmt, const FStmt* prev, const FStmt* next) {
++        if (stmt->is<IR::Declaration>()) {
++            return encapsulate(container, dest_path, &stmt->as<IR::Declaration>(), prev, next);
++        } else if (stmt->is<IR::Statement>()) {
++            return encapsulate(container, dest_path, &stmt->as<IR::Statement>(), prev, next);
++        } else {
++            throw std::logic_error("Unrecognised statement type");
++        }
++    }
++    static FStmt* encapsulate (const FStmt* container, std::string dest_path, const IR::Statement* stmt, const FStmt* prev, const FStmt* next) {
++        if (stmt->is<IR::AssignmentStatement>()) {
++            return new Stmt (container, dest_path, &stmt->as<IR::AssignmentStatement>(), prev, next);
++        } else if (stmt->is<IR::MethodCallStatement>()) {
++            return encapsulate (container, dest_path, &stmt->as<IR::MethodCallStatement>(), prev, next);
++        } else if (stmt->is<IR::BlockStatement>()) {
++            return new BlockStmt (container, dest_path, &stmt->as<IR::BlockStatement>(), prev, next);
++        } else if (stmt->is<IR::IfStatement>()) {
++            return new IfStmt (container, dest_path, &stmt->as<IR::IfStatement>(), prev, next);
++        } else if (stmt->is<IR::SwitchStatement>()) {
++            return new SwitchStmt (container, dest_path, &stmt->as<IR::SwitchStatement>(), prev, next);
++        } else {
++            throw std::logic_error("Unrecognised statement type");
++        }
++    }
++    static FStmt* encapsulate (const FStmt* container, std::string dest_path, const IR::Declaration* stmt, const FStmt* prev, const FStmt* next) {
++        return new Stmt (container, dest_path, stmt, prev, next);
++    }
++
++    static FStmt* encapsulate (const FStmt* container, std::string dest_path, const IR::IfStatement* stmt, const FStmt* prev, const FStmt* next) {
++        return new IfStmt (container, dest_path, stmt, prev, next);
++    }
++};
++
++class StmtFlow {
++ public:
++    enum class Direction {Forward, Backward};
++
++    static bool atomic_stmt(const FStmt* stmt);
++    static bool transfer_stmt(const FStmt* stmt);
++    static Split* transfers_to(const FStmt* stmt);
++
++    static std::set<const FStmt*> getNext(const FStmt* stmt, std::set<const FStmt*> &visited);
++    static std::set<const FStmt*> getPrev(const FStmt* stmt, std::set<const FStmt*> &visited);
++    static std::set<const FStmt*> getOut(Direction dir, const FStmt* stmt, std::set<const FStmt*> &visited);
++    static std::set<const FStmt*> getIn(Direction dir, const FStmt* stmt, std::set<const FStmt*> &visited);
++    static std::set<const FStmt*> step(Direction dir, const FStmt* stmt, std::set<const FStmt*> &visited);
++    static std::set<const FStmt*> step(Direction dir, std::set<const FStmt*> stmts, std::set<const FStmt*> &visited);
++
++    static void cfg_dot(std::ostream *ost, const FStmt* st, std::set<const FStmt*> &visited, const FStmt* pre_st=nullptr);
++
++    static std::string stmt_kind(const FStmt* stmt);
++
++    static std::set<const FStmt*> TransitClos(const FStmt* stmt);
++    static std::set<const FStmt*> transfers(std::set<const FStmt*>);
++};
++
++class FlightplanImpl : public Inspector {
++    ReferenceMap*   refMap;
++    TypeMap*        typeMap;
++    const CompilerOptions options;
++
++    static FStmt* main;
++
++ //   std::vector<FStmt*> steps;
++    const IR::P4Program* original_prog = nullptr;
++    std::set<const IR::PathExpression*> ctxt;
++
++    // FIXME there's redundancy here
++    IR::ID control_ID;
++    const IR::P4Control* control = nullptr;
++    std::vector<const IR::IDeclaration*> control_decls;
++
++ public:
++    explicit FlightplanImpl(ReferenceMap* refMap, TypeMap* typeMap, const CompilerOptions& options) :
++            refMap(refMap), typeMap(typeMap), options(options)
++    {
++        setName("FlightplanImpl");
++    }
++
++    void end_apply(const IR::Node*) override;
++
++#if 0
++    bool preorder(const IR::MethodCallStatement* s) override;
++    bool preorder(const IR::BlockStatement* s) override;
++    bool preorder(const IR::AssignmentStatement* s) override;
++    bool preorder(const IR::IfStatement* s) override;
++    bool preorder(const IR::SwitchStatement* s) override;
++#endif
++
++    bool preorder(const IR::PathExpression* expr) override;
++    bool preorder(const IR::P4Control* s) override;
++    bool preorder(const IR::P4Parser* s) override;
++    bool preorder(const IR::P4Program* p) override;
++
++    void print_ctxt() const;
++    static const FStmt* getMain() {
++        return main;
++    }
++};
++
++class FlightplanTransf : public Transform {
++    ReferenceMap*   refMap;
++    TypeMap*        typeMap;
++    const CompilerOptions options;
++ public:
++    explicit FlightplanTransf(ReferenceMap* refMap, TypeMap* typeMap, const CompilerOptions& options) :
++            refMap(refMap), typeMap(typeMap), options(options)
++    {
++        setName("FlightplanTransf");
++    }
++
++    const IR::Node* preorder(IR::Type_Declaration* t) override;
++    const IR::Node* preorder(IR::Method* t) override;
++    const IR::Node* preorder(IR::MethodCallStatement* mcs) override;
++};
++
++}  // namespace P4
++
++#endif /* _FRONTENDS_P4_FLIGHTPLAN_H_ */
+diff --git a/frontends/p4/flightplan_dot.cpp b/frontends/p4/flightplan_dot.cpp
+new file mode 100644
+index 0000000..bca3cab
+--- /dev/null
++++ b/frontends/p4/flightplan_dot.cpp
+@@ -0,0 +1,316 @@
++/*
++Flightplan
++Nik Sultana, UPenn, July 2018
++*/
++
++#include <assert.h>
++#include <iostream>
++#include <fstream>
++
++#include "externInstance.h"
++
++#include "../common/options.h"
++#include "ir/ir.h"
++#include "ir/visitor.h"
++#include "lib/nullstream.h"
++#include "lib/path.h"
++#include "toP4/toP4.h"
++
++#include "flightplan.h"
++
++namespace P4 {
++
++std::string FStmt::link_from_prev() const {
++    std::string result;
++    if (get_prev() != nullptr) {
++        std::string tail;
++        if (get_prev()->getClustID() != nullptr) {
++            tail = "[ltail=" + *(get_prev()->getClustID()) + "]";
++        }
++
++        const BlockStmt *bs = dynamic_cast<const BlockStmt*>(get_prev());
++        if (bs != nullptr) {
++            if (bs->getEntry() != this) {
++                result += get_prev()->DOTid() + " -> " + DOTid() + tail + ";\n";
++            } else {
++                // Don't make the block's node appear in the graph.
++            }
++        } else {
++            result += get_prev()->DOTid() + " -> " + DOTid() + ";\n";
++        }
++    }
++    return result;
++}
++
++std::string Stmt::toDOT() const {
++    std::string abbrev_name = "stmt" + DOTid();
++    assert(original != nullptr);
++    std::string result = DOTid() + " [label=\"" + abbrev_name + ":" + original->getSourceInfo().toPositionString()  + "\",color=white];\n";
++//    result += "{ rank=same; \"" + DOTid() + "\"}\n";
++    return result;
++}
++
++std::string TransferPoint::toDOT() const {
++    std::string abbrev_name = "stmt" + DOTid();
++    std::string result = DOTid() + " [label=\"" + abbrev_name + ":" + original->getSourceInfo().toPositionString()  + "\",color=red,style=filled,fontcolor=white];\n";
++    return result;
++}
++
++std::string BlockStmt::toDOT() const {
++    std::string abbrev_name = "block";
++    std::string clust_name = *clust_id;
++
++    std::string result = "subgraph " + clust_name + " {\n";
++
++    result += "label=\"\";\n";
++    result += "style=solid;\n";
++    result += "color=lightgray;\n";
++    const FStmt *cursor = block_entry;
++    while (cursor != nullptr) {
++        result += cursor->toDOT();
++        result +=  cursor->toString();
++        result += cursor->link_from_prev();
++        cursor = cursor->get_next();
++    }
++    result += "}\n";
++    return result;
++}
++
++std::string BlockStmt::entryDOTid() const {
++    return block_entry->DOTid();
++}
++
++std::string IfStmt::toDOT() const {
++    // FIXME DRY principle
++
++    std::string abbrev_name = "if";
++    std::string clust_name = *clust_id;
++
++    std::stringstream sstream;
++    P4::ToP4 top4(&sstream, false, "");
++    (void)condition->apply(top4);
++    std::string cond_s = sstream.str();
++
++    std::string label = "label=\"" + abbrev_name + " " + cond_s + "\"";
++
++    std::string result = "subgraph " + clust_name + " {\n";
++    result += DOTid() + " [" + label + ",color=white,fontcolor=blue];\n";
++
++    result += "label=\"\";\n";
++    result += "style=dotted;\n";
++    result += "color=lightgray;\n";
++
++    abbrev_name = "true";
++    result += "subgraph cluster_" + abbrev_name + "_" + DOTid() + " {\n";
++    result += "label=\"" + abbrev_name + "\";\n";
++    result += "style=dotted;\n";
++    result += "color=lightgray;\n";
++    result += "fontcolor=green;\n";
++    result += ifTrue->toDOT();
++    result += "}\n";
++    result += DOTid() + " -> " + ifTrue->entryDOTid() +";\n";
++
++    if (ifFalse != nullptr) {
++        abbrev_name = "false";
++        result += "subgraph cluster_" + abbrev_name + "_" + DOTid() + " {\n";
++        result += "label=\"" + abbrev_name + "\";\n";
++        result += "style=dotted;\n";
++        result += "color=lightgray;\n";
++        result += "fontcolor=red;\n";
++        result += ifFalse->toDOT();
++        result += "}\n";
++        result += DOTid() + " -> " + ifFalse->entryDOTid() +";\n";
++    } else {
++        result += "// no 'false' branch\n";
++    }
++
++    result += "}\n";
++
++    return result;
++}
++
++std::string SwitchStmt::toDOT() const {
++    throw std::logic_error("Unexpected");
++#if 0
++    std::cout << "switch\n" << std::endl;
++
++    // FIXME some code repeition; DRY principle
++    std::string abbrev_name = "switch";
++    std::string result = "subgraph cluster_" + abbrev_name + "_" + DOTid() + " {\n";
++    result += "label=\"" + abbrev_name + "\";\n";
++    result += "color=lightgray;\n";
++
++    // FIXME add edge to each case
++
++    unsigned i = 0;
++    for (auto c : cases) {
++        abbrev_name = "case" + std::to_string(i);
++        result += "label=\"" + abbrev_name + "\";\n";
++        result += "color=lightgray;\n";
++        result += "subgraph cluster_" + abbrev_name + "_" + DOTid() + " {\n";
++        result += c.get_stmt()->toDOT();
++        result += "}\n";
++        i += 1;
++    }
++
++    result += "}\n";
++    return result;
++#endif
++}
++
++void StmtFlow::cfg_dot(std::ostream *ost, const FStmt* st, std::set<const FStmt*> &visited, const FStmt* pre_st) {
++    std::set<const FStmt*> next = step(Direction::Forward, st, visited);
++    bool src_atom = atomic_stmt(st);
++    std::string node = st->DOTid() + " [color=white,label=\"" + st->toStatement()->toString() + ": " + st->toStatement()->getSourceInfo().toPositionString() + "\"];";
++    if (src_atom) {
++        *ost << node << std::endl;
++    } else {
++        *ost << "// " + node << std::endl;
++    }
++    for (auto next_st : next) {
++        bool tgt_atom = atomic_stmt(next_st);
++
++        std::string edge;
++        if (src_atom && tgt_atom) {
++            edge = st->DOTid() + " -> " + next_st->DOTid();
++        } else if (pre_st != nullptr && tgt_atom) {
++            edge = pre_st->DOTid() + " -> " + next_st->DOTid();
++        } else {
++            edge = "// " + st->DOTid() + " -> " + next_st->DOTid();
++        }
++
++        *ost << edge << std::endl;
++
++        if (st == next_st) {
++            // FIXME Shouldn't happen.   
++            continue;
++        }
++
++        if (src_atom) {
++            cfg_dot(ost, next_st, visited, st);
++        } else {
++            cfg_dot(ost, next_st, visited, pre_st);
++        }
++    }
++}
++
++void Split::to_dot(std::ostream *ost, Split *split) {
++    *ost << "digraph G {" << std::endl;
++    *ost << "compound=true;" << std::endl;
++
++    EntryPoint ep(std::string(Flightplan::FP_options.flightplanFolder), nullptr);
++    *ost << ep.toDOT() << std::endl;
++
++#if 0
++    if (split->cleaved != nullptr) {
++        *ost << ep.DOTid() + " -> " + split->cleaved->entryDOTid() + ";" << std::endl;
++        std::cout << "Generating subDOT" << std::endl;
++        *ost << split->cleaved->toDOT() << std::endl;
++    } else {
++        *ost << ep.DOTid() + " -> " + split->getBeginning()->entryDOTid() + ";" << std::endl;
++        *ost << split->getBeginning()->toDOT() << std::endl;
++    }
++    std::cout << "Done subDOT" << std::endl;
++#else
++    *ost << ep.DOTid() + " -> " + split->cleaved->entryDOTid() + ";" << std::endl;
++    *ost << split->cleaved->toDOT() << std::endl;
++#endif
++
++#if 0
++    std::set<const FStmt*> visited;
++    std::queue<FStmt*> to_visit;
++    to_visit.push((FStmt*)/*FIXME type hack*/split->getBeginning());
++
++//    if (split->beginning != FlightplanImpl::getMain()) {
++//        visited.insert(FlightplanImpl::getMain());
++//    }
++    if (split->beginning->getContainer() != nullptr) {
++        visited.insert(split->beginning->getContainer());
++    }
++
++    while (!to_visit.empty()) {
++        auto stmt = to_visit.front();
++        to_visit.pop();
++
++        const TransferPoint *tp = dynamic_cast<const TransferPoint*>(stmt);
++        if (tp != nullptr) {
++            throw std::logic_error("Unexpected: TransferPoint");
++        }
++
++        bool already_visited = false;
++        if (visited.find(stmt) != visited.end()) {
++            already_visited = true;
++            // We've cycled.
++//            break;
++//            throw std::logic_error("Impossible");
++        }
++//        visited.insert(stmt);
++
++        bool faked_next = false;
++        if (stmt->get_next() != nullptr) {
++            // FIXME this method isn't ideal since cannot detect a TransferPoint (at which point this split ends)
++            to_visit.push((FStmt*)/*FIXME type hack*/stmt->get_next());
++        } else {
++            if (stmt->getContainer() != nullptr) {
++                // FIXME add a link between current statement and the next, which might be at an outer scope.
++                const FStmt *prevUp = stmt->getContainer();
++                const FStmt *next = stmt->getContainer()->get_next();
++                bool reached_top = false;
++                while (next == nullptr) {
++                    if (prevUp->getContainer() == nullptr) {
++                        reached_top = true;
++                        break;
++                    }
++                    prevUp = prevUp->getContainer();
++                    next = prevUp->get_next();
++                }
++
++                if (!reached_top) {
++//                    to_visit.push((FStmt*)/*FIXME type hack*/next);
++                    faked_next = true;
++                    stmt->set_next((FStmt*)/*FIXME type hack*/next);
++                }
++            }
++        }
++
++        if (!already_visited) {
++            *ost << stmt->toDOT() << std::endl;
++
++            if (stmt != split->getBeginning()) {
++                // We can't link_from_prev for the beginning node, since there's no prev for it in general.
++                *ost << stmt->link_from_prev() << std::endl;
++            }
++        }
++
++        if (faked_next) {
++            stmt->set_next(nullptr);
++        }
++
++#if 0
++        for (auto next : StmtFlow::getNext(stmt, visited)) {
++            // FIXME redundant protection against cycling?
++            if (next != FlightplanImpl::getMain()) {
++                to_visit.push(next);
++            }
++        }
++#endif
++    }
++#endif
++
++    *ost << "}" << std::endl;
++}
++
++void Split::splits_dot(std::ostream *ost) {
++    *ost << "digraph G {" << std::endl;
++    *ost << "compound=true;" << std::endl;
++    for (auto split : Split::Splits) {
++        *ost << split->name << ";" << std::endl;
++        std::set<Split*> ts = split->successor_splits;
++        for (auto next_split : ts) {
++            *ost << split->name + " -> " + next_split->name + ";" << std::endl;
++        }
++    }
++    *ost << "}" << std::endl;
++}
++
++}  // namespace P4
+diff --git a/frontends/p4/flightplan_ext.cpp b/frontends/p4/flightplan_ext.cpp
+new file mode 100644
+index 0000000..9ac87f2
+--- /dev/null
++++ b/frontends/p4/flightplan_ext.cpp
+@@ -0,0 +1,91 @@
++/*
++Flightplan
++Nik Sultana, UPenn, July 2018
++*/
++
++#include <iostream>
++#include <fstream>
++
++#include "externInstance.h"
++
++#include "../common/options.h"
++#include "ir/ir.h"
++#include "ir/visitor.h"
++#include "lib/nullstream.h"
++#include "lib/path.h"
++#include "toP4/toP4.h"
++
++#include "flightplan.h"
++
++namespace P4 {
++
++const IR::Node* FlightplanTransf::preorder(IR::Type_Declaration* t) {
++/*
++Make list of Landing-returning entries, remember them for the next pass.
++Remove all Landing-returning declarations
++*/
++//    std::cout << "FlightplanTransf = " << t->toString() << std::endl;  
++    if (t->name == Flightplan::landing_type_name) return nullptr;
++    return t;
++}
++
++const IR::Node* FlightplanTransf::preorder(IR::Method* t) {
++    std::cout << "FlightplanTransf = " << t->toString() << std::endl;
++    auto ty = t->type->as<IR::Type_Method>();
++    if (ty.returnType != nullptr && ty.returnType->is<IR::Type_Name>()) {
++      auto re_ty = ty.returnType->as<IR::Type_Name>();
++      std::cout << "                 a " << ty.parameters->size();
++      std::cout << "                 r " << re_ty.toString() << std::endl;
++      if (re_ty.toString() == Flightplan::landing_type_name) return nullptr;
++    }
++    if (Flightplan::landing_API.find(std::string(t->toString())) != Flightplan::landing_API.end()) return nullptr;
++    return t;
++}
++
++const IR::Node* FlightplanTransf::preorder(IR::MethodCallStatement* mcs) {
++    const IR::MethodCallExpression* mce = mcs->methodCall;
++    auto mi = P4::MethodInstance::resolve(mce, refMap, typeMap);
++
++    if (mi->is<P4::ExternFunction>()) {
++        auto ef = mi->to<P4::ExternFunction>();
++//        if (landing_API.find(std::string(ef->method->toString())) != landing_API.end()) return new IR::CutStmt();
++        if (Flightplan::landing_API.find(std::string(ef->method->toString())) != Flightplan::landing_API.end()) return new IR::EmptyStatement();
++    }
++    return mcs;
++}
++
++}  // namespace P4
++
++#if 0
++bool IR::CutStmt::operator==(IR::CutStmt const & a) const {
++        return Statement::operator==(static_cast<const Statement &>(a));
++    }
++bool IR::CutStmt::equiv(IR::Node const & a_) const {
++        if (static_cast<const Node *>(this) == &a_) return true;
++        if (typeid(*this) != typeid(a_)) return false;
++        if (!Statement::equiv(a_)) return false;
++        return true;
++    }
++void IR::CutStmt::toJSON(JSONGenerator & json) const {
++    Statement::toJSON(json);
++}
++IR::CutStmt::CutStmt(JSONLoader & json) : Statement(json) {
++}
++IR::Node * IR::CutStmt::fromJSON(JSONLoader & json) { return new CutStmt(json); }
++IR::CutStmt::CutStmt(Util::SourceInfo srcInfo) :
++    Statement(srcInfo)
++    { validate(); }
++IR::CutStmt::CutStmt()
++    { validate(); }
++
++bool IR::CutStmt::apply_visitor_preorder(Modifier&) {return false;}
++void IR::CutStmt::apply_visitor_postorder(Modifier&) {}
++const IR::Node *IR::CutStmt::apply_visitor_preorder(Transform&) {return this;}
++const IR::Node *IR::CutStmt::apply_visitor_postorder(Transform&) {return this;}
++
++void IR::CutStmt::apply_visitor_revisit(Modifier&, IR::Node const*) const {}
++bool IR::CutStmt::apply_visitor_preorder(Inspector&) const {return false;}
++void IR::CutStmt::apply_visitor_postorder(Inspector&) const {}
++void IR::CutStmt::apply_visitor_revisit(Inspector&) const {}
++void IR::CutStmt::apply_visitor_revisit(Transform&, IR::Node const*) const {}
++#endif
+diff --git a/frontends/p4/flightplan_stmt.cpp b/frontends/p4/flightplan_stmt.cpp
+new file mode 100644
+index 0000000..033ceb3
+--- /dev/null
++++ b/frontends/p4/flightplan_stmt.cpp
+@@ -0,0 +1,241 @@
++/*
++Flightplan
++Nik Sultana, UPenn, July 2018
++*/
++
++#include <assert.h>
++#include <iostream>
++#include <fstream>
++
++#include "externInstance.h"
++
++#include "../common/options.h"
++#include "ir/ir.h"
++#include "ir/visitor.h"
++#include "lib/nullstream.h"
++#include "lib/path.h"
++#include "toP4/toP4.h"
++
++#include "flightplan.h"
++
++namespace P4 {
++
++FStmt::FStmt (const FStmt* container, std::string dest_path, const FStmt* prev = nullptr, const FStmt* next = nullptr) : DOT(Flightplan::dot_id++), container(container), prev(prev), next(next) {
++    splits.insert(Split::current_split(dest_path, this));
++}
++
++FStmt::FStmt (const FStmt* container, unsigned dot_id, const FStmt* prev, const FStmt* next) : DOT(dot_id), container(container), prev(prev), next(next) {}
++
++Stmt::Stmt (const FStmt* container, std::string dest_path, const IR::AssignmentStatement* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next), original(stmt) {}
++Stmt::Stmt (const FStmt* container, std::string dest_path, const IR::MethodCallStatement* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next), original(stmt) {}
++Stmt::Stmt (const FStmt* container, std::string dest_path, const IR::Declaration* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next), original(stmt) {}
++
++TransferPoint::TransferPoint (const FStmt* container, std::string dest_path, const IR::MethodCallStatement* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next), original(stmt) {}
++
++BlockStmt::BlockStmt (const FStmt* container, std::string dest_path, const IR::BlockStatement* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next), original(stmt) {
++    std::string abbrev_name = "block";
++    clust_id = new std::string("cluster_" + abbrev_name + "_" + DOTid());
++
++    FStmt* last = nullptr;
++    // Deconstruct stmt into statements, have block_entry point to the first of them.
++    for (const IR::StatOrDecl* c : stmt->components) {
++        if (block_entry == nullptr) {
++            assert(last == nullptr);
++            last = StmtConvert::encapsulate(this, dest_path, c, nullptr, nullptr);
++            block_entry = last;
++        } else {
++            auto new_last = StmtConvert::encapsulate(this, dest_path, c, last, nullptr);
++            last->set_next(new_last);
++            last = new_last;
++        }
++    }
++}
++
++IfStmt::IfStmt (const FStmt* container, std::string dest_path, const IR::IfStatement* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next) {
++    std::string abbrev_name = "if";
++    clust_id = new std::string("cluster_" + abbrev_name + "_" + DOTid());
++
++    condition = stmt->condition;
++    ifTrue = StmtConvert::encapsulate(this, dest_path, stmt->ifTrue, nullptr, nullptr);
++    if (stmt->ifFalse == nullptr) {
++        ifFalse = nullptr;
++    } else {
++        ifFalse = StmtConvert::encapsulate(this, dest_path, stmt->ifFalse, nullptr, nullptr);
++    }
++}
++
++SwitchStmt::SwitchStmt (const FStmt* container, std::string dest_path, const IR::SwitchStatement* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next) {
++    expression = stmt->expression;
++    for (auto c : stmt->cases) {
++        Case cs = Case(c->label, StmtConvert::encapsulate(this, dest_path, c->statement, nullptr, nullptr));
++        cases.push_back(cs);
++    }
++}
++
++const IR::StatOrDecl* Stmt::toStatement() const {
++    return original;
++}
++
++cstring Stmt::toString() const {
++    return original->srcInfo.toSourceFragment();
++}
++
++cstring BlockStmt::toString() const {
++    return toStatement()->srcInfo.toSourceFragment();
++}
++
++cstring IfStmt::toString() const {
++    return toStatement()->srcInfo.toSourceFragment();
++}
++
++cstring SwitchStmt::toString() const {
++    return toStatement()->srcInfo.toSourceFragment();
++}
++
++cstring TransferPoint::toString() const {
++    return toStatement()->srcInfo.toSourceFragment();
++}
++
++const IR::StatOrDecl* BlockStmt::toStatement() const {
++    // Reconstruct block of statements from block_entry
++    const FStmt* cursor = block_entry;
++    IR::BlockStatement* result = new IR::BlockStatement();
++    while (cursor != nullptr) {
++        result->push_back(cursor->toStatement());
++        cursor = cursor->get_next();
++    }
++    return result;
++}
++
++const IR::Statement* IfStmt::trueStatement() const {
++    const IR::Statement* result = nullptr;
++    if (ifTrue != nullptr) {
++        result = &ifTrue->toStatement()->as<IR::Statement>();
++    }
++    return result;
++}
++
++const IR::Statement* IfStmt::falseStatement() const {
++    const IR::Statement* result = nullptr;
++    if (ifFalse != nullptr) {
++        result = &ifFalse->toStatement()->as<IR::Statement>();
++    }
++    return result;
++}
++
++const IR::StatOrDecl* IfStmt::toStatement() const {
++    // Reconstruct block of statements from block_entry
++    IR::IfStatement* result = new IR::IfStatement(condition, trueStatement(), falseStatement());
++    return result;
++}
++
++const IR::StatOrDecl* SwitchStmt::toStatement() const {
++    IR::Vector<IR::SwitchCase> cases;
++    for (auto c : this->cases) {
++        IR::SwitchCase *sc = new IR::SwitchCase(c.label, c.get_statement());
++        cases.push_back(sc);
++    }
++    IR::SwitchStatement* result = new IR::SwitchStatement(expression, cases);
++    return result;
++}
++
++FStmt* StmtConvert::encapsulate (const FStmt* container, std::string dest_path, const IR::MethodCallStatement* mcs, const FStmt* prev, const FStmt* next) {
++    const IR::MethodCallExpression* mce = mcs->methodCall;
++
++    auto mi = P4::MethodInstance::resolve(mce, Flightplan::FP_refMap, Flightplan::FP_typeMap);
++
++#if 0
++    for (auto param : *mi->getActualParameters()) {
++        visit(param->getNode());
++    }
++#endif
++
++    if (mi->is<P4::ExternFunction>()) {
++#if 0      
++        print_ctxt();
++#endif
++
++        auto ef = mi->to<P4::ExternFunction>();
++        std::cout << "Flightplan: call statement: " << ef->method->toString() << std::endl;
++        //Split::new_split();
++        if (Flightplan::landing_API.find(std::string(ef->method->toString())) != Flightplan::landing_API.end()) {
++//            std::cout << mce->toString();
++//            Split::new_split(std::string(options.flightplanFolder), std::string(mce->arguments->at(0)->toString()));
++            // We only insert a TransferPoint at this stage. Then during a later pass we'll annotate each statement on which split(s) is belongs to.
++            auto tp = new TransferPoint (container, dest_path, mcs, prev, next);
++            // NOTE assuming that the parameter to flyto() hasn't been tampered with by any earlier passes.
++//            tp->transfer_to = std::string(mce->arguments->at(0)->toString());
++
++//            std::stringstream sstream;
++//            P4::ToP4 top4(&sstream, false, "");
++//            ((IR::Statement*)mcs)->apply(top4);
++//            tp->transfer_to = sstream.str();
++
++            tp->transfer_to = TransferPoint::flyto_target(std::string(mcs->srcInfo.toBriefSourceFragment()));
++            std::cout << "Flightplan transfer: " << tp->transfer_to << std::endl;
++            return tp;
++        }
++//        return new IR::EmptyStatement(); FIXME why does this go through the compiler?
++    } else {
++        std::cout << "-> " << mce->toString() << std::endl;
++    }
++    return new Stmt (container, dest_path, mcs, prev, next);
++}
++
++FStmt* TransferPoint::clone() const {
++    TransferPoint* result = new TransferPoint(container, dot_id, prev, next);
++    result->original = this->original;
++    /*FIXME copy state*/
++    return result;
++}
++
++FStmt* Stmt::clone() const {
++    // FIXME have cloning generate new DOTid, to show multiple splits in the same graph
++    Stmt* result = new Stmt(container, dot_id, prev, next);
++    result->original = this->original;
++    assert(result->original != nullptr);
++    return result;
++}
++
++FStmt* BlockStmt::clone() const {
++    BlockStmt* result = new BlockStmt(container, dot_id, prev, next);
++    result->original = this->original;
++    result->clust_id = this->clust_id;
++    result->block_entry = this->block_entry;
++    return result;
++}
++
++FStmt* IfStmt::clone() const {
++    IfStmt* result = new IfStmt(container, dot_id, prev, next);
++    result->condition = this->condition;
++    result->clust_id = this->clust_id;
++    result->ifTrue = this->ifTrue;
++    result->ifFalse = this->ifFalse;
++    return result;
++}
++
++FStmt* SwitchStmt::clone() const {
++    SwitchStmt* result = new SwitchStmt(container, dot_id, prev, next);
++    result->expression = this->expression;
++    result->clust_id = this->clust_id;
++    result->cases = this->cases;
++    return result;
++}
++
++BlockStmt::BlockStmt (const FStmt* container, std::string dest_path, FStmt* stmt, const FStmt* prev, const FStmt* next) : FStmt(container, dest_path, prev, next) {
++    std::string abbrev_name = "block";
++    clust_id = new std::string("cluster_" + abbrev_name + "_" + DOTid());
++
++    block_entry = stmt;
++}
++
++#if 0
++BlockStmt* BlockStmt::block_from (const FStmt* container, std::string dest_path, FStmt* stmt, const FStmt* prev, const FStmt* next) {
++    assert(stmt->getContainer() == nullptr);
++    BlockStmt* result = BlockStmt (container, dest_path, stmt, prev, next);
++
++    return result;
++}
++#endif
++
++}  // namespace P4
