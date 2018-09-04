@@ -1,0 +1,6 @@
+@@ -2,4 +2,4 @@
+ MAYBE_SECONDARY_TARGETS = simple_router l2_switch
+ endif
+ 
+-SUBDIRS = $(MAYBE_SECONDARY_TARGETS) simple_switch psa_switch
++SUBDIRS = $(MAYBE_SECONDARY_TARGETS) simple_switch psa_switch booster_switch

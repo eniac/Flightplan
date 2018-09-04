@@ -1,8 +1,26 @@
-# FEC Encoder booster
+# FEC Boosters
 
-## Running
+This directory contains code for implementations of the fec boosters that run either
+by listening to a pcap interface, or running within the P4 behavioral model.
 
-The each booster accepts arguments:
+## Building for P4 Behavioral Model
+
+To build this code and incorporate it into the P4 behavioral model, set the environment variable
+`$BMV2_REPO` to the path of a cloned copy of p4's `behavioral_model` repository
+
+Running `make bmv2` should copy and patch in the necessary files to build the `booster_switch`
+target.
+
+At that point, the sample p4 file should be able to be run with
+```shell
+cd $P4BOOSTERS_REPO/Wharf/bmv2_p4
+make run
+```
+which will start an instance of mininet running the p4 `booster_switch`
+
+## Running pcap boosters
+
+Each pcap booster accepts arguments:
 
 ```
 ./<booster> -i input_interface [-o output_interface] [-r rules.csv]

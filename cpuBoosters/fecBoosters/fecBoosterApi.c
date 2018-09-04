@@ -263,11 +263,12 @@ static int parse_rule_opts(char *str, tclass_type *tclass, uint16_t *port, bool 
         LOG_ERR("No port provided");
         return -1;
     }
-    *port = atoi(portc);
-    if (*port <= 0 || *port > 65536) {
+    int port_i = atoi(portc);
+    if (port_i <= 0 || port_i > 65535) {
         LOG_ERR("Invalid port provided: %s", portc);
         return -1;
     }
+    *port = port_i;
     char *is_tcpc = strtok(NULL, " ,");
     if (is_tcpc == NULL) {
         LOG_ERR("No protocol provided");
@@ -428,26 +429,24 @@ int wharf_load_from_file(char *filename) {
     return rtn;
 }
 
-
-/** IP header starts right after ethernet header. First 4 bits are IP version */
-#define IPV4_OFFSET sizeof(struct ether_header)
-
-/** Checks that the first four bits are 0x04, ignoring the second four bits */
-#define IS_IPV4(bits) (bits & (0x4)) && !(bits & !(0x4F))
-
-/** Checks if a packet is ipv4 */
-static bool is_ipv4(const u_char *packet, uint32_t pkt_len) {
-    if (pkt_len < IPV4_OFFSET) {
-        return false;
-    }
-    return IS_IPV4(packet[IPV4_OFFSET]);
-}
-
 /** Protocol starts 9 bytes into IP header */
 #define PROTOCOL_OFFSET sizeof(struct ether_header) + 9
 #define TCP_PROTOCOL 0x06
 #define UDP_PROTOCOL 0x11
 
+#define LENGTH_OFFSET sizeof(struct ether_header) + 2 // 3rd byte of IP header
+
+/** IP header starts right after ethernet header. First 4 bits are IP version */
+#define IPV4_OFFSET sizeof(struct ether_header)
+/** Checks that the first four bits are 0x04, ignoring the second four bits */
+#define IS_IPV4(bits) (bits & (0x4)) && !(bits & !(0x4F))
+
+bool is_ipv4(const u_char *packet, uint32_t pkt_len) {
+    if (pkt_len < IPV4_OFFSET) {
+        return false;
+    }
+    return IS_IPV4(packet[IPV4_OFFSET]);
+}
 /** Checks if a packet is tcp */
 static bool is_tcp(const u_char *packet, uint32_t pkt_len) {
     if (pkt_len < PROTOCOL_OFFSET) {
