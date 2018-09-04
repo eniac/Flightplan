@@ -1,0 +1,3 @@
+table_add forward set_egress 1 => 2
+table_add forward set_egress 2 => 1
+table_add parameters set_k_h 0 => 5 1

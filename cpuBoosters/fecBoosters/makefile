@@ -1,30 +1,73 @@
+CC=g++
 VENCORE_CODE=../../RSECode
 
 # To use Vencore's or Hans' implementation of the FEC
 COMPILED_RSE=$(VENCORE_CODE)
 #COMPILED_RSE=../../FPGA/RSEVivadoHLS
 
-FLAGS=-Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -O2 -DWHARF_DEBUGGING
+FLAGS=-g -Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -I. -O3 -DWHARF_DEBUGGING -DNO_LOG_INFO -fPIC
+
+FEC_BOOSTER_SWITCH_DIR=../bmv2/booster_switch/
+FEC_BOOSTER_SWITCH_FEC_DIR=$(FEC_BOOSTER_SWITCH_DIR)fecBoosters/
+
+P4BOOSTERS_REPO=$(realpath ../../)
 
 # For Configuration.h
 OTHER_INCLUDE=../../FPGA/RSEVivadoHLS
 
-all: fecBooster.o fecDecodeBooster fecEncodeBooster forwardingNonbooster boosterCliTest
+PCAP_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.o fecPcap/fecPcap.c
+PCAP_DEPS=$(PCAP_INPUTS) $(VENCORE_CODE)/rse.h fecPcap/fecPcap.h makefile fecBooster.h
 
-fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h fecBoosterApi.c
-	g++ $(FLAGS) -c fecBooster.c -lpcap
+P4_INPUTS=$(COMPILED_RSE)/rse.o fecBooster.o fecP4/fecEncodeBooster.o fecP4/fecDecodeBooster.o fecP4/fecP4.o
+P4_DEPS=$(P4_INPUTS) $(PCAP_DEPS)
 
-fecEncodeBooster: fecEncodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ fecEncodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
+ifeq ($(MAKECMDGOALS), bmv2)
+ifeq ($(BMV2_REPO),)
+    $(error Must set env BMV2_REPO to 'make bmv2')
+endif
+endif
 
-fecDecodeBooster: fecDecodeBooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ fecDecodeBooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
+BMV2_BOOSTER_SWITCH_DIR=$(BMV2_REPO)/targets/booster_switch/
 
-forwardingNonbooster: forwardingNonbooster.c $(VENCORE_CODE)/rse.h $(COMPILED_RSE)/rse.o makefile fecBooster.o
-	g++ $(FLAGS) -o $@ forwardingNonbooster.c $(COMPILED_RSE)/rse.o fecBooster.o fecBoosterApi.c -lpcap
+all: pcap p4
 
-boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c
-	g++ $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c -DNO_FBK
+pcap: fecDecodeBooster fecEncodeBooster forwardingNonbooster noDropForwarder
+
+copy_files: p4
+	rsync -av --exclude='test_output' ./* $(FEC_BOOSTER_SWITCH_FEC_DIR)
+
+bmv2: copy_files
+	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make configure all BOOSTERS=FEC
+
+fecBoosterApi.o: fecBoosterApi.c
+	$(CC) $(FLAGS) -c $<
+
+fecBooster.o: fecBooster.c $(VENCORE_CODE)/rse.h makefile
+	$(CC) $(FLAGS) -c fecBooster.c -lpcap
+
+noDropForwarder: fecPcap/forwardingNonbooster.c $(PCAP_DEPS)
+	$(CC) $(FLAGS) -DWHARF_DROP_AFTER=0 -o $@ $< $(PCAP_INPUTS) -lpcap
+
+fecEncodeBooster: fecPcap/fecEncodeBooster.c $(PCAP_DEPS)
+	$(CC) $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
+
+fecDecodeBooster: fecPcap/fecDecodeBooster.c $(PCAP_DEPS)
+	$(CC) $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
+
+forwardingNonbooster: fecPcap/forwardingNonbooster.c $(PCAP_DEPS)
+	$(CC) $(FLAGS) -o $@ $< $(PCAP_INPUTS) -lpcap
+
+#boosterCliTest: fecBoosterApi.c fecBoosterApi.h boosterCliTest.c fecBooster.c
+#	$(CC) $(FLAGS) -o $@ fecBoosterApi.c boosterCliTest.c fecBooster.c -DNO_FBK
+
+p4: fecBoosterP4lib.a fecP4/fecP4.hpp
+
+fecP4/%.o: fecP4/%.cpp fecBooster.h
+	$(CC) $(FLAGS) --std=c++11 -o $@ -c $<
+
+fecBoosterP4lib.a: $(P4_DEPS)
+	ar cr $@ $(P4_INPUTS)
+
 
 $(COMPILED_RSE)/rse.o:
 	make -C $(COMPILED_RSE) rse.o
@@ -35,4 +78,8 @@ clean:
 	$(RM) forwardingNonbooster
 	$(RM) boosterCliTest
 	$(RM) *.o
+	$(RM) fecP4/*.o
+	$(RM) fecP4/*.a
+	$(RM) fecPcap/*.o
+	$(RM) fecBoosterP4lib.a
 	$(RM) $(COMPILED_RSE)/rse.o

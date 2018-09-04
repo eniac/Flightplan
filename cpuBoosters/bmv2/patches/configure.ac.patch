@@ -1,0 +1,20 @@
+@@ -270,6 +270,11 @@
+ AC_TYPE_UINT64_T
+ AC_LANG_POP(C++)
+
++AM_CONDITIONAL([P4BOOSTERS_REPO_SET], [test x$P4BOOSTERS_REPO != x])
++AC_SUBST([P4BOOSTERS_REPO], $P4BOOSTERS_REPO)
++AM_CONDITIONAL([BUILD_FEC_BOOSTER], [test x$FEC_BOOSTER != x ])
++AM_CONDITIONAL([BUILD_MEMCACHED_BOOSTER], [test x$MEMCACHED_BOOSTER != x ] )
++
+ # Generate makefiles
+ AC_CONFIG_FILES([Makefile
+ 		thrift_src/Makefile
+@@ -292,6 +297,7 @@
+ 		targets/simple_switch/Makefile
+ 		targets/simple_switch/tests/Makefile
+ 		targets/simple_switch/tests/CLI_tests/Makefile
++		targets/booster_switch/Makefile
+ 		targets/psa_switch/Makefile
+ 		targets/psa_switch/tests/Makefile
+ 		tests/Makefile

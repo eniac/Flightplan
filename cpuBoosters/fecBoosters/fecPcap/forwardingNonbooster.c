@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-
+#include "fecPcap.h"
 #include "fecBooster.h"
 
 #ifndef WHARF_DROP_AFTER
