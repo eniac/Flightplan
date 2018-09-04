@@ -122,7 +122,7 @@ def main():
     if args.command_file is not None:
         commands = open(args.command_file).readlines()
         for name, json, port in topo.switch_params:
-            print("Sending %d commands to %s", len(commands), name)
+            print("Sending %d commands to %s" %(len(commands), name))
             send_commands(port, json, commands)
 
     if args.e2e:
