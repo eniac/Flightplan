@@ -136,7 +136,7 @@ void my_packet_handler(
 	// Forward data packets immediately
 	if (fecHeader.index < wharf_get_k(tclass)) {
 		// If there is no data outside of the wharf frame, no need to forward (packet was filler)
-		// if (fecHeader.orig_ethertype != 0) {
+		if (fecHeader.orig_ethertype != 0) {
 #ifdef CHECK_TABLE_ON_DECODE
 			tclass_type tclass = wharf_query_packet(stripped, size);
 			if (tclass == (tclass_type) fecHeader.class_id) {
