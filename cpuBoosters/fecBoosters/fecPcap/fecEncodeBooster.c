@@ -110,9 +110,9 @@ void my_packet_handler(
 	const u_char *packet
 ) {
 
-    size_t packet_len = header->len;
+	size_t packet_len = header->len;
 	tclass_type tclass = wharf_query_packet(packet, packet_len);
-    LOG_INFO("Got packet of size %d", (int)packet_len);
+	LOG_INFO("Got packet of size %d", (int)packet_len);
 
 	// If no rule mapping this packet to traffic class, simply forward
 	if (tclass == TCLASS_NULL) {
@@ -124,12 +124,12 @@ void my_packet_handler(
 	size_t new_size = packet_len + sizeof(struct fec_header);
 	u_char new_packet[new_size];
 
-    uint8_t block_id = get_fec_block_id(tclass, DEFAULT_PORT);
-    uint8_t packet_idx = get_fec_frame_idx(tclass, DEFAULT_PORT);
+	uint8_t block_id = get_fec_block_id(tclass, DEFAULT_PORT);
+	uint8_t packet_idx = get_fec_frame_idx(tclass, DEFAULT_PORT);
 
 	// Tagging the packet also advances the packet index
 	wharf_tag_data(tclass, block_id, packet_idx, packet, packet_len, new_packet, &new_size);
-    advance_packet_idx(tclass, DEFAULT_PORT);
+	advance_packet_idx(tclass, DEFAULT_PORT);
 
 	/* Forward the data packet nowm, then buffer it below for the encoder */
 	forward_frame(new_packet, new_size);
