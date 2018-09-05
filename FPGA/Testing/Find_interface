@@ -1,0 +1,13 @@
+#!/bin/bash -e
+INTERFACES=$(ifconfig -s | tail -n +2 | awk '{ print $1 }')
+for INTERFACE in ${INTERFACES}
+do
+  if ethtool "${INTERFACE}" 2> /dev/null | grep -q 'Speed: 10000Mb'
+  then
+    echo "$INTERFACE"
+    exit 0
+  fi
+done
+echo "Interface was not found."
+exit 1
+
