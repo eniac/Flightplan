@@ -1,23 +1,39 @@
 #!/bin/bash -e
-if [ "$EUID" -ne 0 ]
-  then echo "Please run this script as root."
-  exit 1
-fi
+echo
+echo "================================================================================"
+echo "Start TCPDump"
+echo "================================================================================"
 
 INTERFACE=$(./Find_interface)
+echo "Board found on interface ${INTERFACE}."
 TEMP_FILE=$(mktemp)
-tcpdump -i ${INTERFACE} -vvv -XX -Q in &> ${TEMP_FILE} &
+sudo tcpdump -i "${INTERFACE}" -vvv -XX -Q in &> "${TEMP_FILE}" &
 PROCESS_ID=$!
 
-echo "Input:"
-tcpreplay --intf1=${INTERFACE} Encoded.pcap
-
+# Make sure that TCPDump is ready to receive packets.
 sleep 1
-kill "${PROCESS_ID}"
 
 echo
-echo "Output:"
-cat "${TEMP_FILE}"
+echo "================================================================================"
+echo "Send packets"
+echo "================================================================================"
+sudo tcpreplay "--intf1=${INTERFACE}" Encoded.pcap
 
+# Make sure that we don't miss packets.
+sleep 1
+
+echo
+echo "================================================================================"
+echo "Receive packets"
+echo "================================================================================"
+
+# Send terminate signal to TCPDump process (instead of sudo process) to ensure that the summary
+# is output.
+sudo kill $(ps --ppid "${PROCESS_ID}" -o pid=)
+
+# The terminate signal needs some time to propagate.
+sleep 1
+
+cat "${TEMP_FILE}"
 rm "${TEMP_FILE}"
 

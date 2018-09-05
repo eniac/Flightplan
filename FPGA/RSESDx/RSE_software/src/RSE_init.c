@@ -54,6 +54,7 @@ int main()
   XGpioPs_WriteReg(XPAR_XGPIOPS_0_BASEADDR, 0x4C, 1); // EMIO 0 Data - enable
   Xil_Out32(ADDR_CONFIG_RX_REG1, 0x33); // Enable receiver
 
+/*
   while (1)
   {
     Xil_Out32(ADDR_TICK_REG, 1);
@@ -66,6 +67,7 @@ int main()
     Count += (unsigned long long) Xil_In32(ADDR_STAT_TX_TOTAL_PACKETS_MSB) << 32;
     printf("Packets sent: %llu\n", Count);
   };
+*/
 
   return 0;
 }
