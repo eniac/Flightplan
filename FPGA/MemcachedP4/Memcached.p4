@@ -1,5 +1,4 @@
-@Xilinx_MaxLatency(200)
-extern void memcached(out bit<1> forward);
+#include "Memcached_extern.p4"
 
 control CheckCache(inout headers_t hdr, inout switch_metadata_t ioports)
 {
