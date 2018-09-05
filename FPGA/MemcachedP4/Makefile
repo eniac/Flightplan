@@ -30,7 +30,7 @@ Encoder: Encoder.sdnet ../RSEP4/Scripts/Patch_backpressure.pl \
 Encoder.sdnet: Sources/Encoder.p4
 	p4c-sdnet -I ../RSEVivadoHLS -I ../MemcachedP4 Sources/Encoder.p4 -o Encoder.sdnet
 	patch Encoder.sdnet Patches/Encoder.sdnet.patch
-
+	cp Sources/XilinxSwitch.hpp Encoder/XilinxSwitch/XilinxSwitch.TB/. 
 clean:
 	rm -fr Encoder.sdnet Encoder
 
