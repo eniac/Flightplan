@@ -1,5 +1,5 @@
 #include "targets.h"
-#include "../FPGA/MemcachedP4/Memcached_extern.p4"
+#include "Memcached_extern.p4"
 #include "FEC.p4"
 #include "EmptyBMDefinitions.p4"
 
