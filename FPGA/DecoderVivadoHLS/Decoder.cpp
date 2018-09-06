@@ -141,6 +141,7 @@ static void Collect_packets(hls::stream<input_tuples> & Tuple_input,
 
   bool End = false;
   packet_interface Input;
+  unsigned Offset = 0;
   do
   {
 #pragma HLS LOOP_TRIPCOUNT min=8 max=190
@@ -152,8 +153,10 @@ static void Collect_packets(hls::stream<input_tuples> & Tuple_input,
 
     if (Bypass)
       Bypass_FIFO.write(Input);
-    else if (!Drop)
+    else if (!Drop && Offset < Packet_length)
       Data_FIFOs[Traffic_class].write(Input.Data);
+
+    Offset += BYTES_PER_WORD;
   }
   while (!End);
 
