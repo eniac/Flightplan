@@ -68,14 +68,49 @@ void Pktclassifier(hls::stream<input_tuples> &tuple_in,
 		bool End = false;
 		packet_interface Data;
 		//tuple_out2.write(tuple);
-		do
+	//	do
+	//	{
+//	#pragma HLS pipeline II=1
+	//		Data = pkt_in.read();
+//			End = Data.End_of_frame;
+//			pkt_out1.write(Data);
+//			pkt_out2.write(Data);
+//		}while(!End);
+		int tot_pktnum = (tuple.Hdr.Ipv4.totallen + 14) / BYTES_PER_WORD;
+		int remain_num = (tuple.Hdr.Ipv4.totallen + 14) % BYTES_PER_WORD;
+		if (remain_num == 0) tot_pktnum--;
+		for (int i = 0; i < tot_pktnum; i++)
 		{
-	#pragma HLS pipeline II=1
+	#pragma HLS pipeline II = 1
 			Data = pkt_in.read();
 			End = Data.End_of_frame;
 			pkt_out1.write(Data);
 			pkt_out2.write(Data);
-		}while(!End);
+		}
+		if (remain_num != 0)
+		{	
+			Data = pkt_in.read();
+			End = Data.End_of_frame;
+			Data.End_of_frame = 1;
+			Data.Count = remain_num;
+			pkt_out1.write(Data);
+			pkt_out2.write(Data);
+		}
+		else
+		{
+			Data = pkt_in.read();
+			End = Data.End_of_frame;
+			Data.End_of_frame = 1;
+			Data.Count = 8;
+			pkt_out1.write(Data);
+			pkt_out2.write(Data);
+		}
+		while(!End)
+		{
+			#pragma HLS pipeline II = 1
+			Data = pkt_in.read();
+			End = Data.End_of_frame;
+		}
 		MemcachedPkt mempkt = true;
 		Mempkt.write(mempkt);
 	}
@@ -698,12 +733,14 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			}
 			Memory[index].VALID = 1;
 			//Print_Memory(index);
+			std::cout << "The count is" << (int)count << std::endl;
 
 		}
 		else if(Instruction.response == 1)
 		{
 			Part_Word dataoutput;
 			int totnum = Metadata.Datalen / 8;
+			std::cout << "totnum is" << totnum << std::endl;
 			int remainnum = Metadata.Datalen % 8;
 			if (remainnum == 0)
 				{
