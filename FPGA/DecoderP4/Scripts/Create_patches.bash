@@ -1,5 +1,6 @@
 #!/bin/bash -e
 FILES="Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv \
+       Decoder/XilinxSwitch/Testbench/TB_System_Stim.v \
        Decoder/XilinxSwitch/vivado_sim.bash \
        Decoder/XilinxSwitch/vivado_sim_waveform.bash \
        Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash \
