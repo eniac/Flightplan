@@ -265,7 +265,7 @@ static void Preprocess_headers(hls::stream<parameters> & Input_parameter_FIFO,
 
       unsigned Count = Info.Data_packet ? FEC_PACKET_LENGTH_WIDTH / 8 : 0;
       unsigned Offset = 0;
-      packet_type Packet_type = Info.Original_type;
+      unsigned Packet_type = Info.Original_type;
       for (unsigned Word_offset = 0; Word_offset < Words_per_packet; Word_offset++)
       {
 #pragma HLS LOOP_TRIPCOUNT min=8 max=190
@@ -279,7 +279,7 @@ static void Preprocess_headers(hls::stream<parameters> & Input_parameter_FIFO,
           unsigned Byte = (Input >> (8 * (BYTES_PER_WORD - Byte_offset - 1))) & 0xFF;
           if (Offset >= 12 && Offset < FEC_ETH_HEADER_SIZE / 8)
           {
-            Byte = Packet_type >> (FEC_ETHER_TYPE_WIDTH / 8 - 1);
+            Byte = (Packet_type >> (FEC_ETHER_TYPE_WIDTH - 8)) & 0xFF;
             Packet_type <<= 8;
           }
           if (Output)
