@@ -1,6 +1,6 @@
 Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
---- Decoder.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-09-07 11:09:41.435861000 -0400
-+++ Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-09-07 11:06:57.070771000 -0400
+--- Decoder.original/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-09-12 09:56:23.000000000 -0400
++++ Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv	2018-09-11 16:40:12.000000000 -0400
 @@ -47,7 +47,7 @@
  wire [7:0] tuple_in_ioports_DATA ;
  wire [0:0] enable_processing ;
@@ -31,8 +31,8 @@ Decoder/XilinxSwitch/Testbench/XilinxSwitch_tb.sv
      stim_file = 1;
      check_file = 1;
 Decoder/XilinxSwitch/Testbench/TB_System_Stim.v
---- Decoder.original/XilinxSwitch/Testbench/TB_System_Stim.v	2018-09-07 11:09:41.436420000 -0400
-+++ Decoder/XilinxSwitch/Testbench/TB_System_Stim.v	2018-09-07 11:07:07.525906000 -0400
+--- Decoder.original/XilinxSwitch/Testbench/TB_System_Stim.v	2018-09-12 09:56:23.000000000 -0400
++++ Decoder/XilinxSwitch/Testbench/TB_System_Stim.v	2018-09-11 16:42:58.000000000 -0400
 @@ -71,6 +71,10 @@
  reg [7:0] packet_in_packet_in_TKEEP ;
  reg [63:0] packet_in_packet_in_TDATA ;
@@ -106,8 +106,8 @@ Decoder/XilinxSwitch/Testbench/TB_System_Stim.v
  	end
  end
 Decoder/XilinxSwitch/vivado_sim.bash
---- Decoder.original/XilinxSwitch/vivado_sim.bash	2018-09-07 11:09:41.289230000 -0400
-+++ Decoder/XilinxSwitch/vivado_sim.bash	2018-09-06 14:58:34.109894000 -0400
+--- Decoder.original/XilinxSwitch/vivado_sim.bash	2018-09-12 09:56:19.000000000 -0400
++++ Decoder/XilinxSwitch/vivado_sim.bash	2018-09-11 16:40:12.000000000 -0400
 @@ -1,14 +1,17 @@
  #!/bin/bash
 +[ -z "$XILINX_VIVADO" ] && echo "Please set the XILINX_VIVADO environment variable." && exit 1
@@ -132,8 +132,8 @@ Decoder/XilinxSwitch/vivado_sim.bash
  xelab -L work --debug all -sv_lib dpi.so XilinxSwitch_tb 
  xsim --runall XilinxSwitch_tb 
 Decoder/XilinxSwitch/vivado_sim_waveform.bash
---- Decoder.original/XilinxSwitch/vivado_sim_waveform.bash	2018-09-07 11:09:41.291235000 -0400
-+++ Decoder/XilinxSwitch/vivado_sim_waveform.bash	2018-09-07 11:05:51.103642000 -0400
+--- Decoder.original/XilinxSwitch/vivado_sim_waveform.bash	2018-09-12 09:56:20.000000000 -0400
++++ Decoder/XilinxSwitch/vivado_sim_waveform.bash	2018-09-11 16:40:12.000000000 -0400
 @@ -5,10 +5,13 @@
  
  set -euo pipefail
@@ -156,8 +156,8 @@ Decoder/XilinxSwitch/vivado_sim_waveform.bash
 +${SDSOC_ROOT}/Vivado/bin/xsim XilinxSwitch_tb_sim -gui -wdb work.XilinxSwitch_tb_tb.wdb  
 +
 Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
---- Decoder.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-09-07 11:09:41.407573000 -0400
-+++ Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-09-06 14:58:34.114734000 -0400
+--- Decoder.original/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-09-12 09:56:22.000000000 -0400
++++ Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash	2018-09-11 16:40:12.000000000 -0400
 @@ -1,4 +1,5 @@
  #!/bin/bash
  set -euo pipefail
@@ -166,8 +166,8 @@ Decoder/XilinxSwitch/XilinxSwitch.TB/compile.bash
 +g++ -g -O0 -I. -I$SDSOC_ROOT/Vivado_HLS/include -I../../../../DecoderVivadoHLS -I../../../../RSEConfig -std=c++11 $(find .. -name '*.cpp') ../../../../DecoderVivadoHLS/Decoder_core.cpp ../../../../DecoderVivadoHLS/Decoder.cpp -o XilinxSwitch -D__USE_XOPEN2K8 -DHAVE_DECL_BASENAME=1
 +
 Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
---- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-09-07 11:09:41.388368000 -0400
-+++ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-09-06 14:58:34.116814000 -0400
+--- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-09-12 09:56:21.000000000 -0400
++++ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp	2018-09-11 16:40:12.000000000 -0400
 @@ -58,6 +58,8 @@
  	Update_lvl_1_t Update_lvl_1;
  	Deparser_t Deparser;
@@ -279,8 +279,8 @@ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.hpp
  };
  //######################################################
 Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
---- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-09-07 11:09:41.390822000 -0400
-+++ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-09-06 14:58:34.118887000 -0400
+--- Decoder.original/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-09-12 09:56:21.000000000 -0400
++++ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp	2018-09-11 16:40:12.000000000 -0400
 @@ -99,13 +99,18 @@
  			_tuple_in_stream << ((_LV<8>)_DUT.ioports).to_hex() << ' ';
  			_tuple_in_stream << std::endl;
@@ -308,9 +308,9 @@ Decoder/XilinxSwitch/XilinxSwitch.TB/XilinxSwitch.cpp
  		// close files
  		_packet_in_pcap.close();
 Decoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
---- Decoder.original/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-09-07 11:09:41.224664000 -0400
-+++ Decoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-09-06 14:58:34.120870000 -0400
-@@ -1,5 +1,5 @@
+--- Decoder.original/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-09-12 09:56:18.000000000 -0400
++++ Decoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl	2018-09-12 09:42:08.000000000 -0400
+@@ -1,12 +1,12 @@
 -create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xcvu095-ffva2104-2-e
 -add_files -scan_for_includes ./
 +create_project XilinxSwitch XilinxSwitch_vivado/XilinxSwitch -part xczu9eg-ffvb1156-2-i
@@ -318,3 +318,11 @@ Decoder/XilinxSwitch/XilinxSwitch_vivado_packager.tcl
  import_files -force
  update_compile_order -fileset sources_1
  update_compile_order -fileset sources_1
+ set_property top XilinxSwitch [current_fileset]
+ update_compile_order -fileset sources_1
+ update_compile_order -fileset sim_1
+-ipx::package_project -root_dir XilinxSwitch_vivado/XilinxSwitch/XilinxSwitch.srcs/sources_1/imports/XilinxSwitch -vendor xilinx.com -library user -taxonomy /UserIP
++ipx::package_project -import_files -root_dir XilinxSwitch_vivado/XilinxSwitch/XilinxSwitch.srcs/sources_1/imports/XilinxSwitch -vendor xilinx.com -library user -taxonomy /UserIP
+ set_property library sdnet [ipx::current_core]
+ set_property name XilinxSwitch [ipx::current_core]
+ set_property display_name XilinxSwitch_v1_0 [ipx::current_core]
