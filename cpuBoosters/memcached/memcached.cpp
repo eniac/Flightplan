@@ -6,11 +6,9 @@
 #define UDP_SIZE ((16 + 16 + 16 + 16)/8)
 #define IPV4_SIZE ((32 + 32 + 16 + 8 + 8+ 13 + 3 + 16 + 16 + 8 + 4 + 4)/8)
 
-static char *src_orig;
-
 static int in_offset;
 template <int size_bits>
-char* cp_in(ap_uint<size_bits> &dst, char *src) {
+const char* cp_in(ap_uint<size_bits> &dst, const char *src) {
     //std::cout << "Parsing " << size_bits << " bits starting at byte " << (int)( src - src_orig) << ", Offset: " << in_offset << std::endl;
     uint64_t src_bits = *(uint64_t*)src;
 
@@ -24,7 +22,7 @@ char* cp_in(ap_uint<size_bits> &dst, char *src) {
 
     dst = (ap_uint<size_bits>)(src_bits);
 
-    char *rtn = src + (size_bits + in_offset) / 8;
+    const char *rtn = src + (size_bits + in_offset) / 8;
     in_offset = (size_bits + in_offset) % 8;
     //std::cout << "Finished Parsing " << size_bits << " bits starting at byte " << (int)( src - src_orig) << ", Offset now: " << in_offset << std::endl;
     return rtn;
@@ -50,9 +48,8 @@ char *cp_out(ap_uint<size_bits> &src, char *dst){
     return dst;
 }
 
-void transfer_in(input_tuples &input_tuple, char *packet) {
-    char *sv = packet;
-    src_orig = packet;
+void transfer_in(input_tuples &input_tuple, const char *packet) {
+    const char *sv = packet;
 
     tuple_eth &eth = input_tuple.Hdr.Eth;
     sv = cp_in(eth.Dst, sv);
@@ -119,7 +116,7 @@ void transfer_out(T &input_tuple, char *packet) {
         std::cout << "MATCH " << std::endl; \
     }
 
-bool call_memcached(char *packet, size_t packet_size, mcd_forward_fn forward) {
+bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forward) {
 
     if (packet_size < ETH_SIZE + UDP_SIZE + IPV4_SIZE) {
         std::cout << "Packet size too small!" << std::endl;
