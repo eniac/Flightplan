@@ -6,11 +6,9 @@
 #define UDP_SIZE ((16 + 16 + 16 + 16)/8)
 #define IPV4_SIZE ((32 + 32 + 16 + 8 + 8+ 13 + 3 + 16 + 16 + 8 + 4 + 4)/8)
 
-static char *src_orig;
-
 static int in_offset;
 template <int size_bits>
-char* cp_in(ap_uint<size_bits> &dst, char *src) {
+const char* cp_in(ap_uint<size_bits> &dst, const char *src) {
     //std::cout << "Parsing " << size_bits << " bits starting at byte " << (int)( src - src_orig) << ", Offset: " << in_offset << std::endl;
     uint64_t src_bits = *(uint64_t*)src;
 
@@ -24,7 +22,7 @@ char* cp_in(ap_uint<size_bits> &dst, char *src) {
 
     dst = (ap_uint<size_bits>)(src_bits);
 
-    char *rtn = src + (size_bits + in_offset) / 8;
+    const char *rtn = src + (size_bits + in_offset) / 8;
     in_offset = (size_bits + in_offset) % 8;
     //std::cout << "Finished Parsing " << size_bits << " bits starting at byte " << (int)( src - src_orig) << ", Offset now: " << in_offset << std::endl;
     return rtn;
@@ -50,9 +48,8 @@ char *cp_out(ap_uint<size_bits> &src, char *dst){
     return dst;
 }
 
-void transfer_in(input_tuples &input_tuple, char *packet) {
-    char *sv = packet;
-    src_orig = packet;
+void transfer_in(input_tuples &input_tuple, const char *packet) {
+    const char *sv = packet;
 
     tuple_eth &eth = input_tuple.Hdr.Eth;
     sv = cp_in(eth.Dst, sv);
@@ -82,6 +79,31 @@ void transfer_in(input_tuples &input_tuple, char *packet) {
     std::cout << "Parsed " << (int)(sv - (char*)packet) << " bytes" << std::endl;
 }
 
+uint16_t ccsum(void *buf, size_t buflen) {
+    uint32_t r = 0;
+    size_t len = buflen;
+
+    const uint16_t* d = reinterpret_cast<const uint16_t*>(buf);
+
+    while (len > 1)
+    {
+        r += *d++;
+        len -= sizeof(uint16_t);
+    }
+
+    if (len)
+    {
+        r += *reinterpret_cast<const uint8_t*>(d);
+    }
+
+    while (r >> 16)
+    {
+        r = (r & 0xffff) + (r >> 16);
+    }
+
+    return static_cast<uint16_t>(~r);
+}
+
 template <typename T>
 void transfer_out(T &input_tuple, char *packet) {
     char *sv = packet;
@@ -91,7 +113,10 @@ void transfer_out(T &input_tuple, char *packet) {
     sv = cp_out(eth.Src, sv);
     sv = cp_out(eth.Type, sv);
 
+
     tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
+    ipv4.hdrchecksum = 0;
+    char *start_sv = sv;
     sv = cp_out(ipv4.version, sv);
     sv = cp_out(ipv4.ihl, sv);
     sv = cp_out(ipv4.diffserv, sv);
@@ -101,11 +126,17 @@ void transfer_out(T &input_tuple, char *packet) {
     sv = cp_out(ipv4.fragoffset, sv);
     sv = cp_out(ipv4.ttl, sv);
     sv = cp_out(ipv4.protocol, sv);
+    char *chk_sv = sv;
     sv = cp_out(ipv4.hdrchecksum, sv);
     sv = cp_out(ipv4.srcAddr, sv);
     sv = cp_out(ipv4.dstAddr, sv);
 
+    uint16_t csum = ccsum(start_sv, sv - start_sv);
+    ipv4.hdrchecksum = csum;
+    memcpy(chk_sv, &csum, sizeof(csum));
+
     tuple_udp &udp = input_tuple.Hdr.Udp;
+    udp.chksum = 0;
     sv = cp_out(udp.sport, sv);
     sv = cp_out(udp.dport, sv);
     sv = cp_out(udp.len, sv);
@@ -119,7 +150,7 @@ void transfer_out(T &input_tuple, char *packet) {
         std::cout << "MATCH " << std::endl; \
     }
 
-bool call_memcached(char *packet, size_t packet_size, mcd_forward_fn forward) {
+bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forward) {
 
     if (packet_size < ETH_SIZE + UDP_SIZE + IPV4_SIZE) {
         std::cout << "Packet size too small!" << std::endl;
