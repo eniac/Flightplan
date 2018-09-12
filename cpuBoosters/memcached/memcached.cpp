@@ -79,6 +79,31 @@ void transfer_in(input_tuples &input_tuple, const char *packet) {
     std::cout << "Parsed " << (int)(sv - (char*)packet) << " bytes" << std::endl;
 }
 
+uint16_t ccsum(void *buf, size_t buflen) {
+    uint32_t r = 0;
+    size_t len = buflen;
+
+    const uint16_t* d = reinterpret_cast<const uint16_t*>(buf);
+
+    while (len > 1)
+    {
+        r += *d++;
+        len -= sizeof(uint16_t);
+    }
+
+    if (len)
+    {
+        r += *reinterpret_cast<const uint8_t*>(d);
+    }
+
+    while (r >> 16)
+    {
+        r = (r & 0xffff) + (r >> 16);
+    }
+
+    return static_cast<uint16_t>(~r);
+}
+
 template <typename T>
 void transfer_out(T &input_tuple, char *packet) {
     char *sv = packet;
@@ -88,7 +113,10 @@ void transfer_out(T &input_tuple, char *packet) {
     sv = cp_out(eth.Src, sv);
     sv = cp_out(eth.Type, sv);
 
+
     tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
+    ipv4.hdrchecksum = 0;
+    char *start_sv = sv;
     sv = cp_out(ipv4.version, sv);
     sv = cp_out(ipv4.ihl, sv);
     sv = cp_out(ipv4.diffserv, sv);
@@ -98,11 +126,17 @@ void transfer_out(T &input_tuple, char *packet) {
     sv = cp_out(ipv4.fragoffset, sv);
     sv = cp_out(ipv4.ttl, sv);
     sv = cp_out(ipv4.protocol, sv);
+    char *chk_sv = sv;
     sv = cp_out(ipv4.hdrchecksum, sv);
     sv = cp_out(ipv4.srcAddr, sv);
     sv = cp_out(ipv4.dstAddr, sv);
 
+    uint16_t csum = ccsum(start_sv, sv - start_sv);
+    ipv4.hdrchecksum = csum;
+    memcpy(chk_sv, &csum, sizeof(csum));
+
     tuple_udp &udp = input_tuple.Hdr.Udp;
+    udp.chksum = 0;
     sv = cp_out(udp.sport, sv);
     sv = cp_out(udp.dport, sv);
     sv = cp_out(udp.len, sv);
