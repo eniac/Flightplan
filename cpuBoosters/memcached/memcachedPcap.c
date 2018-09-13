@@ -42,14 +42,11 @@ static uint16_t get_port(const u_char *packet, uint32_t pkt_len) {
 
 static void packet_handler(u_char *args, const struct pcap_pkthdr *hdr,
                            const u_char *packet) {
-    printf("Got packet!\n");
-
     uint16_t port = get_port(packet, hdr->len);
     if (port != 11211) {
         printf("Not a memcached packet (port: %d)\n", (int)port);
         forward_frame(packet, hdr->len, 0);
     } else {
-        printf("calling memcachedn");
         call_memcached((const char*)packet, hdr->len, forward_frame);
     }
 }
