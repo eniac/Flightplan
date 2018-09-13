@@ -1,4 +1,4 @@
-reading from file: ./example.pcap
+reading from file: example.pcap
 pktId, hopId, ingressTs, egressTs, delta
 0, 0, 84, 18153869532, 18153869810, 278
 0, 1, 84, 18159716499, 18159716733, 234
