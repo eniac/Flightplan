@@ -30,7 +30,7 @@ const char* cp_in(ap_uint<size_bits> &dst, const char *src) {
 
 static int out_offset;
 template <int size_bits>
-char *cp_out(ap_uint<size_bits> &src, char *dst){
+unsigned char *cp_out(ap_uint<size_bits> &src, unsigned char *dst){
     uint64_t src_bits = (uint64_t)src;
     char *start = (char*)&src_bits;
     char *end = start + (size_bits + 8 - 1) / 8;
@@ -106,7 +106,7 @@ uint16_t ccsum(void *buf, size_t buflen) {
 
 template <typename T>
 void transfer_out(T &input_tuple, char *packet) {
-    char *sv = packet;
+    unsigned char *sv = (unsigned char*)packet;
 
     tuple_eth &eth = input_tuple.Hdr.Eth;
     sv = cp_out(eth.Dst, sv);
@@ -116,7 +116,7 @@ void transfer_out(T &input_tuple, char *packet) {
 
     tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
     ipv4.hdrchecksum = 0;
-    char *start_sv = sv;
+    unsigned char *start_sv = sv;
     sv = cp_out(ipv4.version, sv);
     sv = cp_out(ipv4.ihl, sv);
     sv = cp_out(ipv4.diffserv, sv);
@@ -126,7 +126,10 @@ void transfer_out(T &input_tuple, char *packet) {
     sv = cp_out(ipv4.fragoffset, sv);
     sv = cp_out(ipv4.ttl, sv);
     sv = cp_out(ipv4.protocol, sv);
-    char *chk_sv = sv;
+    unsigned char *chk_sv = sv;
+    // This really shouldn't be necessary, but it appears to not
+    // copy over the hdrchecksum of 0 the second time...
+    memset(sv, 0, sizeof(uint16_t));
     sv = cp_out(ipv4.hdrchecksum, sv);
     sv = cp_out(ipv4.srcAddr, sv);
     sv = cp_out(ipv4.dstAddr, sv);
@@ -223,9 +226,9 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
 
     packet_interface output;
 
-    output_tuples output_tuple = output_tuple_stream.read();
     int pkt_num = 0;
     while (1) {
+        output_tuples output_tuple = output_tuple_stream.read();
         char output_packet[2048];
         int packet_i = 0;
         do {
@@ -240,11 +243,9 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
         transfer_out(output_tuple, output_packet);
         pkt_num++;
 
-        forward(output_packet, packet_i, output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport);
+        forward(output_packet, packet_i, 0);//output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport);
 
-        if (output_tuple.Checkcache.forward == 1) {
-            output_tuple = output_tuple_stream.read();
-        } else {
+        if (output_tuple.Checkcache.forward != 1) {
             break;
         }
     }
