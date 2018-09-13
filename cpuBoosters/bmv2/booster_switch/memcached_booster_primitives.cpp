@@ -16,6 +16,8 @@ using bm::Header;
 class memcached : public ActionPrimitive<Data &> {
     void operator ()(Data &forward_d) {
         Packet &packet = this->get_packet();
+        int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
+        int ingress_port = phv->get_field("standard_metadata.ingress_port").get_int();
 
         std::vector<Header *>hdrs;
         boosters::get_valid_headers(packet, hdrs);
@@ -27,8 +29,9 @@ class memcached : public ActionPrimitive<Data &> {
         size_t buff_size;
         u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
 
-        auto forwarder = [&](char *payload, size_t len) {
-            SimpleSwitch::get_instance()->output_booster_packet(packet, (u_char*)payload, len);
+        auto forwarder = [&](char *payload, size_t len, int reverse) {
+            BMLOG_DEBUG("Reverse is {}, sending to port {}", reverse, reverse==0 ? egress_port : ingress_port);
+            SimpleSwitch::get_instance()->output_booster_packet(reverse == 0 ? egress_port : ingress_port, (u_char*)payload, len);
         };
 
         bool drop = call_memcached((char*)buff, buff_size, forwarder);

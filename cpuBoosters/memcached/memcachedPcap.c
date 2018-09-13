@@ -17,8 +17,8 @@ static pcap_t *output_handle = NULL;
  * @param[in] packet Packet data to be send on the output interface
  * @param[in] len Size of the provided packet
  */
-void forward_frame(const void * packet, int len) {
-	if (NULL != output_handle) {
+void forward_frame(const void * packet, int len, int reverse) {
+	if (NULL != output_handle && !reverse) {
 		pcap_inject(output_handle, packet, len);
 	} else {
 		pcap_inject(input_handle, packet, len);
@@ -47,7 +47,7 @@ static void packet_handler(u_char *args, const struct pcap_pkthdr *hdr,
     uint16_t port = get_port(packet, hdr->len);
     if (port != 11211) {
         printf("Not a memcached packet (port: %d)\n", (int)port);
-        forward_frame(packet, hdr->len);
+        forward_frame(packet, hdr->len, 0);
     } else {
         printf("calling memcachedn");
         call_memcached((const char*)packet, hdr->len, forward_frame);

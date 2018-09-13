@@ -201,7 +201,7 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
             word <<= 8;
             unsigned offset = BYTES_PER_WORD * i + j;
             if (offset < packet_size) {
-                word |= packet[offset];
+                word |= (unsigned char)packet[offset];
             }
         }
         bool at_end = i == n_words - 1;
@@ -222,48 +222,31 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
     Memcore(input_tuple_stream, output_tuple_stream, packet_input_stream, packet_output_stream);
 
     packet_interface output;
-    char output_packet[2048];
-    int packet_i = 0;
-    do {
-        output = packet_output_stream.read();
-		for (int i = 0; i < output.Count; i++)
-		{
-			char Byte = (output.Data >> (8 * (BYTES_PER_WORD - i -1))) & 0xFF;
-			output_packet[packet_i++] = Byte;
-		}
-    } while (!output.End_of_frame);
 
     output_tuples output_tuple = output_tuple_stream.read();
-    transfer_out(output_tuple, output_packet);
-    forward(output_packet, packet_i);
+    int pkt_num = 0;
+    while (1) {
+        char output_packet[2048];
+        int packet_i = 0;
+        do {
+            output = packet_output_stream.read();
+            for (int i = 0; i < output.Count; i++)
+            {
+                char Byte = (output.Data >> (8 * (BYTES_PER_WORD - i -1))) & 0xFF;
+                output_packet[packet_i++] = Byte;
+            }
+        } while (!output.End_of_frame);
 
-    input_tuples in2;
-    transfer_in(in2, output_packet);
+        transfer_out(output_tuple, output_packet);
+        pkt_num++;
 
+        forward(output_packet, packet_i, output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport);
 
-
-    eth = in2.Hdr.Eth;
-    std::cout << "Eth type " << eth.Type.to_string(16) << std::endl;
-    std::cout << "Eth Src " << eth.Src.to_string(16) << std::endl;
-    std::cout << "Eth Dst " << eth.Dst.to_string(16) << std::endl;
-
-    ipv4 = in2.Hdr.Ipv4;
-    std::cout << "IPv4 Version " << ipv4.version.to_string(16) << std::endl;
-    std::cout << "IPv4 IHL " << ipv4.ihl.to_string(16) << std::endl;
-    std::cout << "IPv4 ID " << ipv4.identification.to_string(16) << std::endl;
-    std::cout << "IPv4 flags" << ipv4.flags.to_string(16) << std::endl;
-    std::cout << "IPv4 frag" << ipv4.fragoffset.to_string(16) << std::endl;
-    std::cout << "IPv4 TTL " << ipv4.ttl.to_string(16) << std::endl;
-    std::cout << "IPv4 Protocol " << ipv4.protocol.to_string(16) << std::endl;
-    std::cout << "IPv4 Checksum " << ipv4.hdrchecksum.to_string(16) << std::endl;
-    std::cout << "IPv4 Src " << ipv4.srcAddr.to_string(16) << std::endl;
-    std::cout << "IPv4 Dst " << ipv4.dstAddr.to_string(16) << std::endl;
-
-    udp = in2.Hdr.Udp;
-    std::cout << "UDP checksum " << udp.chksum.to_string(16) << std::endl;
-    std::cout << "UDP Dst " << udp.dport.to_string(16) << std::endl;
-    std::cout << "UDP Src " << udp.sport.to_string(16) << std::endl;
-    std::cout << "UDP Len " << udp.len.to_string(16) << std::endl;
-
+        if (output_tuple.Checkcache.forward == 1) {
+            output_tuple = output_tuple_stream.read();
+        } else {
+            break;
+        }
+    }
     return true;
 }
