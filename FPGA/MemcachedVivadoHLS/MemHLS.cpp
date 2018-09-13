@@ -1,8 +1,6 @@
 #include "MemHLS.h"
 #include <iostream>
 
-
-
 static Cache Memory[MAX_MEMORY_SIZE];
 static uint16_t Packet_num;
 uint16_t hash(Data_Word Data)
@@ -284,7 +282,6 @@ void Parse_CMD(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 
 
 				 }
-				 std::cout << removelength << std::endl;
 				 State = Alignment;
 				 Metaout.write(Metadata);
 				 remainlen = BYTES_PER_WORD - removelength;
@@ -461,8 +458,7 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 		Instruction.MemHdr = Metadata.MemHdr;
 		index = Metadata.index;
 		Instruction.index = index;
-		std::cout << "Index is " << index << std::endl;
-		if (index == 6) std::cout << "!!!!!" << std::endl;
+		if (index == 6) std::cerr << "!!!!!" << std::endl;
 		if (Metadata.cmd == 1)
 			{
 				State = 0;
@@ -495,7 +491,7 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				if (Memory[index].KEY[count] != key.Data)
 					{
 						collision = true;
-						std::cout << "Collision" << std::endl;
+						std::cerr << "Collision" << std::endl;
 					}
 				count ++;
 				Key_out.write(key);
@@ -569,6 +565,7 @@ void Remove(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt
 					Data_out.write(tempout);
 				}
 			}while(!pktcomplete);
+            std::cout << "Remainword in remove: ";
 			if (State == Alignment && tempin.len > removelength)
 				Data_out.write(remainword);
 		}
@@ -603,10 +600,13 @@ void Parse_Datalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> 
 		if (Metadata.cmd == 1)
 		{
 			tempin = Data_in.read();
+
+
 			num = Find_delimiter(tempin.Data);
 			Datalen.Data.range(63, 64 - num * 8) = tempin.Data.range(63, 64 - num * 8);
 			Datalen.len = num;
 			Lengthout1.write(Datalen);
+
 			Datalen.len += 3;
 			Datalen.Data >>= 3*8;
 			Datalen.Data.range(63, 40) = 0x203020;
@@ -658,6 +658,7 @@ void ConvertDatalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt>
 					hls::stream<Part_Word> & Datalen,
 					hls::stream<metadata> &metain, hls::stream<metadata> &metaout)
 {
+    std::cerr << "Converting data len " << std::endl;
 	MemcachedPkt mempkt = Mempkt.read();
 	Mempkt_out.write(mempkt);
 	if (mempkt)
@@ -674,7 +675,6 @@ void ConvertDatalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt>
 				datalen = datalen* 10 + temp.Data.range(63 - i * 8, 56 - i * 8) - 48;
 			}
 			datalen += 7;
-			std::cout << datalen << std::endl;
 			Memory[index].DATA_LEN = datalen;
 			Metadata.Datalen = datalen;
 			metaout.write(Metadata);
@@ -716,7 +716,6 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				Memory[index].DATA[count] = tempin.Data;
 				count++;
 			}while(!pktcomplete);
-
 			if (tempin.len <= (8 - EndofPacket.len))
 			{
 				Memory[index].DATA[count - 1].range(63-tempin.len * 8, 24 - tempin.len*8) = EndofPacket.Data.range(63, 24);
@@ -732,6 +731,9 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				Memory[index].DATA[count] =EndofPacket.Data << (64 - 8 * tempin.len);
 			}
 			Memory[index].VALID = 1;
+            std::stringstream ss;
+            ss << std::setw((64 + 3) / 4) << std::setfill('0') << std::hex << Memory[index].DATA[count];
+            std::string hexstr = ss.str();
 			//Print_Memory(index);
 			std::cout << "The count is" << (int)count << std::endl;
 
@@ -759,6 +761,9 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			dataoutput.End = 1;
 			dataoutput.len = remainnum;
 			Data_out.write(dataoutput);
+            std::stringstream ss;
+            ss << std::setw((64 + 3) / 4) << std::setfill('0') << std::hex << Memory[index].DATA[totnum];
+            std::string hexstr = ss.str();
 		}
 		else if (Instruction.response == 2)
 		{
@@ -994,6 +999,11 @@ void Output_packets(//input_tuples Input_tuple,
 						temp = Packet_in2.read();
 						Forward_Pkt_End = temp.End_of_frame;
 					}
+                if (End) {
+                    std::stringstream ss;
+                    ss << std::setw((64 + 3) / 4) << std::setfill('0') << std::hex << input.Data;
+                    std::string hexstr = ss.str();
+                }
 			}while(!End);
 			tuple_out.Checkcache.forward = 0;
 			tuple_out.Hdr.Ipv4.totallen = len - ETH_HDR_LEN;
@@ -1087,99 +1097,99 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS dataflow
 	int DATA_FIFO_SIZE = 150;
 	int INST_FIFO_SIZE = 100;
-	static hls::stream<Part_Word> Extracted_Data;
+	 hls::stream<Part_Word> Extracted_Data;
 #pragma HLS STREAM variable=Extracted_Data depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_EthHdr;
+	 hls::stream<Part_Word> Data_after_EthHdr;
 #pragma HLS STREAM variable=Data_after_EthHdr depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_MemHdr;
+	 hls::stream<Part_Word> Data_after_MemHdr;
 #pragma HLS STREAM variable=Data_after_MemHdr depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_cmd;
+	 hls::stream<Part_Word> Data_after_cmd;
 #pragma HLS STREAM variable=Data_after_cmd depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_Key;
+	 hls::stream<Part_Word> Data_after_Key;
 #pragma HLS STREAM variable=Data_after_Key depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_Remove;
+	 hls::stream<Part_Word> Data_after_Remove;
 #pragma HLS STREAM variable=Data_after_Remove depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_len;
+	 hls::stream<Part_Word> Data_after_len;
 #pragma HLS STREAM variable=Data_after_len depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_Stream;
+	 hls::stream<Part_Word> Data_Stream;
 #pragma HLS STREAM variable=Data_Stream depth=DATA_FIFO_SIZE
 
-	static hls::stream<Part_Word> Datalen2Convert;
+	 hls::stream<Part_Word> Datalen2Convert;
 #pragma HLS STREAM variable=Datalen2Convert depth=INST_FIFO_SIZE
-	static hls::stream<Part_Word> Datalen2Output;
+	 hls::stream<Part_Word> Datalen2Output;
 #pragma HLS STREAM variable=Datalen2Output depth=INST_FIFO_SIZE
 
-	static hls::stream<Part_Word> Key_Stream;
+	 hls::stream<Part_Word> Key_Stream;
 #pragma HLS STREAM variable=Key_Stream depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Key2Output;
+	 hls::stream<Part_Word> Key2Output;
 #pragma HLS STREAM variable=Key2Output depth=DATA_FIFO_SIZE
 
-	static hls::stream<metadata> Metadata;
+	 hls::stream<metadata> Metadata;
 #pragma HLS STREAM variable=Metadata depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata_with_CMD;
+	 hls::stream<metadata> Metadata_with_CMD;
 #pragma HLS STREAM variable=Metadata_with_CMD depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ProcessKey;
+	 hls::stream<metadata> Metadata2ProcessKey;
 #pragma HLS STREAM variable=Metadata2ProcessKey depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2Remove;
+	 hls::stream<metadata> Metadata2Remove;
 #pragma HLS STREAM variable=Metadata2Remove depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ParseDatalen;
+	 hls::stream<metadata> Metadata2ParseDatalen;
 #pragma HLS STREAM variable=Metadata2ParseDatalen depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ConvertDatalen;
+	 hls::stream<metadata> Metadata2ConvertDatalen;
 #pragma HLS STREAM variable=Metadata2ConvertDatalen depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ParseData;
+	 hls::stream<metadata> Metadata2ParseData;
 #pragma HLS STREAM variable=Metadata2ParseData depth=INST_FIFO_SIZE
 
-	static hls::stream<instr> Instr2ParseData;
+	 hls::stream<instr> Instr2ParseData;
 #pragma HLS STREAM variable=Instr2ParseData depth=INST_FIFO_SIZE
-	static hls::stream<instr> Instr2Output;
+	 hls::stream<instr> Instr2Output;
 #pragma HLS STREAM variable=Instr2Output depth=INST_FIFO_SIZE
-	static hls::stream<instr> Instr2GenOutput;
+	 hls::stream<instr> Instr2GenOutput;
 #pragma HLS STREAM variable=Instr2GenOutput depth=INST_FIFO_SIZE
 
 
-	static hls::stream<packet_interface> Packet2OutputPacket;
+	 hls::stream<packet_interface> Packet2OutputPacket;
 #pragma HLS STREAM variable=Packet2OutputPacket depth=DATA_FIFO_SIZE
 
-	static hls::stream<input_tuples> Tuple2output;
+	 hls::stream<input_tuples> Tuple2output;
 #pragma HLS STREAM variable=Tuple2output depth=100
 #pragma HLS DATA_PACK variable=Tuple2output
-	static hls::stream<input_tuples> Tuple2ETH;
+	 hls::stream<input_tuples> Tuple2ETH;
 #pragma HLS STREAM variable=Tuple2ETH depth=100
-	static hls::stream<input_tuples> Tuple2PData;
+	 hls::stream<input_tuples> Tuple2PData;
 #pragma HLS STREAM variable=Tuple2PData depth=100
-	static hls::stream<input_tuples> Tuple2Goutput;
+	 hls::stream<input_tuples> Tuple2Goutput;
 #pragma HLS STREAM variable=Tuple2Goutput depth=100
-	static hls::stream<input_tuples> Tuple2ExtractData;
+	 hls::stream<input_tuples> Tuple2ExtractData;
 #pragma HLS STREAM variable=Tuple2ExtractData depth=100
-	static hls::stream<input_tuples> Tuple2Forward;
+	 hls::stream<input_tuples> Tuple2Forward;
 #pragma HLS STREAM variable=Tuple2Forward depth=100
 
-	static hls::stream<packet_interface> Pkt2ExtractData;
+	 hls::stream<packet_interface> Pkt2ExtractData;
 #pragma HLS STREAM variable=Pkt2ExtractData depth=DATA_FIFO_SIZE
-	static hls::stream<packet_interface> Pkt2Forward;
+	 hls::stream<packet_interface> Pkt2Forward;
 #pragma HLS STREAM variable=Pkt2Forward depth=1000
 
-	static hls::stream<MemcachedPkt> Mempkt2ExtractData;
+	 hls::stream<MemcachedPkt> Mempkt2ExtractData;
 #pragma HLS STREAM variable=Mempkt2ExtractData depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseETH;
+	 hls::stream<MemcachedPkt> Mempkt2ParseETH;
 #pragma HLS STREAM variable=Mempkt2ParseETH depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseMemHdr;
+	 hls::stream<MemcachedPkt> Mempkt2ParseMemHdr;
 #pragma HLS STREAM variable=Mempkt2ParseMemHdr depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseCMD;
+	 hls::stream<MemcachedPkt> Mempkt2ParseCMD;
 #pragma HLS STREAM variable=Mempkt2ParseCMD depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseKey;
+	 hls::stream<MemcachedPkt> Mempkt2ParseKey;
 #pragma HLS STREAM variable=Mempkt2ParseKey depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2Process;
+	 hls::stream<MemcachedPkt> Mempkt2Process;
 #pragma HLS STREAM variable=Mempkt2Process depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2Remove;
+	 hls::stream<MemcachedPkt> Mempkt2Remove;
 #pragma HLS STREAM variable=Mempkt2Remove depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseDatalen;
+	 hls::stream<MemcachedPkt> Mempkt2ParseDatalen;
 #pragma HLS STREAM variable=Mempkt2ParseDatalen depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2Conv;
+	 hls::stream<MemcachedPkt> Mempkt2Conv;
 #pragma HLS STREAM variable=Mempkt2Conv depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseData;
+	 hls::stream<MemcachedPkt> Mempkt2ParseData;
 #pragma HLS STREAM variable=Mempkt2ParseData depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2GenerateOutput;
+	 hls::stream<MemcachedPkt> Mempkt2GenerateOutput;
 #pragma HLS STREAM variable=Mempkt2GenerateOutput depth=INST_FIFO_SIZE
 
 #pragma HLS DATA_PACK variable=Tuple2ETH
@@ -1187,8 +1197,8 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS DATA_PACK variable=Tuple2Goutput
 #pragma HLS DATA_PACK variable=Tuple2output
 
-std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
-std::cout << "The No. "<< Packet_num << "Packet"  << std::endl;
+std::cerr << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
+std::cerr << "The No. "<< Packet_num << "Packet"  << std::endl;
 Packet_num ++;
 
 #pragma HLS dependence variable=Memory inter
@@ -1206,7 +1216,7 @@ Packet_num ++;
 	 Parse_Data(Mempkt2ParseData,Mempkt2GenerateOutput, Data_after_len, Metadata2ParseData, Instr2ParseData, Instr2GenOutput, Data_Stream);
 	 Generate_output(Mempkt2GenerateOutput, Packet2OutputPacket, Instr2GenOutput, Instr2Output, Data_Stream, Key2Output, Datalen2Output);
 	 Output_packets(Tuple2output, Output_tuples, Packet2OutputPacket, Pkt2Forward, Packet_output, Instr2Output);
-	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
+	std::cerr << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
 
 }
 
