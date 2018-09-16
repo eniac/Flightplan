@@ -381,7 +381,10 @@ static void Decode_packets(hls::stream<parameters> & Input_parameter_FIFO,
 
       packet_info Info = Input_info_FIFO.read();
       unsigned Offset = 0;
-      while (Offset < DIVIDE_AND_ROUND_UP(Info.Bytes_per_packet + FEC_PACKET_LENGTH_WIDTH / 8, BYTES_PER_WORD))
+      unsigned Length = 1024;
+      unsigned Words_per_packet = 1024;
+      bool End = false;
+      while (!End)
       {
 #pragma HLS LOOP_TRIPCOUNT min=8 max=190
 #pragma HLS pipeline
@@ -403,6 +406,10 @@ static void Decode_packets(hls::stream<parameters> & Input_parameter_FIFO,
         }
 
         data_word Output = Matrix_multiply_word(Input, Coefficients, k);
+
+        End = Offset == Words_per_packet - 1;
+        Words_per_packet = DIVIDE_AND_ROUND_UP(Length, BYTES_PER_WORD);
+        Length = Info.Bytes_per_packet + FEC_PACKET_LENGTH_WIDTH / 8;
 
         if (Offset == 0)
           Info.Bytes_per_packet = Output >> (FEC_AXI_BUS_WIDTH - FEC_PACKET_LENGTH_WIDTH);

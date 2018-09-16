@@ -3,7 +3,7 @@
 @@ -194,6 +194,35 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
- class memcached_0_t::UserEngine(200, 0) {
+ class memcached_0_t::UserEngine(1000, 0) {
 +
 +  Packet_input packet_in;
 +  Packet_output packet_out;
