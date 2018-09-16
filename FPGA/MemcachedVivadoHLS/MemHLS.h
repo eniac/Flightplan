@@ -1,8 +1,8 @@
 #ifndef HLS_MEMCACHED
 #define HLS_MEMCACHED
 //Assumptions
-#define REQUEST_LINE_SIZE (500)
-#define MAX_DATA_SIZE (1024 + 2)
+#define REQUEST_LINE_SIZE (300)
+#define MAX_DATA_SIZE (1200)
 #define MAX_PACKET_SIZE (REQUEST_LINE_SIZE+MAX_DATA_SIZE)
 #define MAX_KEY_LEN (256)
 #define MAX_MEMORY_SIZE (1024)
@@ -11,8 +11,6 @@
 #define MAX_RESPONSE_LEN (20)
 #define NUM_OF_RESPONSE (8)
 //Some consts in the hdr
-#define IPV4_LEN_FIELD (16)
-#define UDP_LEN_FIELD (38)
 #define PAYLOAD_OFFSET_UDP (42) //Payload location under UDP include 8 bytes memcached header
 #define MEMCACHED_UDP_HEADER (8)
 #define ETH_HDR_LEN (14)
@@ -26,12 +24,16 @@
 #define MEM_AXI_BUS_WIDTH (64)
 #define BYTES_PER_WORD (MEM_AXI_BUS_WIDTH / 8)
 
+#define PACKET_END (9)
+
+
 #include <hls_stream.h>
 #include <ap_int.h>
 #include <stdint.h>
 
 typedef ap_uint<MEM_AXI_BUS_WIDTH> Data_Word;
 typedef ap_uint<8> Byte;
+typedef ap_uint<1> MemcachedPkt;
 
 typedef struct
 {
@@ -44,17 +46,51 @@ typedef struct
 
 typedef struct Incomplete_Data_Word{
 	Data_Word Data;
-	ap_uint<8> len;
+	ap_uint<4> len;
+	ap_uint<1> End;
 }Part_Word;
 
 typedef struct Cache_Memory{
-  Data_Word KEY[MAX_KEY_LEN/BYTES_PER_WORD +1];
+  Data_Word KEY[MAX_KEY_LEN/BYTES_PER_WORD];
   int KEY_LEN;
-  Data_Word DATA[MAX_DATA_SIZE/BYTES_PER_WORD + 1];
+  Data_Word DATA[MAX_DATA_SIZE/BYTES_PER_WORD];
   long DATA_LEN;
   bool VALID;
+  Part_Word DATA_LEN_WORD;
+
 }Cache;
 
+typedef struct
+{
+    ap_uint<4> Egress_port;
+    ap_uint<4> Ingress_port;
+} tuple_ioports;
+
+typedef struct
+{
+    ap_uint<16> Id;
+} tuple_local_state;
+
+typedef struct
+{
+    ap_uint<32> Size;
+} tuple_Parser_extracts;
+
+typedef struct
+{
+    ap_uint<22> Control;
+} tuple_control;
+
+typedef struct
+{
+    ap_uint<1> Stateful_valid;
+} tuple_memcached_input;
+
+typedef struct
+{
+	ap_uint<1> forward;
+
+} tuple_checkcache;
 typedef struct
 {
 
@@ -109,18 +145,66 @@ typedef struct
 
 typedef struct
 {
-    tuple_hdr Hdr;
+	tuple_control Control;
+	tuple_checkcache Checkcache;
+	tuple_hdr Hdr;
+	tuple_ioports Ioports;
+    tuple_local_state Local_state;
+    tuple_Parser_extracts Parser_extracts;
+    tuple_memcached_input Memcached_input;
 } input_tuples;
 
 typedef struct
 {
-    tuple_hdr Hdr;
+	tuple_control Control;//23
+	tuple_checkcache Checkcache; //1
+	tuple_hdr Hdr; //372
+	tuple_ioports Ioports; //8
+    tuple_local_state Local_state; //16
+    tuple_Parser_extracts Parser_extracts; //32
+    tuple_memcached_input Memcached_output; //1
 } output_tuples;
 
 // For Hash Function
 #define MAGIC_NUM (31)
 
-enum ascii_cmd {
+enum Parser_State{
+//	IDLE,
+//	Parse_Hdr,
+//	Parse_CMD,
+//	Parse_SET_KEY,
+//	Parse_GET_KEY,
+//	Parse_KEY,
+//	Parse_EXPERT,
+//	Parse_FLAG,
+//	Parse_LEN,
+//	Parse_DATA,
+//	Parse_LastWord,
+//	Read_LastByte,
+//	Next,
+//	FINISH,
+//	ERROR
+	Consumption,
+	Alignment,
+	Not_Alignment
+};
+typedef struct
+{
+	uint16_t index;
+	ap_uint<3> response;
+	Data_Word MemHdr;
+}instr;
+
+typedef struct
+{
+	uint16_t index;
+	ap_uint<3> cmd;
+	Data_Word MemHdr;
+	uint8_t keylen;
+	uint16_t Datalen;
+}metadata;
+
+enum Ascii_cmd {
   GET_CMD,
   SET_CMD,
   DELETE_CMD,
@@ -150,19 +234,24 @@ typedef struct standard_command
 {
 	char cmd[MAX_CMD_LEN];
 	int len;
-	enum ascii_cmd cc;
+	enum Ascii_cmd cc;
 }Cmd_Word;
 
+typedef ap_uint<4> Command_line;
+typedef struct Instruction_Collection
+{
+	ap_uint<4> cmd;
+	uint16_t index;
+}Instruction;
 
-
-const Part_Word Standard_Response[NUM_OF_RESPONSE]={ 0x53544F5245442000, 6,
-													 0x56414C5545200000, 6,
-											         0x454E440000000000, 3,
-											         0x44454C4554454420, 8,
-											         0x4E4F542000000000, 4,
-											         0x464F554E44200000, 6,
-											         0x2000000000000000, 1,
-											         0x0D0A000000000000, 2};
+//const Part_Word Standard_Response[NUM_OF_RESPONSE]={ 0x53544F5245442000, 7,
+//													 0x56414C5545200000, 6,
+//											         0x454E440000000000, 3,
+//											         0x44454C4554454420, 8,
+//											         0x4E4F542000000000, 4,
+//											         0x464F554E44200000, 6,
+//											         0x2000000000000000, 1,
+//											         0x0D0A000000000000, 2};
 
 
 

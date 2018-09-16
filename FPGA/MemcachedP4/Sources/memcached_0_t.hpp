@@ -322,7 +322,9 @@ public:
 	Parser_extracts_t Parser_extracts;
 	memcached_input_t memcached_input;
 	memcached_output_t memcached_output;
-
+ 	Packet Forward_Packet;
+	hdr_t_0 Forward_hdr;
+	bool forward;
 
 	// TODO: ***************************
 	// TODO: *** USER ENGINE MEMBERS ***
@@ -361,108 +363,166 @@ public:
 		// TODO: *** USER ENGINE FUNCTIONALITY ***
 		// TODO: *********************************
 	    	//char * packet = packet_block.data;
-		hls::stream<input_tuples> Input_tuples;
-		input_tuples Tuple;
-		Tuple.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
-		Tuple.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
-		Tuple.Hdr.Eth.Src = hdr.eth.src.to_ulong();
-		Tuple.Hdr.Eth.Type = hdr.eth.type.to_ulong();
-		Tuple.Hdr.FEC.Is_valid = hdr.fec.isValid.to_ulong();
-		Tuple.Hdr.FEC.Traffic_class = hdr.fec.traffic_class.to_ulong();
-		Tuple.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
-		Tuple.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
-		Tuple.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
-		Tuple.Hdr.Ipv4.isValid = hdr.ipv4.isValid.to_ulong();
-		Tuple.Hdr.Ipv4.diffserv = hdr.ipv4.diffserv.to_ulong();
-		Tuple.Hdr.Ipv4.flags = hdr.ipv4.flags.to_ulong();
-		Tuple.Hdr.Ipv4.fragoffset = hdr.ipv4.fragoffset.to_ulong();
-		Tuple.Hdr.Ipv4.hdrchecksum = hdr.ipv4.hdrchecksum.to_ulong();
-		Tuple.Hdr.Ipv4.identification = hdr.ipv4.identification.to_ulong();
-		Tuple.Hdr.Ipv4.ihl = hdr.ipv4.ihl.to_ulong();
-		Tuple.Hdr.Ipv4.protocol = hdr.ipv4.protocol.to_ulong();
-		Tuple.Hdr.Ipv4.srcAddr = hdr.ipv4.srcAddr.to_ulong();
-		Tuple.Hdr.Ipv4.dstAddr = hdr.ipv4.dstAddr.to_ulong();
-		Tuple.Hdr.Ipv4.ttl = hdr.ipv4.ttl.to_ulong();
-		Tuple.Hdr.Ipv4.totallen = hdr.ipv4.totallen.to_ulong();
-		Tuple.Hdr.Ipv4.version = hdr.ipv4.version.to_ulong();
-		Tuple.Hdr.Udp.chksum = hdr.udp.chksum.to_ulong();
-		Tuple.Hdr.Udp.dport = hdr.udp.dport.to_ulong();
-		Tuple.Hdr.Udp.isValid = hdr.udp.isValid.to_ulong();
-		Tuple.Hdr.Udp.len = hdr.udp.len.to_ulong();
-		Tuple.Hdr.Udp.sport = hdr.udp.sport.to_ulong();
-		Input_tuples.write(Tuple);
+		if (forward == 0)
+		{	hls::stream<input_tuples> Input_tuples;
+			input_tuples Tuple;
+			Tuple.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
+			Tuple.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
+			Tuple.Hdr.Eth.Src = hdr.eth.src.to_ulong();
+			Tuple.Hdr.Eth.Type = hdr.eth.type.to_ulong();
+			Tuple.Hdr.FEC.Is_valid = hdr.fec.isValid.to_ulong();
+			Tuple.Hdr.FEC.Traffic_class = hdr.fec.traffic_class.to_ulong();
+			Tuple.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
+			Tuple.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
+			Tuple.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
+			Tuple.Hdr.Ipv4.isValid = hdr.ipv4.isValid.to_ulong();
+			Tuple.Hdr.Ipv4.diffserv = hdr.ipv4.diffserv.to_ulong();
+			Tuple.Hdr.Ipv4.flags = hdr.ipv4.flags.to_ulong();
+			Tuple.Hdr.Ipv4.fragoffset = hdr.ipv4.fragoffset.to_ulong();
+			Tuple.Hdr.Ipv4.hdrchecksum = hdr.ipv4.hdrchecksum.to_ulong();
+			Tuple.Hdr.Ipv4.identification = hdr.ipv4.identification.to_ulong();
+			Tuple.Hdr.Ipv4.ihl = hdr.ipv4.ihl.to_ulong();
+			Tuple.Hdr.Ipv4.protocol = hdr.ipv4.protocol.to_ulong();
+			Tuple.Hdr.Ipv4.srcAddr = hdr.ipv4.srcAddr.to_ulong();
+			Tuple.Hdr.Ipv4.dstAddr = hdr.ipv4.dstAddr.to_ulong();
+			Tuple.Hdr.Ipv4.ttl = hdr.ipv4.ttl.to_ulong();
+			Tuple.Hdr.Ipv4.totallen = hdr.ipv4.totallen.to_ulong();
+			Tuple.Hdr.Ipv4.version = hdr.ipv4.version.to_ulong();
+			Tuple.Hdr.Udp.chksum = hdr.udp.chksum.to_ulong();
+			Tuple.Hdr.Udp.dport = hdr.udp.dport.to_ulong();
+			Tuple.Hdr.Udp.isValid = hdr.udp.isValid.to_ulong();
+			Tuple.Hdr.Udp.len = hdr.udp.len.to_ulong();
+			Tuple.Hdr.Udp.sport = hdr.udp.sport.to_ulong();
+			Tuple.Memcached_input.Stateful_valid = memcached_input.stateful_valid.to_ulong();
+			Tuple.Ioports.Egress_port = ioports.egress_port.to_ulong();
+			Tuple.Ioports.Ingress_port = ioports.ingress_port.to_ulong();
+			Tuple.Local_state.Id = local_state.id.to_ulong();
+			Tuple.Parser_extracts.Size = Parser_extracts.size.to_ulong();
+			Tuple.Checkcache.forward = CheckCache_fl.forward_1.to_ulong();
+			Input_tuples.write(Tuple);
 
-		hls::stream<packet_interface> Packet_input;
-		unsigned Words_per_packet = DIVIDE_AND_ROUNDUP(packet_in.size(), BYTES_PER_WORD);
-		std::cout <<"Enter USER ENGINE FUNCTION" << std::endl;
-		for (int i = 0; i < Words_per_packet; i++)
-		{	
-			ap_uint<MEM_AXI_BUS_WIDTH> WORD = 0;
-			for (int j = 0; j < BYTES_PER_WORD; j++)
-			{
-				WORD <<= 8;
-				unsigned Offset = BYTES_PER_WORD * i + j;
-				if (Offset < packet_in.size())
-					WORD |= packet_in[Offset];
-			}
-			bool End = i == Words_per_packet - 1;
-			packet_interface Input;
-			Input.Data = WORD;
-			std::cout << WORD << std::endl;
-			Input.Start_of_frame = i == 0;
-			Input.End_of_frame = End;
-			Input.Count = packet_in.size() % BYTES_PER_WORD;
-			if (Input.Count == 0 || !End)
-				Input.Count = 8;
-			Input.Error = 0;
-			Packet_input.write(Input);
+			hls::stream<packet_interface> Packet_input;
+			unsigned Words_per_packet = DIVIDE_AND_ROUNDUP(packet_in.size(), BYTES_PER_WORD);
+			std::cout <<"Enter USER ENGINE FUNCTION" << std::endl;
+			for (int i = 0; i < Words_per_packet; i++)
+			{	
+				ap_uint<MEM_AXI_BUS_WIDTH> WORD = 0;
+				for (int j = 0; j < BYTES_PER_WORD; j++)
+				{
+					WORD <<= 8;
+					unsigned Offset = BYTES_PER_WORD * i + j;
+					if (Offset < packet_in.size())
+						WORD |= packet_in[Offset];
+				}
+				bool End = i == Words_per_packet - 1;
+				packet_interface Input;
+				Input.Data = WORD;
+				std::cout << WORD << std::endl;
+				Input.Start_of_frame = i == 0;
+				Input.End_of_frame = End;
+				Input.Count = packet_in.size() % BYTES_PER_WORD;
+				if (Input.Count == 0 || !End)
+					Input.Count = 8;
+				Input.Error = 0;
+				Packet_input.write(Input);
 			
-		}
-		hls::stream<output_tuples> Output_tuples;
-		hls::stream<packet_interface> Packet_output;
-		Memcore(Input_tuples, Output_tuples, Packet_input, Packet_output);
-		output_tuples Tuple_out;
-		Tuple_out = Output_tuples.read();
-		//packet_out.resize(PAYLOAD_OFFSET_UDP - MEMCACHED_UDP_HEADER);
-		packet_out.resize(0);
-		packet_interface Output;
-		do 
-		{
-			Output = Packet_output.read();
-			for (int i = 0; i < Output.Count; i++)
+			}
+			hls::stream<output_tuples> Output_tuples;
+			hls::stream<packet_interface> Packet_output;
+			Memcore(Input_tuples, Output_tuples, Packet_input, Packet_output);
+			output_tuples Tuple_out;
+			Tuple_out = Output_tuples.read();
+			//packet_out.resize(PAYLOAD_OFFSET_UDP - MEMCACHED_UDP_HEADER);
+			packet_out.resize(0);
+			packet_interface Output;
+			do 
 			{
-				char Byte = (Output.Data >> (8 * (BYTES_PER_WORD - i -1))) & 0xFF;
-				packet_out.push_back(Byte);
-			}	
-		}while(!Output.End_of_frame);
+				Output = Packet_output.read();
+				for (int i = 0; i < Output.Count; i++)
+				{
+					char Byte = (Output.Data >> (8 * (BYTES_PER_WORD - i -1))) & 0xFF;
+					packet_out.push_back(Byte);
+				}	
+			}while(!Output.End_of_frame);
 
-		hdr.eth.isValid =Tuple_out.Hdr.Eth.Is_valid.to_uint();
-		hdr.eth.dst = Tuple_out.Hdr.Eth.Dst.to_uint64();
-		hdr.eth.src = Tuple_out.Hdr.Eth.Src.to_uint64();
-		hdr.eth.type = Tuple_out.Hdr.Eth.Type.to_uint();
-		hdr.fec.isValid = Tuple_out.Hdr.FEC.Is_valid.to_uint();
-		hdr.fec.traffic_class = Tuple_out.Hdr.FEC.Traffic_class.to_uint();
-		hdr.fec.block_index = Tuple_out.Hdr.FEC.Block_index.to_uint();
-		hdr.fec.packet_index = Tuple_out.Hdr.FEC.Packet_index.to_uint();
-		hdr.fec.original_type = Tuple_out.Hdr.FEC.Original_type.to_uint();
-		hdr.ipv4.isValid = Tuple_out.Hdr.Ipv4.isValid.to_uint();
-		hdr.ipv4.diffserv = Tuple_out.Hdr.Ipv4.diffserv.to_uint();
-		hdr.ipv4.flags= Tuple_out.Hdr.Ipv4.flags.to_uint();
-		hdr.ipv4.fragoffset = Tuple_out.Hdr.Ipv4.fragoffset.to_uint();
-		hdr.ipv4.hdrchecksum = Tuple_out.Hdr.Ipv4.hdrchecksum.to_uint();
-		hdr.ipv4.identification = Tuple_out.Hdr.Ipv4.identification.to_uint();
-		hdr.ipv4.ihl = Tuple_out.Hdr.Ipv4.ihl.to_uint();
-		hdr.ipv4.protocol = Tuple_out.Hdr.Ipv4.protocol.to_uint();
-		hdr.ipv4.srcAddr = Tuple_out.Hdr.Ipv4.srcAddr.to_uint64();
-		hdr.ipv4.dstAddr = Tuple_out.Hdr.Ipv4.dstAddr.to_uint64();
-		hdr.ipv4.ttl = Tuple_out.Hdr.Ipv4.ttl.to_uint();
-		hdr.ipv4.totallen = Tuple_out.Hdr.Ipv4.totallen.to_uint();
-		hdr.ipv4.version = Tuple_out.Hdr.Ipv4.version.to_uint();
-		hdr.udp.chksum = Tuple_out.Hdr.Udp.chksum.to_uint();
-		hdr.udp.dport = Tuple_out.Hdr.Udp.dport.to_uint();
-		hdr.udp.isValid = Tuple_out.Hdr.Udp.isValid.to_uint();
-		hdr.udp.len = Tuple_out.Hdr.Udp.len.to_uint();
-		hdr.udp.sport = Tuple_out.Hdr.Udp.sport.to_uint();
+			hdr.eth.isValid =Tuple_out.Hdr.Eth.Is_valid.to_uint();
+			hdr.eth.dst = Tuple_out.Hdr.Eth.Dst.to_uint64();
+			hdr.eth.src = Tuple_out.Hdr.Eth.Src.to_uint64();
+			hdr.eth.type = Tuple_out.Hdr.Eth.Type.to_uint();
+			hdr.fec.isValid = Tuple_out.Hdr.FEC.Is_valid.to_uint();
+			hdr.fec.traffic_class = Tuple_out.Hdr.FEC.Traffic_class.to_uint();
+			hdr.fec.block_index = Tuple_out.Hdr.FEC.Block_index.to_uint();
+			hdr.fec.packet_index = Tuple_out.Hdr.FEC.Packet_index.to_uint();
+			hdr.fec.original_type = Tuple_out.Hdr.FEC.Original_type.to_uint();
+			hdr.ipv4.isValid = Tuple_out.Hdr.Ipv4.isValid.to_uint();
+			hdr.ipv4.diffserv = Tuple_out.Hdr.Ipv4.diffserv.to_uint();
+			hdr.ipv4.flags= Tuple_out.Hdr.Ipv4.flags.to_uint();
+			hdr.ipv4.fragoffset = Tuple_out.Hdr.Ipv4.fragoffset.to_uint();
+			hdr.ipv4.hdrchecksum = Tuple_out.Hdr.Ipv4.hdrchecksum.to_uint();
+			hdr.ipv4.identification = Tuple_out.Hdr.Ipv4.identification.to_uint();
+			hdr.ipv4.ihl = Tuple_out.Hdr.Ipv4.ihl.to_uint();
+			hdr.ipv4.protocol = Tuple_out.Hdr.Ipv4.protocol.to_uint();
+			hdr.ipv4.srcAddr = Tuple_out.Hdr.Ipv4.srcAddr.to_uint64();
+			hdr.ipv4.dstAddr = Tuple_out.Hdr.Ipv4.dstAddr.to_uint64();
+			hdr.ipv4.ttl = Tuple_out.Hdr.Ipv4.ttl.to_uint();
+			hdr.ipv4.totallen = Tuple_out.Hdr.Ipv4.totallen.to_uint();
+			hdr.ipv4.version = Tuple_out.Hdr.Ipv4.version.to_uint();
+			hdr.udp.chksum = Tuple_out.Hdr.Udp.chksum.to_uint();
+			hdr.udp.dport = Tuple_out.Hdr.Udp.dport.to_uint();
+			hdr.udp.isValid = Tuple_out.Hdr.Udp.isValid.to_uint();
+			hdr.udp.len = Tuple_out.Hdr.Udp.len.to_uint();
+			hdr.udp.sport = Tuple_out.Hdr.Udp.sport.to_uint();
+			if (Tuple_out.Checkcache.forward == 1)
+			{	
+				Forward_Packet.clear();
+				forward = 1;
+				do
+				{
+					Output = Packet_output.read();
+					for (int i = 0; i < Output.Count; i++)
+					{
+						char Byte = (Output.Data >> (8 * (BYTES_PER_WORD - i -1))) & 0xFF;
+						Forward_Packet.push_back(Byte);
+					}	
+				}while(!Output.End_of_frame);
+				Tuple_out = Output_tuples.read();
+				Forward_hdr.eth.isValid =Tuple_out.Hdr.Eth.Is_valid.to_uint();
+				Forward_hdr.eth.dst = Tuple_out.Hdr.Eth.Dst.to_uint64();
+				Forward_hdr.eth.src = Tuple_out.Hdr.Eth.Src.to_uint64();
+				Forward_hdr.eth.type = Tuple_out.Hdr.Eth.Type.to_uint();
+				Forward_hdr.fec.isValid = Tuple_out.Hdr.FEC.Is_valid.to_uint();
+				Forward_hdr.fec.traffic_class = Tuple_out.Hdr.FEC.Traffic_class.to_uint();
+				Forward_hdr.fec.block_index = Tuple_out.Hdr.FEC.Block_index.to_uint();
+				Forward_hdr.fec.packet_index = Tuple_out.Hdr.FEC.Packet_index.to_uint();
+				Forward_hdr.fec.original_type = Tuple_out.Hdr.FEC.Original_type.to_uint();
+				Forward_hdr.ipv4.isValid = Tuple_out.Hdr.Ipv4.isValid.to_uint();
+				Forward_hdr.ipv4.diffserv = Tuple_out.Hdr.Ipv4.diffserv.to_uint();
+				Forward_hdr.ipv4.flags= Tuple_out.Hdr.Ipv4.flags.to_uint();
+				Forward_hdr.ipv4.fragoffset = Tuple_out.Hdr.Ipv4.fragoffset.to_uint();
+				Forward_hdr.ipv4.hdrchecksum = Tuple_out.Hdr.Ipv4.hdrchecksum.to_uint();
+				Forward_hdr.ipv4.identification = Tuple_out.Hdr.Ipv4.identification.to_uint();
+				Forward_hdr.ipv4.ihl = Tuple_out.Hdr.Ipv4.ihl.to_uint();
+				Forward_hdr.ipv4.protocol = Tuple_out.Hdr.Ipv4.protocol.to_uint();
+				Forward_hdr.ipv4.srcAddr = Tuple_out.Hdr.Ipv4.srcAddr.to_uint64();
+				Forward_hdr.ipv4.dstAddr = Tuple_out.Hdr.Ipv4.dstAddr.to_uint64();
+				Forward_hdr.ipv4.ttl = Tuple_out.Hdr.Ipv4.ttl.to_uint();
+				Forward_hdr.ipv4.totallen = Tuple_out.Hdr.Ipv4.totallen.to_uint();
+				Forward_hdr.ipv4.version = Tuple_out.Hdr.Ipv4.version.to_uint();
+				Forward_hdr.udp.chksum = Tuple_out.Hdr.Udp.chksum.to_uint();
+				Forward_hdr.udp.dport = Tuple_out.Hdr.Udp.dport.to_uint();
+				Forward_hdr.udp.isValid = Tuple_out.Hdr.Udp.isValid.to_uint();
+				Forward_hdr.udp.len = Tuple_out.Hdr.Udp.len.to_uint();
+				Forward_hdr.udp.sport = Tuple_out.Hdr.Udp.sport.to_uint();
+    		
+			}
+			else forward = 0;	
+		}	
+	 	else
+		{
+			packet_out =Forward_Packet;
+			hdr = Forward_hdr;
+			forward = false;
+		}	
 		/*		
 		//write input
 		for (int i = 0; i< MAX_DATA_SIZE; i++)
@@ -520,7 +580,7 @@ public:
 		printf("STATE ERROR!");
 		printf("%d",packet_block.STATE);
 		exit(0);*/
-		return false;
+		return forward;
 	}
 };
 //######################################################
