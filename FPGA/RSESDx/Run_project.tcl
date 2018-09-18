@@ -1,7 +1,7 @@
 set DIR [lindex $argv 0]
 setws $DIR/RSESDx
 connect -url tcp:127.0.0.1:3121
-source /opt/Xilinx/SDx/2017.1/SDK/scripts/sdk/util/zynqmp_utils.tcl
+source $::env(SDSOC_ROOT)/SDK/scripts/sdk/util/zynqmp_utils.tcl
 targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2NC *"} -index 1
 rst -system
 after 3000
