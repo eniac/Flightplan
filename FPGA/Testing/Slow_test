@@ -1,0 +1,52 @@
+#!/bin/bash -e
+
+# If sudo needs a password, it is hard to enter it when tcpdump starts because it starts in the
+# background.  Therefore, this harmless echo was added.
+sudo echo
+
+echo "================================================================================"
+echo "Start TCPDump"
+echo "================================================================================"
+
+Cleanup()
+{
+  [ -n "${PROCESS_ID}" ] && sudo kill ${PROCESS_ID}
+  [ -n "${TEMP_FILE}" ] && rm "${TEMP_FILE}"
+
+}
+trap Cleanup EXIT
+
+INTERFACE=$(./Find_interface)
+echo "Board found on interface ${INTERFACE}."
+TEMP_FILE=$(mktemp)
+sudo tcpdump -i "${INTERFACE}" -vvv -XX -Q in &> "${TEMP_FILE}" &
+PROCESS_ID=$!
+
+# Make sure that TCPDump is ready to receive packets.
+sleep 1
+
+echo
+echo "================================================================================"
+echo "Send packets"
+echo "================================================================================"
+#sudo tcpreplay "--intf1=${INTERFACE}" -p 10000 -l 3 Encoded.pcap
+sudo tcpreplay "--intf1=${INTERFACE}" -M 10000 100000_encoded_packets_of_1024.pcap
+
+# Make sure that we don't miss packets.
+sleep 1
+
+echo
+echo "================================================================================"
+echo "Receive packets"
+echo "================================================================================"
+
+# Send terminate signal to TCPDump process (instead of sudo process) to ensure that the summary
+# is output.
+sudo kill $(ps --ppid "${PROCESS_ID}" -o pid=)
+unset PROCESS_ID
+
+# The terminate signal needs some time to propagate.
+sleep 1
+
+cat "${TEMP_FILE}"
+

@@ -810,6 +810,257 @@ index 0000000..4054e88
 +}  // namespace P4
 +
 +#endif /* _FRONTENDS_P4_FLIGHTPLAN_H_ */
+diff --git a/frontends/p4/flightplan_analysis.cpp b/frontends/p4/flightplan_analysis.cpp
+new file mode 100644
+index 0000000..afdaff5
+--- /dev/null
++++ b/frontends/p4/flightplan_analysis.cpp
+@@ -0,0 +1,245 @@
++/*
++Flightplan
++Nik Sultana, UPenn, July 2018
++*/
++
++#include <assert.h>
++#include <iostream>
++#include <fstream>
++#include <queue>
++
++#include "externInstance.h"
++
++#include "../common/options.h"
++#include "ir/ir.h"
++#include "ir/visitor.h"
++#include "lib/nullstream.h"
++#include "lib/path.h"
++#include "toP4/toP4.h"
++
++#include "flightplan.h"
++
++namespace P4 {
++
++void Split::mark_split(FStmt* stmt, Split* split, std::set<const FStmt*> visited) {
++    for (auto next : StmtFlow::step(StmtFlow::Direction::Forward, stmt, visited)) {
++        const TransferPoint *tp = dynamic_cast<const TransferPoint*>(stmt);
++        if (tp != nullptr) {
++            stmt->splits.clear();
++            split = new_split(std::string(Flightplan::FP_options.flightplanFolder), tp->transfer_to, stmt);
++            mark_split((FStmt*)/*FIXME type hack*/next, split, visited);
++        } else {
++            stmt->splits.insert(split);
++            mark_split((FStmt*)/*FIXME type hack*/next, split, visited);
++        }
++    }
++}
++
++int Split::mark_split(FStmt* main) {
++    for (auto split : main->splits) {
++        std::set<const FStmt*> visited;
++        mark_split(main, split, visited);
++    }
++    return Split::Splits.size();
++}
++
++bool Split::ascend_split(Split *split, FStmt* prev, FStmt* stmt, std::set<FStmt*> &visited) {
++#if 0
++    std::cout << "Ascending..." << std::endl;
++#endif
++    if (stmt == nullptr || stmt->getContainer() == nullptr) {
++        return false;
++    }
++
++    if (stmt->getContainer()->get_next() != nullptr) {
++        return continue_split(split, prev, (FStmt*)/*FIXME type hack*/stmt->getContainer()->get_next(), visited, false, true/*If we have ascended, we shall continue to ascend*/);
++    } else {
++        return ascend_split(split, prev, (FStmt*)/*FIXME type hack*/stmt->getContainer(), visited);
++    }
++}
++
++bool Split::continue_split(Split *split, FStmt* prev, FStmt* stmt, std::set<FStmt*> &visited, bool pre_cloned, bool ascend) {
++#if 0
++    std::cout << "Continuing..." << std::endl;
++#endif
++    if (stmt == nullptr) {
++        return false;
++    }
++
++//the clone is being lost, since prev is initially null
++//indicate if we've pre-cloned
++
++    // We are guaranteed that stmt!=nullptr at this point
++    stmt->keep_split(split);
++
++    FStmt* stmt_cp = nullptr;
++    if (!pre_cloned) {
++        stmt_cp = stmt->clone();
++        stmt = nullptr;
++    } else {
++        stmt_cp = (FStmt *)/*FIXME type hack*/stmt;
++        stmt = nullptr;
++    }
++    if (prev != nullptr) {
++        prev->set_next(stmt_cp);
++    }
++    stmt_cp->set_prev(prev);
++
++    if (StmtFlow::transfer_stmt(stmt_cp)) {
++        stmt_cp->set_next(nullptr);
++        // FIXME set_next to null be default?
++        auto next_split = StmtFlow::transfers_to(stmt_cp);
++        std::cout << "TRANSFER! -> " << next_split->output_file << std::endl;
++//        std::cout << "          -> " << stmt_cp->toString() << std::endl;
++        split->successor_splits.insert(next_split);
++        return true;
++    }
++
++    BlockStmt *bs = dynamic_cast<BlockStmt*>(stmt_cp);
++    if (bs != nullptr) {
++        assert(bs->getEntry() != nullptr);
++        assert(visited.find(bs) == visited.end());
++        std::cout << "...Block" << std::endl;
++        visited.insert(bs);
++        bs->setEntry(bs->getEntry()->clone());
++//        if (continue_split(bs->getEntry(), bs->getEntry()->get_next(), visited)) {
++        if (continue_split(split, nullptr, bs->getEntry(), visited, true, ascend)) {
++            return true;
++        }
++    }
++    IfStmt *ifst = dynamic_cast<IfStmt*>(stmt_cp);
++    if (ifst != nullptr) {
++//        assert(visited.find(ifst) == visited.end());     
++        visited.insert(ifst);
++        std::cout << "...If" << std::endl;
++
++        assert(ifst->get_ifTrue() != nullptr);
++        int total_branches = 2; // Even if there isn't a "false" branch, it's implicitly there but does nothing (importantly, it doesn't transfer)
++        int total_transfers = 0;
++        ifst->set_ifTrue(ifst->get_ifTrue()->clone());
++//        if (continue_split(ifst->get_ifTrue(), ifst->get_ifTrue()->get_next(), visited)) {
++        if (continue_split(split, nullptr, ifst->get_ifTrue(), visited, true, ascend)) {
++            total_transfers += 1;
++        }
++
++        if (ifst->get_ifFalse() != nullptr) {
++            total_branches += 1;
++
++            ifst->set_ifFalse(ifst->get_ifFalse()->clone());
++//            if (continue_split(ifst->get_ifFalse(), ifst->get_ifFalse()->get_next(), visited)) {
++            if (continue_split(split, nullptr, ifst->get_ifFalse(), visited, true, ascend)) {
++                total_transfers += 1;
++            }
++        }
++
++        if (total_branches == total_transfers) {
++            return true;
++        }
++    }
++    SwitchStmt *swst = dynamic_cast<SwitchStmt*>(stmt_cp);
++    if (swst != nullptr) {
++        assert(visited.find(swst) == visited.end());
++        visited.insert(swst);
++
++        throw std::logic_error("Not yet tested"); // FIXME   
++#if 0
++        std::set<const FStmt*> result;
++        for (auto c : swst->getCases()) {
++            result.insert(c.get_stmt());
++        }
++        return result;
++#endif
++    }
++
++    if (stmt_cp->get_next() != nullptr) {
++        return continue_split(split, stmt_cp, (FStmt*)/*FIXME type hack*/stmt_cp->get_next(), visited, false, ascend);
++    } else {
++        if (stmt_cp->getContainer() != nullptr &&
++                visited.find((FStmt *)/*FIXME type hack*/stmt_cp->getContainer()) == visited.end()) {
++            if (ascend) {
++                // Computes CFG
++                return ascend_split(split, stmt_cp, stmt_cp, visited);
++            } else {
++                // Computes subgraph of AST
++                return false;
++            }
++        } else {
++            return false;
++        }
++    }
++}
++
++FStmt* Split::effect_split(Split *split) {
++    // Cache the split code, to avoid redoing the splitting if this function is called again?
++    if (split->cleaved != nullptr) {
++        return split->cleaved;
++    } else {
++        std::cout << "Splitting..." << std::endl;
++        std::set<FStmt *> visited;
++        FStmt* pre_result = split->beginning->clone();
++        pre_result->set_prev(nullptr);
++#if 0
++        continue_split(pre_result, pre_result->get_next(), visited, false);
++// FIXME doesn't work if we start at a Transfer node!    
++//        continue_split(nullptr, pre_result, visited, true);
++#endif
++
++        if (StmtFlow::transfer_stmt(pre_result)) {
++            pre_result->keep_split(split);
++            // Otherwise it terminates immediately
++            continue_split(split, pre_result, (FStmt*)/*FIXME type hack*/pre_result->get_next(), visited, false, true);
++        } else {
++            // This must be the "main" entry point
++            continue_split(split, nullptr, pre_result, visited, true, false);
++        }
++
++        FStmt* result = pre_result;
++        const BlockStmt *bs = dynamic_cast<const BlockStmt*>(pre_result);
++        if (bs == nullptr) {
++            result = new BlockStmt (nullptr, std::string(Flightplan::FP_options.flightplanFolder), pre_result, nullptr, nullptr);
++        }
++        split->cleaved = result;
++        std::cout << "Done splitting" << std::endl;
++        return result;
++    }
++}
++
++#if 0
++// Return subset of statements that consist of TransferPoints
++std::set<const FStmt*> StmtFlow::transfers(std::set<const FStmt*> stmts) {
++    std::set<const FStmt*> result;
++    for (auto stmt : stmts) {
++        if (StmtFlow::transfer_stmt(stmt)) {
++                result.insert(stmt);
++        }
++    }
++
++    return result;
++}
++
++// Compute transitive closure of getNext
++std::set<const FStmt*> StmtFlow::TransitClos(const FStmt* stmt) {
++    std::set<const FStmt*> result;
++    std::set<const FStmt*> visited;
++    std::vector<const FStmt*> to_visit = {stmt};
++
++    while (!to_visit.empty()) {
++        stmt = to_visit.front();
++        to_visit.pop_back();
++
++        for (auto new_stmt : StmtFlow::getNext(stmt, visited)) {
++            std::cout << ".";
++            result.insert(new_stmt);
++            if (!StmtFlow::transfer_stmt(stmt)) {
++                // We don't pursue transfers further, since that's pursued inside their splits
++                to_visit.push_back(new_stmt);
++            }
++        }
++    }
++    std::cout << std::endl;
++
++    return result;
++}
++#endif
++
++}
 diff --git a/frontends/p4/flightplan_dot.cpp b/frontends/p4/flightplan_dot.cpp
 new file mode 100644
 index 0000000..bca3cab
@@ -1229,6 +1480,289 @@ index 0000000..9ac87f2
 +void IR::CutStmt::apply_visitor_revisit(Inspector&) const {}
 +void IR::CutStmt::apply_visitor_revisit(Transform&, IR::Node const*) const {}
 +#endif
+diff --git a/frontends/p4/flightplan_preanalysis.cpp b/frontends/p4/flightplan_preanalysis.cpp
+new file mode 100644
+index 0000000..015b92e
+--- /dev/null
++++ b/frontends/p4/flightplan_preanalysis.cpp
+@@ -0,0 +1,277 @@
++/*
++Flightplan
++Nik Sultana, UPenn, July 2018
++*/
++
++#include <assert.h>
++#include <iostream>
++#include <fstream>
++#include <regex>
++
++#include "externInstance.h"
++
++#include "../common/options.h"
++#include "ir/ir.h"
++#include "ir/visitor.h"
++#include "lib/nullstream.h"
++#include "lib/path.h"
++#include "toP4/toP4.h"
++
++#include "flightplan.h"
++
++namespace P4 {
++
++std::set<const FStmt*> StmtFlow::getNext(const FStmt* stmt, std::set<const FStmt*> &visited) {
++#if 0
++    std::cout << "getNext: " << stmt->toStatement()->toString() + ": " + stmt->toStatement()->getSourceInfo().toPositionString() << std::endl;
++#endif
++
++    bool is_statement = atomic_stmt(stmt);
++
++    if (!is_statement && visited.find(stmt) == visited.end()) {
++        return getIn(Direction::Forward, stmt, visited);
++    }
++
++    visited.insert(stmt);
++
++    // Continue moving in the same direction if we can, otherwise get out.
++    if (stmt->get_next() != nullptr) {
++        return std::set<const FStmt*>{stmt->get_next()};
++    } else {
++        return getOut(Direction::Forward, stmt, visited);
++    }
++}
++
++std::set<const FStmt*> StmtFlow::getPrev(const FStmt* stmt, std::set<const FStmt*> &visited) {
++#if 0
++    std::cout << "getPrev: " << stmt->toStatement()->toString() + ": " + stmt->toStatement()->getSourceInfo().toPositionString() << std::endl;
++#endif
++
++    // FIXME DRY with getNext
++
++    bool is_statement = atomic_stmt(stmt);
++
++    if (!is_statement && visited.find(stmt) == visited.end()) {
++        return getIn(Direction::Backward, stmt, visited);
++    }
++
++    visited.insert(stmt);
++
++    // Continue moving in the same direction if we can, otherwise get out.
++    if (stmt->get_prev() != nullptr) {
++        return std::set<const FStmt*>{stmt->get_prev()};
++    } else {
++        return getOut(Direction::Backward, stmt, visited);
++    }
++}
++
++std::set<const FStmt*> StmtFlow::getOut(StmtFlow::Direction dir, const FStmt* stmt, std::set<const FStmt*> &visited) {
++#if 0
++    std::cout << "getOut: " << stmt->toStatement()->toString() + ": " + stmt->toStatement()->getSourceInfo().toPositionString() << std::endl;
++#endif
++
++    visited.insert(stmt);
++
++    if (stmt->getContainer() == nullptr) {
++        // In case we're at the top-level (and can't get out) we first try continuing to travel
++        // in the same direction before giving up.
++        const FStmt *next = nullptr;
++        switch (dir) {
++            case Direction::Forward:
++                next = stmt->get_next();
++            case Direction::Backward:
++                next = stmt->get_prev();
++        }
++
++        if (next != nullptr) {
++            return std::set<const FStmt*>{next};
++        } else {
++            // This is how it ends: there's no containing structure, and no next step.
++            return std::set<const FStmt*>{};
++        }
++    } else {
++        switch (dir) {
++            case Direction::Forward:
++                return getNext(stmt->getContainer(), visited);
++            case Direction::Backward:
++                return getPrev(stmt->getContainer(), visited);
++        }
++    }
++}
++
++std::set<const FStmt*> StmtFlow::getIn(StmtFlow::Direction dir, const FStmt* stmt, std::set<const FStmt*> &visited) {
++#if 0
++    std::cout << "getIn: " << stmt->toStatement()->toString() + ": " + stmt->toStatement()->getSourceInfo().toPositionString() << std::endl;
++#endif
++
++    visited.insert(stmt);
++
++    const BlockStmt *bs = dynamic_cast<const BlockStmt*>(stmt);
++    if (bs != nullptr) {
++        if (bs->getEntry() != nullptr) {
++            switch (dir) {
++                case Direction::Forward:
++                    return std::set<const FStmt *>{bs->getEntry()};
++                case Direction::Backward:
++                    return std::set<const FStmt *>{bs->getLast()};
++            }
++        } else {
++            throw std::logic_error("Impossible: empty block");
++#if 0
++            // If we can't proceed vertically, then we proceed horizontally.
++            switch (dir) {
++                case Direction::Forward:
++//                    return std::set<const FStmt *>{stmt};
++                    return getNext(stmt, visited);
++                case Direction::Backward:
++//                    return std::set<const FStmt *>{stmt};
++                    return getPrev(stmt, visited);
++            }
++#endif
++        }
++    }
++    const IfStmt *ifst = dynamic_cast<const IfStmt*>(stmt);
++    if (ifst != nullptr) {
++        assert(ifst->get_ifTrue() != nullptr);
++        std::set<const FStmt*> result{ifst->get_ifTrue()};
++        if (ifst->get_ifFalse() != nullptr) {
++            result.insert(ifst->get_ifFalse());
++        }
++        return result;
++    }
++    const SwitchStmt *swst = dynamic_cast<const SwitchStmt*>(stmt);
++    if (swst != nullptr) {
++        throw std::logic_error("Not yet tested"); // FIXME   
++
++        std::set<const FStmt*> result;
++        for (auto c : swst->getCases()) {
++            result.insert(c.get_stmt());
++        }
++        return result;
++    }
++//    throw std::logic_error("getIn: Unknown statement type:" + stmt->toString());
++    throw std::logic_error("getIn: Unknown statement type");
++}
++
++std::string StmtFlow::stmt_kind(const FStmt* stmt) {
++    if (stmt == nullptr) {
++        throw std::logic_error("atomic_stmt: null stmt");
++    }
++    const BlockStmt *bs = dynamic_cast<const BlockStmt*>(stmt);
++    if (bs != nullptr) {
++        return "BlockStmt";
++    }
++    const Stmt *st = dynamic_cast<const Stmt*>(stmt);
++    if (st != nullptr) {
++        return "Stmt";
++    }
++    const TransferPoint *tp = dynamic_cast<const TransferPoint*>(stmt);
++    if (tp != nullptr) {
++        return "TransferPoint";
++    }
++    const IfStmt *ifst = dynamic_cast<const IfStmt*>(stmt);
++    if (ifst != nullptr) {
++        return "IfStmt";
++    }
++    const SwitchStmt *swst = dynamic_cast<const SwitchStmt*>(stmt);
++    if (swst != nullptr) {
++        return "SwitchStmt";
++    }
++//    throw std::logic_error("stmt_kind: Unknown statement type:" + stmt->toString());
++    throw std::logic_error("stmt_kind: Unknown statement type");
++}
++
++bool StmtFlow::atomic_stmt(const FStmt* stmt) {
++    if (stmt == nullptr) {
++        throw std::logic_error("atomic_stmt: null stmt");
++    }
++    const BlockStmt *bs = dynamic_cast<const BlockStmt*>(stmt);
++    if (bs != nullptr) {
++        return false;
++    }
++    const Stmt *st = dynamic_cast<const Stmt*>(stmt);
++    if (st != nullptr) {
++        return true;
++    }
++    const TransferPoint *tp = dynamic_cast<const TransferPoint*>(stmt);
++    if (tp != nullptr) {
++        return true;
++    }
++    const IfStmt *ifst = dynamic_cast<const IfStmt*>(stmt);
++    if (ifst != nullptr) {
++        return false;
++    }
++    const SwitchStmt *swst = dynamic_cast<const SwitchStmt*>(stmt);
++    if (swst != nullptr) {
++        return false;
++    }
++//    throw std::logic_error("atomic_stmt: Unknown statement type:" + stmt->toString());
++    throw std::logic_error("atomic_stmt: Unknown statement type");
++}
++
++bool StmtFlow::transfer_stmt(const FStmt* stmt) {
++    const TransferPoint *tp = dynamic_cast<const TransferPoint*>(stmt);
++    if (tp != nullptr) {
++        return true;
++    }
++    return false;
++}
++
++Split* StmtFlow::transfers_to(const FStmt* stmt) {
++    const TransferPoint *tp = dynamic_cast<const TransferPoint*>(stmt);
++    if (tp == nullptr) {
++        throw std::logic_error("Not a TransferPoint");
++    }
++    Split* result = nullptr;
++    for (auto split : Split::Splits) {
++#if 0
++        std::cout << "transfers_to : " << stmt->toString() << std::endl;
++        std::cout << "             : " << split->output_file << std::endl;
++        std::cout << "             : " << tp->transfer_to << std::endl;
++        std::cout << "             : " << tp->original->srcInfo.toBriefSourceFragment() << std::endl;
++#endif
++
++        std::string str(split->output_file);
++//        if (str.find(std::string(tp->transfer_to)) != std::string::npos) {
++        if (str.find(TransferPoint::flyto_target(std::string(tp->original->srcInfo.toBriefSourceFragment()))) != std::string::npos) {
++            result = split;
++            break;
++        }
++    }
++    assert(result != nullptr);
++    return result;
++}
++
++std::set<const FStmt*> StmtFlow::step(StmtFlow::Direction dir, const FStmt* stmt, std::set<const FStmt*> &visited) {
++    switch (dir) {
++        case Direction::Forward:
++            return getNext(stmt, visited);
++        case Direction::Backward:
++            return getPrev(stmt, visited);
++    }
++}
++
++std::set<const FStmt*> StmtFlow::step(StmtFlow::Direction dir, std::set<const FStmt*> stmts, std::set<const FStmt*> &visited) {
++    std::set<const FStmt*> result;
++    for (auto stmt : stmts) {
++        std::set<const FStmt*> pre_result = step(dir, stmt, visited);
++        if (pre_result.size() > 0) {
++            for (auto s : pre_result) {
++                result.insert(s);
++            }
++        }
++    }
++    return result;
++}
++
++std::string TransferPoint::flyto_target(const std::string& expression) {
++    std::regex regex("flyto\\(([a-zA-Z0-9_]+)\\(\\)\\)");
++    std::smatch match;
++//    std::cout << "MATCHING " << expression << std::endl;
++    if (!std::regex_search(expression.begin(), expression.end(), match, regex)) {
++        throw std::logic_error("TransferPoint::flyto_target: no match");
++    }
++    return match[1];
++}
++
++}  // namespace P4
 diff --git a/frontends/p4/flightplan_stmt.cpp b/frontends/p4/flightplan_stmt.cpp
 new file mode 100644
 index 0000000..033ceb3

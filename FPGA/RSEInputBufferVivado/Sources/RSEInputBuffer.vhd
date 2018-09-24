@@ -2,11 +2,8 @@ library IEEE;
   use IEEE.std_logic_1164.all;
   use IEEE.numeric_std.all;
 
-library UniSim;
-  use UniSim.VComponents.all;
-
-library UniMacro;
-  use UniMacro.VComponents.all;
+library XPM;
+  use XPM.VComponents.all;
 
 entity RSEInputBuffer is
   port
@@ -30,39 +27,6 @@ entity RSEInputBuffer is
 end RSEInputBuffer;
 
 architecture RTL of RSEInputBuffer is
-
-  component packet_fifo
-    port
-    (
-      clk         : in  std_logic;
-      srst        : in  std_logic;
-      din         : in  std_logic_vector(72 downto 0);
-      wr_en       : in  std_logic;
-      rd_en       : in  std_logic;
-      dout        : out std_logic_vector(72 downto 0);
-      full        : out std_logic;
-      empty       : out std_logic;
-      prog_full   : out std_logic;
-      wr_rst_busy : out std_logic;
-      rd_rst_busy : out std_logic
-    );
-  end component;
-
-  component valid_fifo
-    port
-    (
-      clk         : in  std_logic;
-      srst        : in  std_logic;
-      din         : in  std_logic_vector(0 downto 0);
-      wr_en       : in  std_logic;
-      rd_en       : in  std_logic;
-      dout        : out std_logic_vector(0 downto 0);
-      full        : out std_logic;
-      empty       : out std_logic;
-      wr_rst_busy : out std_logic;
-      rd_rst_busy : out std_logic
-    );
-  end component;
 
   type input_state_type  is (input_state_idle, input_state_store,
                              input_state_drop);
@@ -93,35 +57,90 @@ begin
 
   enable <= enable_processing and internal_rst_done;
 
-  packet_fifo_0: packet_fifo
+  packet_fifo: xpm_fifo_sync
+    generic map
+    (
+      FIFO_MEMORY_TYPE    => "auto",
+      ECC_MODE            => "no_ecc",
+      FIFO_WRITE_DEPTH    => 2048,
+      WRITE_DATA_WIDTH    => 73,
+      WR_DATA_COUNT_WIDTH => 9,
+      PROG_FULL_THRESH    => 1847,
+      FULL_RESET_VALUE    => 0,
+      READ_MODE           => "std",
+      FIFO_READ_LATENCY   => 1,
+      READ_DATA_WIDTH     => 73,
+      RD_DATA_COUNT_WIDTH => 9,
+      PROG_EMPTY_THRESH   => 3,
+      DOUT_RESET_VALUE    => "0",
+      WAKEUP_TIME         => 0
+    )
     port map
     (
-      clk         => clk_line,
-      srst        => clk_line_rst,
-      din         => packet_fifo_din,
-      wr_en       => packet_fifo_wr_en,
-      rd_en       => packet_fifo_rd_en,
-      dout        => packet_fifo_dout,
-      full        => packet_fifo_full,
-      empty       => packet_fifo_empty,
-      prog_full   => packet_fifo_prog_full,
-      wr_rst_busy => open,
-      rd_rst_busy => open
+      rst           => clk_line_rst,
+      wr_clk        => clk_line,
+      wr_en         => packet_fifo_wr_en,
+      din           => packet_fifo_din,
+      full          => packet_fifo_full,
+      overflow      => open,
+      wr_rst_busy   => open,
+      rd_en         => packet_fifo_rd_en,
+      dout          => packet_fifo_dout,
+      empty         => packet_fifo_empty,
+      underflow     => open,
+      rd_rst_busy   => open,
+      prog_full     => packet_fifo_prog_full,
+      wr_data_count => open,
+      prog_empty    => open,
+      rd_data_count => open,
+      sleep         => '0',
+      injectsbiterr => '0',
+      injectdbiterr => '0',
+      sbiterr       => open,
+      dbiterr       => open
     );
 
-  valid_fifo_0: valid_fifo
+  valid_fifo: xpm_fifo_sync
+    generic map
+    (
+      FIFO_MEMORY_TYPE    => "auto",
+      ECC_MODE            => "no_ecc",
+      FIFO_WRITE_DEPTH    => 2048,
+      WRITE_DATA_WIDTH    => 1,
+      WR_DATA_COUNT_WIDTH => 9,
+      PROG_FULL_THRESH    => 1847,
+      FULL_RESET_VALUE    => 0,
+      READ_MODE           => "std",
+      FIFO_READ_LATENCY   => 1,
+      READ_DATA_WIDTH     => 1,
+      RD_DATA_COUNT_WIDTH => 9,
+      PROG_EMPTY_THRESH   => 3,
+      DOUT_RESET_VALUE    => "0",
+      WAKEUP_TIME         => 0
+    )
     port map
     (
-      clk         => clk_line,
-      srst        => clk_line_rst,
-      din         => valid_fifo_din,
-      wr_en       => valid_fifo_wr_en,
-      rd_en       => valid_fifo_rd_en,
-      dout        => valid_fifo_dout,
-      full        => valid_fifo_full,
-      empty       => valid_fifo_empty,
-      wr_rst_busy => open,
-      rd_rst_busy => open
+      rst           => clk_line_rst,
+      wr_clk        => clk_line,
+      wr_en         => valid_fifo_wr_en,
+      din           => valid_fifo_din,
+      full          => valid_fifo_full,
+      overflow      => open,
+      wr_rst_busy   => open,
+      rd_en         => valid_fifo_rd_en,
+      dout          => valid_fifo_dout,
+      empty         => valid_fifo_empty,
+      underflow     => open,
+      rd_rst_busy   => open,
+      prog_full     => open,
+      wr_data_count => open,
+      prog_empty    => open,
+      rd_data_count => open,
+      sleep         => '0',
+      injectsbiterr => '0',
+      injectdbiterr => '0',
+      sbiterr       => open,
+      dbiterr       => open
     );
     
   packet_fifo_din <= axis_in_TDATA & axis_in_TKEEP & last_word;

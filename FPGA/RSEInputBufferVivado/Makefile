@@ -7,7 +7,7 @@ Create_project: RSEInputBufferVivado
 Build_project: RSEInputBufferVivado
 	vivado -mode batch -source Build_project.tcl
 
-RSEInputBufferVivado: Sources/RSEInputBuffer.vhd Sources/packet_fifo.xci Sources/valid_fifo.xci
+RSEInputBufferVivado: Sources/RSEInputBuffer.vhd
 	vivado -mode batch -source Create_project.tcl
 
 clean:

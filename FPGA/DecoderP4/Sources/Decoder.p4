@@ -49,6 +49,7 @@ header fec_h
 	bit<FEC_BLOCK_INDEX_WIDTH>	block_index;
 	bit<FEC_PACKET_INDEX_WIDTH>	packet_index;
 	bit<FEC_ETHER_TYPE_WIDTH>	original_type;
+	bit<FEC_PACKET_LENGTH_WIDTH>	packet_length;
 }
 
 struct headers_t {

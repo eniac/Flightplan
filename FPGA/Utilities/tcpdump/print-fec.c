@@ -21,14 +21,14 @@
 
 static int read_field(const u_char * packet, int offset, int width)
 {
-	int start = (offset + 7) / 8;
-	int end = (offset + width - 1 + 7) / 8;
+	int start = offset / 8;
+	int end = (offset + width - 1) / 8;
 	int value = 0;
 	for (int i = start; i <= end; i++)
 		value = (value << 8) | packet[i];
 	int length = 8 * (end - start + 1);
-	int mask = (1 << (length - start)) - 1;
-	mask -= (1 << (length - start - width)) - 1;
+	int mask = (1 << (length - offset % 8)) - 1;
+	mask -= (1 << (length - offset % 8 - width)) - 1;
 	return value & mask;
 }
 
@@ -56,7 +56,8 @@ fec_print(netdissect_options *ndo, const u_char *pptr, u_int len)
 	ND_PRINT(", block %u", block_index);
 	ND_PRINT(", packet %u", packet_index);
 	ND_PRINT(", original type: %u", original_type);
-	ND_PRINT(", encoded length: %u", packet_length);
+	if (packet_index >= k)
+		ND_PRINT(", encoded length: %x", packet_length);
 	ND_PRINT(", contents:");
 	if (!ndo->ndo_Xflag && !ndo->ndo_xflag && !ndo->ndo_Aflag)
 		hex_and_ascii_print(ndo, "\n\t", pptr + PAYLOAD_OFFSET, len);
