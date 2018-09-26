@@ -35,7 +35,7 @@
 
 `include "Configuration.v"
 
-`define FEC_HDR_WIDTH `FEC_TRAFFIC_CLASS_WIDTH + `FEC_BLOCK_INDEX_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_ETHER_TYPE_WIDTH
+`define FEC_HDR_WIDTH `FEC_TRAFFIC_CLASS_WIDTH + `FEC_BLOCK_INDEX_WIDTH + `FEC_PACKET_INDEX_WIDTH + `FEC_ETHER_TYPE_WIDTH + `FEC_PACKET_LENGTH_WIDTH
 
 `define TUPLE_CONTROL_WIDTH          23
 `define TUPLE_UPDATE_FL_WIDTH        2 * `FEC_K_WIDTH + `FEC_H_WIDTH
@@ -332,7 +332,7 @@ assign packet_in_packet_in_RDY = 1;
 
 assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_out_DAT,
         packet_out_packet_out_CNT, packet_out_packet_out_ERR} = dec_packet_output_v;
-assign packet_out_packet_out_VAL = dec_packet_output_v_ap_vld;
+assign packet_out_packet_out_VAL = dec_packet_output_v_ap_vld & ~backpressure_in;
 
 assign tuple_out_Decoder_output_DATA  = dec_tuple_output_v[`TUPLE_DECODER_OUTPUT_END:`TUPLE_DECODER_OUTPUT_START];
 assign tuple_out_Parser_extracts_DATA = dec_tuple_output_v[`TUPLE_PARSER_EXTRACTS_END:`TUPLE_PARSER_EXTRACTS_START];

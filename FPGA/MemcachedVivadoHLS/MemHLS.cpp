@@ -61,19 +61,56 @@ void Pktclassifier(hls::stream<input_tuples> &tuple_in,
 		MemcachedPkt mempkt = false;
 		Mempkt.write(mempkt);
 
+
 	}
 	else
 	{
 		bool End = false;
 		packet_interface Data;
 		//tuple_out2.write(tuple);
-		do
+	//	do
+	//	{
+//	#pragma HLS pipeline II=1
+	//		Data = pkt_in.read();
+//			End = Data.End_of_frame;
+//			pkt_out1.write(Data);
+//			pkt_out2.write(Data);
+//		}while(!End);
+		int tot_pktnum = (tuple.Hdr.Ipv4.totallen + 14) / BYTES_PER_WORD;
+		int remain_num = (tuple.Hdr.Ipv4.totallen + 14) % BYTES_PER_WORD;
+		if (remain_num == 0) tot_pktnum--;
+		for (int i = 0; i < tot_pktnum; i++)
 		{
-	#pragma HLS pipeline II=1
+	#pragma HLS pipeline II = 1
 			Data = pkt_in.read();
 			End = Data.End_of_frame;
 			pkt_out1.write(Data);
-		}while(!End);
+			pkt_out2.write(Data);
+		}
+		if (remain_num != 0)
+		{	
+			Data = pkt_in.read();
+			End = Data.End_of_frame;
+			Data.End_of_frame = 1;
+			Data.Count = remain_num;
+			pkt_out1.write(Data);
+			pkt_out2.write(Data);
+		}
+		else
+		{
+			Data = pkt_in.read();
+			End = Data.End_of_frame;
+			Data.End_of_frame = 1;
+			Data.Count = 8;
+			pkt_out1.write(Data);
+			pkt_out2.write(Data);
+		}
+		while(!End)
+		{
+			#pragma HLS pipeline II = 1
+			Data = pkt_in.read();
+			End = Data.End_of_frame;
+		}
 		MemcachedPkt mempkt = true;
 		Mempkt.write(mempkt);
 	}
@@ -405,7 +442,7 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				 hls::stream<Part_Word> &Key_in, hls::stream<Part_Word> &Key_out,
 				 //hls::stream<input_tuples> &tuple_in,
 				 //hls::stream<input_tuples> & tuple_out,
-				 hls::stream<metadata> &Metain, hls::stream<instr> &instrout1, hls::stream<instr> &instrout2)
+				 hls::stream<metadata> &Metain, hls::stream<instr> &instrout1)//, hls::stream<instr> &instrout2)
 {
 	 MemcachedPkt mempkt = Mempkt.read();
 	 Mempkt_out.write(mempkt);
@@ -431,7 +468,7 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				State = 0;
 				Instruction.response = 0; //Stored
 				instrout1.write(Instruction);
-				instrout2.write(Instruction);
+				//instrout2.write(Instruction);
 
 			}
 		else if (Metadata.cmd == 0)
@@ -467,7 +504,7 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 		if (collision) Instruction.response = 2;
 		if (State != 0) {
 			instrout1.write(Instruction);
-			instrout2.write(Instruction);
+			//instrout2.write(Instruction);
 		}
 		//input_tuples tuple = tuple_in.read();
 		//tuple_out.write(tuple);
@@ -653,12 +690,14 @@ void ConvertDatalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt>
 void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 				 hls::stream<Part_Word> &Data_in,
 				 hls::stream<metadata> & metain, hls::stream<instr> &Instr_in,
+				 hls::stream<instr> &Instr_out,
 				 hls::stream<Part_Word> &Data_out)
 {
 	MemcachedPkt mempkt = Mempkt.read();
 	Mempkt_out.write(mempkt);
 	if (mempkt)
-	{	instr Instruction = Instr_in.read();
+	{
+		instr Instruction = Instr_in.read();
 		metadata Metadata = metain.read();
 		uint8_t count = 0;
 		uint16_t index = Instruction.index;
@@ -694,12 +733,14 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			}
 			Memory[index].VALID = 1;
 			//Print_Memory(index);
+			std::cout << "The count is" << (int)count << std::endl;
 
 		}
-		else if(Instruction.response == 1 || Instruction.response == 2)
+		else if(Instruction.response == 1)
 		{
 			Part_Word dataoutput;
 			int totnum = Metadata.Datalen / 8;
+			std::cout << "totnum is" << totnum << std::endl;
 			int remainnum = Metadata.Datalen % 8;
 			if (remainnum == 0)
 				{
@@ -719,6 +760,15 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			dataoutput.len = remainnum;
 			Data_out.write(dataoutput);
 		}
+		else if (Instruction.response == 2)
+		{
+			Part_Word dataoutput;
+			dataoutput.Data = 0;
+			dataoutput.End = 1;
+			dataoutput.len = 8;
+			Data_out.write(dataoutput);
+		}
+		Instr_out.write(Instruction);
 		//input_tuples tuple = tuple_in.read();
 		//tuple_out.write(tuple);
 	}
@@ -726,7 +776,9 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 void Generate_output(hls::stream<MemcachedPkt> &Mempkt,
 		 	 	 	//hls::stream<input_tuples> &tuple_in,
 		 	 	 	//hls::stream<input_tuples> & tuple_out,
-					hls::stream<packet_interface> &Packet_out, hls::stream<instr> &Instruction,
+					hls::stream<packet_interface> &Packet_out,
+					hls::stream<instr> &Instruction,
+					hls::stream<instr> &Instr_out,
 				   hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Key_in,
 				   hls::stream<Part_Word> &Datalen_in)
 {
@@ -738,165 +790,165 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt,
 		Part_Word remainword;
 		uint16_t totlen = 15;
 		instr Instr = Instruction.read();
-		output.Start_of_frame = 1;
-		output.End_of_frame = 0;
-		output.Data = 0;
-		output.Count = 8;
-		output.Error = 0;
-		Packet_out.write(output);
-		output.Start_of_frame = 0;
-		for (int i = 1; i < 5; i++)
-		{
-	#pragma HLS pipeline II = 1
-			Packet_out.write(output);
-		}
-		output.Data.range(47,0) = Instr.MemHdr.range(63, 16);
-		Packet_out.write(output);
-		output.Data.range(63, 48) = Instr.MemHdr.range(15, 0);
-		if (Instr.response == 0)
-		{
-			output.Data.range(47, 0) = 0x53544F524544;
-			Packet_out.write(output);
-			output.Count = 2;
+			output.Start_of_frame = 1;
+			output.End_of_frame = 0;
 			output.Data = 0;
-			output.Data.range(63, 32) = 0x0d0a0000;
-			output.End_of_frame =1;
-			Packet_out.write(output);
-		}
-		else if (Instr.response == 1 || Instr.response == 2)
-		{
-			bool datacomplete;
-			Part_Word tempin;
-			Part_Word Datalen;
-			if (Instr.response == 1) output.Data.range(47,0) = 0x56414c554520;
-			else output.Data.range(47,0) = 0x434f4c4c4920;
 			output.Count = 8;
+			output.Error = 0;
 			Packet_out.write(output);
-			tempin = Key_in.read();
-			do
+			output.Start_of_frame = 0;
+			for (int i = 1; i < 5; i++)
 			{
-	#pragma HLS pipeline II=1
-				output.Data= tempin.Data;
-				output.Count = tempin.len;
-				output.Start_of_frame = 0;
-				output.End_of_frame = 0;
-				output.Error = 0;
+		#pragma HLS pipeline II = 1
+				Packet_out.write(output);
+			}
+			output.Data.range(47,0) = Instr.MemHdr.range(63, 16);
+			Packet_out.write(output);
+			output.Data.range(63, 48) = Instr.MemHdr.range(15, 0);
+			if (Instr.response == 0)
+			{
+				output.Data.range(47, 0) = 0x53544F524544;
+				Packet_out.write(output);
+				output.Count = 2;
+				output.Data = 0;
+				output.Data.range(63, 32) = 0x0d0a0000;
+				output.End_of_frame =1;
+				Packet_out.write(output);
+			}
+			else if (Instr.response == 1 || Instr.response == 2)
+			{
+				bool datacomplete;
+				Part_Word tempin;
+				Part_Word Datalen;
+				if (Instr.response == 1) output.Data.range(47,0) = 0x56414c554520;
+				else output.Data.range(47,0) = 0x434f4c4c4920;
+				output.Count = 8;
 				Packet_out.write(output);
 				tempin = Key_in.read();
 				datacomplete = tempin.End;
-			}while(!datacomplete);
-			remainword.len = 0;
-			remainword.Data = 0;
-			Datalen = Datalen_in.read();
-			if (tempin.len !=0)
-			{
-				if (tempin.len ==8)
+				while(!datacomplete)	
 				{
-					output.Data = tempin.Data;
+		#pragma HLS pipeline II=1
+					output.Data= tempin.Data;
+					output.Count = tempin.len;
+					output.Start_of_frame = 0;
+					output.End_of_frame = 0;
+					output.Error = 0;
 					Packet_out.write(output);
-					remainword = Datalen;
+					tempin = Key_in.read();
+					datacomplete = tempin.End;
 				}
-				else if (tempin.len + Datalen.len <= 8)
+				remainword.len = 0;
+				remainword.Data = 0;
+				Datalen = Datalen_in.read();
+				if (tempin.len !=0)
 				{
-					remainword.len = tempin.len + Datalen.len;
-					remainword.Data.range(63, 64 - tempin.len * 8) = tempin.Data.range(63, 64 - tempin.len * 8);
-					remainword.Data.range(63 - tempin.len * 8, 64 - remainword.len * 8) = Datalen.Data.range(63, 64 - Datalen.len * 8);
-					if (remainword.len == 8)
+					if (tempin.len ==8)
 					{
-						output.Data = remainword.Data;
-						output.Count = remainword.len;
+						output.Data = tempin.Data;
+						Packet_out.write(output);
+						remainword = Datalen;
+					}
+					else if (tempin.len + Datalen.len <= 8)
+					{
+						remainword.len = tempin.len + Datalen.len;
+						remainword.Data.range(63, 64 - tempin.len * 8) = tempin.Data.range(63, 64 - tempin.len * 8);
+						remainword.Data.range(63 - tempin.len * 8, 64 - remainword.len * 8) = Datalen.Data.range(63, 64 - Datalen.len * 8);
+						if (remainword.len == 8)
+						{
+							output.Data = remainword.Data;
+							output.Count = remainword.len;
+							output.End_of_frame = 0;
+							remainword.len = 0;
+							remainword.Data = 0;
+							Packet_out.write(output);
+						}
+					}
+					else
+					{
+						remainword.len = tempin.len + Datalen.len - 8;
+						remainword.Data.range(63, 64 -remainword.len * 8) = Datalen.Data(63 - Datalen.len*8 + remainword.len *8, 64 - Datalen.len*8);
+						output.Data = tempin.Data;
+						output.Data.range(63 - 8*tempin.len,0) = Datalen.Data.range(63, 8 * tempin.len);
+						output.Count = 8;
 						output.End_of_frame = 0;
-						remainword.len = 0;
-						remainword.Data = 0;
 						Packet_out.write(output);
 					}
 				}
 				else
 				{
-					remainword.len = tempin.len + Datalen.len - 8;
-					remainword.Data.range(63, 64 -remainword.len * 8) = Datalen.Data(63 - Datalen.len*8 + remainword.len *8, 64 - Datalen.len*8);
-					output.Data = tempin.Data;
-					output.Data.range(63 - 8*tempin.len,0) = Datalen.Data.range(63, 8 * tempin.len);
+					remainword = Datalen;
+				}
+				if(remainword.len ==7)
+				{
+					remainword.Data.range(7,0) = 0x0d;
+					output.Data = remainword.Data;
 					output.Count = 8;
 					output.End_of_frame = 0;
 					Packet_out.write(output);
+					remainword.len = 1;
+					remainword.Data.range(63,56) = 0x0a;
 				}
-			}
-			else
-			{
-				remainword = Datalen;
-			}
-			if(remainword.len ==7)
-			{
-				remainword.Data.range(7,0) = 0x0d;
-				output.Data = remainword.Data;
-				output.Count = 8;
-				output.End_of_frame = 0;
-				Packet_out.write(output);
-				remainword.len = 1;
-				remainword.Data.range(63,56) = 0x0a;
-			}
-			else if (remainword.len == 6)
-			{
-				remainword.Data.range(15,0) = 0x0d0a;
-				output.Data = remainword.Data;
-				output.Count = 8;
-				output.End_of_frame = 0;
-				Packet_out.write(output);
-				remainword.len = 0;
-				remainword.Data = 0;
-			}
-			else
-			{
-				remainword.len +=2;
-				remainword.Data.range(79 - 8 * remainword.len ,64 - 8 * remainword.len) = 0x0d0a;
-			}
-			tempin = Data_in.read();
-			datacomplete = false;
-			do
-			{
-	#pragma HLS pipeline II=1
-				if (remainword.len == 0)
+				else if (remainword.len == 6)
 				{
-						output.Data= tempin.Data;
+					remainword.Data.range(15,0) = 0x0d0a;
+					output.Data = remainword.Data;
+					output.Count = 8;
+					output.End_of_frame = 0;
+					Packet_out.write(output);
+					remainword.len = 0;
+					remainword.Data = 0;
+				}
+				else
+				{
+					remainword.len +=2;
+					remainword.Data.range(79 - 8 * remainword.len ,64 - 8 * remainword.len) = 0x0d0a;
+				}
+				tempin = Data_in.read();
+				datacomplete = tempin.End;
+				while(!datacomplete)
+				{
+		#pragma HLS pipeline II=1
+					if (remainword.len == 0)
+					{
+							output.Data= tempin.Data;
+					}
+					else
+					{
+						output.Data = remainword.Data;
+						output.Data.range(63 - 8 * remainword.len,0) = tempin.Data.range(63, remainword.len * 8);
+						remainword.Data.range(63, 64 - 8*remainword.len) = tempin.Data.range(8 *remainword.len - 1, 0);
+					}
+					output.Count = 8;
+					output.End_of_frame = datacomplete;
+					output.Start_of_frame = 0;
+					output.Error = 0;
+					Packet_out.write(output);
+					tempin = Data_in.read();
+					datacomplete = tempin.End;
+				}
+				if (tempin.len + remainword.len <=8)
+				{
+					output.Data = remainword.Data;
+					output.Count = tempin.len + remainword.len;
+					output.End_of_frame = true;
+					output.Data.range(63 - 8*remainword.len, 64 - (tempin.len + remainword.len) * 8) = tempin.Data.range(63, 64 - tempin.len *8);
+					Packet_out.write(output);
 				}
 				else
 				{
 					output.Data = remainword.Data;
 					output.Data.range(63 - 8 * remainword.len,0) = tempin.Data.range(63, remainword.len * 8);
-					remainword.Data.range(63, 64 - 8*remainword.len) = tempin.Data.range(8 *remainword.len - 1, 0);
+					output.Count = 8;
+					output.End_of_frame = 0;
+					Packet_out.write(output);
+					output.Count = tempin.len + remainword.len - 8;
+					output.Data = tempin.Data << (8 - remainword.len)*8;
+					output.End_of_frame = 1;
+					Packet_out.write(output);
 				}
-				output.Count = 8;
-				output.End_of_frame = datacomplete;
-				output.Start_of_frame = 0;
-				output.Error = 0;
-				Packet_out.write(output);
-				tempin = Data_in.read();
-				datacomplete = tempin.End;
-			}while(!datacomplete);
-			if (tempin.len + remainword.len <=8)
-			{
-				output.Data = remainword.Data;
-				output.Count = tempin.len + remainword.len;
-				output.End_of_frame = true;
-				output.Data.range(63 - 8*remainword.len, 64 - (tempin.len + remainword.len) * 8) = tempin.Data.range(63, 64 - tempin.len *8);
-				Packet_out.write(output);
 			}
-			else
-			{
-				output.Data = remainword.Data;
-				output.Data.range(63 - 8 * remainword.len,0) = tempin.Data.range(63, remainword.len * 8);
-				output.Count = 8;
-				output.End_of_frame = 0;
-				Packet_out.write(output);
-				output.Count = tempin.len + remainword.len - 8;
-				output.Data = tempin.Data << (8 - remainword.len)*8;
-				output.End_of_frame = 1;
-				Packet_out.write(output);
-			}
-		}
-		//input_tuples tuple = tuple_in.read();
-		//tuple_out.write(tuple);
+		Instr_out.write(Instr);
 	}
 
 }
@@ -906,11 +958,12 @@ void Output_packets(//input_tuples Input_tuple,
 					hls::stream<output_tuples> & Output_tuples,
 					hls::stream<packet_interface> &Packet_in1,
 					hls::stream<packet_interface> &Packet_in2,
-					hls::stream<packet_interface> &Packet_out)
+					hls::stream<packet_interface> &Packet_out,
+					hls::stream<instr> &Instr_in)
 {
-	packet_interface input;
+	packet_interface input, temp;
 	input_tuples tuple_in;
-	output_tuples tuple_out;
+	output_tuples tuple_out,tuple_forward;
 	uint16_t len;
 	len = 0;
 	tuple_in = Input_tuples.read();
@@ -921,28 +974,87 @@ void Output_packets(//input_tuples Input_tuple,
 	tuple_out.Local_state = tuple_in.Local_state;
 	tuple_out.Memcached_output = tuple_in.Memcached_input;
 	tuple_out.Parser_extracts = tuple_in.Parser_extracts;
+	tuple_forward = tuple_out;
 	bool End = false;
 	//if (tuple_in.Hdr.Eth.Type == 0x0800 && tuple_in.Hdr.Ipv4.protocol == 0x11 && tuple_in.Hdr.Udp.dport ==0x2bcb)
 	if (tuple_in.Memcached_input.Stateful_valid == 1)
 	{
-		do
+		instr Instruction = Instr_in.read();
+		if (Instruction.response == 1)
 		{
-	#pragma HLS pipeline II=1
-			input = Packet_in1.read();
-			End = input.End_of_frame;
-			len += input.Count;
-			if (End && len < 60) input.Count += 60 - len;
-			Packet_out.write(input);
-		}while(!End);
-		tuple_out.Hdr.Ipv4.totallen = len - ETH_HDR_LEN;
-		tuple_out.Hdr.Udp.len = len - ETH_HDR_LEN - IPV4_HDR_LEN;
+			bool Forward_Pkt_End = false;
+			do
+			{
+		#pragma HLS pipeline II=1
+				input = Packet_in1.read();
+				End = input.End_of_frame;
+				len += input.Count;
+				Packet_out.write(input);
+				if (!Forward_Pkt_End)
+					{
+						temp = Packet_in2.read();
+						Forward_Pkt_End = temp.End_of_frame;
+					}
+			}while(!End);
+			tuple_out.Checkcache.forward = 0;
+			tuple_out.Hdr.Ipv4.totallen = len - ETH_HDR_LEN;
+			tuple_out.Hdr.Udp.len = len - ETH_HDR_LEN - IPV4_HDR_LEN;
+			tuple_out.Hdr.Eth.Dst = tuple_in.Hdr.Eth.Src;
+			tuple_out.Hdr.Eth.Src = tuple_in.Hdr.Eth.Dst;
+			tuple_out.Hdr.Ipv4.srcAddr = tuple_in.Hdr.Ipv4.dstAddr;
+			tuple_out.Hdr.Ipv4.dstAddr = tuple_in.Hdr.Ipv4.srcAddr;
+			tuple_out.Hdr.Udp.dport = tuple_in.Hdr.Udp.sport;
+			tuple_out.Hdr.Udp.sport = tuple_in.Hdr.Udp.dport;
+			Output_tuples.write(tuple_out);
+		}
+		else if (Instruction.response == 2)
+		{
 
-		tuple_out.Hdr.Eth.Dst = tuple_in.Hdr.Eth.Src;
-		tuple_out.Hdr.Eth.Src = tuple_in.Hdr.Eth.Dst;
-		tuple_out.Hdr.Ipv4.srcAddr = tuple_in.Hdr.Ipv4.dstAddr;
-		tuple_out.Hdr.Ipv4.dstAddr = tuple_in.Hdr.Ipv4.srcAddr;
-		tuple_out.Hdr.Udp.dport = tuple_in.Hdr.Udp.sport;
-		tuple_out.Hdr.Udp.sport = tuple_in.Hdr.Udp.dport;
+			bool Forward_Pkt_End = false;
+			do
+			{
+		#pragma HLS pipeline II=1
+				input = Packet_in1.read();
+				End = input.End_of_frame;
+				if (!Forward_Pkt_End)
+				{
+					temp = Packet_in2.read();
+					Forward_Pkt_End = temp.End_of_frame;
+					Packet_out.write(temp);
+				}
+			}while(!End);
+			Output_tuples.write(tuple_forward);
+		}
+		else if (Instruction.response == 0)
+		{
+			do
+			{
+		#pragma HLS pipeline II=1
+				input = Packet_in1.read();
+				End = input.End_of_frame;
+				len += input.Count;
+				if (End && len < 60) input.Count += 60 - len;
+				Packet_out.write(input);
+			}while(!End);
+			tuple_out.Hdr.Ipv4.totallen = len - ETH_HDR_LEN;
+			tuple_out.Hdr.Udp.len = len - ETH_HDR_LEN - IPV4_HDR_LEN;
+			tuple_out.Hdr.Eth.Dst = tuple_in.Hdr.Eth.Src;
+			tuple_out.Hdr.Eth.Src = tuple_in.Hdr.Eth.Dst;
+			tuple_out.Hdr.Ipv4.srcAddr = tuple_in.Hdr.Ipv4.dstAddr;
+			tuple_out.Hdr.Ipv4.dstAddr = tuple_in.Hdr.Ipv4.srcAddr;
+			tuple_out.Hdr.Udp.dport = tuple_in.Hdr.Udp.sport;
+			tuple_out.Hdr.Udp.sport = tuple_in.Hdr.Udp.dport;
+			tuple_out.Checkcache.forward = 1;
+			Output_tuples.write(tuple_out);
+			do
+			{
+		#pragma HLS pipeline II=1
+				input = Packet_in2.read();
+				End = input.End_of_frame;
+				Packet_out.write(input);
+			}while(!End);
+			Output_tuples.write(tuple_forward);
+		}
 	}
 	else
 	{
@@ -953,8 +1065,8 @@ void Output_packets(//input_tuples Input_tuple,
 			End = input.End_of_frame;
 			Packet_out.write(input);
 		}while(!End);
+		Output_tuples.write(tuple_out);
 	}
-	Output_tuples.write(tuple_out);
 
 
 }
@@ -974,99 +1086,101 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS INTERFACE ap_hs port=Packet_output
 
 #pragma HLS dataflow
-	int DATA_FIFO_SIZE = 150;
+	int DATA_FIFO_SIZE = 400;
 	int INST_FIFO_SIZE = 100;
-	static hls::stream<Part_Word> Extracted_Data;
+	hls::stream<Part_Word> Extracted_Data;
 #pragma HLS STREAM variable=Extracted_Data depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_EthHdr;
+	hls::stream<Part_Word> Data_after_EthHdr;
 #pragma HLS STREAM variable=Data_after_EthHdr depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_MemHdr;
+	hls::stream<Part_Word> Data_after_MemHdr;
 #pragma HLS STREAM variable=Data_after_MemHdr depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_cmd;
+	hls::stream<Part_Word> Data_after_cmd;
 #pragma HLS STREAM variable=Data_after_cmd depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_Key;
+	hls::stream<Part_Word> Data_after_Key;
 #pragma HLS STREAM variable=Data_after_Key depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_Remove;
+	hls::stream<Part_Word> Data_after_Remove;
 #pragma HLS STREAM variable=Data_after_Remove depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_after_len;
+	hls::stream<Part_Word> Data_after_len;
 #pragma HLS STREAM variable=Data_after_len depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Data_Stream;
+	hls::stream<Part_Word> Data_Stream;
 #pragma HLS STREAM variable=Data_Stream depth=DATA_FIFO_SIZE
 
-	static hls::stream<Part_Word> Datalen2Convert;
+	hls::stream<Part_Word> Datalen2Convert;
 #pragma HLS STREAM variable=Datalen2Convert depth=INST_FIFO_SIZE
-	static hls::stream<Part_Word> Datalen2Output;
+	hls::stream<Part_Word> Datalen2Output;
 #pragma HLS STREAM variable=Datalen2Output depth=INST_FIFO_SIZE
 
-	static hls::stream<Part_Word> Key_Stream;
+	hls::stream<Part_Word> Key_Stream;
 #pragma HLS STREAM variable=Key_Stream depth=DATA_FIFO_SIZE
-	static hls::stream<Part_Word> Key2Output;
+	hls::stream<Part_Word> Key2Output;
 #pragma HLS STREAM variable=Key2Output depth=DATA_FIFO_SIZE
 
-	static hls::stream<metadata> Metadata;
+	hls::stream<metadata> Metadata;
 #pragma HLS STREAM variable=Metadata depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata_with_CMD;
+	hls::stream<metadata> Metadata_with_CMD;
 #pragma HLS STREAM variable=Metadata_with_CMD depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ProcessKey;
+	hls::stream<metadata> Metadata2ProcessKey;
 #pragma HLS STREAM variable=Metadata2ProcessKey depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2Remove;
+	hls::stream<metadata> Metadata2Remove;
 #pragma HLS STREAM variable=Metadata2Remove depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ParseDatalen;
+	hls::stream<metadata> Metadata2ParseDatalen;
 #pragma HLS STREAM variable=Metadata2ParseDatalen depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ConvertDatalen;
+	hls::stream<metadata> Metadata2ConvertDatalen;
 #pragma HLS STREAM variable=Metadata2ConvertDatalen depth=INST_FIFO_SIZE
-	static hls::stream<metadata> Metadata2ParseData;
+	hls::stream<metadata> Metadata2ParseData;
 #pragma HLS STREAM variable=Metadata2ParseData depth=INST_FIFO_SIZE
 
-	static hls::stream<instr> Instr2ParseData;
+	hls::stream<instr> Instr2ParseData;
 #pragma HLS STREAM variable=Instr2ParseData depth=INST_FIFO_SIZE
-	static hls::stream<instr> Instr2Output;
+	hls::stream<instr> Instr2Output;
 #pragma HLS STREAM variable=Instr2Output depth=INST_FIFO_SIZE
+	hls::stream<instr> Instr2GenOutput;
+#pragma HLS STREAM variable=Instr2GenOutput depth=INST_FIFO_SIZE
 
 
-	static hls::stream<packet_interface> Packet2OutputPacket;
+	hls::stream<packet_interface> Packet2OutputPacket;
 #pragma HLS STREAM variable=Packet2OutputPacket depth=DATA_FIFO_SIZE
 
-	static hls::stream<input_tuples> Tuple2output;
+	hls::stream<input_tuples> Tuple2output;
 #pragma HLS STREAM variable=Tuple2output depth=100
 #pragma HLS DATA_PACK variable=Tuple2output
-	static hls::stream<input_tuples> Tuple2ETH;
+	hls::stream<input_tuples> Tuple2ETH;
 #pragma HLS STREAM variable=Tuple2ETH depth=100
-	static hls::stream<input_tuples> Tuple2PData;
+	hls::stream<input_tuples> Tuple2PData;
 #pragma HLS STREAM variable=Tuple2PData depth=100
-	static hls::stream<input_tuples> Tuple2Goutput;
+	hls::stream<input_tuples> Tuple2Goutput;
 #pragma HLS STREAM variable=Tuple2Goutput depth=100
-	static hls::stream<input_tuples> Tuple2ExtractData;
+	hls::stream<input_tuples> Tuple2ExtractData;
 #pragma HLS STREAM variable=Tuple2ExtractData depth=100
-	static hls::stream<input_tuples> Tuple2Forward;
+	hls::stream<input_tuples> Tuple2Forward;
 #pragma HLS STREAM variable=Tuple2Forward depth=100
 
-	static hls::stream<packet_interface> Pkt2ExtractData;
+	hls::stream<packet_interface> Pkt2ExtractData;
 #pragma HLS STREAM variable=Pkt2ExtractData depth=DATA_FIFO_SIZE
-	static hls::stream<packet_interface> Pkt2Forward;
+	hls::stream<packet_interface> Pkt2Forward;
 #pragma HLS STREAM variable=Pkt2Forward depth=DATA_FIFO_SIZE
 
-	static hls::stream<MemcachedPkt> Mempkt2ExtractData;
+	hls::stream<MemcachedPkt> Mempkt2ExtractData;
 #pragma HLS STREAM variable=Mempkt2ExtractData depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseETH;
+	hls::stream<MemcachedPkt> Mempkt2ParseETH;
 #pragma HLS STREAM variable=Mempkt2ParseETH depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseMemHdr;
+	hls::stream<MemcachedPkt> Mempkt2ParseMemHdr;
 #pragma HLS STREAM variable=Mempkt2ParseMemHdr depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseCMD;
+	hls::stream<MemcachedPkt> Mempkt2ParseCMD;
 #pragma HLS STREAM variable=Mempkt2ParseCMD depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseKey;
+	hls::stream<MemcachedPkt> Mempkt2ParseKey;
 #pragma HLS STREAM variable=Mempkt2ParseKey depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2Process;
+	hls::stream<MemcachedPkt> Mempkt2Process;
 #pragma HLS STREAM variable=Mempkt2Process depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2Remove;
+	hls::stream<MemcachedPkt> Mempkt2Remove;
 #pragma HLS STREAM variable=Mempkt2Remove depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseDatalen;
+	hls::stream<MemcachedPkt> Mempkt2ParseDatalen;
 #pragma HLS STREAM variable=Mempkt2ParseDatalen depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2Conv;
+	hls::stream<MemcachedPkt> Mempkt2Conv;
 #pragma HLS STREAM variable=Mempkt2Conv depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2ParseData;
+	hls::stream<MemcachedPkt> Mempkt2ParseData;
 #pragma HLS STREAM variable=Mempkt2ParseData depth=INST_FIFO_SIZE
-	static hls::stream<MemcachedPkt> Mempkt2GenerateOutput;
+	hls::stream<MemcachedPkt> Mempkt2GenerateOutput;
 #pragma HLS STREAM variable=Mempkt2GenerateOutput depth=INST_FIFO_SIZE
 
 #pragma HLS DATA_PACK variable=Tuple2ETH
@@ -1086,13 +1200,13 @@ Packet_num ++;
 	 Parse_Memcached_Hdr(Mempkt2ParseMemHdr, Mempkt2ParseCMD, Data_after_EthHdr, Data_after_MemHdr, Metadata);
 	 Parse_CMD(Mempkt2ParseCMD, Mempkt2ParseKey, Data_after_MemHdr, Data_after_cmd, Metadata, Metadata_with_CMD);
 	 Parse_Key(Mempkt2ParseKey, Mempkt2Process, Data_after_cmd, Data_after_Key, Metadata_with_CMD, Metadata2ProcessKey, Metadata2Remove, Key_Stream);
-	 Process_Key(Mempkt2Process, Mempkt2Remove, Key_Stream, Key2Output, Metadata2ProcessKey, Instr2Output, Instr2ParseData);
+	 Process_Key(Mempkt2Process, Mempkt2Remove, Key_Stream, Key2Output, Metadata2ProcessKey, Instr2ParseData);
 	 Remove(Mempkt2Remove, Mempkt2ParseDatalen, Data_after_Key, Data_after_Remove, Metadata2Remove, Metadata2ParseDatalen);
 	 Parse_Datalen(Mempkt2ParseDatalen,Mempkt2Conv, Data_after_Remove, Data_after_len, Datalen2Convert, Datalen2Output, Metadata2ParseDatalen, Metadata2ConvertDatalen);
 	 ConvertDatalen(Mempkt2Conv, Mempkt2ParseData, Datalen2Convert, Metadata2ConvertDatalen, Metadata2ParseData);
-	 Parse_Data(Mempkt2ParseData,Mempkt2GenerateOutput, Data_after_len, Metadata2ParseData, Instr2ParseData, Data_Stream);
-	 Generate_output(Mempkt2GenerateOutput, Packet2OutputPacket,Instr2Output, Data_Stream, Key2Output, Datalen2Output);
-	 Output_packets(Tuple2output, Output_tuples, Packet2OutputPacket, Pkt2Forward, Packet_output);
+	 Parse_Data(Mempkt2ParseData,Mempkt2GenerateOutput, Data_after_len, Metadata2ParseData, Instr2ParseData, Instr2GenOutput, Data_Stream);
+	 Generate_output(Mempkt2GenerateOutput, Packet2OutputPacket, Instr2GenOutput, Instr2Output, Data_Stream, Key2Output, Datalen2Output);
+	 Output_packets(Tuple2output, Output_tuples, Packet2OutputPacket, Pkt2Forward, Packet_output, Instr2Output);
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
 
 }

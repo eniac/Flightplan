@@ -38,8 +38,8 @@ def main():
     outputTextFile(args.textFilename, packets)
   random.seed(int(args.randomSeed))
 
-def generatePacket(addrDst = '000000000000'.decode('hex'),
-                   addrSrc = '000000000000'.decode('hex'),
+def generatePacket(addrDst = '222222222222'.decode('hex'),
+                   addrSrc = '222222222220'.decode('hex'),
                    payloadLength = 1024, packetIndex = 0):
   """
   Generate a single data packet without tag.
@@ -47,7 +47,7 @@ def generatePacket(addrDst = '000000000000'.decode('hex'),
   length = pickPayloadLength(payloadLength)
   payloadByte = (str(packetIndex % 9 + 1) * 2).decode("hex")
   payload = payloadByte * length;
-  return dpkt.ethernet.Ethernet(dst = addrDst, src = addrSrc, type = 0,
+  return dpkt.ethernet.Ethernet(dst = addrDst, src = addrSrc, type = length,
                                 data = payload)
 
 def outputPCAPFile(filename, packets):

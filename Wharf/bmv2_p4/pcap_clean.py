@@ -15,6 +15,7 @@ for pkt in scapy_cap:
         out.append(packet_without_trailer)
     except Exception as e:
         print("Error: %s"%e)
-        out.append(pkt)
+        print("Omitting this packet!!!")
+        #out.append(pkt)
 
 wrpcap(sys.argv[2], out)
