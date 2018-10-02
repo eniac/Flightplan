@@ -15,7 +15,7 @@ $(error Must set BMV2_REPO to run mininet with makefile)
 endif
 endif
 
-DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 
+DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 Sources/Complete.p4
 
 TARGET=TARGET_BMV2
 
@@ -29,7 +29,7 @@ test:
 	${P4TEST} -DTARGET_BMV2 -I../FPGA/RSEVivadoHLS/ -I../FPGA/RSEConfig  -I../FPGA/MemcachedP4 Sources/Example.p4
 
 bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json $(BLD_BMV2)/Forwarder.json \
-      $(BLD_BMV2)/Example.json
+      $(BLD_BMV2)/Example.json $(BLD_BMV2)/Complete.json
 
 run: All
 	-mkdir -p pcap_output log_files
