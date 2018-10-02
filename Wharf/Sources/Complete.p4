@@ -20,6 +20,8 @@ control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta)
 
     bit<24> proto_and_port = 0;
     FEC_Classify() classification;
+    FecClassParams() decoder_params;
+    FecClassParams() encoder_params;
 
     apply {
         if (!hdr.eth.isValid()) {
@@ -36,7 +38,7 @@ control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta)
 
         // If lossy link, then FEC decode.
         if (hdr.fec.isValid()) {
-            FecClassParams.apply(hdr.fec.traffic_class, k, h);
+            decoder_params.apply(hdr.fec.traffic_class, k, h);
             hdr.eth.type = hdr.fec.orig_ethertype;
             FEC_DECODE(hdr.fec, k, h);
             if (hdr.fec.packet_index >= k) {
@@ -77,7 +79,7 @@ control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta)
 
             classification.apply(hdr, m, meta, proto_and_port);
             if (hdr.fec.isValid()) {
-                FecClassParams.apply(hdr.fec.traffic_class, k, h);
+                encoder_params.apply(hdr.fec.traffic_class, k, h);
                 get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index);
                 hdr.fec.orig_ethertype = hdr.eth.type;
                 FEC_ENCODE(hdr.fec, k, h);
