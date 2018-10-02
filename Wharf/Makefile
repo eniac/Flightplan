@@ -1,6 +1,7 @@
 .PHONY: All EncoderNew run clean
 
 P4C:=p4c-bm2-ss
+P4TEST:=p4test
 
 BMV2_REPO_M:=$(BMV2_REPO)#FILL IN BEHAVIORAL-MODEL REPO LOCATION
 RUNTIME_CLI_DIR=$(BMV2_REPO_M)/tools
@@ -24,7 +25,11 @@ All: bmv2 Sample
 
 Sample: $(BLD_BMV2)/Sample.json
 
-bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json $(BLD_BMV2)/Forwarder.json
+test:
+	${P4TEST} -DTARGET_BMV2 -I../FPGA/RSEVivadoHLS/ -I../FPGA/RSEConfig  -I../FPGA/MemcachedP4 Sources/Example.p4
+
+bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json $(BLD_BMV2)/Forwarder.json \
+      $(BLD_BMV2)/Example.json
 
 run: All
 	-mkdir -p pcap_output log_files
@@ -47,7 +52,7 @@ run-%: $(BLD_BMV2)/%.json
 	sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python 1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump pcap_output/ --command-file forwarding_commands.txt
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BLD_BMV2)
-	p4c-bm2-ss --emit-externs -I  ../../FPGA/RSEVivadoHLS/ $< -o $@ --target bmv2 --arch v1model -D$(TARGET)
+	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET)
 	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@
 
 clean:
