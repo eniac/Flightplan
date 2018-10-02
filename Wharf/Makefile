@@ -33,15 +33,15 @@ bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json
 
 run: All
 	-mkdir -p pcap_output log_files
-	-sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python fec_demo.py \
+	-sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python bmv2/fec_demo.py \
 		--behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch \
 		--encoder-json $(BLD_BMV2)/Encoder.json \
 		--decoder-json $(BLD_BMV2)/Decoder.json \
 		--dropper-json $(BLD_BMV2)/Dropper.json \
-		--dropper-pcap lldp_enable_fec.pcap \
-		--pcap-dump pcap_output/ \
+		--dropper-pcap bmv2/lldp_enable_fec.pcap \
+		--pcap-dump bmv2/pcap_output/ \
 		--log-console log_files/ \
-		--command-file forwarding_commands.txt
+		--command-file bmv2/forwarding_commands.txt
 	-sudo chown -R $(USER) pcap_output/ log_files/
 
 $(BLD) $(BLD_BMV2):
@@ -49,7 +49,7 @@ $(BLD) $(BLD_BMV2):
 
 run-%: $(BLD_BMV2)/%.json
 	mkdir -p pcap_output
-	sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python 1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump pcap_output/ --command-file forwarding_commands.txt
+	sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python bmv2/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump pcap_output/ --command-file forwarding_commands.txt
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BLD_BMV2)
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET)
