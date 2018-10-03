@@ -44,6 +44,8 @@ parser.add_argument('--dropper-pcap', help="Provide a pcap file to send from dro
                     type=str, action='store', required=False, default=None)
 parser.add_argument('--command-file', help='Initial commands.txt file to pass over thrift port to all switches',
                     type=str, action='store', required=False, default=None)
+parser.add_argument('--h2-prog', help='Program to run on host 2',
+                    type=str, action='store', required=False, default=None)
 
 args = parser.parse_args()
 
@@ -125,15 +127,24 @@ def main():
             print("Sending %d commands to %s" %(len(commands), name))
             send_commands(port, json, commands)
 
+    if args.h2_prog:
+        h2 = net.get('h2')
+        h2.cmd(args.h2_prog)
+
     if args.e2e:
         h1 = net.get('h1')
         h2 = net.get('h2')
         h1.cmd('tcpdump -Q out -i eth0 -w {}/h1_out.pcap &'.format(args.pcap_dump))
+        h1.cmd('tcpdump -Q in -i eth0 -w {}/h1_in.pcap &'.format(args.pcap_dump))
+        h2.cmd('tcpdump -Q out -i eth0 -w {}/h2_out.pcap &'.format(args.pcap_dump))
         h2.cmd('tcpdump -Q in -i eth0 -w {}/h2_in.pcap &'.format(args.pcap_dump))
-        h1.cmd('tcpreplay -p 200 -i eth0 {}'.format(args.e2e))
+        s0 = net.get('s0')
+        s0.cmd('tcpdump -Q in -i s0-eth1 -w {}/s0_in.pcap &'.format(args.pcap_dump))
+        h1.cmd('tcpreplay -p 100 -i eth0 {}'.format(args.e2e))
         sleep(3)
         h1.cmd('killall tcpdump')
         h2.cmd('killall tcpdump')
+        s0.cmd('killall tcpdump')
         sleep(1)
     else:
         CLI( net )
