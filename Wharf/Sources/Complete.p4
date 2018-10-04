@@ -50,6 +50,7 @@ control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta)
 
         // If multiplexed link, then header decompress.
         // TODO add code
+        Forwarder.apply(meta);
 
         // If Memcached REQ/RES then pass through the cache.
         bit<1> forward = 0;
@@ -59,7 +60,6 @@ control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta)
             }
         }
 
-        Forwarder.apply(meta);
         bit<1> faulty = 1;
 
 
