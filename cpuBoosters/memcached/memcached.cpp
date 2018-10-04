@@ -226,6 +226,7 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
 
     packet_interface output;
 
+    bool drop = true;
     int pkt_num = 0;
     while (1) {
         output_tuples output_tuple = output_tuple_stream.read();
@@ -243,11 +244,19 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
         transfer_out(output_tuple, output_packet);
         pkt_num++;
 
-        forward(output_packet, packet_i, 0);//output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport);
+        if (output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport) {
+            forward(output_packet, packet_i, true);
+        } else {
+            std::cout << "NOT dropping packet " << std::endl;
+            drop = false;
+        }
 
         if (output_tuple.Checkcache.forward != 1) {
             break;
         }
     }
-    return true;
+    if (drop) {
+        std::cout << "YES dropping packet " << std::endl;
+    }
+    return drop;
 }

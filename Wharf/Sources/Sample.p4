@@ -33,19 +33,38 @@ typedef bit<48> MacAddress;
 struct  booster_metadata_t {
 }
 
+#define ETHERTYPE_IPV4 0x0800
 header eth_h
 {
 	MacAddress	dst;
 	MacAddress	src;
 	bit<16>		type;
 }
+header ipv4_h {
+  	bit<4>   version;
+  	bit<4>   ihl;
+  	bit<8>   tos;
+  	bit<16>  len;
+  	bit<16>  id;
+  	bit<3>   flags;
+  	bit<13>  frag;
+  	bit<8>   ttl;
+  	bit<8>   proto;
+  	bit<16>  chksum;
+  	bit<32>  src;
+  	bit<32>  dst;
+}
+
+
 struct headers_t {
 	eth_h	eth;
+    ipv4_h ipv4;
 }
 
 // Duplcates the packet with the string `value` (size `width`) in  location `index` of the payload
 // Duplicated packet sent to deparser
 extern void copy_modified(in bit<8> index, in bit<8> width, in bit<48> value);
+extern void print_headers();
 
 parser SampleParser(packet_in pkt, out headers_t hdr, inout booster_metadata_t meta, inout standard_metadata_t smd)
 {
@@ -55,6 +74,14 @@ parser SampleParser(packet_in pkt, out headers_t hdr, inout booster_metadata_t m
 
     state parse_eth {
         pkt.extract(hdr.eth);
+        transition select(hdr.eth.type) {
+            ETHERTYPE_IPV4: parse_ipv4;
+            default : accept;
+        }
+    }
+
+    state parse_ipv4 {
+        pkt.extract(hdr.ipv4);
         transition accept;
     }
 }
@@ -89,6 +116,7 @@ control SampleProcess(inout headers_t hdr, inout booster_metadata_t meta, inout 
     }
 
     apply {
+        print_headers();
         forward.apply();
         // Copy in the modified payload and send to deparser
         copy_modified(index, width, value);

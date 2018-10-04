@@ -15,7 +15,7 @@ control FecClassParams(in tclass_t tclass, out bit<FEC_K_WIDTH> k, out bit<FEC_H
         h = h_in;
     }
 
-    table parameters {
+    table fec_params {
         key = {
             tclass : exact;
         }
@@ -25,7 +25,7 @@ control FecClassParams(in tclass_t tclass, out bit<FEC_K_WIDTH> k, out bit<FEC_H
     }
 
     apply {
-        parameters.apply();
+        fec_params.apply();
     }
 }
 

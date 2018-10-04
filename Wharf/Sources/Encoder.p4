@@ -21,6 +21,7 @@ control NoEgress(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta
 
 control ProcessEncode(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta) {
     apply {
+        print_headers();
         FecEncode.apply(hdr, meta);
     }
 }
