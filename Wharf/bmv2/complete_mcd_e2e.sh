@@ -51,11 +51,11 @@ sudo PYTHONPATH=$RUNTIME_CLI_DIR python $HERE/fec_demo.py \
 		--decoder-json $BLD/bmv2/Complete.json \
 		--dropper-json $BLD/bmv2/Dropper.json \
 		--pcap-dump $PCAP_DUMPS \
-        --log-console $LOG_DUMPS \
-        --dropper-pcap $HERE/lldp_enable_fec.pcap \
 		--command-file $HERE/complete_commands.txt \
         --h2-prog "memcached -vv -u $USER -U 11211 -l 10.0.1.1 -B ascii > $LOG_DUMPS/mcd_out.txt 2> $LOG_DUMPS/mcd_err.txt  &" \
-		--e2e $INPUT_PCAP 
+		--e2e $INPUT_PCAP  \
+        --dropper-pcap $HERE/lldp_enable_fec.pcap \
+        #--log-console $LOG_DUMPS \ log-console creates too many logs!
 
 sleep 4
 
@@ -63,20 +63,21 @@ REQ_PCAP=$OUTDIR/${BASENAME}_req.pcap
 EXP_PCAP=$OUTDIR/${BASENAME}_expected.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-python $HERE/pcap_clean2.py $INPUT_PCAP $REQ_PCAP
-python $HERE/pcap_sub.py $EXPECTED $EXP_PCAP 1
-python $HERE/pcap_clean2.py $EXP_PCAP $EXP_PCAP
-python $HERE/pcap_clean2.py $PCAP_DUMPS/h1_in.pcap $OUT_PCAP
+python $HERE/pcap_clean.py $INPUT_PCAP $REQ_PCAP --rm-chksum &
+python $HERE/pcap_sub.py $EXPECTED $EXP_PCAP 1 &
+python $HERE/pcap_clean.py $PCAP_DUMPS/h1_in.pcap $OUT_PCAP --rm-chksum &
+wait
+python $HERE/pcap_clean.py $EXP_PCAP $EXP_PCAP --rm-chksum
 
 sleep 1
 REQ_TXT=$OUTDIR/${BASENAME}_req.txt
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
 IN_TXT=$OUTDIR/${BASENAME}_in.txt
 
-python $HERE/pcap_print.py $REQ_PCAP > $REQ_TXT
-python $HERE/pcap_print.py $EXP_PCAP > $IN_TXT
-python $HERE/pcap_print.py $OUT_PCAP > $OUT_TXT
-
+python $HERE/pcap_print.py $REQ_PCAP $REQ_TXT &
+python $HERE/pcap_print.py $EXP_PCAP $IN_TXT &
+python $HERE/pcap_print.py $OUT_PCAP $OUT_TXT &
+wait
 
 sudo chown -R $USER:$USER $OUTDIR
 
