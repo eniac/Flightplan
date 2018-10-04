@@ -56,8 +56,8 @@ sleep 4
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-python $HERE/pcap_clean.py  $PCAP_DUMPS/h1_out.pcap $IN_PCAP
-python $HERE/pcap_clean.py $PCAP_DUMPS/h2_in.pcap $OUT_PCAP
+python $HERE/pcap_clean.py  $PCAP_DUMPS/h1_out.pcap $IN_PCAP --ipv4-only
+python $HERE/pcap_clean.py $PCAP_DUMPS/h2_in.pcap $OUT_PCAP --ipv4-only
 
 sleep 1
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
