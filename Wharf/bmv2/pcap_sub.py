@@ -8,7 +8,7 @@ if len(sys.argv) != 4:
 scapy_cap  = rdpcap(sys.argv[1])
 
 out = []
-print "$%^$%^$%#^$%#^", sys.argv[1]
+print("Swapping out IP addresses for mininet from {} to {} ".format(sys.argv[1], sys.argv[2]))
 
 src_mac = '00:04:00:00:00:00'
 dst_mac = '00:04:00:00:00:01'

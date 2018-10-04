@@ -1,25 +1,34 @@
 import sys
 from scapy.all import *
+import argparse
 
-if len(sys.argv) != 3:
-    print("Usage: %s <expected.pcap> <output.pcap>" % sys.argv[0])
-    exit()
+parser = argparse.ArgumentParser()
+parser.add_argument('expected', type=str)
+parser.add_argument('output', type=str)
+parser.add_argument('--show', action='store', required=False, default=None)
+args = parser.parse_args()
 
-exp_cap  = rdpcap(sys.argv[1])
-out_cap  = [ x for x in rdpcap(sys.argv[2]) if IP in x]
+exp_cap  = rdpcap(args.expected)
+out_cap  = [ x for x in rdpcap(args.output) if IP in x]
 
 
 def strrep(pkt):
     try:
         return str(pkt)[0:14 + pkt[IP].len]
     except:
-        return "NOT IP!"
+        return None
 
 found_pkts = set()
 missing = []
 dups = []
 
-for pkt in exp_cap:
+print("Comparing {} and {} for memcached".format(args.expected, args.output))
+
+for j, pkt in enumerate(exp_cap):
+
+    if (j + 1) % (len(exp_cap) / 10) == 0:
+        print 100.0 * j  / len(exp_cap)
+
     try:
         exp = strrep(pkt)
         found = False
@@ -30,25 +39,27 @@ for pkt in exp_cap:
                 found = True
                 break
             if stpkt2 in found_pkts:
-                dups.append(pkt2)
+                dups.append((pkt2,j))
                 del out_cap[i - n_remvd]
                 n_remvd += 1
         if found:
             del out_cap[i - n_remvd]
             found_pkts.add(exp)
         else:
-            missing.append(pkt)
+            missing.append((pkt,j))
 
     except Exception as e:
         print "EXCEPTION", e
 
 def classify(pkts):
-    nos = dict(STORED=0, VALUE=0, other=0)
-    for pkt in pkts:
+    nos = dict(STORED=0, VALUE=0, other=0, stored_i = [], value_i = [])
+    for pkt, i in pkts:
         if 'STORED' in str(pkt):
             nos['STORED'] += 1
+            nos['stored_i'].append(i)
         elif 'VALUE' in str(pkt):
             nos['VALUE'] += 1
+            nos['value_i'].append(i)
         else:
             nos['other'] += 1
     return nos
@@ -58,11 +69,13 @@ def show_classf(classf):
 
 extras = []
 
+print ("Classifying duplicates and extras")
+
 for pkt in out_cap:
     if strrep(pkt) in found_pkts:
-        dups.append(pkt)
+        dups.append((pkt, -1))
     else:
-        extras.append(pkt)
+        extras.append((pkt, -1))
 
 
 missingnos = classify(missing)
@@ -73,16 +86,27 @@ rtn = 0
 if len(missing) > 0:
     rtn = 1
     print "MISSING PACKETS:"
-    show_classf(missingno)
+    show_classf(missingnos)
+    print missingnos['stored_i']
+    print missingnos['value_i']
+    if args.show == 'missing':
+        for pkt, _ in missing:
+            pkt.show()
 
 if len(extras) > 0:
     if len(extras) != extranos['other']:
         rtn = -1
     print "EXTRA PACKETS:"
     show_classf(extranos)
+    if args.show == 'extra':
+        for pkt, _ in extras:
+            pkt.show()
 
 if len(dups) > 0:
     print "DUPLICATE PACKETS:"
     show_classf(dupnos)
+
+print "SUCCESSFUL PACKETS:"
+show_classf(classify([(x, 0) for x in found_pkts]))
 
 exit(rtn)
