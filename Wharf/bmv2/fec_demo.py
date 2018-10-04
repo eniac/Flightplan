@@ -65,6 +65,8 @@ class FecTopo(Topo):
         for i, (name, json, port) in enumerate(self.switch_params):
             if log_console:
                 console_log = '{}/{}.log'.format(log_console, name)
+            else:
+                console_log = None
             switches.append(self.addSwitch('s%d' % i,
                                            sw_path = bm,
                                            json_path = json,
@@ -119,6 +121,7 @@ def main():
     if args.dropper_pcap:
         s1 = net.get('s1')
         s1.cmd('tcpreplay -i s1-eth1 {}'.format(args.dropper_pcap))
+        #s1.cmd('tcpreplay -i s1-eth2 {}'.format(args.dropper_pcap))
         sleep(1)
 
     if args.command_file is not None:
