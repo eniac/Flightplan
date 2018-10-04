@@ -48,8 +48,9 @@ $(BLD) $(BLD_BMV2):
 	mkdir -p $@
 
 run-%: $(BLD_BMV2)/%.json
+	sudo mn -c
 	mkdir -p pcap_output
-	sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python bmv2/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump pcap_output/ --command-file forwarding_commands.txt
+	sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python bmv2/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump pcap_output/ --command-file bmv2/complete_commands.txt
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BLD_BMV2)
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET)
