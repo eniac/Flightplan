@@ -81,7 +81,8 @@ control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta)
             classification.apply(hdr, m, meta, proto_and_port);
             if (hdr.fec.isValid()) {
                 encoder_params.apply(hdr.fec.traffic_class, k, h);
-                get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index);
+                update_fec_state(hdr.fec.traffic_class, k, h,
+                                 hdr.fec.block_index, hdr.fec.packet_index);
                 hdr.fec.orig_ethertype = hdr.eth.type;
                 FEC_ENCODE(hdr.fec, k, h);
                 hdr.eth.type = ETHERTYPE_WHARF;

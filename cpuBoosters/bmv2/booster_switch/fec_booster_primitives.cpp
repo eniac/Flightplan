@@ -58,10 +58,17 @@ using bm::NamedCalculation;
 using bm::HeaderStack;
 
 
-class get_fec_state : public ActionPrimitive<const Data &, Data &, Data &> {
-    void operator ()(const Data &tclass_d, Data &block_id_d, Data &packet_idx_d) {
+class update_fec_state : public ActionPrimitive<const Data &, const Data &, const Data &,
+                                                Data &, Data &> {
+    void operator ()(const Data &tclass_d, const Data &k_d, const Data &h_d,
+                     Data &block_id_d, Data &packet_idx_d) {
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
+
         uint8_t tclass = tclass_d.get<uint8_t>();
+        uint8_t k = k_d.get<uint8_t>();
+        uint8_t h = h_d.get<uint8_t>();
+        set_fec_params(tclass, k, h);
+
 
         uint8_t block_id = get_fec_block_id(tclass, egress_port);
         uint8_t packet_idx = get_fec_frame_idx(tclass, egress_port);
@@ -70,10 +77,12 @@ class get_fec_state : public ActionPrimitive<const Data &, Data &, Data &> {
 
         block_id_d.set(block_id);
         packet_idx_d.set(packet_idx);
+
+        advance_packet_idx(tclass, egress_port);
     }
 };
 
-REGISTER_PRIMITIVE(get_fec_state);
+REGISTER_PRIMITIVE(update_fec_state);
 
 class set_port_status : public ActionPrimitive<const Data &> {
     void operator ()(const Data &port_d) {

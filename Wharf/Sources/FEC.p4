@@ -5,8 +5,8 @@
 
 
 @Xilinx_MaxLatency(200)
-extern void get_fec_state(in tclass_t class, out bindex_t block_index, out pindex_t packet_index);
-extern void print_headers();
+extern void update_fec_state(in tclass_t tclass, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
+                             out bindex_t block_index, out pindex_t packet_index);
 
 control FecClassParams(in tclass_t tclass, out bit<FEC_K_WIDTH> k, out bit<FEC_H_WIDTH> h) {
 
@@ -81,7 +81,8 @@ control FecEncode(inout headers_t hdr, inout metadata_t meta) {
             classification.apply();
             if (hdr.fec.isValid()) {
                 FecClassParams.apply(hdr.fec.traffic_class, k, h);
-                get_fec_state(hdr.fec.traffic_class, hdr.fec.block_index, hdr.fec.packet_index);
+                update_fec_state(hdr.fec.traffic_class, k, h,
+                                 hdr.fec.block_index, hdr.fec.packet_index);
                 hdr.fec.orig_ethertype = hdr.eth.type;
                 FEC_ENCODE(hdr.fec, k, h);
                 hdr.eth.type = ETHERTYPE_WHARF;

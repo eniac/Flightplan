@@ -90,14 +90,13 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
             (int)tclass, pkt_size, (int)fec->block_id);
     insert_into_pkt_buffer(tclass, egress_port, fec->block_id, fec->index, pkt_size, pkt);
 
-    // If advancing the packet index starts a new block
-    int new_idx = advance_packet_idx(tclass, egress_port);
-    if (new_idx == 0) {
+    // If advancing the packet index would start a new block
+    if (fec->index == (k - 1)) {
         LOG_INFO("Encoding and forwarding block");
         encode_and_forward(tclass, egress_port, forward, fec->block_id, k, h);
         timeouts[tclass][egress_port] = zero_time;
         mark_pkts_absent(tclass, egress_port, fec->block_id);
-    } else if (new_idx == 1) {
+    } else if (fec->index == 0) {
         LOG_INFO("Resetting tclass %d timer", tclass);
         timeouts[tclass][egress_port] = steady_clock::now() + std::chrono::milliseconds(t);
     }
