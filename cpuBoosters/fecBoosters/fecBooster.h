@@ -10,13 +10,16 @@
 #include "rse.h"
 
 #ifndef NO_LOG_ERR
+#undef LOG_ERR
 #define LOG_ERR(s, ...) fprintf(stderr, "[%s:%s()::%d] ERROR: " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
 #else
+#undef LOG_ERR
 #define LOG_ERR(s, ...)
 #endif
 
 
 #ifndef NO_LOG_INFO
+#undef LOG_INFO
 #define LOG_INFO(s, ...) fprintf(stderr, "[%s:%s()::%d] " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
 #define LOG_HEX(buff, len) \
     for (int _i_=0; _i_ < len; _i_++) { \
@@ -27,6 +30,7 @@
     } \
     fprintf(stderr, "\n");
 #else
+#undef LOG_INFO
 #define LOG_INFO(s, ...)
 #define LOG_HEX(buff, len)
 #endif
