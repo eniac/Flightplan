@@ -26,10 +26,10 @@ All: bmv2 Sample
 Sample: $(BLD_BMV2)/Sample.json
 
 test:
-	${P4TEST} -DTARGET_BMV2 -I../FPGA/RSEVivadoHLS/ -I../FPGA/RSEConfig  -I../FPGA/MemcachedP4 Sources/Example.p4
+	${P4TEST} -DTARGET_BMV2 -I../FPGA/RSEVivadoHLS/ -I../FPGA/RSEConfig  -I../FPGA/MemcachedP4 
 
-bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json $(BLD_BMV2)/Forwarder.json \
-      $(BLD_BMV2)/Example.json $(BLD_BMV2)/Complete.json
+bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json \
+	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json
 
 run: All
 	-mkdir -p pcap_output log_files
