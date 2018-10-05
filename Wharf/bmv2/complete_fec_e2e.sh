@@ -87,6 +87,11 @@ if [[ $INLINES == $OUTLINES ]]; then
     diff $IN_SRT $OUT_SRT
     echo "Diff complete"
 
+    if [[ $INLINES == 0 ]]; then
+        echo -e ${RED}TEST FAILED${NC}
+        exit 1;
+    fi
+
     if [[ `diff $IN_SRT $OUT_SRT | wc -l` != '0' ]]; then
         echo -e ${RED}TEST FAILED${NC}
         exit 1
