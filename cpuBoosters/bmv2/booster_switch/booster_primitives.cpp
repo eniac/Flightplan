@@ -1,13 +1,19 @@
 #include "booster_primitives.hpp"
 
-using namespace boosters;
-
-void boosters::init_boosters() {
 #ifdef FEC_BOOSTER
-    if (rse_init() != 0) {
-        printf("ERROR Initializing RSE\n");
-        exit(-1);
-    }
+#include "fec_booster_primitives.h"
+#endif
+
+#ifdef MEMCACHED_BOOSTER
+#include "memcached_booster_primitives.h"
+#endif
+
+void boosters::import_booster_externs(SimpleSwitch *sswitch) {
+#ifdef FEC_BOOSTER
+    import_fec_booster_primitives(sswitch);
+#endif
+#ifdef MEMCACHED_BOOSTER
+    import_memcached_booster_primitives(sswitch);
 #endif
 }
 

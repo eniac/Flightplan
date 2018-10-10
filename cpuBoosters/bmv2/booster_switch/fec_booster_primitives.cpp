@@ -44,7 +44,7 @@
 #define PACKET_LENGTH_REG_IDX 0
 
 template <typename... Args>
-using ActionPrimitive = bm::ActionPrimitive<Args...>;
+using BoosterExtern = boosters::BoosterExtern<Args...>;
 using bm::Switch;
 using bm::PHV;
 using bm::Packet;
@@ -58,8 +58,10 @@ using bm::NamedCalculation;
 using bm::HeaderStack;
 
 
-class update_fec_state : public ActionPrimitive<const Data &, const Data &, const Data &,
-                                                Data &, Data &> {
+class update_fec_state : public BoosterExtern<const Data &, const Data &, const Data &,
+                                              Data &, Data &> {
+    using BoosterExtern::BoosterExtern;
+
     void operator ()(const Data &tclass_d, const Data &k_d, const Data &h_d,
                      Data &block_id_d, Data &packet_idx_d) {
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
@@ -82,9 +84,10 @@ class update_fec_state : public ActionPrimitive<const Data &, const Data &, cons
     }
 };
 
-REGISTER_PRIMITIVE(update_fec_state);
 
-class set_port_status : public ActionPrimitive<const Data &> {
+class set_port_status : public BoosterExtern<const Data &> {
+    using BoosterExtern::BoosterExtern;
+
     void operator ()(const Data &port_d) {
         uint8_t port = port_d.get<uint8_t>();
 
@@ -93,9 +96,10 @@ class set_port_status : public ActionPrimitive<const Data &> {
     }
 };
 
-REGISTER_PRIMITIVE(set_port_status);
 
-class get_port_status: public ActionPrimitive<const Data &, Data &> {
+class get_port_status: public BoosterExtern<const Data &, Data &> {
+    using BoosterExtern::BoosterExtern;
+
     void operator ()(const Data &port_d, Data &faulty_d) {
         uint8_t port = port_d.get<uint8_t>();
 
@@ -105,12 +109,11 @@ class get_port_status: public ActionPrimitive<const Data &, Data &> {
     }
 };
 
-REGISTER_PRIMITIVE(get_port_status);
-
 /**
  * Version of fec_encode extern which automatically finds headers
  */
-class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> {
+class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
+    using BoosterExtern::BoosterExtern;
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
         Packet &packet = this->get_packet();
@@ -142,8 +145,7 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
         // (egress_port is ignored here -- can be obtained from the template packet)
         auto forwarder = [&](const u_char *payload, size_t len, int egress_port) {
             (void)egress_port;
-            BMLOG_DEBUG("Forwarding packet of len {} to {}", len, egress_port);
-            SimpleSwitch::get_instance()->enqueue_booster_packet(packet, payload, len);
+            enqueue_new_packet((const char*)payload, len);
         };
         // Does the actual external work
         fec_encode_p4_packet((u_char *)buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
@@ -159,22 +161,21 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
         phv->get_field("fec.packet_len").set(htons(buff_size_16));
     }
 
-    static void timeout_forwarder(const u_char *payload, size_t len, int egress_port) {
-        SimpleSwitch::get_instance()->output_booster_packet(egress_port, payload, len);
+    void timeout_handler () {
+        auto forwarder = [&](const u_char *payload, size_t len, int egress_port) {
+            output_new_packet(egress_port, (const char *)payload, len);
+        };
+        fec_encode_timeout_handler(forwarder);
     }
 
-    static void timeout_handler () {
-        fec_encode_timeout_handler(timeout_forwarder);
-    }
-
+    // TODO: FIX BY BRINGING IN NEW PERIODIC SEMANTICS
     // Placing this call inside the class only registers it only
     // when the class is instantiated (i.e. only if the extern is used)
-    REGISTER_PERIODIC_CALL(timeout_handler);
+    // REGISTER_PERIODIC_CALL(timeout_handler);
 };
 
-REGISTER_PRIMITIVE(fec_encode);
-
-class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> {
+class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
+    using BoosterExtern::BoosterExtern;
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
         Packet &packet = get_packet();
@@ -204,7 +205,7 @@ class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> 
 
         // Set up function that will forward the packets 
         auto forwarder = [&](const u_char *payload, size_t len) {
-            SimpleSwitch::get_instance()->recirculate_booster_packet(packet, payload, len);
+            recirculate_new_packet((const char*)payload, len);
         };
 
         auto dropper = [&]() {
@@ -231,44 +232,8 @@ class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> 
             fec_h.mark_valid();
     }
 };
-
-REGISTER_PRIMITIVE(fec_decode);
-
-/**
- * Copy_modified accepts an index, a width, and a value.
- * It copies `width` bytes from `value` into location `index` of a copy of the payload,
- * then enqueues the newly modified (copied) packet for deparsing.
- */
-class copy_modified : public ActionPrimitive<const Data &, const Data &, const Data &> {
-
-    void operator ()(const Data &idx_d, const Data &width_d, const Data &value_d) {
-        Packet &packet = get_packet();
-
-        // Retrieve the value of the passed in data
-        uint8_t idx = idx_d.get<uint8_t>();
-        uint8_t width = width_d.get<uint8_t>();
-        std::string value = value_d.get_string();
-
-        size_t payload_size = packet.get_data_size();
-        if (payload_size <= idx + width) {
-            BMLOG_DEBUG("Payload size {} is smaller than max modification index {}",
-                        payload_size, idx + width);
-            return;
-        }
-
-        // Create a copy of the payload, modifying the appropriate bits
-        u_char new_payload[payload_size];
-        memcpy(new_payload, packet.data(), payload_size);
-        memcpy(&new_payload[idx], value.c_str(), width);
-
-        // Send the new packet to the deparser for output
-        SimpleSwitch::get_instance()->deparse_booster_packet(packet, new_payload, payload_size);
-    }
-};
-
-REGISTER_PRIMITIVE(copy_modified);
-
-class random_drop : public ActionPrimitive<const Data &, const Data &, const Data &> {
+class random_drop : public BoosterExtern<const Data &, const Data &> {
+    using BoosterExtern::BoosterExtern;
 
     std::vector<int> packet_idx = {0,0,0,0,0,0,0,0};
     std::vector<int> drop_idx = {0,0,0,0,0,0,0,0};
@@ -296,9 +261,10 @@ class random_drop : public ActionPrimitive<const Data &, const Data &, const Dat
     }
 };
 
-REGISTER_PRIMITIVE(random_drop);
 
-class print_headers : public ActionPrimitive<> {
+class print_headers : public BoosterExtern<> {
+    using BoosterExtern::BoosterExtern;
+
     void operator ()() {
         Packet &packet = get_packet();
         PHV *phv = packet.get_phv();
@@ -308,7 +274,6 @@ class print_headers : public ActionPrimitive<> {
     }
 };
 
-REGISTER_PRIMITIVE(print_headers);
 
 #endif //FEC_BOOSTERS
 
@@ -317,6 +282,17 @@ REGISTER_PRIMITIVE(print_headers);
 // the previous alternative was to have all the primitives in a header file (the
 // primitives could also be placed in simple_switch.cpp directly), but I need
 // this dummy function if I want to keep the primitives in their own file
-int import_fec_booster_primitives() {
+int import_fec_booster_primitives(SimpleSwitch *sswitch) {
+  if (rse_init() != 0) {
+      printf("ERROR initializing RSE\n");
+      exit(-1);
+  }
+  REGISTER_BOOSTER_EXTERN(update_fec_state, sswitch);
+  REGISTER_BOOSTER_EXTERN(set_port_status, sswitch);
+  REGISTER_BOOSTER_EXTERN(get_port_status, sswitch);
+  REGISTER_BOOSTER_EXTERN(fec_encode, sswitch);
+  REGISTER_BOOSTER_EXTERN(fec_decode, sswitch);
+  REGISTER_BOOSTER_EXTERN(random_drop, sswitch);
+  REGISTER_BOOSTER_EXTERN(print_headers, sswitch);
   return 0;
 }

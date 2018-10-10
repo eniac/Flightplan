@@ -3,15 +3,51 @@
 
 #include <bm/bm_sim/phv.h>
 #include <bm/bm_sim/packet.h>
+#include <bm/bm_sim/actions.h>
 #include <bm/bm_sim/logger.h>
 
-#ifdef FEC_BOOSTER
-#include "rse.h"
-#endif
+#include "simple_switch.h"
+
+#define REGISTER_BOOSTER_EXTERN(extern_name, sswitch_p) \
+    bm::ActionOpcodesMap::get_instance()->register_primitive( \
+        #extern_name, \
+        [sswitch_p]() { return std::unique_ptr<bm::ActionPrimitive_>( \
+                               new extern_name(sswitch_p)); })
 
 namespace boosters {
 
-void init_boosters();
+template <typename... Args>
+class BoosterExtern : public bm::ActionPrimitive<Args...> {
+protected:
+    using bm::ActionPrimitive<Args...>::get_packet;
+
+    SimpleSwitch *sswitch;
+
+    void enqueue_new_packet(const char *payload, size_t len) {
+        assert(sswitch);
+        Packet &input = get_packet();
+        auto pkt = sswitch->duplicate_headers(input, payload, len);
+        sswitch->enqueue_booster_packet(input.get_packet_id(), std::move(pkt));
+    }
+
+    void recirculate_new_packet(const char *payload, size_t len) {
+        assert(sswitch);
+        Packet &input = get_packet();
+        auto pkt = sswitch->duplicate_headers(input, payload, len);
+        sswitch->recirculate_booster_packet(std::move(pkt));
+    }
+
+    void output_new_packet(int egress_port, const char *payload, size_t len) {
+        assert(sswitch);
+        auto pkt = sswitch->create_packet(egress_port, payload, len);
+        sswitch->output_booster_packet(std::move(pkt));
+    }
+public:
+    BoosterExtern(SimpleSwitch *sswitch) : sswitch{sswitch} {}
+
+};
+
+void import_booster_externs(SimpleSwitch *sswitch);
 
 using bm::PHV;
 using bm::Header;

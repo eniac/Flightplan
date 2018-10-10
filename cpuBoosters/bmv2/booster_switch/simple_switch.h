@@ -67,11 +67,16 @@ using bm::p4object_id_t;
 
 class SimpleSwitch : public Switch {
  public:
-  void enqueue_booster_packet(Packet &src, const u_char *payload, size_t len);
-  void deparse_booster_packet(Packet &src, const u_char *payload, size_t len);
-  void output_booster_packet(Packet &src, const u_char *payload, size_t len);
-  void output_booster_packet(int engress_port, const u_char *payload, size_t len);
-  void recirculate_booster_packet(Packet &src, const u_char *payload, size_t len);
+  std::unique_ptr<Packet> duplicate_headers(Packet &src,
+                                            const char *payload,
+                                            size_t len);
+  std::unique_ptr<Packet> create_packet(int egress_port,
+                                        const char *payload,
+                                        size_t len);
+
+  void enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> booster_pkt);
+  void output_booster_packet(std::unique_ptr<Packet> booster_pkt);
+  void recirculate_booster_packet(std::unique_ptr<Packet> booster_pkt);
 
   using mirror_id_t = int;
 
@@ -84,8 +89,8 @@ class SimpleSwitch : public Switch {
   std::unique_ptr<Packet> duplicate_modified_packet(Packet &src, const u_char *payload, size_t len);
 
   // BOOSTER
-  void booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> packet);
-
+  //void booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> packet);
+  //
   using periodic_fn =  std::function<void()>;
 
   std::vector<std::tuple<periodic_fn, std::string> > periodic_calls;

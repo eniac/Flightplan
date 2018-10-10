@@ -6,15 +6,18 @@
 #include <bm/bm_sim/data.h>
 #include <bm/bm_sim/packet.h>
 
-template <typename... Args>
-using ActionPrimitive = bm::ActionPrimitive<Args...>;
 using bm::Data;
 using bm::Packet;
 using bm::Header;
 
 
-class memcached : public ActionPrimitive<Data &> {
+class memcached : public boosters::BoosterExtern<Data &> {
+    using BoosterExtern::BoosterExtern;
+
     void operator ()(Data &forward_d) {
+        // Unused...
+        (void)forward_d;
+
         Packet &packet = this->get_packet();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
         int ingress_port = phv->get_field("standard_metadata.ingress_port").get_int();
@@ -31,7 +34,7 @@ class memcached : public ActionPrimitive<Data &> {
 
         auto forwarder = [&](char *payload, size_t len, int reverse) {
             BMLOG_DEBUG("Reverse is {}, sending to port {}", reverse, reverse==0 ? egress_port : ingress_port);
-            SimpleSwitch::get_instance()->output_booster_packet(reverse == 0 ? egress_port : ingress_port, (u_char*)payload, len);
+            output_new_packet(reverse == 0 ? egress_port : ingress_port, payload, len);
         };
 
         bool drop = call_memcached((char*)buff, buff_size, forwarder);
@@ -49,15 +52,8 @@ class memcached : public ActionPrimitive<Data &> {
     }
 };
 
-REGISTER_PRIMITIVE(memcached);
-
-// dummy function, which ensures that this unit is not discarded by the linker
-// it is being called by the constructor of SimpleSwitch
-// the previous alternative was to have all the primitives in a header file (the
-// primitives could also be placed in simple_switch.cpp directly), but I need
-// this dummy function if I want to keep the primitives in their own file
-int import_memcached_booster_primitives() {
-  return 0;
+void import_memcached_booster_primitives(SimpleSwitch *sswitch) {
+  REGISTER_BOOSTER_EXTERN(memcached, sswitch);
 }
 
 
