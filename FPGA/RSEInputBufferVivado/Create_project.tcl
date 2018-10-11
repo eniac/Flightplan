@@ -100,9 +100,7 @@ set obj [get_filesets sources_1]
 
 # Import local files from the original project
 set files [list \
- "[file normalize "$origin_dir/Sources/valid_fifo.xci"]"\
  "[file normalize "$origin_dir/Sources/RSEInputBuffer.vhd"]"\
- "[file normalize "$origin_dir/Sources/packet_fifo.xci"]"\
 ]
 set imported_files [import_files -fileset sources_1 $files]
 
