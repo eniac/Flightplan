@@ -72,10 +72,10 @@ python $HERE/pcap_clean.py $EXP_PCAP $EXP_PCAP --rm-chksum
 sleep 1
 REQ_TXT=$OUTDIR/${BASENAME}_req.txt
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
-IN_TXT=$OUTDIR/${BASENAME}_in.txt
+EXP_TXT=$OUTDIR/${BASENAME}_exp.txt
 
 python $HERE/pcap_print.py $REQ_PCAP $REQ_TXT &
-python $HERE/pcap_print.py $EXP_PCAP $IN_TXT &
+python $HERE/pcap_print.py $EXP_PCAP $EXP_TXT &
 python $HERE/pcap_print.py $OUT_PCAP $OUT_TXT &
 wait
 
@@ -89,11 +89,11 @@ python $HERE/pcap_mcd_compare.py $EXP_PCAP $OUT_PCAP
 
 if [[ $? == 0 ]]; then
     echo -e ${GREEN}TEST SUCCEEDED${NC}
-    echo "Check $IN_TXT $OUT_TXT to compare"
+    echo "Check $EXP_TXT $OUT_TXT to compare"
     exit 0
 else
     echo -e ${RED}TEST FAILED${NC}
-    echo "Check $IN_TXT $OUT_TXT to compare"
+    echo "Check $EXP_TXT $OUT_TXT to compare"
     exit 1
 fi
 
