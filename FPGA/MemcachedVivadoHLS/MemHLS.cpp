@@ -465,7 +465,8 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				 hls::stream<Part_Word> &Key_in, hls::stream<Part_Word> &Key_out,
 				 hls::stream<metadata> &Metain, hls::stream<metadata> &Metaout)
 {
-	 MemcachedPkt mempkt = Mempkt.read();
+	MemcachedPkt mempkt = Mempkt.read();
+	Mempkt_out.write(mempkt);
 	if (mempkt)
 	{
 		bool keycomplete;
@@ -486,7 +487,7 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			}
 		else if (Metadata.pkt == get_pkt)
 			{
-				if (Memory[index].VALID == 0) { State = 2; Metadata.pkt = get_miss;mempkt = false;} 
+				if (Memory[index].VALID == 0) { State = 2; Metadata.pkt = get_miss;}
 				else State = 1;
 			}
 		else if (Metadata.pkt == value_pkt)
@@ -513,15 +514,13 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				if (Memory[index].KEY[count] != key.Data)
 				{
 					Metadata.pkt = get_collision;
-					mempkt =false;
 				}
 				Key_out.write(key); count++;
 			}
 		}while(!keycomplete);
-	if (mempkt) 
 		Metaout.write(Metadata);
 	}
-  Mempkt_out.write(mempkt);
+
 }
 void Remove(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 			hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out,
@@ -672,9 +671,7 @@ void Parse_Datalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> 
 		else if(Metadata.pkt == get_pkt)
 		{
 			Datalen = Memory[index].DATA_LEN_WORD;
-			//Lengthout1.write(Datalen);
 			Lengthout2.write(Datalen);
-			PrintDataWord(Datalen);
 		}
 	}
 }
@@ -796,6 +793,8 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 		Part_Word remainword;
 		uint16_t totlen = 15;
 		metadata Metadata = metain.read();
+		if (Metadata.pkt != get_miss && Metadata.pkt != get_collision)
+		{
 			output.Start_of_frame = 1;
 			output.End_of_frame = 0;
 			output.Data = 0;
@@ -954,20 +953,26 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 					Packet_out.write(output);
 				}
 			}
+		}
+		else if (Metadata.pkt == get_miss)
+		{
+			Datalen_in.read();
+		}
+		else if (Metadata.pkt == get_collision)
+		{
+			Datalen_in.read();
+			bool keycomplete = false;
+			Part_Word keytemp;
+			do
+			{
+#pragma HLS pipeline II =1
+				keytemp = Key_in.read();
+				keycomplete = keytemp.End;
+			}
+			while(!keycomplete);
+		}
 	metaout.write(Metadata);
 	}
-	else if (!Key_in.empty())
-	{
-		bool KeyEnd = false;
-		Part_Word tempin;
-		do
-		{
-#pragma HLS pipeline II=1
-			tempin = Key_in.read();
-			KeyEnd= tempin.End;
-		}while(!KeyEnd);
-	}
-
 }
 
 void Output_packets(//input_tuples Input_tuple,
@@ -1064,6 +1069,17 @@ void Output_packets(//input_tuples Input_tuple,
 			tuple_out.Hdr.Udp.sport = tuple_in.Hdr.Udp.dport;
 			tuple_out.Checkcache.forward = 1;
 			Output_tuples.write(tuple_out);
+			do
+			{
+		#pragma HLS pipeline II=1
+				input = Packet_in2.read();
+				End = input.End_of_frame;
+				Packet_out.write(input);
+			}while(!End);
+			Output_tuples.write(tuple_forward);
+		}
+		else if (Metadata.pkt == get_miss || Metadata.pkt == get_collision)
+		{
 			do
 			{
 		#pragma HLS pipeline II=1
