@@ -2,14 +2,14 @@
 
 All: Create_project Build_project
 
-Create_project: RSEInputBufferVivado
+Create_project: PacketDropperVivado
 
-Build_project: RSEInputBufferVivado
+Build_project: PacketDropperVivado
 	vivado -mode batch -source Build_project.tcl
 
-RSEInputBufferVivado: Sources/RSEInputBuffer.vhd
+PacketDropperVivado: Sources/PacketDropper.vhd
 	vivado -mode batch -source Create_project.tcl
 
 clean:
-	rm -fr RSEInputBufferVivado *.jou *.log
+	rm -fr PacketDropperVivado *.jou *.log
 

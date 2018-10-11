@@ -48,6 +48,7 @@ run-%: $(BLD_BMV2)/%.json
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BLD_BMV2)
 	p4c-bm2-ss --emit-externs -I  ../../FPGA/RSEVivadoHLS/ $< -o $@ --target bmv2 --arch v1model -D$(TARGET)
+	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@
 
 clean:
 	rm -fr $(BLD)
