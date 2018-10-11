@@ -36,7 +36,7 @@ parser.add_argument('--dropper-json', help='Path to dropper JSON',
                     type=str, action='store', required=True)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
                     type=str, action="store", required=False, default=False)
-parser.add_argument('--e2e', help='Provide a pcap file to be sent through',
+parser.add_argument('--replay', help='Provide a pcap file to be sent through',
                     type=str, action='store', required=False, default=False)
 parser.add_argument('--log-console', help='Log console to this directory',
                     type=str, action='store', required=False, default=None)
@@ -134,7 +134,7 @@ def main():
         h2 = net.get('h2')
         h2.cmd(args.h2_prog)
 
-    if args.e2e:
+    if args.replay:
         h1 = net.get('h1')
         h2 = net.get('h2')
         h1.cmd('tcpdump -Q out -i eth0 -w {}/h1_out.pcap &'.format(args.pcap_dump))
@@ -144,7 +144,7 @@ def main():
         s0 = net.get('s0')
         s0.cmd('tcpdump -Q in -i s0-eth1 -w {}/s0_in.pcap &'.format(args.pcap_dump))
         sleep(1)
-        h1.cmd('tcpreplay -p 10 -i eth0 {}'.format(args.e2e))
+        h1.cmd('tcpreplay -p 10 -i eth0 {}'.format(args.replay))
         sleep(4)
         h1.cmd('killall tcpdump')
         h2.cmd('killall tcpdump')

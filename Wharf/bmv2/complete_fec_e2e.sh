@@ -49,7 +49,7 @@ sudo PYTHONPATH=$RUNTIME_CLI_DIR python $HERE/fec_demo.py \
         --log-console $LOG_DUMPS \
         --dropper-pcap $HERE/lldp_enable_fec.pcap \
 		--command-file $HERE/complete_commands.txt \
-		--e2e $INPUT_PCAP \
+		--replay $INPUT_PCAP \
 
 sleep 4
 

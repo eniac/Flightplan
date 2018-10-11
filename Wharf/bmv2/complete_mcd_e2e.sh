@@ -53,7 +53,7 @@ sudo PYTHONPATH=$RUNTIME_CLI_DIR python $HERE/fec_demo.py \
 		--pcap-dump $PCAP_DUMPS \
 		--command-file $HERE/complete_commands.txt \
         --h2-prog "memcached -vv -u $USER -U 11211 -l 10.0.1.1 -B ascii > $LOG_DUMPS/mcd_out.txt 2> $LOG_DUMPS/mcd_err.txt  &" \
-		--e2e $INPUT_PCAP  \
+		--replay $INPUT_PCAP  \
         --dropper-pcap $HERE/lldp_enable_fec.pcap \
         #--log-console $LOG_DUMPS \ log-console creates too many logs!
 
