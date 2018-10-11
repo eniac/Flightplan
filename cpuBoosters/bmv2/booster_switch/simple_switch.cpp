@@ -67,6 +67,9 @@ extern int import_primitives();
 #ifdef FEC_BOOSTER
 extern int import_fec_booster_primitives();
 #endif
+#ifdef MEMCACHED_BOOSTER
+extern int import_memcached_booster_primitives();
+#endif
 
 packet_id_t SimpleSwitch::packet_id = 0;
 
@@ -109,6 +112,9 @@ SimpleSwitch::SimpleSwitch(port_t max_port, bool enable_swap)
 
 #ifdef FEC_BOOSTER
   import_fec_booster_primitives();
+#endif
+#ifdef MEMCACHED_BOOSTER
+  import_memcached_booster_primitives();
 #endif
 }
 

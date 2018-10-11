@@ -29,7 +29,7 @@ echo
 echo "================================================================================"
 echo "Send packets"
 echo "================================================================================"
-#sudo tcpreplay "--intf1=${INTERFACE}" -p 10000 -l 3 Encoded.pcap
+#sudo tcpreplay "--intf1=${INTERFACE}" -p 10 -l 3 Encoded.pcap
 sudo tcpreplay "--intf1=${INTERFACE}" -M 10000 100000_encoded_packets_of_1024.pcap
 
 # Make sure that we don't miss packets.
