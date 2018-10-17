@@ -1,7 +1,14 @@
 #include "MemHLS.h"
 #include <iostream>
+#define STORE_FROMSERVER 
 
-
+#ifdef STORE_FROMSERVER
+#define IS_PKTS_NEED_RESP Metadata.pkt == get_pkt 
+#define PKTS_ONLY_FORWARD Metadata.pkt == get_miss || Metadata.pkt == get_collision || Metadata.pkt == value_pkt || Metadata.pkt == set_pkt
+#else
+#define IS_PKTS_NEED_RESP Metadata.pkt == set_pkt || Metadata.pkt == get_pkt
+#define PKTS_ONLY_FORWARD Metadata.pkt == get_miss || Metadata.pkt == get_collision || Metadata.pkt == value_pkt
+#endif 
 
 static Cache Memory[MAX_MEMORY_SIZE];
 static uint16_t Packet_num;
@@ -792,8 +799,8 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 		packet_interface output;
 		Part_Word remainword;
 		uint16_t totlen = 15;
-		metadata Metadata = metain.read();
-		if (Metadata.pkt != get_miss && Metadata.pkt != get_collision)
+		metadata Metadata = metain.read(); 
+		if (IS_PKTS_NEED_RESP) 
 		{
 			output.Start_of_frame = 1;
 			output.End_of_frame = 0;
@@ -810,7 +817,7 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 			output.Data.range(47,0) = Metadata.MemHdr.range(63, 16);
 			Packet_out.write(output);
 			output.Data.range(63, 48) = Metadata.MemHdr.range(15, 0);
-			if (Metadata.pkt == set_pkt || Metadata.pkt == value_pkt)
+			if (Metadata.pkt == set_pkt)
 			{
 				output.Data.range(47, 0) = 0x53544F524544;
 				Packet_out.write(output);
@@ -971,6 +978,10 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 			}
 			while(!keycomplete);
 		}
+		else if (Metadata.pkt == value_pkt)
+		{	
+			std::cout << "Value Pkt" << std::endl;
+		}
 	metaout.write(Metadata);
 	}
 }
@@ -1030,24 +1041,7 @@ void Output_packets(//input_tuples Input_tuple,
 			tuple_out.Hdr.Udp.sport = tuple_in.Hdr.Udp.dport;
 			Output_tuples.write(tuple_out);
 		}
-		else if (Metadata.pkt == value_pkt)
-		{
-
-			bool Forward_Pkt_End = false;
-			do
-			{
-		#pragma HLS pipeline II=1
-				input = Packet_in2.read();
-				Forward_Pkt_End = input.End_of_frame;
-				Packet_out.write(input);
-				if (!End)
-				{
-					temp = Packet_in1.read();
-					End = temp.End_of_frame;
-				}
-			}while(!Forward_Pkt_End);
-			Output_tuples.write(tuple_forward);
-		}
+		#ifndef STORE_FROMSERVER
 		else if (Metadata.pkt == set_pkt)
 		{
 			do
@@ -1078,7 +1072,8 @@ void Output_packets(//input_tuples Input_tuple,
 			}while(!End);
 			Output_tuples.write(tuple_forward);
 		}
-		else if (Metadata.pkt == get_miss || Metadata.pkt == get_collision)
+		#endif
+		else if (PKTS_ONLY_FORWARD)
 		{
 			do
 			{
