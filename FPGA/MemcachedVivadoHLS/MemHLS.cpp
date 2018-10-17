@@ -255,17 +255,18 @@ void Parse_CMD(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 {
 	 MemcachedPkt mempkt = Mempkt.read();
 	 if (mempkt)
-	 {	 bool pktcomplete;
-		 pktcomplete = false;
-		 enum Parser_State State;
-		 State = Consumption;
-		 int removelength;
-		 uint8_t remainlen;
-		 Part_Word tempin, tempout;
-		 metadata Metadata;
-		 Part_Word remainword;
-		 Part_Word EndWord = {0,0};
-		 Metadata = Metain.read();
+	 {	 
+		bool pktcomplete;
+		pktcomplete = false;
+		enum Parser_State State;
+		State = Consumption;
+		int removelength;
+		uint8_t remainlen;
+		Part_Word tempin, tempout;
+		metadata Metadata;
+		Part_Word remainword;
+		Part_Word EndWord = {0,0};
+		Metadata = Metain.read();
 		tempin = Data_in.read();
 		switch (tempin.Data.range(63,32))
 		{
@@ -300,55 +301,71 @@ void Parse_CMD(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 			case (0x53544f52):
 			{
 				 mempkt = false;
-				 removelength = 8;
 				 break;
+			}
+			case (0x4e4f5420):
+			{
+				mempkt = false;
+				break;
+			}
+			default:
+			{
+				mempkt = false;
+				break;
 			}
 
 
 		}
 		std::cout << Metadata.pkt << std::endl;
-		if (mempkt){
-			State = Alignment;
-			remainlen = BYTES_PER_WORD - removelength;
-			remainword.Data = 0;
-			remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
-		}
-		if (mempkt){
-		 do
-		 {
-	#pragma HLS pipeline II=1
-	#pragma HLS loop_tripcount min=8 max=190
-
-			 tempin = Data_in.read();
-			 pktcomplete = tempin.End;
-			 {
-				 if (tempin.len > removelength)
-
+		if (mempkt)
+		{
+			 State = Alignment;
+			 remainlen = BYTES_PER_WORD - removelength;
+		    	 remainword.Data = 0;
+			 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
+			 do
+		 	 {
+		#pragma HLS pipeline II=1
+		#pragma HLS loop_tripcount min=8 max=190
+	
+				 tempin = Data_in.read();
+				 pktcomplete = tempin.End;
+				 {
+					 if (tempin.len > removelength)
 					 {
 						 tempout.len = BYTES_PER_WORD;
 						 tempout.End = false;
 					 }
-				 else if (tempin.len == removelength)
+					 else if (tempin.len == removelength)
 					 {
 						 tempout.len = BYTES_PER_WORD;
 						 tempout.End = true;
 					 }
-				 else
+					 else
 					 {
 						 tempout.len = BYTES_PER_WORD -removelength + tempin.len;
 						 tempout.End = true;
 					 }
-				 tempout.Data = remainword.Data;
-				 tempout.Data(63 - 8 * remainlen, 0) = tempin.Data.range(63, 64 - 8 * removelength);
-				 remainword.len = tempin.len - removelength;
-				 remainword.End = true;
-				 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
-				 Data_out.write(tempout);
-			 }
-		 }while(!pktcomplete);
-		 if (tempin.len > removelength)
-			 Data_out.write(remainword);
-	 }
+				 	tempout.Data = remainword.Data;
+					 tempout.Data(63 - 8 * remainlen, 0) = tempin.Data.range(63, 64 - 8 * removelength);
+					 remainword.len = tempin.len - removelength;
+					 remainword.End = true;
+					 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
+					 Data_out.write(tempout);
+				 }
+			  }while(!pktcomplete);
+			 if (tempin.len > removelength)
+				 Data_out.write(remainword);
+	 	}
+		else
+		{
+			pktcomplete = tempin.End;
+			while(!pktcomplete)
+			{
+				tempin = Data_in.read();
+				pktcomplete = tempin.End;
+			}
+		}	
   }
 	Mempkt_out.write(mempkt);
 }

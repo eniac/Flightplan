@@ -180,6 +180,7 @@ enum Pkt_Status{
 	value_pkt,
 	get_collision,
 	get_miss,
+	NotFound_pkt,
 	invalid
 };
 typedef struct
