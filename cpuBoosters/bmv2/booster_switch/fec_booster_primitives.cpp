@@ -277,30 +277,31 @@ class copy_modified : public ActionPrimitive<const Data &, const Data &, const D
 
 REGISTER_PRIMITIVE(copy_modified);
 
-class random_drop : public ActionPrimitive<const Data &, const Data &> {
+class random_drop : public ActionPrimitive<const Data &, const Data &, const Data &> {
 
-    int packet_idx = 0;
-    int drop_idx = 0;
+    std::vector<int> packet_idx = {0,0,0,0,0,0,0,0};
+    std::vector<int> drop_idx = {0,0,0,0,0,0,0,0};
 
-    void operator ()(const Data &n1_d, const Data &n2_d) {
+    void operator ()(const Data &n1_d, const Data &n2_d, const Data &egress_d) {
         int n1 = n1_d.get_int();
         int n2 = n2_d.get_int();
+        int egress = egress_d.get_int();
 
-        if (packet_idx == 0) {
-            drop_idx = rand() % n1;
-            BMLOG_DEBUG("Setting drop index to {}/{}", drop_idx, n1 + n2);
+        if (packet_idx[egress] == 0) {
+            drop_idx[egress] = rand() % n1;
+            BMLOG_DEBUG("Setting drop index to {}/{}", drop_idx[egress], n1 + n2);
         }
 
-        if (drop_idx == packet_idx) {
+        if (drop_idx[egress] == packet_idx[egress]) {
             // Mark to drop
             get_field("standard_metadata.egress_spec").set(511);
             if (get_phv().has_field("intrinsic_metadata.mcast_grp")) {
                 get_field("intrinsic_metadata.mcast_grp").set(0);
             }
-            BMLOG_DEBUG("Dropping packet {}", packet_idx);
+            BMLOG_DEBUG("Dropping packet {}", packet_idx[egress]);
         }
 
-        packet_idx = (packet_idx + 1) % (n1 + n2);
+        packet_idx[egress] = (packet_idx[egress] + 1) % (n1 + n2);
     }
 };
 
