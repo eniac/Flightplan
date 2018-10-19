@@ -31,6 +31,8 @@ test:
 bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json \
 	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json
 
+complete: $(BLD_BMV2)/Complete.json
+
 run: All
 	-mkdir -p pcap_output log_files
 	-sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python bmv2/fec_demo.py \
