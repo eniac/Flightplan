@@ -117,7 +117,10 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
 
     state parse_fec {
         pkt.extract(hdr.fec);
-        transition accept;
+        transition select(hdr.fec.orig_ethertype) {
+            ETHERTYPE_IPV4: parse_ipv4;
+            default: accept;
+        }
     }
 
     state parse_ipv4 {
