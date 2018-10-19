@@ -7,14 +7,14 @@
 #if defined(TARGET_BMV2)
 
 parser BMParser(packet_in pkt, out headers_t hdr,
-                inout bmv2_meta_t m, inout metadata_t meta) {
+                inout booster_metadata_t m, inout metadata_t meta) {
     state start {
         FecParser.apply(pkt, hdr);
         transition accept;
     }
 }
 
-control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta) {
+control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
 
