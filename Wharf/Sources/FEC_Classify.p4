@@ -1,7 +1,7 @@
 #include "targets.h"
 #include "EmptyBMDefinitions.p4"
 
-control FEC_Classify(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta, in bit<24> proto_and_port) {
+control FEC_Classify(inout headers_t hdr, in bit<24> proto_and_port) {
     action classify(tclass_t tclass) {
         hdr.fec.setValid();
         hdr.fec.traffic_class = tclass;

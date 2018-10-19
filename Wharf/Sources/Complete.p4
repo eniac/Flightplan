@@ -78,7 +78,7 @@ control Process(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta)
                 proto_and_port = hdr.ipv4.proto ++ (bit<16>)0;
             }
 
-            classification.apply(hdr, m, meta, proto_and_port);
+            classification.apply(hdr, proto_and_port);
             if (hdr.fec.isValid()) {
                 encoder_params.apply(hdr.fec.traffic_class, k, h);
                 update_fec_state(hdr.fec.traffic_class, k, h,
