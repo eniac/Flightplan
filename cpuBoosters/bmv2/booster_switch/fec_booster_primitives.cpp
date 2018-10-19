@@ -117,20 +117,22 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
         PHV *phv = packet.get_phv();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
 
+        // Must save packet state so it can be restored after deparsing
+        const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
+
+        // Get the FEC header, and mark it invalid so it won't show up in
+        // the serialized packet
+        struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
         bool is_fec_valid = fec_h.is_valid();
         fec_h.mark_invalid();
-        // Retrieve the headers which are valid and not metadata
-        std::vector<Header *>hdrs;
-        boosters::get_valid_headers(packet, hdrs);
-        if (is_fec_valid) {
-            fec_h.mark_valid();
-        }
 
-        // Stores the serialized packet and valid headers in `*buff`
-        size_t buff_size;
-        u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
-        // Deparses the fec header so it can be read in c++;
-        struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
+        auto deparser = get_p4objects()->get_deparser("deparser");
+
+        // Deparsing the packet makes the headers readable in packet.data()
+        deparser->deparse(&packet);
+
+        char *buff = packet.data();
+        size_t buff_size = packet.get_data_size();
 
         // Retrieves the integers corresponding to the passed-in values
         uint8_t k = k_d.get<uint8_t>();
@@ -140,27 +142,18 @@ class fec_encode : public ActionPrimitive<Header &, const Data &, const Data &> 
         // (egress_port is ignored here -- can be obtained from the template packet)
         auto forwarder = [&](const u_char *payload, size_t len, int egress_port) {
             (void)egress_port;
+            BMLOG_DEBUG("Forwarding packet of len {} to {}", len, egress_port);
             SimpleSwitch::get_instance()->enqueue_booster_packet(packet, payload, len);
         };
         // Does the actual external work
-        fec_encode_p4_packet(buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
+        fec_encode_p4_packet((u_char *)buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
 
         BMLOG_DEBUG("Fec index {:d}", fec->index);
-        // Replaces the deserialized headers back to the packet
-        boosters::replace_headers(packet, buff, hdrs);
-        boosters::replace_headers(packet, (u_char*)fec, fec_h);
-        BMLOG_DEBUG("Fec index after: {:d}", phv->get_field("fec.packet_index").get_int());
+        packet.restore_buffer_state(packet_in_state);
+        if (is_fec_valid)
+            fec_h.mark_valid();
 
-        /* For some reason setting directly in the header doesn't work. Must be done through phv
-        int packet_len_offset = fec_h.get_header_type().get_field_offset("packet_len");
-        if (packet_len_offset < 0) {
-            BMLOG_DEBUG("Cannot find packet_len field in FEC header!");
-            boosters::printHeader(fec_h);
-            return;
-        }
-        auto packet_len_f = fec_h.get_field(packet_len_offset);
-        packet_len_f.set(htons(buff_size_16));
-        */
+        // Must set buffer size in fec header explicitly
         uint16_t buff_size_16 = buff_size;
         BMLOG_DEBUG("Set packet length to {:d}", buff_size_16);
         phv->get_field("fec.packet_len").set(htons(buff_size_16));
@@ -188,20 +181,19 @@ class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> 
         PHV *phv = packet.get_phv();
         int ingress_port = phv->get_field("standard_metadata.ingress_port").get_int();
 
+        // Must save packet state so it can be restored after deparsing
+        const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
+
         bool is_fec_valid = fec_h.is_valid();
         fec_h.mark_invalid();
-        // Retrieve the headers which are valid and not metadata
-        std::vector<Header *>hdrs;
-        boosters::get_valid_headers(packet, hdrs);
-        if (is_fec_valid) {
-            fec_h.mark_valid();
-        }
 
-        // Stores the serialized packet and valid headers in `*buff`
-        size_t buff_size;
-        u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
+        // Deparse packet so valid headers are available in packet.data()
+        auto deparser = get_p4objects()->get_deparser("deparser");
+        deparser->deparse(&packet);
 
-        BMLOG_DEBUG("Fec index before: {:d}", phv->get_field("fec.packet_index").get_int());
+        char *buff = packet.data();
+        size_t buff_size = packet.get_data_size();
+
         // Deparses the fec header so it can be read in c++
         struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
         BMLOG_DEBUG("Fec index {:d}", fec->index);
@@ -233,11 +225,10 @@ class fec_decode : public ActionPrimitive<Header &, const Data &, const Data &> 
         auto packet_len_f = fec_h.get_field(packet_len_offset);
         uint16_t pkt_len = ntohs(packet_len_f.get<uint16_t>());
 
-        fec_decode_p4_packet(buff, (size_t)pkt_len, fec, ingress_port, k, h, forwarder, dropper);
-
-        // Replace the deserialized headers back into the packet
-        boosters::replace_headers(packet, buff, hdrs);
-        boosters::replace_headers(packet, (u_char*)fec, fec_h);
+        fec_decode_p4_packet((const u_char*)buff, (size_t)pkt_len, fec, ingress_port, k, h, forwarder, dropper);
+        packet.restore_buffer_state(packet_in_state);
+        if (is_fec_valid)
+            fec_h.mark_valid();
     }
 };
 
@@ -329,5 +320,3 @@ REGISTER_PRIMITIVE(print_headers);
 int import_fec_booster_primitives() {
   return 0;
 }
-
-
