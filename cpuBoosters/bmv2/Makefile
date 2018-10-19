@@ -56,7 +56,7 @@ booster_switch/memcachedBooster:
 	cd ../memcached && make copy_files
 
 booster_switch: copy_files  $(BOOSTER_DEPS)
-	cd $(BOOSTER_TARGET_DIR) && make
+	cd $(BOOSTER_TARGET_DIR) && make -j8
 
 $(BOOSTER_TARGET_DIR):
 	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
