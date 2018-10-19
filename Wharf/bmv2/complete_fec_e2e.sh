@@ -46,7 +46,8 @@ sudo PYTHONPATH=$RUNTIME_CLI_DIR python $HERE/fec_demo.py \
 		--decoder-json $BLD/bmv2/Complete.json \
 		--dropper-json $BLD/bmv2/Dropper.json \
 		--pcap-dump $PCAP_DUMPS \
-        --log-console $LOG_DUMPS \
+        --verbose \
+        --log $LOG_DUMPS \
         --dropper-pcap $HERE/lldp_enable_fec.pcap \
 		--command-file $HERE/complete_commands.txt \
 		--replay $INPUT_PCAP \
