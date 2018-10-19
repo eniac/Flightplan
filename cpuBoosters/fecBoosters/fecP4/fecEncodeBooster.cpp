@@ -75,6 +75,9 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
                           const struct fec_header *fec, int egress_port,
                           int k, int h, int t,
                           encode_forward_fn forward) {
+    // Must put egress on odd numbers to not overlap with ingress
+    egress_port = egress_port * 2 - 1;
+
     // Lock while encoding in progress
     std::lock_guard<std::mutex> lock(encoder_mutex);
 
