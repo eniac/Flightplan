@@ -22,15 +22,14 @@ class memcached : public boosters::BoosterExtern<Data &> {
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
         int ingress_port = phv->get_field("standard_metadata.ingress_port").get_int();
 
-        std::vector<Header *>hdrs;
-        boosters::get_valid_headers(packet, hdrs);
+        // Must save packet state so it can be restored after deparsing
+        const auto packet_in_state = packet.save_buffer_state();
 
-        for (auto hdr : hdrs) {
-            boosters::printHeader(*hdr);
-        }
+        auto deparser = get_p4objects()->get_deparser("deparser");
+        deparser->deparse(&packet);
 
-        size_t buff_size;
-        u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
+        char *buff = packet.data();
+        size_t buff_size = packet.get_data_size();
 
         auto forwarder = [&](char *payload, size_t len, int reverse) {
             int new_ingress = reverse == 0 ? ingress_port : egress_port;
@@ -40,12 +39,13 @@ class memcached : public boosters::BoosterExtern<Data &> {
 
         bool drop = call_memcached((char*)buff, buff_size, forwarder);
 
+        packet.restore_buffer_state(packet_in_state);
+
         if (drop) {
             forward_d.set(true);
         } else {
             forward_d.set(false);
         }
-
        /* for (auto hdr : hdrs) {
             boosters::printHeader(*hdr);
         }*/
