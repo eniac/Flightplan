@@ -3,4 +3,4 @@
  endif
  
 -SUBDIRS = $(MAYBE_SECONDARY_TARGETS) simple_switch psa_switch
-+SUBDIRS = $(MAYBE_SECONDARY_TARGETS) simple_switch psa_switch booster_switch
++SUBDIRS = $(MAYBE_SECONDARY_TARGETS) booster_switch simple_switch psa_switch

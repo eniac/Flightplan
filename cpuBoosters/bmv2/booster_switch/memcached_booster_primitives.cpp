@@ -33,18 +33,19 @@ class memcached : public boosters::BoosterExtern<Data &> {
         u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
 
         auto forwarder = [&](char *payload, size_t len, int reverse) {
-            BMLOG_DEBUG("Reverse is {}, sending to port {}", reverse, reverse==0 ? egress_port : ingress_port);
-            output_new_packet(reverse == 0 ? egress_port : ingress_port, payload, len);
+            int new_ingress = reverse == 0 ? ingress_port : egress_port;
+            int new_egress = reverse == 0 ? egress_port : ingress_port;
+            generate_packet(payload, len, new_ingress, new_egress);
         };
 
         bool drop = call_memcached((char*)buff, buff_size, forwarder);
 
         if (drop) {
-            get_field("standard_metadata.egress_spec").set(511);
-            if (get_phv().has_field("intrinsic_metadata.mcast_grp")) {
-                get_field("intrinsic_metadata.mcast_grp").set(0);
-            }
+            forward_d.set(true);
+        } else {
+            forward_d.set(false);
         }
+
        /* for (auto hdr : hdrs) {
             boosters::printHeader(*hdr);
         }*/

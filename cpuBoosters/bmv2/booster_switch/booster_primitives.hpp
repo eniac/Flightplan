@@ -23,25 +23,35 @@ protected:
 
     SimpleSwitch *sswitch;
 
-    void enqueue_new_packet(const char *payload, size_t len) {
+    void generate_packet(const char *payload, size_t len,
+                        int ingress_port, int egress_port = -1) {
         assert(sswitch);
-        Packet &input = get_packet();
-        auto pkt = sswitch->duplicate_headers(input, payload, len);
-        sswitch->enqueue_booster_packet(input.get_packet_id(), std::move(pkt));
+        Packet &input = this->get_packet();
+        auto booster_pkt = sswitch->create_booster_packet(
+            &input, ingress_port, payload, len
+        );
+        if (egress_port != -1) {
+            booster_pkt->get_phv()->get_field("standard_metadata.egress_spec").set(egress_port);
+        }
+        if (input.last_node != nullptr) {
+            BMLOG_DEBUG("New booster packet insertion");
+            booster_pkt->next_node = input.last_node;
+        } else {
+            BMLOG_DEBUG("No specified entry point for booster packet");
+        }
+        sswitch->insert_booster_packet(std::move(booster_pkt));
+
     }
 
-    void recirculate_new_packet(const char *payload, size_t len) {
+    void output_packet(const char *payload, size_t len, int egress_port) {
         assert(sswitch);
-        Packet &input = get_packet();
-        auto pkt = sswitch->duplicate_headers(input, payload, len);
-        sswitch->recirculate_booster_packet(std::move(pkt));
+        auto booster_pkt = sswitch->create_booster_packet(
+            nullptr, 0, payload, len
+        );
+        booster_pkt->set_egress_port(egress_port);
+        sswitch->output_booster_packet(std::move(booster_pkt));
     }
 
-    void output_new_packet(int egress_port, const char *payload, size_t len) {
-        assert(sswitch);
-        auto pkt = sswitch->create_packet(egress_port, payload, len);
-        sswitch->output_booster_packet(std::move(pkt));
-    }
 public:
     BoosterExtern(SimpleSwitch *sswitch) : sswitch{sswitch} {}
 

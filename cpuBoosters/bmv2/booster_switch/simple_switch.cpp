@@ -66,6 +66,7 @@ REGISTER_HASH(bmv2_hash);
 extern int import_primitives();
 
 packet_id_t SimpleSwitch::packet_id = 0;
+copy_id_t SimpleSwitch::booster_id = 0;
 
 SimpleSwitch::SimpleSwitch(port_t max_port, bool enable_swap)
   : Switch(enable_swap),
@@ -616,60 +617,43 @@ SimpleSwitch::egress_thread(size_t worker_id) {
   }
 }
 
-void SimpleSwitch::enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> new_packet) {
-    BMLOG_DEBUG("Searching output buffer for id {}", id);
-    if (booster_output_buffer.find(id) == booster_output_buffer.end()) {
-       BMLOG_DEBUG("Creating new booster queue for id {}", id);
-        booster_output_buffer[id] =
-            std::unique_ptr<Queue<std::unique_ptr<Packet> > >(new Queue<std::unique_ptr<Packet> >);
+void
+SimpleSwitch::output_booster_packet(std::unique_ptr<Packet> packet) {
+  output_buffer.push_front(std::move(packet));
+}
+
+void
+SimpleSwitch::insert_booster_packet(std::unique_ptr<Packet> packet) {
+  priority_input_buffer.push(std::move(packet));
+}
+
+std::unique_ptr<Packet>
+SimpleSwitch::create_booster_packet(Packet *src, int ingress_port,
+                                    const char *payload, size_t len) {
+    BMLOG_DEBUG("Creating new booster packet");
+    packet_id_t pkt_id = 0;
+    if (src) {
+        pkt_id = src->get_packet_id();
     }
-    booster_output_buffer[id]->push_front(std::move(new_packet));
-    BMLOG_DEBUG("Enqueueing new booster packet for id {}", id);
-}
 
-void SimpleSwitch::output_booster_packet(std::unique_ptr<Packet> booster_pkt) {
-    BMLOG_DEBUG("Enqueuing packet directly to output");
-    output_buffer.push_front(std::move(booster_pkt));
-}
 
-void SimpleSwitch::recirculate_booster_packet(std::unique_ptr<Packet> booster_pkt) {
-    BMLOG_DEBUG("Recircuilating booster packet to input")
-    input_buffer.push_front(std::move(booster_pkt));
-}
-
-std::unique_ptr<Packet>
-SimpleSwitch::duplicate_headers(Packet &src, const char *payload, size_t len) {
-    PHV *src_phv = src.get_phv();
-    packet_id_t packet_id = src.get_packet_id();
-
-    int input_port = src_phv->get_field("standard_metadata.ingress_port").get_int();
-    int output_port = src_phv->get_field("standard_metadata.egress_spec").get_int();
-
-    BMLOG_DEBUG("Making new packet of len {}", len);
-    auto booster_pkt = new_packet_ptr(input_port, packet_id,
-                                      len,
-                                      bm::PacketBuffer(len + 512, (char *)payload, len));
-    BMLOG_DEBUG("Setting headers");
-    PHV *phv_copy = booster_pkt->get_phv();
-    phv_copy->copy_headers(*src_phv);
-    phv_copy->get_field("standard_metadata.packet_length").set(len);
-    booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
-    booster_pkt->set_egress_port(output_port);
-
-    return std::move(booster_pkt);
-}
-
-std::unique_ptr<Packet>
-SimpleSwitch::create_packet(int egress_port, const char *payload, size_t len) {
-    BMLOG_DEBUG("Creating output packet out of thin air");
-    auto booster_pkt = new_packet_ptr(0, 0, len,
-                                      bm::PacketBuffer(len + 512, (char *)payload, len));
-    BMLOG_DEBUG("Setting headers");
+    auto booster_pkt = new_packet_ptr(
+        ingress_port, pkt_id, len, bm::PacketBuffer(len + 512, (char *)payload, len)
+    );
     PHV *phv = booster_pkt->get_phv();
-    phv->get_field("standard_metadata.packet_length").set(len);
-    booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
-    booster_pkt->set_egress_port(egress_port);
+    if (src) {
+        phv->copy_headers(*src->get_phv());
+        for (auto it = phv->header_begin(); it != phv->header_end(); it++) {
+            if (!it->is_metadata()) {
+                it->reset();
+            }
+        }
+    }
 
+    phv->get_field("standard_metadata.packet_length").set(len);
+    booster_pkt->set_ingress_port(ingress_port);
+    booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
+    booster_pkt->set_copy_id(booster_id++);
     return std::move(booster_pkt);
 }
 

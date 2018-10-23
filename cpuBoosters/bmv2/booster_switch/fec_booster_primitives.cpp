@@ -119,6 +119,7 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
         Packet &packet = this->get_packet();
         PHV *phv = packet.get_phv();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
+        int ingress_port = packet.get_ingress_port();
 
         // Must save packet state so it can be restored after deparsing
         const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
@@ -145,7 +146,7 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
         // (egress_port is ignored here -- can be obtained from the template packet)
         auto forwarder = [&](const u_char *payload, size_t len, int egress_port) {
             (void)egress_port;
-            enqueue_new_packet((const char*)payload, len);
+            generate_packet((const char*)payload, len, ingress_port);
         };
         // Does the actual external work
         fec_encode_p4_packet((u_char *)buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
@@ -163,7 +164,7 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
 
     void timeout_handler () {
         auto forwarder = [&](const u_char *payload, size_t len, int egress_port) {
-            output_new_packet(egress_port, (const char *)payload, len);
+            output_packet((const char *)payload, len, egress_port);
         };
         fec_encode_timeout_handler(forwarder);
     }
@@ -179,8 +180,7 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
         Packet &packet = get_packet();
-        PHV *phv = packet.get_phv();
-        int ingress_port = phv->get_field("standard_metadata.ingress_port").get_int();
+        int ingress_port = packet.get_ingress_port();
 
         // Must save packet state so it can be restored after deparsing
         const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
@@ -193,7 +193,6 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
         deparser->deparse(&packet);
 
         char *buff = packet.data();
-        size_t buff_size = packet.get_data_size();
 
         // Deparses the fec header so it can be read in c++
         struct fec_header *fec = boosters::deparse_header<struct fec_header>(fec_h);
@@ -205,7 +204,7 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
 
         // Set up function that will forward the packets 
         auto forwarder = [&](const u_char *payload, size_t len) {
-            recirculate_new_packet((const char*)payload, len);
+            generate_packet((const char*)payload, len, ingress_port);
         };
 
         auto dropper = [&]() {
@@ -232,7 +231,7 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
             fec_h.mark_valid();
     }
 };
-class random_drop : public BoosterExtern<const Data &, const Data &> {
+class random_drop : public BoosterExtern<const Data &, const Data &, const Data &> {
     using BoosterExtern::BoosterExtern;
 
     std::vector<int> packet_idx = {0,0,0,0,0,0,0,0};

@@ -62,21 +62,23 @@ using bm::McSimplePreLAG;
 using bm::Field;
 using bm::FieldList;
 using bm::packet_id_t;
+using bm::copy_id_t;
 using bm::p4object_id_t;
 
 
 class SimpleSwitch : public Switch {
+ private:
+  static copy_id_t booster_id;
+  std::queue<std::unique_ptr<Packet>> priority_input_buffer;
+  void ingress_action(std::unique_ptr<Packet> packet, bool is_booster);
  public:
-  std::unique_ptr<Packet> duplicate_headers(Packet &src,
-                                            const char *payload,
-                                            size_t len);
-  std::unique_ptr<Packet> create_packet(int egress_port,
-                                        const char *payload,
-                                        size_t len);
+  void output_booster_packet(std::unique_ptr<Packet> packet);
+  void insert_booster_packet(std::unique_ptr<Packet> packet);
 
-  void enqueue_booster_packet(packet_id_t id, std::unique_ptr<Packet> booster_pkt);
-  void output_booster_packet(std::unique_ptr<Packet> booster_pkt);
-  void recirculate_booster_packet(std::unique_ptr<Packet> booster_pkt);
+  std::unique_ptr<Packet> create_booster_packet(Packet *src,
+                                                int ingress_port,
+                                                const char *payload,
+                                                size_t len);
 
   using mirror_id_t = int;
 
