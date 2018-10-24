@@ -49,5 +49,7 @@ $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 The first tests just the FEC functionality. A representative input file is
 located in `bmv2/pcaps/tcp_100.pcap`
 
-The second tests FEC + memcached functionality. A good input files are:
-`bmv2/pcaps/Memcached_in.pcap` and `bmv2/pcaps/Memcached_expected.pcap`
+The second tests FEC + memcached functionality. Good input files are:
+- `bmv2/pcaps/Memcached_in.pcap` and `bmv2/pcaps/Memcached_expected.pcap`
+- `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap` 
+- `bmv2/pcaps/Memcached_in_shortest.pcap` and `bmv2/pcaps/Memcached_expected_shortest.pcap`
