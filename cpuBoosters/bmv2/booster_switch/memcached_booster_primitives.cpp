@@ -15,7 +15,7 @@ class memcached : public boosters::BoosterExtern<Data &> {
     using BoosterExtern::BoosterExtern;
 
     void operator ()(Data &forward_d) {
-        if (is_reentry()) {
+        if (is_generated()) {
             forward_d.set(true);
             return;
         }

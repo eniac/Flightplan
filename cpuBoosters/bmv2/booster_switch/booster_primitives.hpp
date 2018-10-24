@@ -46,7 +46,7 @@ protected:
         sswitch->output_booster_packet(std::move(booster_pkt));
     }
 
-    bool is_reentry() {
+    bool is_generated() {
         return this->pkt->entry_node == this->pkt->current_node;
     }
 

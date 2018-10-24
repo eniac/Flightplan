@@ -116,7 +116,7 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
     using BoosterExtern::BoosterExtern;
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
-        if (is_reentry()) {
+        if (is_generated()) {
             return;
         }
         Packet &packet = this->get_packet();
@@ -182,7 +182,7 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
     using BoosterExtern::BoosterExtern;
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
-        if (is_reentry()) {
+        if (is_generated()) {
             return;
         }
         Packet &packet = get_packet();
