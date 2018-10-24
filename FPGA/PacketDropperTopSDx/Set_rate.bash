@@ -11,6 +11,12 @@ then
   exit 1
 fi
 
+if [ -z "$DISPLAY" ]
+then
+  echo "Despite running SDx in batch mode, you have to set the DISPLAY environment variable."
+  exit 1
+fi
+
 mkdir -p Sources
 sed "s/RATE/$1/" Dropper_init_template.c > Sources/Dropper_init.c
 source $SDSOC_ROOT/settings64.sh
