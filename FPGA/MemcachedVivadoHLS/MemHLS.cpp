@@ -1,7 +1,14 @@
 #include "MemHLS.h"
 #include <iostream>
+#define STORE_FROMSERVER 
 
-
+#ifdef STORE_FROMSERVER
+#define IS_PKTS_NEED_RESP Metadata.pkt == get_pkt 
+#define PKTS_ONLY_FORWARD Metadata.pkt == get_miss || Metadata.pkt == get_collision || Metadata.pkt == value_pkt || Metadata.pkt == set_pkt
+#else
+#define IS_PKTS_NEED_RESP Metadata.pkt == set_pkt || Metadata.pkt == get_pkt
+#define PKTS_ONLY_FORWARD Metadata.pkt == get_miss || Metadata.pkt == get_collision || Metadata.pkt == value_pkt
+#endif 
 
 static Cache Memory[MAX_MEMORY_SIZE];
 static uint16_t Packet_num;
@@ -248,17 +255,18 @@ void Parse_CMD(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 {
 	 MemcachedPkt mempkt = Mempkt.read();
 	 if (mempkt)
-	 {	 bool pktcomplete;
-		 pktcomplete = false;
-		 enum Parser_State State;
-		 State = Consumption;
-		 int removelength;
-		 uint8_t remainlen;
-		 Part_Word tempin, tempout;
-		 metadata Metadata;
-		 Part_Word remainword;
-		 Part_Word EndWord = {0,0};
-		 Metadata = Metain.read();
+	 {	 
+		bool pktcomplete;
+		pktcomplete = false;
+		enum Parser_State State;
+		State = Consumption;
+		int removelength;
+		uint8_t remainlen;
+		Part_Word tempin, tempout;
+		metadata Metadata;
+		Part_Word remainword;
+		Part_Word EndWord = {0,0};
+		Metadata = Metain.read();
 		tempin = Data_in.read();
 		switch (tempin.Data.range(63,32))
 		{
@@ -293,55 +301,71 @@ void Parse_CMD(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 			case (0x53544f52):
 			{
 				 mempkt = false;
-				 removelength = 8;
 				 break;
+			}
+			case (0x4e4f5420):
+			{
+				mempkt = false;
+				break;
+			}
+			default:
+			{
+				mempkt = false;
+				break;
 			}
 
 
 		}
 		std::cout << Metadata.pkt << std::endl;
-		if (mempkt){
-			State = Alignment;
-			remainlen = BYTES_PER_WORD - removelength;
-			remainword.Data = 0;
-			remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
-		}
-		if (mempkt){
-		 do
-		 {
-	#pragma HLS pipeline II=1
-	#pragma HLS loop_tripcount min=8 max=190
-
-			 tempin = Data_in.read();
-			 pktcomplete = tempin.End;
-			 {
-				 if (tempin.len > removelength)
-
+		if (mempkt)
+		{
+			 State = Alignment;
+			 remainlen = BYTES_PER_WORD - removelength;
+		    	 remainword.Data = 0;
+			 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
+			 do
+		 	 {
+		#pragma HLS pipeline II=1
+		#pragma HLS loop_tripcount min=8 max=190
+	
+				 tempin = Data_in.read();
+				 pktcomplete = tempin.End;
+				 {
+					 if (tempin.len > removelength)
 					 {
 						 tempout.len = BYTES_PER_WORD;
 						 tempout.End = false;
 					 }
-				 else if (tempin.len == removelength)
+					 else if (tempin.len == removelength)
 					 {
 						 tempout.len = BYTES_PER_WORD;
 						 tempout.End = true;
 					 }
-				 else
+					 else
 					 {
 						 tempout.len = BYTES_PER_WORD -removelength + tempin.len;
 						 tempout.End = true;
 					 }
-				 tempout.Data = remainword.Data;
-				 tempout.Data(63 - 8 * remainlen, 0) = tempin.Data.range(63, 64 - 8 * removelength);
-				 remainword.len = tempin.len - removelength;
-				 remainword.End = true;
-				 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
-				 Data_out.write(tempout);
-			 }
-		 }while(!pktcomplete);
-		 if (tempin.len > removelength)
-			 Data_out.write(remainword);
-	 }
+				 	tempout.Data = remainword.Data;
+					 tempout.Data(63 - 8 * remainlen, 0) = tempin.Data.range(63, 64 - 8 * removelength);
+					 remainword.len = tempin.len - removelength;
+					 remainword.End = true;
+					 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
+					 Data_out.write(tempout);
+				 }
+			  }while(!pktcomplete);
+			 if (tempin.len > removelength)
+				 Data_out.write(remainword);
+	 	}
+		else
+		{
+			pktcomplete = tempin.End;
+			while(!pktcomplete)
+			{
+				tempin = Data_in.read();
+				pktcomplete = tempin.End;
+			}
+		}	
   }
 	Mempkt_out.write(mempkt);
 }
@@ -792,8 +816,8 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 		packet_interface output;
 		Part_Word remainword;
 		uint16_t totlen = 15;
-		metadata Metadata = metain.read();
-		if (Metadata.pkt != get_miss && Metadata.pkt != get_collision)
+		metadata Metadata = metain.read(); 
+		if (IS_PKTS_NEED_RESP) 
 		{
 			output.Start_of_frame = 1;
 			output.End_of_frame = 0;
@@ -810,7 +834,7 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 			output.Data.range(47,0) = Metadata.MemHdr.range(63, 16);
 			Packet_out.write(output);
 			output.Data.range(63, 48) = Metadata.MemHdr.range(15, 0);
-			if (Metadata.pkt == set_pkt || Metadata.pkt == value_pkt)
+			if (Metadata.pkt == set_pkt)
 			{
 				output.Data.range(47, 0) = 0x53544F524544;
 				Packet_out.write(output);
@@ -971,6 +995,10 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt
 			}
 			while(!keycomplete);
 		}
+		else if (Metadata.pkt == value_pkt)
+		{	
+			std::cout << "Value Pkt" << std::endl;
+		}
 	metaout.write(Metadata);
 	}
 }
@@ -1030,24 +1058,7 @@ void Output_packets(//input_tuples Input_tuple,
 			tuple_out.Hdr.Udp.sport = tuple_in.Hdr.Udp.dport;
 			Output_tuples.write(tuple_out);
 		}
-		else if (Metadata.pkt == value_pkt)
-		{
-
-			bool Forward_Pkt_End = false;
-			do
-			{
-		#pragma HLS pipeline II=1
-				input = Packet_in2.read();
-				Forward_Pkt_End = input.End_of_frame;
-				Packet_out.write(input);
-				if (!End)
-				{
-					temp = Packet_in1.read();
-					End = temp.End_of_frame;
-				}
-			}while(!Forward_Pkt_End);
-			Output_tuples.write(tuple_forward);
-		}
+		#ifndef STORE_FROMSERVER
 		else if (Metadata.pkt == set_pkt)
 		{
 			do
@@ -1078,7 +1089,8 @@ void Output_packets(//input_tuples Input_tuple,
 			}while(!End);
 			Output_tuples.write(tuple_forward);
 		}
-		else if (Metadata.pkt == get_miss || Metadata.pkt == get_collision)
+		#endif
+		else if (PKTS_ONLY_FORWARD)
 		{
 			do
 			{
