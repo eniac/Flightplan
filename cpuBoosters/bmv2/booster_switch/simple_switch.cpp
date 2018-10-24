@@ -651,6 +651,7 @@ SimpleSwitch::create_booster_packet(Packet *src, int ingress_port,
 
     phv->get_field("standard_metadata.packet_length").set(len);
     booster_pkt->set_ingress_port(ingress_port);
+    phv->get_field("standard_metadata.ingress_port").set(ingress_port);
     booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
     booster_pkt->set_copy_id(booster_id++);
     return std::move(booster_pkt);
