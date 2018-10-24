@@ -116,6 +116,9 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
     using BoosterExtern::BoosterExtern;
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
+        if (is_reentry()) {
+            return;
+        }
         Packet &packet = this->get_packet();
         PHV *phv = packet.get_phv();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
@@ -179,6 +182,9 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
     using BoosterExtern::BoosterExtern;
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
+        if (is_reentry()) {
+            return;
+        }
         Packet &packet = get_packet();
         int ingress_port = packet.get_ingress_port();
 

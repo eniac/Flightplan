@@ -15,8 +15,10 @@ class memcached : public boosters::BoosterExtern<Data &> {
     using BoosterExtern::BoosterExtern;
 
     void operator ()(Data &forward_d) {
-        // Unused...
-        (void)forward_d;
+        if (is_reentry()) {
+            forward_d.set(true);
+            return;
+        }
 
         Packet &packet = this->get_packet();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
@@ -42,9 +44,9 @@ class memcached : public boosters::BoosterExtern<Data &> {
         packet.restore_buffer_state(packet_in_state);
 
         if (drop) {
-            forward_d.set(true);
-        } else {
             forward_d.set(false);
+        } else {
+            forward_d.set(true);
         }
        /* for (auto hdr : hdrs) {
             boosters::printHeader(*hdr);
