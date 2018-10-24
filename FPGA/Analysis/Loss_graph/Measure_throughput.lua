@@ -29,13 +29,11 @@ local function Test_rate(Rate)
   pktgen.set(TX_port, "rate", Rate);
   pktgen.start(TX_port);
 
-  while pktgen.portStats(RX_port, "rate")[RX_port]["pkts_rx"] == 0 do
+  while pktgen.isSending(TX_port) == "y" or
+        pktgen.portStats(RX_port, "port")[RX_port]["ipackets"] == 0 do
     pktgen.delay(10);
   end
-
-  while pktgen.portStats(RX_port, "rate")[RX_port]["pkts_rx"] > 0 do
-    pktgen.delay(10);
-  end
+  pktgen.delay(1000);
 
   RX_count = pktgen.portStats(RX_port, "port")[RX_port]["ipackets"];
   printf("Received: %i packets\n", RX_count);
@@ -50,25 +48,6 @@ Rate = 100;
 while not Test_rate(Rate) do
   Rate = Rate - 1;
 end
-
---if Test_rate(100) then
---  Rate = 100;
---else
---  Low = 0;
---  High = 100;
---  while true do
---    Rate = math.floor((High + Low) / 2);
---    if Rate == Low then
---      break;
---    end
---
---    if Test_rate(Rate) then
---      Low = Rate;
---    else
---      High = Rate;
---    end
---  end
---end
 
 printf("Best rate: %i\n", Rate);
 

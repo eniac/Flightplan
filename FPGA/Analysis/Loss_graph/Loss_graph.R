@@ -1,15 +1,16 @@
 #!/usr/bin/Rscript
-Throughputs = c()
-X = c()
-Y = c()
-for (i in 1:16)
+Data = read.csv('Loss.csv', header = FALSE)
+Data = Data[Data[, 1] == 79, ]
+Matrix = t(data.matrix(Data[, 3:ncol(Data)]))
+X = unique(Data[, 2])
+colnames(Matrix) = X
+Range = range(Matrix)
+if (min(Matrix) == 0)
 {
-  Data = read.csv(paste0('Loss_', i, '.csv'), header = FALSE)
-  Throughputs = c(Throughputs, Data[1, 1])
-  Data = Data[-1, ]
-  X = c(X, Data[, 1])
-  Y = c(Y, Data[, 2])
+  Range[1] = 1e-6
 }
+
+Matrix
 
 Predictions = c()
 for (p in unique(X))
@@ -33,9 +34,9 @@ for (p in unique(X))
 }
 
 pdf(file = "Loss_graph.pdf", width = 6 + 2 / 3, height = 4.2)
-boxplot(Y ~ X, at = unique(X), log = "xy", xlim = range(X), ylim = range(Y))
+boxplot(Matrix, at = X, log = "xy", xlim = range(X), ylim = Range)
 par(new = TRUE)
-plot(unique(X), Predictions, log = "xy", type = "o", xlim = range(X), ylim = range(Y),
+plot(unique(X), Predictions, log = "xy", type = "o", xlim = range(X), ylim = Range,
      axes = FALSE, xlab = "Link loss rate (packet/s)", ylab = "Observed loss rate (packet/s)",
      col = "red")
 

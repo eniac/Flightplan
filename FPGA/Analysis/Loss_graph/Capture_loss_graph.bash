@@ -12,7 +12,9 @@ ENCODER_TARGET=jsn-JTAG-SMT2NC-210308A47676
 DROPPER_TARGET=jsn-JTAG-SMT2NC-210308A5EE07
 DECODER_TARGET=jsn-JTAG-SMT2NC-210308A5F0D3
 
+SEND_RATES="50 max"
 LOSS_RATES="0.001 0.003 0.01 0.03 0.1"
+REPETITIONS=20
 
 
 Run_command()
@@ -56,35 +58,46 @@ echo
 Run_command ${DROPPER_SDX_DIR} ./Set_rate.bash 0 ${DROPPER_TARGET}
 
 echo
-echo "Measuring throughput..."
-echo "======================"
+echo "Measuring maximum transmission rate without loss..."
+echo "==================================================="
 echo
 cd ${DPDK_DIR}
 ./Run_script.bash ${SCRIPT_DIR}/Measure_throughput.lua
-RATE=$(cat /tmp/Output.txt)
+MAX_RATE=$(cat /tmp/Output.txt)
 sudo rm /tmp/Output.txt
 
-echo "${RATE}," > ${SCRIPT_DIR}/Loss.csv
-
-sed "s/RATE/${RATE}/" ${SCRIPT_DIR}/Measure_loss_template.lua > ${SCRIPT_DIR}/Measure_loss.lua
-
-for LOSS_RATE in ${LOSS_RATES}
+rm -f ${SCRIPT_DIR}/Loss.csv
+for SEND_RATE in ${SEND_RATES}
 do
-  echo -n "${LOSS_RATE}, " >> ${SCRIPT_DIR}/Loss.csv
+  if [ "${SEND_RATE}" == "max" ]
+  then
+    SEND_RATE=${MAX_RATE}
+  fi
 
   echo
-  echo "Programming drop rate to ${LOSS_RATE}..."
+  echo "Setting transmission rate to ${SEND_RATE}..."
   echo "========================================"
   echo
-  Run_command ${DROPPER_SDX_DIR} ./Set_rate.bash ${LOSS_RATE} ${DROPPER_TARGET}
+  sed -e "s/RATE/${SEND_RATE}/g" -e "s/REPETITIONS/${REPETITIONS}/g" ${SCRIPT_DIR}/Measure_loss_template.lua > ${SCRIPT_DIR}/Measure_loss.lua
 
-  echo
-  echo "Measuring loss..."
-  echo "================="
-  echo
-  cd ${DPDK_DIR}
-  ./Run_script.bash ${SCRIPT_DIR}/Measure_loss.lua | tee ${TEMP_FILE}
-  echo $(cat /tmp/Output.txt) >> ${SCRIPT_DIR}/Loss.csv
-  sudo rm /tmp/Output.txt
+  for LOSS_RATE in ${LOSS_RATES}
+  do
+    echo
+    echo "Programming drop rate to ${LOSS_RATE}..."
+    echo "========================================"
+    echo
+    Run_command ${DROPPER_SDX_DIR} ./Set_rate.bash ${LOSS_RATE} ${DROPPER_TARGET}
+
+    echo
+    echo "Measuring loss..."
+    echo "================="
+    echo
+    cd ${DPDK_DIR}
+    ./Run_script.bash ${SCRIPT_DIR}/Measure_loss.lua
+    RESULT=$(cat /tmp/Output.txt)
+    sudo rm /tmp/Output.txt
+
+    echo "${SEND_RATE}, ${LOSS_RATE}${RESULT}" >> ${SCRIPT_DIR}/Loss.csv
+  done
 done
 
