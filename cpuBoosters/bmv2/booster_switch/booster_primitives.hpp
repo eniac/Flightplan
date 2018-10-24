@@ -33,14 +33,8 @@ protected:
         if (egress_port != -1) {
             booster_pkt->get_phv()->get_field("standard_metadata.egress_spec").set(egress_port);
         }
-        if (input.last_node != nullptr) {
-            BMLOG_DEBUG("New booster packet insertion");
-            booster_pkt->next_node = input.last_node;
-        } else {
-            BMLOG_DEBUG("No specified entry point for booster packet");
-        }
+        booster_pkt->entry_node = input.current_node;
         sswitch->insert_booster_packet(std::move(booster_pkt));
-
     }
 
     void output_packet(const char *payload, size_t len, int egress_port) {
@@ -50,6 +44,10 @@ protected:
         );
         booster_pkt->set_egress_port(egress_port);
         sswitch->output_booster_packet(std::move(booster_pkt));
+    }
+
+    bool is_reentry() {
+        return this->pkt->entry_node == this->pkt->current_node;
     }
 
 public:

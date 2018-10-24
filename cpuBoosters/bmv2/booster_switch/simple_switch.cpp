@@ -352,8 +352,8 @@ SimpleSwitch::ingress_action(std::unique_ptr<Packet> packet, bool is_booster) {
   const Packet::buffer_state_t packet_in_state = packet->save_buffer_state();
   parser->parse(packet.get());
 
-  if (!(is_booster && packet->next_node == nullptr)) {
-    ingress_mau->apply(packet.get(), packet->next_node);
+  if (!(is_booster && packet->entry_node == nullptr)) {
+    ingress_mau->apply(packet.get(), packet->entry_node);
   }
 
   packet->reset_exit();
@@ -635,7 +635,6 @@ SimpleSwitch::create_booster_packet(Packet *src, int ingress_port,
     if (src) {
         pkt_id = src->get_packet_id();
     }
-
 
     auto booster_pkt = new_packet_ptr(
         ingress_port, pkt_id, len, bm::PacketBuffer(len + 512, (char *)payload, len)
