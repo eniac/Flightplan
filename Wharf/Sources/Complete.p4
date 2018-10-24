@@ -52,16 +52,19 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         // TODO add code
         Forwarder.apply(meta);
 
-        // If Memcached REQ/RES then pass through the cache.
         bit<1> forward = 0;
+        // If Memcached REQ/RES then pass through the cache.
         if (hdr.udp.isValid()) {
             if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
                 memcached(forward); // FIXME check "forward" output value.
+                if (forward == 0) {
+                    drop();
+                    return;
+                }
             }
         }
 
         bit<1> faulty = 1;
-
 
         // If heading out on a multiplexed link, then header compress.
         // TODO add code

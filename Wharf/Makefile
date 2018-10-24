@@ -21,6 +21,8 @@ TARGET=TARGET_BMV2
 
 USER=$(shell logname)
 
+EXTERNS=fec_encode fec_decode memcached
+
 All: bmv2 Sample
 
 Sample: $(BLD_BMV2)/Sample.json
@@ -57,6 +59,7 @@ run-%: $(BLD_BMV2)/%.json
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BLD_BMV2)
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET)
 	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@
+	python split_extern_event.py $@ $@ ${EXTERNS}
 
 clean:
 	rm -fr $(BLD)
