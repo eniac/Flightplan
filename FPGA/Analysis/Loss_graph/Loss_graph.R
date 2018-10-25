@@ -1,16 +1,6 @@
 #!/usr/bin/Rscript
 Data = read.csv('Loss.csv', header = FALSE)
-Data = Data[Data[, 1] == 79, ]
-Matrix = t(data.matrix(Data[, 3:ncol(Data)]))
 X = unique(Data[, 2])
-colnames(Matrix) = X
-Range = range(Matrix)
-if (min(Matrix) == 0)
-{
-  Range[1] = 1e-6
-}
-
-Matrix
 
 Predictions = c()
 for (p in unique(X))
@@ -33,10 +23,21 @@ for (p in unique(X))
   Predictions = c(Predictions, 1 - Recovery)
 }
 
-pdf(file = "Loss_graph.pdf", width = 6 + 2 / 3, height = 4.2)
-boxplot(Matrix, at = X, log = "xy", xlim = range(X), ylim = Range)
-par(new = TRUE)
-plot(unique(X), Predictions, log = "xy", type = "o", xlim = range(X), ylim = Range,
-     axes = FALSE, xlab = "Link loss rate (packet/s)", ylab = "Observed loss rate (packet/s)",
-     col = "red")
+for (Rate in unique(Data[, 1]))
+{
+  Selection = Data[Data[, 1] == Rate, ]
+  Matrix = t(data.matrix(Selection[, 3:ncol(Selection)]))
+  colnames(Matrix) = X
+  Range = range(Matrix)
+  if (min(Matrix) == 0)
+  {
+    Range[1] = 1e-6
+  }
 
+  pdf(file = paste0("Loss_graph_rate_", Rate, ".pdf"), width = 6 + 2 / 3, height = 4.2)
+  boxplot(Matrix, at = X, log = "xy", xlim = range(X), ylim = Range)
+  par(new = TRUE)
+  plot(unique(X), Predictions, log = "xy", type = "o", xlim = range(X), ylim = Range,
+       axes = FALSE, xlab = "Link loss rate (packet/s)", ylab = "Observed loss rate (packet/s)",
+       col = "red")
+}
