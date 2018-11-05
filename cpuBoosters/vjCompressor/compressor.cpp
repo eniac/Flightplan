@@ -68,10 +68,23 @@ struct compressedHeader_t {
   uint16_t urg;
 };
 
-struct compressorInput { 
-  uint16_t pktLen;
-  const ip* ipHeader;
-  const tcphdr* tcpHeader;
+struct compressorTuple_t { 
+  uint16_t len;
+  uint16_t idx;
+
+  // LEFT OFF HERE. Define specific IP and TCP headers.
+  // IP headers.
+
+  // TCP headers.
+  uint8_t tcpflags;
+  uint16_t totalLen;
+  uint16_t identification;
+  uint16_t window;
+  uint16_t checksum;
+  uint16_t urg;
+
+  ip ipHeader;
+  tcphdr tcpHeader;
 };
 
 
@@ -92,7 +105,7 @@ void printHeaderSizes(){
 =            Ported functions.            =
 =========================================*/
 
-void compressFunction(compressorInput pkt);
+void compressFunction(compressorTuple_t pkt);
 
 /*=====  End of Ported functions.  ======*/
 
@@ -163,11 +176,11 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
 
     // Compress -- inject modified packet buffer.
     if (doCompress){
-      compressorInput ci;
-      ci.pktLen = pkthdr -> len;
-      ci.ipHeader = ipHeader;
-      ci.tcpHeader = tcpHeader;
-      compressFunction(ci);
+      compressorTuple_t ct;
+      ct.len = pkthdr -> len;
+      memcpy(&ct.ipHeader, ipHeader, sizeof(ipHeader));
+      memcpy(&ct.tcpHeader, tcpHeader, sizeof(tcpHeader));
+      compressFunction(ct);
     }
     // Don't compress -- just inject packet unchanged.
     else {
@@ -178,15 +191,39 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
 }
 
 
+/*=========================================
+=            Compressor State.            =
+=========================================*/
+
+#define CACHE_SZ 1024
+compressorTuple_t compressorCache[CACHE_SZ];
+
+/*=====  End of Compressor State.  ======*/
+
+void calculateIdx(compressorTuple_t *ct){
+  uint16_t idx = (uint32_t)(ct -> ipHeader.ip_src.s_addr) % CACHE_SZ;
+}
+
+void compressFunction(compressorTuple_t ct) {
+    bool isHit;
+  if (ct.len > 100) {
+    // TODO: replace this with a better function that uses full flow key.
+    // 1. Calculate index.
+    ct.idx = (uint32_t)(ct.ipHeader.ip_src.s_addr) % CACHE_SZ;
+    // 2. Check if hit.
+
+    // 2.a. If not hit, save this packet's header to the store and send the packet unmodified.
+    if (isHit){
+
+    }
+    // 2.b. If its a hit, update the store and modify the packet header before tx.
+    else {
+
+    }
 
 
-void compressFunction(compressorInput pkt) {
+  }
 
-  return;
-  // if (pkt.len > 100) {
-  //   return;
-
-  // }
 }
 
 void print_hex_memory(void *mem, int len) {
