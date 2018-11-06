@@ -7,11 +7,10 @@ import binascii
 import dpkt
 import subprocess
 
-default_pktTmpFile = 'emptyPackets.pcap'
-pcapF1 = "oneFlow.pcap.compressor.in.pcap"
-pcapF2 = "oneFlow.pcap.compressor.out.pcap"
+# pcapF1 = "oneFlow.pcap.compressor.in.pcap"
+# pcapF2 = "oneFlow.pcap.compressor.out.pcap"
 
-def main():
+def main(pcapF1, pcapF2):
 	comparePcaps(pcapF1, pcapF2)
 
 def comparePcaps(pcapF1, pcapF2):
@@ -24,12 +23,17 @@ def comparePcaps(pcapF1, pcapF2):
 	for ts, buf in pcap2:
 		pcap2Bufs.append(buf)
 	
-	print("comparing %s pcaps"%len(pcap1Bufs))
+	print("comparing %s packets..."%len(pcap1Bufs))
+	success = True
 	for i in range(len(pcap1Bufs)):
 		if pcap1Bufs[i] != pcap2Bufs[i]:
-			print("packets %s don't match")
-	print("done.")
+			print("\tpacket #%s doesn't match")
+			success = False
+	if (success):
+		print ("PASS: all packets in %s and %s are identical"%(pcapF1, pcapF2))
+	else:
+		print ("FAIL: packets in %s and %s are NOT identical"%(pcapF1, pcapF2))
 
 
 if __name__ == '__main__':
-	main()
+	main(sys.argv[1], sys.argv[2])

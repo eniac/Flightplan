@@ -1,5 +1,5 @@
 # run the empty booster.
-BOOSTER_NAME=compressor
+BOOSTER_NAME=compressorAndDecompressor
 SOURCE_PCAP=$1
 INPUT_PCAP=$1.$BOOSTER_NAME.in.pcap
 OUTPUT_PCAP=$1.$BOOSTER_NAME.out.pcap
@@ -43,8 +43,11 @@ echo "starting tcpreplay..."
 tcpreplay --preload-pcap --quiet -p 1000 -i networkVeth $SOURCE_PCAP
 sleep 1
 
-# # cleanup
+# cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
 killall tcpdump
 killall $BOOSTER_NAME
 ip link delete networkVeth
+
+# compare input and output pcaps.
+python comparePcaps.py $INPUT_PCAP $OUTPUT_PCAP

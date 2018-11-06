@@ -95,22 +95,18 @@ void printHeaderSizes(){
 =            Ported functions.            =
 =========================================*/
 
-bool compress(u_char * compressedPktBuf, uint32_t *compressedPktLen,
-  uint32_t pktLen, 
-  const struct ether_header* ethernetHeader, 
-  const struct ipHeader_t* ipHeader,
-  const struct tcpHeader_t* tcpHeader,
-  char * payload, uint32_t payloadLen);
+// bool compress(u_char * compressedPktBuf, uint32_t *compressedPktLen,
+//   uint32_t pktLen, 
+//   const struct ether_header* ethernetHeader, 
+//   const struct ipHeader_t* ipHeader,
+//   const struct tcpHeader_t* tcpHeader,
+//   char * payload, uint32_t payloadLen);
 
-bool checkCache(uint32_t idx,
-  const struct ipHeader_t* ipHeader,
-  const struct tcpHeader_t* tcpHeader);
-
-
+void compress(const u_char*packet, uint32_t pktLen);
+bool checkCache(compressorTuple_t curPktTup);
 void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPktTup);
 
-void decompressHandler(const u_char*packet, uint32_t pktLen);
-
+void decompress(const u_char*packet, uint32_t pktLen);
 uint32_t buildDecompressedHeaders(compressorTuple_t *curPktTup, 
   const struct compressedHeader_t * cHeader);
 
