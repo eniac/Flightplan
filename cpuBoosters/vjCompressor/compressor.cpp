@@ -8,10 +8,10 @@
 #include <unistd.h>
 #include <pcap.h>
 #include <net/ethernet.h>
-#include <netinet/ip.h>
 #include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
+// #include <netinet/ip.h>
+// #include <netinet/tcp.h>
+// #include <netinet/udp.h>
 #include <arpa/inet.h>
 #include <linux/if_packet.h>
 #include <net/if.h>
@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <list>
 
+#include "compressor.h"
 
 using namespace std;
 
@@ -41,73 +42,7 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
 void print_hex_memory(void *mem, int len);
 
 
-/*================================
-=            Headers.            =
-================================*/
 
-// struct compressionControlHeader_t {
-//   uint16_t slotId     : 10;
-//   uint16_t __pad      : 4;
-//   uint16_t newFlow    : 1;
-//   uint16_t seqChange  : 1;
-// };
-
-struct compressedHeader_t {
-  // Compressor control fields. 
-  uint16_t slotId     : 16;
-  uint8_t newFlow    : 1;
-  uint8_t seqChange  : 1;
-  uint8_t ackChange  : 1;
-  uint8_t __pad      : 5;
-  // Packet headers to always include.
-  uint8_t tcpflags;
-  uint16_t totalLen;
-  uint16_t identification;
-  uint16_t window;
-  uint16_t checksum;
-  uint16_t urg;
-};
-
-struct compressorTuple_t { 
-  uint16_t len;
-  uint16_t idx;
-
-  // LEFT OFF HERE. Define specific IP and TCP headers.
-  // IP headers.
-
-  // TCP headers.
-  uint8_t tcpflags;
-  uint16_t totalLen;
-  uint16_t identification;
-  uint16_t window;
-  uint16_t checksum;
-  uint16_t urg;
-
-  ip ipHeader;
-  tcphdr tcpHeader;
-};
-
-
-// // Packet headers to include only if they've changed.
-// struct varHeader_t {
-//   uint32_t seqNum;
-//   uint32_t ackNum;
-// }
-
-
-void printHeaderSizes(){
-  printf("size compressionControlHeader_t: %li bytes\n",sizeof(compressedHeader_t));
-
-}
-/*=====  End of Headers.  ======*/
-
-/*=========================================
-=            Ported functions.            =
-=========================================*/
-
-void compressFunction(compressorTuple_t pkt);
-
-/*=====  End of Ported functions.  ======*/
 
 
 
@@ -149,8 +84,8 @@ int main(int argc, char *argv[]){
 
 void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
     const struct ether_header* ethernetHeader;
-    const struct ip* ipHeader;
-    const struct tcphdr* tcpHeader;
+    const struct ipHeader_t* ipHeader;
+    const struct tcpHeader_t* tcpHeader;
     const struct udphdr* udpHeader;
     char * payload;
     uint32_t payloadLen;
@@ -159,30 +94,30 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
     // Parse eth, ip, and tcp/udp headers.
     ethernetHeader = (struct ether_header*)packet;
     if (ntohs(ethernetHeader->ether_type) == ETHERTYPE_IP) {
-        ipHeader = (struct ip*)(packet + sizeof(struct ether_header));
-      if (ipHeader->ip_p == 6){
-        tcpHeader = (tcphdr*)((u_char*)ipHeader + sizeof(*ipHeader));
+        ipHeader = (struct ipHeader_t*)(packet + sizeof(struct ether_header));
+      if (ipHeader->proto == 6){
+        tcpHeader = (tcpHeader_t*)((u_char*)ipHeader + sizeof(*ipHeader));
         payload = (char *)tcpHeader + sizeof(*tcpHeader);
         payloadLen = (pkthdr -> len) - sizeof(*ipHeader) - sizeof(*tcpHeader);
         doCompress = true;
       }
-      else if (ipHeader->ip_p == 17){
-        udpHeader = (udphdr*)((u_char*)ipHeader + sizeof(*ipHeader));
-        payload = (char *)udpHeader + sizeof(*udpHeader);
-        payloadLen = (pkthdr -> len) - sizeof(*ipHeader) - sizeof(*udpHeader);
-        // doCompress = true;
-      }
     }
 
-    // Compress -- inject modified packet buffer.
+    // Attempt compression.
     if (doCompress){
-      compressorTuple_t ct;
-      ct.len = pkthdr -> len;
-      memcpy(&ct.ipHeader, ipHeader, sizeof(ipHeader));
-      memcpy(&ct.tcpHeader, tcpHeader, sizeof(tcpHeader));
-      compressFunction(ct);
+      char compressedPktBuf[pkthdr -> len];
+      uint32_t compressedPktLen = 0;
+      if (compress(compressedPktBuf, &compressedPktLen, pkthdr -> len, ethernetHeader, ipHeader, tcpHeader, payload, payloadLen)){
+        // Compression, send compressed buffer.
+        pcap_inject(pcap,compressedPktBuf,compressedPktLen);
+      }
+      else {
+        // No compression, send unmodified packet.
+        pcap_inject(pcap,packet,pkthdr -> len);
+
+      }
     }
-    // Don't compress -- just inject packet unchanged.
+    // Don't attempt compression.
     else {
       pcap_inject(pcap,packet,pkthdr -> len);
       return;
@@ -198,32 +133,127 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
 #define CACHE_SZ 1024
 compressorTuple_t compressorCache[CACHE_SZ];
 
+
 /*=====  End of Compressor State.  ======*/
 
-void calculateIdx(compressorTuple_t *ct){
-  uint16_t idx = (uint32_t)(ct -> ipHeader.ip_src.s_addr) % CACHE_SZ;
+/**
+ *
+ * Check the cache for the new packet's flow.
+ *
+ */
+bool checkCache(compressorTuple_t curPktTup){  
+  compressorTuple_t lastPkt = compressorCache[curPktTup.idx];
+  // If all keys are equal, return true.
+  if(lastPkt.ipHeader.saddr == curPktTup.ipHeader.saddr){
+  if(lastPkt.ipHeader.daddr == curPktTup.ipHeader.daddr){
+  if(lastPkt.tcpHeader.source == curPktTup.tcpHeader.source){
+  if(lastPkt.tcpHeader.dest == curPktTup.tcpHeader.dest){
+    return true;
+  }
+  }
+  }
+  }
+  return false;
 }
 
-void compressFunction(compressorTuple_t ct) {
-    bool isHit;
-  if (ct.len > 100) {
-    // TODO: replace this with a better function that uses full flow key.
-    // 1. Calculate index.
-    ct.idx = (uint32_t)(ct.ipHeader.ip_src.s_addr) % CACHE_SZ;
-    // 2. Check if hit.
+/**
+ *
+ * Build the compressed header from context and the current packet.
+ *
+ */
+void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPktTup) {
+  compressorTuple_t lastPkt = compressorCache[curPktTup->idx];
+  memset(cHeader, 0, sizeof(compressedHeader_t));
 
-    // 2.a. If not hit, save this packet's header to the store and send the packet unmodified.
-    if (isHit){
+  // Set slot ID.  
+  cHeader->slotId = curPktTup->idx;
 
-    }
-    // 2.b. If its a hit, update the store and modify the packet header before tx.
-    else {
+  // Add the header fields that are always included.
+  // IP.
+  cHeader->tot_len = curPktTup->ipHeader.tot_len;
+  cHeader->id = curPktTup->ipHeader.id;
+  // TCP.
+  cHeader->flags = curPktTup->tcpHeader.flags;
+  cHeader->window = curPktTup->tcpHeader.window;
+  cHeader->check = curPktTup->tcpHeader.check;
+  cHeader->urg_ptr = curPktTup->tcpHeader.urg_ptr;
 
-    }
-
-
+  // Set change flags.
+  if (lastPkt.tcpHeader.seq != curPktTup->tcpHeader.seq) {
+    cHeader->seqChange = 1;
+  }
+  if (lastPkt.tcpHeader.ack_seq != curPktTup->tcpHeader.ack_seq) {
+    cHeader->ackChange = 1;
   }
 
+}
+
+/**
+ *
+ * Main compress function.
+ *
+ */
+bool compress(char * compressedPktBuf, uint32_t *compressedPktLen,
+  uint32_t pktLen, 
+  const struct ether_header* ethernetHeader, 
+  const struct ipHeader_t* ipHeader,
+  const struct tcpHeader_t* tcpHeader,
+  char * payload, uint32_t payloadLen) {
+
+  bool isHit;
+
+  // Initialize tuple for current packet.
+  compressorTuple_t curPktTup;
+  curPktTup.ipHeader = *ipHeader;
+  curPktTup.tcpHeader = *tcpHeader;
+  curPktTup.len = pktLen;
+
+  // 0. Check length.
+  if (curPktTup.len < 100) {
+    return false;
+  }
+  // 1. Calculate index into cache.
+  curPktTup.idx = (uint32_t)(curPktTup.ipHeader.saddr) % CACHE_SZ; // TODO: use a hash function.
+
+  // 2. Check if hit.
+  isHit = checkCache(curPktTup);
+
+  // 2.a. If not hit, this is the first packet in a flow. 
+  // Save this packet's header to the cache and send it unmodified.
+  if (!isHit){
+    compressorCache[curPktTup.idx] = curPktTup;
+    return false;
+  }
+  // 2.b. If its a hit, derive the compressed header and update the cache.
+  else {
+    // Get the compressed header.
+    compressedHeader_t compressedHeader;
+    buildCompressedHeader(&compressedHeader, &curPktTup);
+    // Assemble the compressed buffer.
+    // [Ethernet Header] | [compressedHeader_t] | [Optional Fields] | [TCP/UDP payload]
+    // Ethernet
+    memcpy(compressedPktBuf, ethernetHeader, sizeof(ethernetHeader));
+    (*compressedPktLen) += sizeof(ethernetHeader);
+    // compressedHeader_t
+    memcpy(compressedPktBuf + (*compressedPktLen), &compressedHeader, sizeof(compressedHeader));
+    (*compressedPktLen) += sizeof(compressedHeader);
+    // optional fields
+    if (compressedHeader.seqChange == 1){
+      memcpy(compressedPktBuf + (*compressedPktLen), &(curPktTup.tcpHeader.seq), sizeof(curPktTup.tcpHeader.seq));
+      (*compressedPktLen) += sizeof(curPktTup.tcpHeader.seq);
+    }
+    if (compressedHeader.ackChange == 1){
+      memcpy(compressedPktBuf + (*compressedPktLen), &(curPktTup.tcpHeader.ack_seq), sizeof(curPktTup.tcpHeader.ack_seq));
+      (*compressedPktLen) += sizeof(curPktTup.tcpHeader.ack_seq);
+    }
+    // tcp payload
+    memcpy(compressedPktBuf + (*compressedPktLen), payload, payloadLen);
+    (*compressedPktLen) += payloadLen;
+
+    // save current packet tuple to cache
+    compressorCache[curPktTup.idx] = curPktTup;
+    return true;
+  }
 }
 
 void print_hex_memory(void *mem, int len) {
