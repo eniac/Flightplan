@@ -102,41 +102,42 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
         doCompress = true;
       }
     }
-    pcap_inject(pcap,packet,pkthdr -> len);
-    return;
+    // pcap_inject(pcap,packet,pkthdr -> len);
+    // return;
 
     // Attempt compression.
     if (doCompress){
-      char compressedPktBuf[pkthdr -> len];
+      u_char compressedPktBuf[pkthdr -> len];
       uint32_t compressedPktLen = 0;
       if (compress(compressedPktBuf, &compressedPktLen, pkthdr -> len, ethernetHeader, ipHeader, tcpHeader, payload, payloadLen)){
         // Compression, send compressed buffer.
-        pcap_inject(pcap,compressedPktBuf,compressedPktLen);
+        decompressHandler(compressedPktBuf,compressedPktLen);
+        // pcap_inject(pcap,compressedPktBuf,compressedPktLen);
       }
       else {
         // No compression, send unmodified packet.
-        pcap_inject(pcap,packet,pkthdr -> len);
+        decompressHandler(packet,pkthdr -> len);
+        // pcap_inject(pcap,packet,pkthdr -> len);
 
       }
     }
     // Don't attempt compression.
     else {
-      pcap_inject(pcap,packet,pkthdr -> len);
+        decompressHandler(packet,pkthdr -> len);
+      // pcap_inject(pcap,packet,pkthdr -> len);
       return;
     }
 
 }
 
 
+
 /*=========================================
-=            Compressor State.            =
+=            Compressor.                  =
 =========================================*/
 
-#define CACHE_SZ 1024
+
 compressorTuple_t compressorCache[CACHE_SZ];
-
-
-/*=====  End of Compressor State.  ======*/
 
 /**
  *
@@ -195,7 +196,7 @@ void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPk
  * Main compress function.
  *
  */
-bool compress(char * compressedPktBuf, uint32_t *compressedPktLen,
+bool compress(u_char * compressedPktBuf, uint32_t *compressedPktLen,
   uint32_t pktLen, 
   const struct ether_header* ethernetHeader, 
   const struct ipHeader_t* ipHeader,
@@ -236,6 +237,9 @@ bool compress(char * compressedPktBuf, uint32_t *compressedPktLen,
     // [Ethernet Header] | [compressedHeader_t] | [Optional Fields] | [TCP/UDP payload]
     // Ethernet
     memcpy(compressedPktBuf, ethernetHeader, sizeof(ethernetHeader));
+    // adjust ether type for compressed packet.
+    ether_header *modEthHdr = (ether_header *)compressedPktBuf;
+    modEthHdr -> ether_type = ETYPE_COMPRESSED;    
     (*compressedPktLen) += sizeof(ethernetHeader);
     // compressedHeader_t
     memcpy(compressedPktBuf + (*compressedPktLen), &compressedHeader, sizeof(compressedHeader));
@@ -258,6 +262,130 @@ bool compress(char * compressedPktBuf, uint32_t *compressedPktLen,
     return true;
   }
 }
+
+/*=====  End of Compressor.  ======*/
+
+
+/*======================================
+=            Decompression.            =
+======================================*/
+
+compressorTuple_t decompressorCache[CACHE_SZ];
+
+
+void decompressHandler(const u_char *packet, uint32_t pktLen){
+
+  // Parse ethernet header.
+  const struct ether_header* ethernetHeader;
+  const struct ipHeader_t* ipHeader;
+  const struct tcpHeader_t* tcpHeader;
+  const struct compressedHeader_t* cHeader;
+  compressorTuple_t curPktTup;
+
+  ethernetHeader = (struct ether_header*)packet;
+  // Standard TCP packet -- update local cache and emit.
+  if (ntohs(ethernetHeader->ether_type) == ETHERTYPE_IP) {
+      ipHeader = (struct ipHeader_t*)(packet + sizeof(struct ether_header));
+    if (ipHeader->proto == 6){
+      tcpHeader = (tcpHeader_t*)((u_char*)ipHeader + sizeof(*ipHeader));
+
+      // Initialize tuple for current packet.
+      curPktTup.ipHeader = *ipHeader;
+      curPktTup.tcpHeader = *tcpHeader;
+      curPktTup.len = pktLen;
+      curPktTup.idx = (uint32_t)(curPktTup.ipHeader.saddr) % CACHE_SZ; // TODO: use a hash function.
+
+      // update cache.
+      decompressorCache[curPktTup.idx] = curPktTup;
+
+      // emit packet.
+      pcap_inject(pcap,packet,pktLen);
+      return;
+
+    }
+  }
+  // Not a TCP packet, but not compressed -- just emit.
+  else if (ethernetHeader->ether_type != ETYPE_COMPRESSED){
+    pcap_inject(pcap,packet,pktLen);
+    return;
+  }
+  // default case: a compressed packet.
+
+
+  // Parse compressed header
+  cHeader = (compressedHeader_t*) (packet + sizeof(struct ether_header));
+  // rebuild original headers.
+  buildDecompressedHeaders(&curPktTup, cHeader);
+
+
+  // u_char decompressedPktBuf[pktLen + 128];
+  // uint32_t decompressedPktLen = 0;
+
+
+
+}
+
+void buildDecompressedHeaders(compressorTuple_t *curPktTup, const struct compressedHeader_t * cHeader){
+  const u_char * condHdrPos = (const u_char *)cHeader + sizeof(cHeader);
+
+  // Get index from compressed header.
+  curPktTup->idx = cHeader->slotId;
+
+  // Look up last packet from this flow.
+  compressorTuple_t lastPktTup = decompressorCache[curPktTup->idx];
+
+  // fill IP header.
+  // Fixed fields -- load from last packet tup.
+  curPktTup->ipHeader.ihl_version = lastPktTup.ipHeader.ihl_version;
+  curPktTup->ipHeader.tos = lastPktTup.ipHeader.tos;
+  curPktTup->ipHeader.frag_off = lastPktTup.ipHeader.frag_off;
+  curPktTup->ipHeader.ttl = lastPktTup.ipHeader.ttl;
+  curPktTup->ipHeader.proto = lastPktTup.ipHeader.proto;
+  curPktTup->ipHeader.saddr = lastPktTup.ipHeader.saddr;
+  curPktTup->ipHeader.daddr = lastPktTup.ipHeader.daddr;
+  // Carried fields -- load from header.
+  curPktTup->ipHeader.tot_len = cHeader->tot_len;
+  curPktTup->ipHeader.id = cHeader->id;
+  // Computed fields -- TODO. (checksum)
+
+  // fill TCP header.
+  // Fixed fields
+  curPktTup->tcpHeader.source = lastPktTup.tcpHeader.source;
+  curPktTup->tcpHeader.dest = lastPktTup.tcpHeader.dest;
+  // Carried fields
+  curPktTup->tcpHeader.flags = cHeader->flags;
+  curPktTup->tcpHeader.window = cHeader->window;
+  curPktTup->tcpHeader.check = cHeader->check;
+  curPktTup->tcpHeader.urg_ptr = cHeader->urg_ptr;
+
+  // Conditional fields
+  // Seq num.
+  // If change, load from packet and update cache.
+  if (cHeader->seqChange == 1) {
+    curPktTup->tcpHeader.seq = *(const uint32_t *)condHdrPos;
+    condHdrPos += sizeof(uint32_t);
+    decompressorCache[curPktTup->idx].tcpHeader.seq = curPktTup->tcpHeader.seq;
+  }
+  // If no change, load from cache.
+  else {
+    curPktTup->tcpHeader.seq = lastPktTup.tcpHeader.seq;
+  }
+  // Ack num.
+  if (cHeader->ackChange == 1) {
+    curPktTup->tcpHeader.ack_seq = *(const uint32_t *)condHdrPos;
+    condHdrPos += sizeof(uint32_t);
+    decompressorCache[curPktTup->idx].tcpHeader.ack_seq = curPktTup->tcpHeader.ack_seq;
+  }
+  else {
+    curPktTup->tcpHeader.ack_seq = lastPktTup.tcpHeader.ack_seq;
+  }
+
+
+}
+
+/*=====  End of Decompression.  ======*/
+
+
 
 void print_hex_memory(void *mem, int len) {
   int i;

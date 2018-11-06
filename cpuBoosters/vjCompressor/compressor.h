@@ -4,6 +4,9 @@
  *
  */
 
+#define ETYPE_COMPRESSED 0x66
+#define CACHE_SZ 1024
+
 /*================================
 =            Headers.            =
 ================================*/
@@ -92,7 +95,7 @@ void printHeaderSizes(){
 =            Ported functions.            =
 =========================================*/
 
-bool compress(char * compressedPktBuf, uint32_t *compressedPktLen,
+bool compress(u_char * compressedPktBuf, uint32_t *compressedPktLen,
   uint32_t pktLen, 
   const struct ether_header* ethernetHeader, 
   const struct ipHeader_t* ipHeader,
@@ -105,6 +108,11 @@ bool checkCache(uint32_t idx,
 
 
 void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPktTup);
+
+void decompressHandler(const u_char*packet, uint32_t pktLen);
+
+void buildDecompressedHeaders(compressorTuple_t *curPktTup, 
+  const struct compressedHeader_t * cHeader);
 
 /*=====  End of Ported functions.  ======*/
 
