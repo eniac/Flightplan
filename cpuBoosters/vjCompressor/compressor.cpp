@@ -102,6 +102,8 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
         doCompress = true;
       }
     }
+    pcap_inject(pcap,packet,pkthdr -> len);
+    return;
 
     // Attempt compression.
     if (doCompress){

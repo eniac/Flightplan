@@ -1,9 +1,10 @@
 # run the empty booster.
 BOOSTER_NAME=compressor
-INPUT_PCAP=$1
+SOURCE_PCAP=$1
+INPUT_PCAP=$1.$BOOSTER_NAME.in.pcap
 OUTPUT_PCAP=$1.$BOOSTER_NAME.out.pcap
 echo "testing booster $BOOSTER_NAME with veth pairs."
-echo "input pcap: $INPUT_PCAP"
+echo "source pcap: $SOURCE_PCAP"
 echo "output pcap: $OUTPUT_PCAP"
 
 if ! [ $(id -u) = 0 ]; then
@@ -30,14 +31,16 @@ echo "starting booster..."
 ./$BOOSTER_NAME -i deviceVeth &
 
 # start tcpdump to collect the packets that come back into the network from the device.
-echo "starting tcpdump... OUTPUT_PCAP=$OUTPUT_PCAP"
+echo "starting tcpdump... INPUT_PCAP=$INPUT_PCAP, OUTPUT_PCAP=$OUTPUT_PCAP"
+rm $INPUT_PCAP
 rm $OUTPUT_PCAP
+tcpdump -Q out -i networkVeth -w $INPUT_PCAP &
 tcpdump -Q in -i networkVeth -w $OUTPUT_PCAP &
 sleep 1
 
 # start tcpreplay to send input from the network to the device (at 1k pps).
 echo "starting tcpreplay..."
-tcpreplay --preload-pcap --quiet -p 1000 -i networkVeth $INPUT_PCAP
+tcpreplay --preload-pcap --quiet -p 1000 -i networkVeth $SOURCE_PCAP
 sleep 1
 
 # # cleanup
