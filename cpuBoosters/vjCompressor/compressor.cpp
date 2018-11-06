@@ -47,8 +47,8 @@ void print_hex_memory(void *mem, int len);
 
 
 int main(int argc, char *argv[]){
-  printHeaderSizes();
-  return 1;
+  // printHeaderSizes();
+  // return 1;
   int opt = 0;
   char *if_name = nullptr;
   while ((opt =  getopt(argc, argv, "i:")) != EOF)
@@ -219,12 +219,13 @@ bool compress(char * compressedPktBuf, uint32_t *compressedPktLen,
   isHit = checkCache(curPktTup);
 
   // 2.a. If not hit, this is the first packet in a flow. 
-  // Save this packet's header to the cache and send it unmodified.
+  // Save this packet's header to the cache and don't build a compressed packet.
   if (!isHit){
     compressorCache[curPktTup.idx] = curPktTup;
     return false;
   }
-  // 2.b. If its a hit, derive the compressed header and update the cache.
+  // 2.b. If its a hit, this is a subsequent packet that can be compressed.
+  // build and return a compressed packet, update the cache.
   else {
     // Get the compressed header.
     compressedHeader_t compressedHeader;

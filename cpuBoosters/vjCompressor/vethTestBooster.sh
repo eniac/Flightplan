@@ -1,7 +1,7 @@
 # run the empty booster.
 BOOSTER_NAME=compressor
 INPUT_PCAP=$1
-OUTPUT_PCAP=$(dirname "$INPUT_PCAP")/$BOOSTER_NAME/"_veth_"$(basename "$INPUT_PCAP")
+OUTPUT_PCAP=$1.$BOOSTER_NAME.out.pcap
 echo "testing booster $BOOSTER_NAME with veth pairs."
 echo "input pcap: $INPUT_PCAP"
 echo "output pcap: $OUTPUT_PCAP"
@@ -15,9 +15,6 @@ if [ $SUDO_USER ]; then
 else
     real_user=$(whoami)
 fi
-
-mkdir $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
-chown $real_user:$real_user $(dirname "$INPUT_PCAP")/$BOOSTER_NAME
 
 # bring up veth pairs. 
 # networkVeth = network side of cable. 
