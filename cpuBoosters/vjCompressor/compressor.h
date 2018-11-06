@@ -4,7 +4,7 @@
  *
  */
 
-#define ETYPE_COMPRESSED 0x66
+#define ETYPE_COMPRESSED 0x1234
 #define CACHE_SZ 1024
 
 /*================================
@@ -111,7 +111,7 @@ void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPk
 
 void decompressHandler(const u_char*packet, uint32_t pktLen);
 
-void buildDecompressedHeaders(compressorTuple_t *curPktTup, 
+uint32_t buildDecompressedHeaders(compressorTuple_t *curPktTup, 
   const struct compressedHeader_t * cHeader);
 
 /*=====  End of Ported functions.  ======*/

@@ -28,7 +28,7 @@ ifconfig deviceVeth up promisc
 
 # start empty booster : reads and writes to deviceVeth.
 echo "starting booster..."
-./$BOOSTER_NAME -i deviceVeth &
+./$BOOSTER_NAME -i deviceVeth > $BOOSTER_NAME.log &
 
 # start tcpdump to collect the packets that come back into the network from the device.
 echo "starting tcpdump... INPUT_PCAP=$INPUT_PCAP, OUTPUT_PCAP=$OUTPUT_PCAP"
