@@ -1091,27 +1091,52 @@ void Output_packets(//input_tuples Input_tuple,
 		}
 		#endif
 		else if (PKTS_ONLY_FORWARD)
-		{
-			do
+		{	
+			input = Packet_in2.read();
+			End = input.End_of_frame;
+			while(!End)
 			{
 		#pragma HLS pipeline II=1
+				Packet_out.write(input);
 				input = Packet_in2.read();
 				End = input.End_of_frame;
-				Packet_out.write(input);
-			}while(!End);
+			}
+			if (tuple_forward.Hdr.Udp.len < 26)
+			{
+				input.Data.range(63 - 8*input.Count, 0) = 0;
+				input.Count += 26 - tuple_forward.Hdr.Udp.len;
+			}  
+			Packet_out.write(input);
 			Output_tuples.write(tuple_forward);
 		}
 	}
 	else
 	{
-		do
-		{
-	#pragma HLS pipeline II=1
+		//do
+		//{
+//	#pragma HLS pipeline II=1
+//			input = Packet_in2.read();
+//			End = input.End_of_frame;
+//			Packet_out.write(input);
+//		}while(!End);
+//		Output_tuples.write(tuple_out);
 			input = Packet_in2.read();
 			End = input.End_of_frame;
+			while(!End)
+			{
+		#pragma HLS pipeline II=1
+				Packet_out.write(input);
+				input = Packet_in2.read();
+				End = input.End_of_frame;
+			}
+			if (tuple_forward.Hdr.Udp.len < 26)
+			{
+				input.Data.range(63 - 8*input.Count, 0) = 0;
+				input.Count += 26 - tuple_forward.Hdr.Udp.len;
+			}
 			Packet_out.write(input);
-		}while(!End);
-		Output_tuples.write(tuple_out);
+			Output_tuples.write(tuple_forward);
+
 	}
 
 
