@@ -1,6 +1,4 @@
 TupleGeneratorVivado
-vivado.jou
-vivado.log
 Sources/ip
 Sources/ui
 Sources/hdl
@@ -9,3 +7,6 @@ Sources/ipshared
 Sources/design_1_ooc.xdc
 Sources/design_1.bxml
 Sources/xgui
+*.log
+*.jou
+

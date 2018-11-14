@@ -1,0 +1,19 @@
+@@ -40,6 +40,7 @@
+ #include "parser_error.h"
+ #include "phv_source.h"
+ #include "phv_forward.h"
++#include "control_flow.h"
+ 
+ namespace bm {
+ 
+@@ -100,6 +101,10 @@ class Packet final {
+   friend class Switch;
+ 
+  public:
++
++  const bm::ControlFlowNode *current_node = nullptr;
++  const bm::ControlFlowNode *entry_node = nullptr;
++
+   using clock = std::chrono::system_clock;
+ 
+   using buffer_state_t = PacketBuffer::state_t;
