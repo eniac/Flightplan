@@ -429,7 +429,7 @@ int wharf_tag_parity(tclass_type tclass, int block_id, int frame_index,
 	tag->index = frame_index;
 	// TODO: This is also sort-of nonsense
 	tag->orig_ethertype = htons(WHARF_ETHERTYPE);
-	tag->packet_len = size_in;
+	tag->packet_len = size_in + WHARF_TAG_SIZE;
 
 	memcpy(out + WHARF_TAG_SIZE, packet, size_in);
 

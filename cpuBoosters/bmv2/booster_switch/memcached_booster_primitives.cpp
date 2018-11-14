@@ -6,41 +6,47 @@
 #include <bm/bm_sim/data.h>
 #include <bm/bm_sim/packet.h>
 
-template <typename... Args>
-using ActionPrimitive = bm::ActionPrimitive<Args...>;
 using bm::Data;
 using bm::Packet;
 using bm::Header;
 
 
-class memcached : public ActionPrimitive<Data &> {
+class memcached : public boosters::BoosterExtern<Data &> {
+    using BoosterExtern::BoosterExtern;
+
     void operator ()(Data &forward_d) {
+        if (is_generated()) {
+            forward_d.set(true);
+            return;
+        }
+
         Packet &packet = this->get_packet();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
         int ingress_port = phv->get_field("standard_metadata.ingress_port").get_int();
 
-        std::vector<Header *>hdrs;
-        boosters::get_valid_headers(packet, hdrs);
+        // Must save packet state so it can be restored after deparsing
+        const auto packet_in_state = packet.save_buffer_state();
 
-        for (auto hdr : hdrs) {
-            boosters::printHeader(*hdr);
-        }
+        auto deparser = get_p4objects()->get_deparser("deparser");
+        deparser->deparse(&packet);
 
-        size_t buff_size;
-        u_char *buff = boosters::serialize_with_headers(packet, buff_size, hdrs);
+        char *buff = packet.data();
+        size_t buff_size = packet.get_data_size();
 
         auto forwarder = [&](char *payload, size_t len, int reverse) {
-            BMLOG_DEBUG("Reverse is {}, sending to port {}", reverse, reverse==0 ? egress_port : ingress_port);
-            SimpleSwitch::get_instance()->output_booster_packet(reverse == 0 ? egress_port : ingress_port, (u_char*)payload, len);
+            int new_ingress = reverse == 0 ? ingress_port : egress_port;
+            int new_egress = reverse == 0 ? egress_port : ingress_port;
+            generate_packet(payload, len, new_ingress, new_egress);
         };
 
         bool drop = call_memcached((char*)buff, buff_size, forwarder);
 
+        packet.restore_buffer_state(packet_in_state);
+
         if (drop) {
-            get_field("standard_metadata.egress_spec").set(511);
-            if (get_phv().has_field("intrinsic_metadata.mcast_grp")) {
-                get_field("intrinsic_metadata.mcast_grp").set(0);
-            }
+            forward_d.set(false);
+        } else {
+            forward_d.set(true);
         }
        /* for (auto hdr : hdrs) {
             boosters::printHeader(*hdr);
@@ -49,15 +55,8 @@ class memcached : public ActionPrimitive<Data &> {
     }
 };
 
-REGISTER_PRIMITIVE(memcached);
-
-// dummy function, which ensures that this unit is not discarded by the linker
-// it is being called by the constructor of SimpleSwitch
-// the previous alternative was to have all the primitives in a header file (the
-// primitives could also be placed in simple_switch.cpp directly), but I need
-// this dummy function if I want to keep the primitives in their own file
-int import_memcached_booster_primitives() {
-  return 0;
+void import_memcached_booster_primitives(SimpleSwitch *sswitch) {
+  REGISTER_BOOSTER_EXTERN(memcached, sswitch);
 }
 
 

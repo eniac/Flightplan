@@ -1,0 +1,25 @@
+@@ -27,7 +27,7 @@
+ namespace bm {
+ 
+ void
+-Pipeline::apply(Packet *pkt) {
++Pipeline::apply(Packet *pkt, const ControlFlowNode *node_init) {
+   BMELOG(pipeline_start, *pkt, *this);
+   // TODO(antonin)
+   // this is temporary while we experiment with the debugger
+@@ -36,11 +36,15 @@ Pipeline::apply(Packet *pkt) {
+       DBG_CTR_CONTROL | get_id());
+   BMLOG_DEBUG_PKT(*pkt, "Pipeline '{}': start", get_name());
+   const ControlFlowNode *node = first_node;
++  if (node_init) {
++      node = node_init;
++  }
+   while (node) {
+     if (pkt->is_marked_for_exit()) {
+       BMLOG_DEBUG_PKT(*pkt, "Packet is marked for exit, interrupting pipeline");
+       break;
+     }
++    pkt->current_node = node;
+     node = (*node)(pkt);
+   }
+   BMELOG(pipeline_done, *pkt, *this);

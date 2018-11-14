@@ -29,8 +29,11 @@ all: p4 pcap
 copy_files: p4
 	rsync -av --exclude='test_output' ./* $(BOOSTER_SWITCH_MEMCD_DIR)
 
-bmv2: copy_files
+bmv2_configure: copy_files
 	cd $(BOOSTER_SWITCH_DIR)/.. && make configure all BOOSTERS=MEMCACHED
+
+bmv2: copy_files
+	cd $(BOOSTER_SWITCH_DIR)/.. && make
 
 memcached.o: memcached.cpp
 	$(CC) $(FLAGS) -c $<

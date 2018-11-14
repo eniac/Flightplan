@@ -1,0 +1,9 @@
+@@ -43,7 +43,7 @@ class Pipeline : public NamedP4Object {
+   //! condiitons. Each step is determined based on the result of the previous
+   //! step (table lookup or condition evaluation), according to the P4 control
+   //! flow graph.
+-  void apply(Packet *pkt);
++  void apply(Packet *pkt, const ControlFlowNode *node = nullptr);
+ 
+   //! Deleted copy constructor
+   Pipeline(const Pipeline &other) = delete;
