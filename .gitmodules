@@ -1,0 +1,3 @@
+[submodule "testing/Shremote"]
+	path = testing/Shremote
+	url = https://github.com/isaac-ped/Shremote.git
