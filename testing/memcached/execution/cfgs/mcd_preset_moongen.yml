@@ -1,0 +1,133 @@
+dirs:
+    home: /home/iped
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+
+params:
+    get_pct: '{0.args.get_pct}'
+    rate: '{0.args.rate}'
+    collision_prob: '{0.args.p_collision}'
+    local_lua_template: ./pktgen_template.lua
+    local_lua: '{0.out}/pktgen.lua'
+    local_pcap: '{0.out}/pkts.pcap'
+    n_pkts: 50000
+
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+init_cmds:
+    make_lua: >-
+        python format_lua_template.py {0.params.local_lua_template} {0.params.local_lua}
+        --rate {0.params.rate} --log  {0.programs.log_dir}/pktgen.log --count {0.params.n_pkts}
+    make_pcap: >-
+        python {0.dirs.P4Boosters}/MemPacket/generate_memcached.py
+        --out {0.params.local_pcap} --hashlog {0.out}/pktlog.json
+        --smac {0.hosts.pktgen.mac} --sip {0.hosts.pktgen.ip}
+        --dmac {0.hosts.mcd.mac} --dip {0.hosts.mcd.ip}
+        --n-pkt {0.params.n_pkts} --collision-prob {0.params.collision_prob}
+        --get-pct {0.params.get_pct} --pre-set
+
+files:
+    pktgen_script:
+        src: '{0.params.local_lua}'
+        dst: '{0.programs.log_dir}/pktgen.lua'
+        host: pktgen
+    pcap_file:
+        src: '{0.params.local_pcap}'
+        dst: '{0.programs.log_dir}/pkts.pcap'
+        host: pktgen
+
+hosts:
+    johnshack:
+        addr: johnshack
+    pktgen:
+        addr: tclust4
+        mac: 7c:fe:90:1c:36:80
+        ip: '{0.args.mcd_ip}'
+    mcd:
+        addr: tclust13
+        mac: 00:02:c9:39:d6:d1
+        ip: 10.0.0.3
+    tcpdump:
+        addr: tclust14
+
+programs:
+    log_dir: '{0.dirs.home}/logs/{0.label}'
+
+    program_fpga:
+        host: johnshack
+        start: 'cd ~/P4Boosters/FPGA/RSESDx && source ~/.bashrc && ./Run_project.bash'
+        fg: true
+        log:
+            out: program_fpga.out
+            err: program_fpga.err
+    gulp:
+        host: tcpdump
+        start: '~/bin/gulp -i ens3d1'
+        stop: pkill -f gulp
+        log:
+            dir: gulp
+            out: gulp.pcap
+            err: gulp.err
+    moongen:
+        host: tcpdump
+        start: 'cd ~/dcomp/moongen/MoonGen/ && ./build/MoonGen bounce.lua -s150 1 {log}'
+        stop: pkill MoonGen
+        log:
+            dir: moongen
+            log: moongen.pcap
+            out: moongen.out
+            err: moongen.err
+    tcpgulp:
+        host: tcpdump
+        start: '~/bin/tcpdump -i ens3d1 -s 150 -w - -j adapter_unsynced | ~/bin/gulp -c -r 1024'
+        stop: 'pkill -f tcpdump'
+        log:
+            dir: gulp
+            out: gulp.pcap
+            err: gulp.err
+    tcpdump:
+        host: tcpdump
+        start: '~/bin/tcpdump -i ens3d1 -w {log} -j adapter_unsynced -s 150 -c 100000'
+        stop: pkill -f tcpdump
+        log:
+            dir: tcpdump
+            out: tcpdump.out
+            err: tcpdump.err
+            log: tcpdump.pcap
+    mcd:
+        host: mcd
+        start: 'memcached -U 11211 -l 10.0.0.3'
+        stop: 'pkill -f memcached'
+        log:
+            out: memcached.out
+            err: memcached.err
+    pktgen:
+        host: pktgen
+        start: tmux new -d '~/dcomp/dpdk/run_lua.sh {lua} {pcap}'
+        log:
+            log: pktgen.log
+            out: pktgen.out
+            err: pktgen.err
+    end:
+        host: tcpdump
+        start: echo 'ENDING EXPERIMENT'
+        stop: pkill echo
+
+
+commands:
+    program_fpga:
+        begin: -30
+    mcd:
+        duration: 50
+        enforce_duration: True
+    moongen:
+        duration: 50
+        enforce_duration: true
+    pktgen:
+        lua: '{0.files.pktgen_script.dst}'
+        pcap: '{0.files.pcap_file.dst}'
+    end:
+        begin: 90
+        duration: 1

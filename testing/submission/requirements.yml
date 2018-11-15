@@ -1,0 +1,13 @@
+all:
+    - description
+    - experiment
+    - repositories:
+        - P4Boosters
+    - files:
+        - documentation.md
+
+memcached:
+    - files:
+        - data
+        - bitstream.tar.gz
+

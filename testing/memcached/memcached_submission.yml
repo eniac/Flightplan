@@ -1,0 +1,15 @@
+description: >-
+    This is an additional test, which contains the
+    same files as the first test, but has a longer
+    and more thorough description inside of it.
+
+experiment: memcached
+
+repositories:
+    P4Boosters: 7f4905bf
+
+files:
+    documentation.md: Memcached.md
+    data: output/
+    analysis: analysis/
+    bitstream.tar.gz: /home/iped/1104bit.tar.gz
