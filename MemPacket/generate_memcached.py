@@ -114,7 +114,7 @@ def generate_packets(args):
             log.append(dict(type='get', h=mcdh.str_hash(key), k=key))
     else:
         total_n = n_get + n_set
-        inter_set = total_n / n_set
+        inter_set = n_get / n_set
 
         # Hash -> [key1, key2, ...]
         hashes = defaultdict(list)
