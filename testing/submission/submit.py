@@ -62,7 +62,7 @@ def read_requirements(submission, req_file = None):
 
     for req in reqs_exp:
         update_requirements(req, reqs_complete)
-       
+
     return dictize_requirements(reqs_complete)
 
 def check_requirements(submission, reqs, prefix=''):
@@ -110,9 +110,8 @@ def check_files(submission):
             raise Exception("Required file {} ({}) DNE".format(v, k))
 
 def rsync_all(submission, submission_file, label, key=None, user=None, addr='dcomp1.seas.upenn.edu', exp_dir='/harvest/experiments'):
-
     ssh = dict(key=key, user=user, addr=addr)
-    this_exp_dir = os.path.join(exp_dir, submission['experiment'], label)
+    this_exp_dir = os.path.join(exp_dir, submission['experiment'], os.getlogin(), label)
 
     print("Making directory {}".format(this_exp_dir))
 
@@ -133,10 +132,17 @@ def rsync_all(submission, submission_file, label, key=None, user=None, addr='dco
 
     print("Copied files to {}".format(this_exp_dir))
 
-def run(sub_file, label, key, user):
+def read_submission(sub_file):
     with open(sub_file) as f:
         sub = yaml.load(open(sub_file))
 
+    for k in sub['files']:
+        sub['files'][k] = os.path.join(os.path.dirname(sub_file), sub['files'][k])
+
+    return sub
+
+def run(sub_file, label, key, user):
+    sub = read_submission(sub_file)
     reqs = read_requirements(sub)
     check_requirements(sub, reqs)
     check_files(sub)
