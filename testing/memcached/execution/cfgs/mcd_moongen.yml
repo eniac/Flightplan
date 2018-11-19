@@ -8,7 +8,7 @@ params:
     collision_prob: '{0.args.p_collision}'
     local_lua_template: ./pktgen_template.lua
     local_lua: '{0.out}/pktgen.lua'
-    local_pcap: '{0.out}/pkts.pcap'
+    local_pcap: '{0.out}/get_pkts.pcap'
     n_pkts: 50000
 
 ssh:
@@ -103,6 +103,7 @@ programs:
         log:
             out: memcached.out
             err: memcached.err
+
     pktgen:
         host: pktgen
         start: tmux new -d '~/dcomp/dpdk/run_lua.sh {lua} {pcap}'

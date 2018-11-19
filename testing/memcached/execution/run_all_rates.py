@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument("--out", type=str, help="output folder")
     args = parser.parse_args()
 
-    rates = [.25, .75, 1.25, 1.75, 2.25, 2.75, 3.25]
+    rates = [.05, .1, .15, .25, .5, .75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0]
     time.sleep(2)
     for rate in rates:
         kwargs = '{};rate:{}'.format(args.args, rate)
