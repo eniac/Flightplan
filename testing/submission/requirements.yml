@@ -1,4 +1,4 @@
-all:
+all:         # All experiments must contain these fields
     - description
     - experiment
     - repositories:
@@ -6,7 +6,7 @@ all:
     - files:
         - documentation.md
 
-memcached:
+memcached:   # Memcached must contain these in addition
     - files:
         - data
         - bitstream.tar.gz
