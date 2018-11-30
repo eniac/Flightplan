@@ -3,7 +3,7 @@ from collections import defaultdict
 from pprint import pprint
 import os
 import random
-sys.path.append(os.path.realpath("../FPGA/MemcachedVivadoHLS/"))
+sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/../FPGA/MemcachedVivadoHLS/"))
 from MemHLS_hash_py import str_hash
 
 def gen_hashes(n, max=100000):
