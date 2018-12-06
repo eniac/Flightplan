@@ -9,29 +9,22 @@ DPDK_DIR=/scratch/safe/giesen/dpdk/
 SCRIPT_DIR=${PWD}
 
 ENCODER_TARGET=jsn-JTAG-SMT2NC-210308A47676
-DROPPER_TARGET=jsn-JTAG-SMT2NC-210308A5EE07
+DROPPER_TARGET=jsn-JTAG-SMT2NC-210308A7A865 # jsn-JTAG-SMT2NC-210308A7A487
 DECODER_TARGET=jsn-JTAG-SMT2NC-210308A5F0D3
+
+DROPPER_PORT=/dev/ttyUSB0
 
 SEND_RATES="50 max"
 LOSS_RATES="0.001 0.003 0.01 0.03 0.1"
 REPETITIONS=20
 
 
-Run_command()
-{
-  cd $1
-  shift
-  while true
-  do
-    $* && break
-  done
-}
-
 echo
 echo "Programming encoder..."
 echo "======================"
 echo
-Run_command ${ENCODER_SDX_DIR} ./Run_project.bash ${ENCODER_TARGET}
+cd ${ENCODER_SDX_DIR}
+#./Run_project.bash ${ENCODER_TARGET}
 
 sleep 1
 
@@ -39,7 +32,8 @@ echo
 echo "Programming packet dropper..."
 echo "============================="
 echo
-Run_command ${DROPPER_SDX_DIR} ./Run_project.bash ${DROPPER_TARGET}
+cd ${DROPPER_SDX_DIR}
+#./Run_project.bash ${DROPPER_TARGET}
 
 sleep 1
 
@@ -47,7 +41,8 @@ echo
 echo "Programming decoder..."
 echo "======================"
 echo
-Run_command ${DECODER_SDX_DIR} ./Run_project.bash ${DECODER_TARGET}
+cd ${DECODER_SDX_DIR}
+#./Run_project.bash ${DECODER_TARGET}
 
 sleep 1
 
@@ -55,7 +50,8 @@ echo
 echo "Programming drop rate to 0..."
 echo "============================="
 echo
-Run_command ${DROPPER_SDX_DIR} ./Set_rate.bash 0 ${DROPPER_TARGET}
+cd ${DROPPER_SDX_DIR}
+./Set_rate.bash ${DROPPER_PORT} 0
 
 echo
 echo "Measuring maximum transmission rate without loss..."
@@ -86,7 +82,8 @@ do
     echo "Programming drop rate to ${LOSS_RATE}..."
     echo "========================================"
     echo
-    Run_command ${DROPPER_SDX_DIR} ./Set_rate.bash ${LOSS_RATE} ${DROPPER_TARGET}
+    cd ${DROPPER_SDX_DIR}
+    ./Set_rate.bash ${DROPPER_PORT} ${LOSS_RATE}
 
     echo
     echo "Measuring loss..."
