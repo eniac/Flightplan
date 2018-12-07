@@ -50,8 +50,8 @@ Memcached1Port: Memcached1Port_project
 
 RSEEncoder2Ports: RSEEncoder2Ports_project
 	vivado -mode batch -source Build_project.tcl -tclargs RSEEncoder2Ports
-	@mkdir -p RSEEncoder1Port/RSEEncoder1Port.sdk
-	@cp RSEEncoder1Port/RSEEncoder1Port.runs/impl_1/design_1_wrapper.sysdef RSEEncoder1Port/RSEEncoder1Port.sdk/design_1_wrapper.hdf
+	@mkdir -p RSEEncoder1Port/RSEEncoder2Ports.sdk
+	@cp RSEEncoder2Ports/RSEEncoder2Ports.runs/impl_1/design_1_wrapper.sysdef RSEEncoder2Ports/RSEEncoder2Ports.sdk/design_1_wrapper.hdf
 
 RSEDecoder2Ports: RSEDecoder2Ports_project
 	vivado -mode batch -source Build_project.tcl -tclargs RSEDecoder2Ports
