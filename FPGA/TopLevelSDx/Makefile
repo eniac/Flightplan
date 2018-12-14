@@ -2,6 +2,8 @@ ifndef DISPLAY
   $(error Despite SDx is used in batch mode, you have to set the DISPLAY environment variable.)
 endif
 
+SHELL=/bin/bash
+
 .PHONY: All RSE Memcached RSEEncoder1Port RSEDecoder1Port Memcached1Port RSEEncoder2Ports RSEDecoder2Ports
 	Memcached2Ports PacketDropper2Ports
 
