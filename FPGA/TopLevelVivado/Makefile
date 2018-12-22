@@ -1,6 +1,8 @@
 .PHONY: All RSEEncoder1Port RSEDecoder1Port Memcached1Port RSEEncoder2Ports RSEDecoder2Ports Memcached2Ports \
-        PacketDropper2Ports RSEEncoder1Port_project RSEDecoder1Port_project Memcached1Port_project \
-        RSEEncoder2Ports_project RSEDecoder2Ports_project Memcached2Ports_project PacketDropper2Ports
+        PacketDropper2Ports RSEEncoder4Ports RSEDecoder4Ports Memcached4Ports RSEEncoder1Port_project \
+        RSEDecoder1Port_project Memcached1Port_project RSEEncoder2Ports_project RSEDecoder2Ports_project \
+        Memcached2Ports_project PacketDropper2Ports RSEEncoder4Ports_project RSEDecoder4Ports_project \
+        Memcached4Ports_project
 
 All: RSEEncoder1Port RSEDecoder1Port Memcached1Port RSEEncoder2Ports RSEDecoder2Ports Memcached2Ports \
         PacketDropper2Ports
@@ -33,6 +35,18 @@ PacketDropper2Ports_project:
 	@rm -fr PacketDropper2Ports
 	vivado -mode batch -source Create_PacketDropper2Ports_project.tcl
 
+RSEEncoder4Ports_project:
+	@rm -fr RSEEncoder4Ports
+	vivado -mode batch -source Create_project.tcl -tclargs ../RSEP4/Encoder/XilinxSwitch generic_4_ports RSEEncoder4Ports
+
+RSEDecoder4Ports_project:
+	@rm -fr RSEDecoder4Ports
+	vivado -mode batch -source Create_project.tcl -tclargs ../DecoderP4/Decoder/XilinxSwitch generic_4_ports RSEDecoder4Ports
+
+Memcached4Ports_project:
+	@rm -fr Memcached4Ports
+	vivado -mode batch -source Create_project.tcl -tclargs ../MemcachedP4/Encoder/XilinxSwitch generic_4_ports Memcached4Ports
+
 RSEEncoder1Port: RSEEncoder1Port_project
 	vivado -mode batch -source Build_project.tcl -tclargs RSEEncoder1Port
 	@mkdir -p RSEEncoder1Port/RSEEncoder1Port.sdk
@@ -50,7 +64,7 @@ Memcached1Port: Memcached1Port_project
 
 RSEEncoder2Ports: RSEEncoder2Ports_project
 	vivado -mode batch -source Build_project.tcl -tclargs RSEEncoder2Ports
-	@mkdir -p RSEEncoder1Port/RSEEncoder2Ports.sdk
+	@mkdir -p RSEEncoder2Ports/RSEEncoder2Ports.sdk
 	@cp RSEEncoder2Ports/RSEEncoder2Ports.runs/impl_1/design_1_wrapper.sysdef RSEEncoder2Ports/RSEEncoder2Ports.sdk/design_1_wrapper.hdf
 
 RSEDecoder2Ports: RSEDecoder2Ports_project
@@ -68,7 +82,23 @@ PacketDropper2Ports: PacketDropper2Ports_project
 	@mkdir -p PacketDropper2Ports/PacketDropper2Ports.sdk
 	@cp PacketDropper2Ports/PacketDropper2Ports.runs/impl_1/design_1_wrapper.sysdef PacketDropper2Ports/PacketDropper2Ports.sdk/design_1_wrapper.hdf
 
+RSEEncoder4Ports: RSEEncoder4Ports_project
+	vivado -mode batch -source Build_project.tcl -tclargs RSEEncoder4Ports
+	@mkdir -p RSEEncoder4Ports/RSEEncoder4Ports.sdk
+	@cp RSEEncoder4Ports/RSEEncoder4Ports.runs/impl_1/design_1_wrapper.sysdef RSEEncoder4Ports/RSEEncoder4Ports.sdk/design_1_wrapper.hdf
+
+RSEDecoder4Ports: RSEDecoder4Ports_project
+	vivado -mode batch -source Build_project.tcl -tclargs RSEDecoder4Ports
+	@mkdir -p RSEDecoder4Ports/RSEDecoder4Ports.sdk
+	@cp RSEDecoder4Ports/RSEDecoder4Ports.runs/impl_1/design_1_wrapper.sysdef RSEDecoder4Ports/RSEDecoder4Ports.sdk/design_1_wrapper.hdf
+
+Memcached4Ports: Memcached4Ports_project
+	vivado -mode batch -source Build_project.tcl -tclargs Memcached4Ports
+	@mkdir -p Memcached4Ports/Memcached4Ports.sdk
+	@cp Memcached4Ports/Memcached4Ports.runs/impl_1/design_1_wrapper.sysdef Memcached4Ports/Memcached4Ports.sdk/design_1_wrapper.hdf
+
 clean:
-	rm -fr RSEEncoder1Port RSEDecoder1Port Memcached1Port RSEEncoder2Ports RSEDecoder2Ports Memcached2Ports PacketDropper2Ports
+	rm -fr RSEEncoder1Port RSEDecoder1Port Memcached1Port RSEEncoder2Ports RSEDecoder2Ports Memcached2Ports \
+               PacketDropper2Ports RSEEncoder4Ports RSEDecoder4Ports Memcached4Ports
 	rm -f *.jou *.log
 

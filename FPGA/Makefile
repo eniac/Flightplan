@@ -1,8 +1,10 @@
 .PHONY: All RSE Memcached RSEEncoder1PortSDx RSEDecoder1PortSDx Memcached1PortSDx RSEEncoder2PortsSDx \
-	RSEDecoder2PortsSDx Memcached2PortsSDx PacketDropper2PortsSDx RSEEncoder1PortVivado RSEDecoder1PortVivado \
-	Memcached1PortVivado RSEEncoder2PortsVivado RSEDecoder2PortsVivado Memcached2PortsVivado \
-	PacketDropper2PortsVivado RSEEncoderP4 RSEDecoderP4 MemcachedP4 PacketDropperVivado RSEInputBufferVivado \
-        RSEOutputBufferVivado TupleGeneratorVivado RSEEncoderVivadoHLS RSEDecoderVivadoHLS MemcachedVivadoHLS
+	RSEDecoder2PortsSDx Memcached2PortsSDx PacketDropper2PortsSDx RSEEncoder4PortsVivado RSEDecoder4PortsVivado \
+        Memcached4PortsVivado RSEEncoder1PortVivado RSEDecoder1PortVivado Memcached1PortVivado RSEEncoder2PortsVivado \
+        RSEDecoder2PortsVivado Memcached2PortsVivado PacketDropper2PortsVivado RSEEncoder4PortsVivado \
+        RSEDecoder4PortsVivado Memcached4PortsVivado RSEEncoderP4 RSEDecoderP4 MemcachedP4 PacketDropperVivado \
+        RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado RSEEncoderVivadoHLS RSEDecoderVivadoHLS \
+        MemcachedVivadoHLS
 
 All: RSE Memcached
 
@@ -30,6 +32,15 @@ Memcached2PortsSDx: Memcached2PortsVivado
 PacketDropper2PortsSDx: PacketDropper2PortsVivado
 	cd TopLevelSDx && make PacketDropper2Ports
 
+RSEEncoder4PortsSDx: RSEEncoder4PortsVivado
+	cd TopLevelSDx && make RSEEncoder4Ports
+
+RSEDecoder4PortsSDx: RSEDecoder4PortsVivado
+	cd TopLevelSDx && make RSEDecoder4Ports
+
+Memcached4PortsSDx: Memcached4PortsVivado
+	cd TopLevelSDx && make Memcached4Ports
+
 RSEEncoder1PortVivado: RSEEncoderP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
 	cd TopLevelVivado && make RSEEncoder1Port
 
@@ -50,6 +61,15 @@ Memcached2PortsVivado: MemcachedP4 RSEInputBufferVivado RSEOutputBufferVivado Tu
 
 PacketDropper2PortsVivado: PacketDropperVivado RSEInputBufferVivado RSEOutputBufferVivado
 	cd TopLevelVivado && make PacketDropper2Ports
+
+RSEEncoder4PortsVivado: RSEEncoderP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
+	cd TopLevelVivado && make RSEEncoder4Ports
+
+RSEDecoder4PortsVivado: RSEDecoderP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
+	cd TopLevelVivado && make RSEDecoder4Ports
+
+Memcached4PortsVivado: MemcachedP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
+	cd TopLevelVivado && make Memcached4Ports
 
 RSEEncoderP4: RSEEncoderVivadoHLS
 	cd RSEP4 && make
