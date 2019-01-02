@@ -72,7 +72,7 @@ programs:
             err: gulp.err
     moongen:
         host: tcpdump
-        start: 'cd ~/dcomp/moongen/MoonGen/ && ./build/MoonGen bounce.lua -s150 1 {log}'
+        start: 'cd ~/dcomp/moongen/MoonGen/ && ./build/MoonGen bounce.lua -s150 4 {log}'
         stop: pkill MoonGen
         log:
             dir: moongen
@@ -129,11 +129,6 @@ commands:
         begin: -31
     program_fpga:
         begin: -30
-    mcd:
-        duration: 50
-        enforce_duration: True
-        threads: '{0.args.mcd_threads}'
-        memory: '{0.args.mcd_memory}'
     moongen:
         duration: 50
         enforce_duration: true

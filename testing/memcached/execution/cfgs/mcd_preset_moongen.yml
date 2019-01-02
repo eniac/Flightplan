@@ -104,7 +104,7 @@ programs:
             log: tcpdump.pcap
     mcd:
         host: mcd
-        start: 'memcached -U 11211 -l 10.0.0.3'
+        start: 'memcached -U 11211 -l 10.0.0.3 --threads={threads} --memory-limit={memory}'
         stop: 'pkill -f memcached'
         log:
             out: memcached.out
@@ -124,6 +124,13 @@ programs:
             log: pktgen.log
             out: pktgen.out
             err: pktgen.err
+
+    check_huge_pages:
+        host: pktgen
+        start: 'bash /home/iped/dcomp/dpdk/dpdkScripts/printHugePages.sh'
+        log:
+            out: hugepages.txt
+
     end:
         host: tcpdump
         start: echo 'ENDING EXPERIMENT'
@@ -131,11 +138,15 @@ programs:
 
 
 commands:
+    check_huge_pages:
+        begin: -31
     program_fpga:
         begin: -30
     mcd:
         duration: 90
         enforce_duration: True
+        threads: '{0.args.mcd_threads}'
+        memory: '{0.args.mcd_memory}'
     moongen:
         duration: 90
         enforce_duration: true
