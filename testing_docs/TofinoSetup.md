@@ -15,13 +15,19 @@ _________________           ______|___________________________|_____            
 ```
 
 FPGA 1 : Runs KV cache
-         Johnshack cable: ???? `jsn-JTAG-SMT2NC-210308A46CBE` ????
+
+         Johnshack cable: `jsn-JTAG-SMT2NC-210308A46CBE`
+
          NOTE: Currently still plugged into arista on port 7/1
 
+         
 FPGA 2 : Runs Encoder
+
          Johnshack cable: ???? `jsn-JTAG-SMT2NC-210308A47676` ????
 
+
 FPGA 3 : Runs decoder
+
          Johnshack cable: ???? `jsn-JTAG-SMT2NC-210308A5F0D3` ????
 
 
@@ -38,4 +44,3 @@ If `-f` not provided, encoder and decoder will not be used
 If `-k` not provided, kv store will not be used
 `<drop_rate>` sets the rate at which packets are dropped when sent over the loopback
 Only UDP traffic is routed through the cache
-
