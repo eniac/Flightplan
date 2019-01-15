@@ -16,9 +16,24 @@ def gen_hashes(n, max=100000):
         str_k = "{:08d}".format(k)
         yield str_k, str_hash(str_k)
 
+def gen_mostly_collisions(n, max=10000000):
+    keys_so_far = set()
+    hashes_so_far = set()
+    for _ in range(n):
+        k = random.randint(1, max)
+        while k in keys_so_far:
+            k = random.randint(1, max)
+        n -= 1
+        if n < 0:
+            break
+        str_k = "{:08d}".format(k)
+        h = str_hash(str_k)
+        if h in hashes_so_far or random.random() < .05:
+            yield str_k, h
 
-def gen_collisions(key, n, max=100000):
-    h = str_hash(key)
+
+def gen_collisions(keys, n, max=100000):
+    h = str(str_hash(k) for k in keys)
     l = []
     for i in range(max):
         n-=1
@@ -62,9 +77,9 @@ if __name__  == '__main__':
         hash_out = get_all_collisions()
         sorted_out = sorted(hash_out.items(), key=lambda x:len(x[1]))
         for o in sorted_out[:10]:
-            print "{}: {}".format(o[0], o[1])
+            print("{}: {}".format(o[0], o[1]))
 
         for o in sorted_out[-10:]:
-            print "{}: {}".format(o[0], o[1])
+            print("{}: {}".format(o[0], o[1]))
     else:
         pprint(get_collisions(sys.argv[1]))
