@@ -1,0 +1,104 @@
+dirs:
+    home: /home/iped
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+init_cmds: {}
+
+time:
+    iperf: 30
+
+files:
+    start_iperf_servers:
+        src: 'start_iperf_servers.sh'
+        dst: '{0.programs.log_dir}/start_iperf_servers.sh'
+        host: server
+    start_iperf_clients:
+        src: 'start_iperf_clients.sh'
+        dst: '{0.programs.log_dir}/start_iperf_clients.sh'
+        host: client
+
+hosts:
+    johnshack:
+        addr: johnshack
+    client:
+        addr: tclust1
+        ip: 10.0.0.1
+    server:
+        addr: tclust2
+        ip: 10.0.0.2
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+    log_dir: '{0.dirs.home}/logs/{0.label}'
+
+    program_encoder:
+        host: johnshack
+        start: 'cd ~/P4Boosters/FPGA/TopLevelSDx && bash program_encoder.sh'
+        check_rtn: 0
+        log:
+            out: program_encoder.out
+            err: program_encoder.err
+
+    program_decoder:
+        host: johnshack
+        start: 'cd ~/P4Boosters/FPGA/TopLevelSDx && bash program_decoder.sh'
+        check_rtn: 0
+        log:
+            out: program_decoder.out
+            err: program_decoder.err
+
+    dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/simpleE2e && ./run.sh -f -d {drop_rate}
+        stop: cd ~/gits/TofinoP4Boosters/simpleE2e && ./stop.sh
+
+    iperf3_server:
+        host: server
+        start: 'bash {0.files.start_iperf_servers.dst} {n} {log}'
+        stop: pkill iperf3
+        log:
+            dir: iperf
+            log: server
+            out: start_servers.out
+            err: start_servers.err
+
+    iperf3_client:
+        host: client
+        start: 'bash {0.files.start_iperf_clients.dst} {n} {time} {log}'
+        log:
+            dir: iperf
+            log: client
+            out: start_clients.out
+            err: start_clients.err
+
+    end:
+        host: client
+        start: "echo 'ending'"
+
+commands:
+    dataplane:
+        begin: -40
+        duration: '{0.time.iperf} + 60'
+        drop_rate: '{0.args.drop_rate}'
+    program_encoder:
+        begin: -30
+    program_decoder:
+        begin: -30
+    iperf3_server:
+        begin: 0
+        n: 10
+        duration: '{0.time.iperf} + 15'
+    iperf3_client:
+        begin: 5
+        n: 10
+        time: "{0.time.iperf}"
+        enforce_duration: '{0.time.iperf}'

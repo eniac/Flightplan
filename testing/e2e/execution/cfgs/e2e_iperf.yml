@@ -1,0 +1,84 @@
+dirs:
+    home: /home/iped
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+init_cmds: {}
+
+time:
+    iperf: 60
+
+files:
+    start_iperf_servers:
+        src: 'start_iperf_servers.sh'
+        dst: '{0.programs.log_dir}/start_iperf_servers.sh'
+        host: server
+    start_iperf_clients:
+        src: 'start_iperf_clients.sh'
+        dst: '{0.programs.log_dir}/start_iperf_clients.sh'
+        host: client
+
+hosts:
+    client:
+        addr: tclust1
+        ip: 10.0.0.1
+    server:
+        addr: tclust2
+        ip: 10.0.0.2
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+    log_dir: '{0.dirs.home}/logs/{0.label}'
+
+    dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/simpleE2e && ./run.sh -d {drop_rate}
+        stop: cd ~/gits/TofinoP4Boosters/simpleE2e && ./stop.sh
+
+    iperf3_server:
+        host: server
+        start: 'bash {0.files.start_iperf_servers.dst} {n} {log}'
+        stop: pkill iperf3
+        log:
+            dir: iperf
+            log: server
+            out: start_servers.out
+            err: start_servers.err
+
+    iperf3_client:
+        host: client
+        start: 'bash {0.files.start_iperf_clients.dst} {n} {time} {log}'
+        log:
+            dir: iperf
+            log: client
+            out: start_clients.out
+            err: start_clients.err
+
+    end:
+        host: client
+        start: "echo 'ending'"
+
+commands:
+    dataplane:
+        begin: -20
+        drop_rate: '{0.args.drop_rate}'
+        duration: '{0.time.iperf} + 40'
+
+    iperf3_server:
+        begin: 0
+        n: 10
+        duration: '{0.time.iperf} + 15'
+
+    iperf3_client:
+        begin: 5
+        n: 10
+        time: "{0.time.iperf}"
+        enforce_duration: '{0.time.iperf}'
