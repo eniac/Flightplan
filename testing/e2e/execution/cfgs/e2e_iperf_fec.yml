@@ -9,7 +9,7 @@ ssh:
 init_cmds: {}
 
 time:
-    iperf: 30
+    iperf: 60
 
 files:
     start_iperf_servers:
@@ -25,11 +25,11 @@ hosts:
     johnshack:
         addr: johnshack
     client:
-        addr: tclust1
-        ip: 10.0.0.1
+        addr: tclust3
+        ip: 10.0.0.3
     server:
-        addr: tclust2
-        ip: 10.0.0.2
+        addr: tclust4
+        ip: 10.0.0.4
     tofino:
         addr: 158.130.4.218
         ssh:
@@ -58,8 +58,8 @@ programs:
 
     dataplane:
         host: tofino
-        start: cd ~/gits/TofinoP4Boosters/simpleE2e && ./run.sh -f -d {drop_rate}
-        stop: cd ~/gits/TofinoP4Boosters/simpleE2e && ./stop.sh
+        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./run.sh -f -d {drop_rate}
+        stop: cd ~/gits/TofinoP4Boosters/compressionE2e && ./stop.sh
 
     iperf3_server:
         host: server
