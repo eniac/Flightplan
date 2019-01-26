@@ -1,15 +1,17 @@
 description: >-
-    This is an additional test, which contains the
-    same files as the first test, but has a longer
-    and more thorough description inside of it.
+    Draft of the memcached data and analysis which contains
+    the 10% and 50% collision rate numbers, along with
+    all booster and all mcd.
+    Couple data points still need to be obtained,
+    specifically for high rate mcd alone
 
 experiment: memcached
 
 repositories:
-    P4Boosters: 7f4905bf
+    P4Boosters: 93473589
 
 files:
     documentation.md: Memcached.md
     data: output/
     analysis: analysis/
-    bitstream.tar.gz: /home/iped/1104bit.tar.gz
+    bitstream.tar.gz: /home/iped/MemcachedFPGA.tar.gz

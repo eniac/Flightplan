@@ -37,6 +37,10 @@ files:
         src: '{0.params.local_pcap}'
         dst: '{0.programs.log_dir}/pkts.pcap'
         host: pktgen
+    moongen_script:
+        src: 'bounce.lua'
+        dst: '{0.programs.log_dir}/bounce.lua'
+        host: moongen
 
 hosts:
     johnshack:
@@ -46,56 +50,31 @@ hosts:
         mac: 7c:fe:90:1c:36:80
         ip: '{0.args.mcd_ip}'
     mcd:
-        addr: tclust13
-        mac: 00:02:c9:39:d6:d1
+        addr: tclust10
+        mac: 00:02:c9:39:bd:81
         ip: 10.0.0.3
-    tcpdump:
-        addr: tclust14
+    moongen:
+        addr: tclust8
 
 programs:
     log_dir: '{0.dirs.home}/logs/{0.label}'
 
     program_fpga:
         host: johnshack
-        start: 'cd ~/P4Boosters/FPGA/RSESDx && source ~/.bashrc && ./Run_project.bash'
+        start: 'cd ~/P4Boosters/FPGA/TopLevelSDx && source ~/.bashrc && bash program_memcached.sh'
         fg: true
         log:
             out: program_fpga.out
             err: program_fpga.err
-    gulp:
-        host: tcpdump
-        start: '~/bin/gulp -i ens3d1'
-        stop: pkill -f gulp
-        log:
-            dir: gulp
-            out: gulp.pcap
-            err: gulp.err
     moongen:
-        host: tcpdump
-        start: 'cd ~/dcomp/moongen/MoonGen/ && ./build/MoonGen bounce.lua -s150 4 {log}'
+        host: moongen
+        start: 'cd ~/dcomp/moongen/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} -s150 1 {log}'
         stop: pkill MoonGen
         log:
             dir: moongen
             log: moongen.pcap
             out: moongen.out
             err: moongen.err
-    tcpgulp:
-        host: tcpdump
-        start: '~/bin/tcpdump -i ens3d1 -s 150 -w - -j adapter_unsynced | ~/bin/gulp -c -r 1024'
-        stop: 'pkill -f tcpdump'
-        log:
-            dir: gulp
-            out: gulp.pcap
-            err: gulp.err
-    tcpdump:
-        host: tcpdump
-        start: '~/bin/tcpdump -i ens3d1 -w {log} -j adapter_unsynced -s 150 -c 100000'
-        stop: pkill -f tcpdump
-        log:
-            dir: tcpdump
-            out: tcpdump.out
-            err: tcpdump.err
-            log: tcpdump.pcap
     mcd:
         host: mcd
         start: 'memcached -U 11211 -l 10.0.0.3 --threads={threads} --memory-limit={memory}'
@@ -119,7 +98,7 @@ programs:
             out: hugepages.txt
 
     end:
-        host: tcpdump
+        host: moongen
         start: echo 'ENDING EXPERIMENT'
         stop: pkill echo
 
