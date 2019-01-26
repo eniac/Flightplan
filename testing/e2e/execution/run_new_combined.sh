@@ -1,31 +1,35 @@
 #!/bin/bash
-
 for i in `seq 1 3`; do
 
     python ../../Shremote/shremote.py \
-        cfgs/new_e2e_iperf_and_mcd.yml new_tc_$i \
-        --args "drop_rate:0;dataplane_flags:-c" --out ../output_swap/
+        cfgs/new_e2e_iperf_and_mcd.yml new_c_$i \
+            --args "drop_rate:0;dataplane_flags:-c" --out ../output_swap/
     sleep 10
 done
+
 exit 0
 
 for i in `seq 1 3`; do
 
     python ../../Shremote/shremote.py \
         cfgs/new_e2e_iperf_and_mcd.yml new_t_$i \
-            --args "drop_rate:0;dataplane_flags:" --out ../output_swap/
+            --args "drop_rate:0;dataplane_flags:-t" --out ../output_swap/
+    sleep 10
+    python ../../Shremote/shremote.py \
+        cfgs/new_e2e_iperf_and_mcd.yml new_tc_$i \
+        --args "drop_rate:0;dataplane_flags:-t -c" --out ../output_swap/
     sleep 10
     python ../../Shremote/shremote.py \
         cfgs/new_e2e_iperf_and_mcd.yml new_tdc_$i \
-            --args "drop_rate:0.05;dataplane_flags:-c" --out ../output_swap/
+            --args "drop_rate:0.05;dataplane_flags:-t -c" --out ../output_swap/
     sleep 10
     python ../../Shremote/shremote.py \
         cfgs/new_e2e_iperf_and_mcd.yml new_tdcf_$i \
-            --args "drop_rate:0.05;dataplane_flags:-c -f" --out ../output_swap/
+            --args "drop_rate:0.05;dataplane_flags:-t -c -f" --out ../output_swap/
     sleep 10
     python ../../Shremote/shremote.py \
         cfgs/new_e2e_iperf_and_mcd.yml new_tdcfk_$i \
-            --args "drop_rate:0.05;dataplane_flags:-c -f -k" --out ../output_swap/
+            --args "drop_rate:0.05;dataplane_flags:-t -c -f -k" --out ../output_swap/
     sleep 10
 done
 

@@ -68,7 +68,7 @@ function capture(rxQueue, args, threadId)
     local bufs = memory.bufArray()
 
     while lm.running() do
-        local count = rxQueue:tryRecv(bufs, 1000)
+        local count = rxQueue:tryRecv(bufs, 100)
         local batchTime = lm.getTime()
         for i = 1, count do
             local buf = bufs[i]
@@ -106,7 +106,7 @@ function bounce(rxQueue, txQueue, args, threadId)
     local bufs = memory.bufArray()
 
     while lm.running() do
-        local count = rxQueue:tryRecv(bufs, 1000) -- 1000 is timeout (ms)
+        local count = rxQueue:tryRecv(bufs, 100) -- 100 is timeout (ms)
         local batchTime = lm.getTime()
         for i = 1, count do
             local buf = bufs[i]

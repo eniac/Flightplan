@@ -85,7 +85,7 @@ programs:
 
     dataplane:
         host: tofino
-        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./run.sh -d {drop_rate} -t {0.args.dataplane_flags}
+        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./run.sh -d {drop_rate} {0.args.dataplane_flags}
         stop: cd ~/gits/TofinoP4Boosters/compressionE2e && ./stop.sh
 
     moongen:
@@ -154,7 +154,7 @@ commands:
     dataplane:
         begin: -95
         drop_rate: '{0.args.drop_rate}'
-        duration: '{0.time.iperf} + 15 + 95'
+        duration: '{0.time.iperf} + 25 + 95'
     program_fpgas:
         begin: -90
     check_huge_pages:
@@ -178,7 +178,7 @@ commands:
           enforce_duration: 20
     ping:
         begin: 10
-        duration: 20
+        duration: 21
     iperf3_server:
         begin: 15
         n: 10
