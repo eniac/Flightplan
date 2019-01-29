@@ -62,7 +62,9 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             }
         }
 
+#if defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
+#endif
 
         // If Memcached REQ/RES then pass through the cache.
         if (hdr.udp.isValid()) {
@@ -108,6 +110,10 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 hdr.eth.type = ETHERTYPE_WHARF;
             }
         }
+
+#if !defined(MID_FORWARDING_DECISION)
+        Forwarder.apply(meta);
+#endif
     }
 }
 
