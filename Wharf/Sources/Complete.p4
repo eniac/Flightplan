@@ -56,7 +56,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         // If Memcached REQ/RES then pass through the cache.
         if (hdr.udp.isValid()) {
             if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
-                memcached(forward); // FIXME check "forward" output value.
+                memcached(forward);
                 if (forward == 0) {
                     drop();
                     return;
