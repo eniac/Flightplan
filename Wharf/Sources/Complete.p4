@@ -94,7 +94,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     }
 }
 
-// FIXME parser and deparser currently only deal with FEC
 V1Switch(BMParser(), NoVerify(), Process(), NoEgress(), NoCheck(), FecDeparser()) main;
 
 #else
