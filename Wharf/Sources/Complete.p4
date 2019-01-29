@@ -70,7 +70,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         // TODO add code
 
         // If heading out on a lossy link, then FEC encode.
-        // TODO: Commenting out next line until lldp packets are tested
         get_port_status(meta.egress_spec, faulty);
         if (faulty == 1) {
             if (hdr.tcp.isValid()) {
