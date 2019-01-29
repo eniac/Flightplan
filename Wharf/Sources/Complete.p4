@@ -3,6 +3,7 @@
 #include "Memcached_extern.p4"
 #include "FEC.p4"
 #include "FEC_Classify.p4"
+#include "HC_extern.p4"
 
 #if defined(TARGET_BMV2)
 
@@ -48,11 +49,21 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             hdr.fec.setInvalid();
         }
 
+        bit<1> compressed_link = 0;
+        bit<1> forward = 0;
+
         // If multiplexed link, then header decompress.
-        // TODO add code
+        get_port_link_compression(meta.ingress_port, compressed_link);
+        if (compressed_link == 1) {
+            header_decompress(forward);
+            if (forward == 0) {
+                drop();
+                return;
+            }
+        }
+
         Forwarder.apply(meta);
 
-        bit<1> forward = 0;
         // If Memcached REQ/RES then pass through the cache.
         if (hdr.udp.isValid()) {
             if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
@@ -67,7 +78,14 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         bit<1> faulty = 1;
 
         // If heading out on a multiplexed link, then header compress.
-        // TODO add code
+        get_port_link_compression(meta.egress_spec, compressed_link);
+        if (compressed_link == 1) {
+            header_compress(forward);
+            if (forward == 0) {
+                drop();
+                return;
+            }
+        }
 
         // If heading out on a lossy link, then FEC encode.
         get_port_status(meta.egress_spec, faulty);
