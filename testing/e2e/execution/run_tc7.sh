@@ -5,12 +5,6 @@ CFG=cfgs/tc7_e2e_iperf_and_mcd.yml
 BASE=tc7
 OUT=../tc7_output/
 
-i=4
-python $SHR $CFG ${BASE}_c_$i \
-    --args "drop_rate:0;dataplane_flags:-c" --out ${OUT}
-
-exit 0
-
 for i in `seq 1 5`; do
 
     python $SHR $CFG ${BASE}_base_$i \
