@@ -96,7 +96,12 @@ def generate_packets(args):
         hashes = defaultdict(list)
         sets = []
 
-        for i, (k, h) in enumerate(mcdh.gen_hashes(n_set)):
+        if args.collision_prob > .95:
+            gtor = mcdh.gen_mostly_collisions(n_set)
+        else:
+            gtor = mcdh.gen_hashes(n_set)
+
+        for i, (k, h) in enumerate(gtor):
             sets.append(k)
             hashes[h].append(i)
 

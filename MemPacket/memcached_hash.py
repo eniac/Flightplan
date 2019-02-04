@@ -19,17 +19,18 @@ def gen_hashes(n, max=100000):
 def gen_mostly_collisions(n, max=10000000):
     keys_so_far = set()
     hashes_so_far = set()
-    for _ in range(n):
+    for _ in range(max):
         k = random.randint(1, max)
         while k in keys_so_far:
             k = random.randint(1, max)
-        n -= 1
-        if n < 0:
-            break
+        keys_so_far.add(k)
         str_k = "{:08d}".format(k)
         h = str_hash(str_k)
         if h in hashes_so_far or random.random() < .05:
             yield str_k, h
+            n -= 1
+            if n < 0:
+                break
 
 
 def gen_collisions(keys, n, max=100000):
