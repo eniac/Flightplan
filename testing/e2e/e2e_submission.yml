@@ -15,5 +15,4 @@ files:
     analysis.ipynb: analysis/e2eAnalysis.ipynb
     run_script.sh: execution/run_tc7.sh
     documentation.md: e2e.md
-    stack.pdf: analysis/e2e_stack.pdf
-    twin.pdf: analysis/e2e_twin.pdf
+    e2e.pdf: analysis/e2e.pdf

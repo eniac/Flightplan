@@ -1,17 +1,22 @@
 description: >-
-    Draft of the memcached data and analysis which contains
-    the 10% and 50% collision rate numbers, along with
-    all booster and all mcd.
-    Couple data points still need to be obtained,
-    specifically for high rate mcd alone
+    Final submission to SIGCOMM, including analysis.
+    Data has been consolidated to single folder.
+    Opted to omit 50% collision rate due to complications,
+    analysis instead only covers 0, 10, 100% collisions.
 
 experiment: memcached
 
 repositories:
-    P4Boosters: 93473589
+    P4Boosters: 5f88a383
 
 files:
     documentation.md: Memcached.md
     data: output/
     analysis: analysis/
+    cfg_booster: execution/cfgs/booster_alone_preset.yml
+    cfg_mcd: execution/cfgs/mcd_alone_preset.yml
+    cfg_misses: execution/cfgs/booster_mcd_preset.yml
     bitstream.tar.gz: /home/iped/MemcachedFPGA.tar.gz
+    booster_alone.sh: execution/run_all_booster_misses.sh
+    mcd_alone.sh: execution/run_all_mcd_alone_preset.sh
+    booster_misses.sh: execution/run_both_booster_misses.sh
