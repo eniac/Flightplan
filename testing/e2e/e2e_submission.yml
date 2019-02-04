@@ -1,0 +1,19 @@
+description: >-
+    Final version of data and analysis scripts for sigcomm submission.
+    Formatting and analysis differences in analysis.ipynb.
+    Telemetry has also been disabled in the experiment as a whole.
+
+experiment: e2e
+
+repositories:
+    P4Boosters: 317c7f28
+    TofinoP4Boosters: 1d83cb15853
+
+files:
+    data: tc7_output/
+    config.yml: execution/cfgs/tc7_e2e_iperf_and_mcd.yml
+    analysis.ipynb: analysis/e2eAnalysis.ipynb
+    run_script.sh: execution/run_tc7.sh
+    documentation.md: e2e.md
+    stack.pdf: analysis/e2e_stack.pdf
+    twin.pdf: analysis/e2e_twin.pdf
