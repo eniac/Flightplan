@@ -11,3 +11,14 @@ memcached:   # Memcached must contain these in addition
         - data
         - bitstream.tar.gz
 
+e2e:
+    - repositories:
+        - TofinoP4Boosters
+    - files:
+        - data
+
+fec:
+    - files:
+        - data
+    - repositories:
+        - TofinoP4Boosters
