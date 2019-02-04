@@ -13,4 +13,4 @@ files:
     analysis.ipynb: analysis/fecAnalysis.ipynb
     run_script.sh: execution/run_iperf.sh
     documentation.md: fec.md
-    throughput: analysis/fec_throughput.pdf
+    throughput: analysis/tcp_throughput.pdf
