@@ -1,0 +1,14 @@
+description: >-
+    SIGCOMM submission -- plotting pings to get overhead
+    of table offload
+
+experiment: offload
+
+repositories:
+    P4Boosters: 52e70cc6
+
+files:
+    analysis.ipynb: plot_pings.ipynb
+    baselinePingLog.txt: baselinePingLog.txt
+    oneHopPingLog.txt: oneHopPingLog.txt
+    documentation.md: offload.md
