@@ -66,7 +66,6 @@ Due to a limitation of the FEC, some MAC addresses had to be changed. Also, some
   * Attached via ens3d1 to tofino:3
   * ip: 10.0.0.7
   * mac: 00:02:c9:3a:84:00
-    * Potentially has to be set in arp on memcached server
     * Mac address should be used for generation of packets
 * Memcached Server
   * tclust4
@@ -74,7 +73,7 @@ Due to a limitation of the FEC, some MAC addresses had to be changed. Also, some
   * ip: 10.0.0.4
   * mac: 7c:fe:90:1c:36:81
     * Mac address should be used for generation of packets
-  * May have to set arp with `arp -s 10.0.0.7 00:02:c9:3a:84:00 --dev ens1f1` but not sure if this in mandatory
+  * _NOTE_: I had set ARP on the memcached server so that it knew which on device and MAC to send packets responding to the memcached client. This may not be necessary, but if packets are not making it back to the memcached client, you may try executing: `arp -s 10.0.0.7 00:02:c9:3a:84:00 --dev ens1f1`.
 * Iperf client
   * tclust1
   * Attached via ens1f1 to tofino:1
