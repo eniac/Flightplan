@@ -112,20 +112,44 @@ def generate_packets(args):
             pkts.append(set_gen.set(key))
             log.append(dict(type='set', h=mcdh.str_hash(key), k=key))
 
-        for _ in range(n_get):
+        hit_hash_keys = hashes.keys()
+        miss_hash_keys = multi_hashes.keys()
+
+        safe_hit_hash_keys = set(hashes.keys())
+        safe_miss_hash_keys = set(multi_hashes.keys())
+        used_hash_keys = []
+
+        for i in range(n_get):
+            if i % (n_get / 10) == 0:
+                print('%d,' % len(pkts), end='')
+                sys.stdout.flush()
             do_collide = random.random() < args.collision_prob
             if do_collide:
-                h = random.choice(multi_hashes.keys())
+                h = random.choice(list(safe_miss_hash_keys))
                 idx = hashes[h][0]
                 del hashes[h][0]
                 hashes[h].append(idx)
                 pkts.append(gen.get(sets[idx]))
-                log.append(dict(type='get', h = mcdh.str_hash(sets[idx]), k=sets[idx]))
+                log.append(dict(type='get', h = mcdh.str_hash(sets[idx]), k=sets[idx], collide=True, idx=i))
+
+                safe_hit_hash_keys.remove(h)
+                safe_miss_hash_keys.remove(h)
             else:
-                h = random.choice(hashes.keys())
+                h = random.choice(list(safe_hit_hash_keys))
                 idx = hashes[h][-1]
                 pkts.append(gen.get(sets[idx]))
-                log.append(dict(type='get', h = mcdh.str_hash(sets[idx]), k=sets[idx]))
+                log.append(dict(type='get', h = mcdh.str_hash(sets[idx]), k=sets[idx], collide=False, idx=i))
+
+                if h in safe_miss_hash_keys:
+                    safe_miss_hash_keys.remove(h)
+                safe_hit_hash_keys.remove(h)
+
+            used_hash_keys.append(h)
+            if i >= 500:
+                reuse_hash = used_hash_keys[i-250]
+                if reuse_hash in miss_hash_keys:
+                    safe_miss_hash_keys.add(reuse_hash)
+                safe_hit_hash_keys.add(reuse_hash)
 
     else:
 
