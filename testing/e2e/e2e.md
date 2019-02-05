@@ -112,7 +112,7 @@ Tests were orchestrated from tclust6, though the orchestrator should not
 make a difference as long as it has passwordless access to all other
 necessary machines.
 
-Tests are executed with Shremote, checked out [here](../Shremote) as a git submodule.
+Tests are executed with Shremote, checked out [here](..) as a git submodule.
 
 If the submodule is not checked out, initialize it with:
 ```shell
