@@ -4,3 +4,6 @@
 [submodule "testing/memcached/analysis/memoization"]
 	path = testing/memcached/analysis/memoization
 	url = https://gist.github.com/1789ce639c1ed6d4ce3d2d15f354bc2f.git
+[submodule "testing/overhead_benchmark/Memoizer"]
+	path = testing/overhead_benchmark/Memoizer
+	url = https://github.com/isaac-ped/Memoizer.git
