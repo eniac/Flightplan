@@ -66,6 +66,26 @@ Due to a limitation of the FEC, some MAC addresses had to be changed. Also, some
   * ip: 10.0.0.2
   * mac: unchanged, not directly used
 
+### FPGAs
+
+The three FPGAs are:
+
+* KV cache
+  * Bottom
+  * Power # 2
+  * Tofino port 17/1
+  * Johnshack cable: `jsn-JTAG-SMT2NC-210308A46CBE`
+* Encoder
+  * Middle
+  * Power # 3
+  * Tofino port 17/2
+  * Johnshack cable: `jsn-JTAG-SMT2NC-210308A47676`
+* Decoder
+  * Top
+  * Power # 4
+  * Tofino port 17/3
+  * Johnshack cable: `jsn-JTAG-SMT2NC-210308A5F0D3`
+
 
 ## Test Execution
 
