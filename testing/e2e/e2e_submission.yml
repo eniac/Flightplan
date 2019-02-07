@@ -16,3 +16,6 @@ files:
     run_script.sh: execution/run_tc7.sh
     documentation.md: e2e.md
     e2e.pdf: analysis/e2e.pdf
+    Encoder.tar.gz: ../bitstreams/RSEEncoder1Port.tar.gz
+    Decoder.tar.gz: ../bitstreams/RSEDecoder1Port.tar.gz
+    Memcached.tar.gz: ../bitstreams/Memcached.tar.gz
