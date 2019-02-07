@@ -29,7 +29,7 @@ View [Shremote Description](../e2e/e2e.md#Shremote-Description), and
 
 ### Shremote Config
 For these experiments, shremote is run with the config:
-[iperf.yml.yml](execution/cfgs/iperf.yml).
+[iperf.yml](execution/cfgs/iperf.yml).
 
 This configuration file uses the scripts to [start](execution/start_iperf_servers.sh)
 and [stop](execution/stop_iperf_servers.sh) N iperf servers and clients necessary for
