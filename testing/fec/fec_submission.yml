@@ -14,3 +14,5 @@ files:
     run_script.sh: execution/run_iperf.sh
     documentation.md: fec.md
     throughput: analysis/tcp_throughput.pdf
+    Encoder.tar.gz: ../bitstreams/RSEEncoder1Port.tar.gz
+    Decoder.tar.gz: ../bitstreams/RSEDecoder1Port.tar.gz
