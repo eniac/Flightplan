@@ -3,7 +3,7 @@
 FEC testing depends on the same tofino setup as in the end-to-end tests.
 View [e2e.md](../e2e/e2e.md) for more information on the tofino and topology.
 
-The sections that are different here are [Shremote Config](#Shremote_Config) and [Running](#Running)
+The sections that are different here are [Shremote Config](#Shremote-Config) and [Running](#Running)
 
 ## Set-up
 
@@ -12,7 +12,7 @@ View [Topology](../e2e/e2e.md#Topology) section of e2e.md.
 Only iperf3 client and server (tclust1 and tclust2) are necessary.
 
 ### Machine Specifications
-View [Machine Specifications](../e2e/e2e.md#Machine_Specifications) section of e2e.md.
+View [Machine Specifications](../e2e/e2e.md#Machine-Specifications) section of e2e.md.
 Only Iperf client and Iperf server are necessary.
 
 
@@ -21,11 +21,11 @@ View [FPGAS](../e2e/e2e.md#FPGAs) section of e2e.md.
 Only encoder and decoder are necessary
 
 ## Test Execution
-View [Test Execution](../e2e/e2e.md#Test_Execution) section of e2e.md
+View [Test Execution](../e2e/e2e.md#Test-Execution) section of e2e.md
 
 ### Shremote
-View [Shremote Description](../e2e/e2e.md#Shremote_Description), and
-[Shremote Program Dependencies](../e2e/e2e.md#Shremote_Program_Dependencies)
+View [Shremote Description](../e2e/e2e.md#Shremote-Description), and
+[Shremote Program Dependencies](../e2e/e2e.md#Shremote-Program-Dependencies)
 
 ### Shremote Config
 For these experiments, shremote is run with the config:
@@ -49,7 +49,7 @@ ssh key referenced, which logs onto the tofino. Be sure
 to change that as well.
 
 ### Shremote Config Dependencies
-View [Shremote Config Dependencies](../e2e/e2e.md#Shremote_Config_Dependencies),
+View [Shremote Config Dependencies](../e2e/e2e.md#Shremote-Config-Dependencies),
 only the following are necessary:
 * files: johnshack, tofino
 * programs: iperf3
