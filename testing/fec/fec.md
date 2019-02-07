@@ -31,8 +31,8 @@ View [Shremote Description](../e2e/e2e.md#Shremote-Description), and
 For these experiments, shremote is run with the config:
 [iperf.yml](execution/cfgs/iperf.yml).
 
-This configuration file uses the scripts to [start](execution/start_iperf_servers.sh)
-and [stop](execution/stop_iperf_servers.sh) N iperf servers and clients necessary for
+This configuration file uses the scripts to start iperf [servers](execution/start_iperf_servers.sh)
+and [clients](execution/start_iperf_clients.sh) N iperf servers and clients necessary for
 the experiment.
 
 These scripts are copied to the target machines automatically.
