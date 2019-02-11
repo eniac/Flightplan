@@ -1,0 +1,191 @@
+dirs:
+    home: /home/iped
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+
+params:
+    get_pct: '.95'
+    collision_prob: .1
+    local_lua_template: ./pktgen_template.lua
+    local_lua: '{0.out}/pktgen.lua'
+    local_pcap: './200k_get_pkts.pcap'
+    local_set_pcap: './200k_set_pkts.pcap'
+
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+
+init_cmds: {}
+
+time:
+    iperf: 10
+
+files:
+    pcap_file:
+        src: '{0.params.local_pcap}'
+        dst: '{0.programs.log_dir}/pkts.pcap'
+        host: pktgen
+    moongen_script:
+        src: 'bounce2.lua'
+        dst: '{0.programs.log_dir}/bounce.lua'
+        host: moongen
+    set_pcap_file:
+        src: '{0.params.local_set_pcap}'
+        dst: '{0.programs.log_dir}/set_pkts.pcap'
+        host: pktgen
+    start_iperf_servers:
+        src: 'start_iperf_servers.sh'
+        dst: '{0.programs.log_dir}/start_iperf_servers.sh'
+        host: server
+    start_iperf_clients:
+        src: 'start_iperf_clients.sh'
+        dst: '{0.programs.log_dir}/start_iperf_clients.sh'
+        host: client
+
+hosts:
+    johnshack:
+        addr: johnshack
+    pktgen:
+        addr: tclust5
+    mcd:
+        addr: tclust4
+        mac: 7c:fe:90:1c:36:81
+        ip: 10.0.0.4
+    moongen:
+        addr: tclust3
+        mac: 7c:fe:90:1c:36:00
+        ip: 10.0.0.3
+    client:
+        addr: tclust1
+        ip: 10.0.0.1
+    server:
+        addr: tclust2
+        ip: 10.0.0.2
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+    log_dir: '{0.dirs.home}/logs/{0.label}'
+
+    program_fpgas:
+        host: johnshack
+        start: 'cd ~/P4Boosters/FPGA/TopLevelSDx && bash program_all.sh {log}'
+        fg: true
+        check_rtn: 0
+        log:
+            dir: program_fpgas
+            log: program
+            out: program_fpgas.out
+            err: program_fgpas.err
+
+    dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./run.sh -d {drop_rate} {0.args.dataplane_flags}
+        stop: cd ~/gits/TofinoP4Boosters/compressionE2e && ./stop.sh
+
+    moongen:
+        host: moongen
+        start: 'cd ~/dcomp/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} -s150 4 5 {log}_in.pcap {log}_out.pcap'
+        stop: pkill MoonGen
+        log:
+            dir: moongen
+            log: moongen
+            out: moongen.out
+            err: moongen.err
+    mcd:
+        host: mcd
+        start: 'memcached -U 11211 -l {0.hosts.mcd.ip}'
+        stop: 'pkill memcached'
+        log:
+            out: memcached.out
+            err: memcached.err
+
+    check_huge_pages:
+        host: pktgen
+        start: 'bash /home/iped/dcomp/dpdkScripts/printHugePages.sh'
+        log:
+            out: hugepages.txt
+
+    iperf3_server:
+        host: server
+        start: 'bash {0.files.start_iperf_servers.dst} {n} {log} {0.hosts.server.ip}'
+        stop: pkill iperf3
+        log:
+            dir: iperf
+            log: server
+            out: start_servers.out
+            err: start_servers.err
+
+    iperf3_client:
+        host: client
+        start: 'bash {0.files.start_iperf_clients.dst} {n} {time} {log} {0.hosts.client.ip} {0.hosts.server.ip}'
+        log:
+            dir: iperf
+            log: client
+            out: start_clients.out
+            err: start_clients.err
+
+    ping:
+        host: client
+        start: 'ping -i .2 {0.hosts.server.ip}'
+        stop: 'pkill ping'
+        log:
+            dir: ping
+            out: ping.out
+            err: ping.err
+
+    end:
+        host: client
+        start: "echo 'ending'"
+
+    tcpreplay:
+        host: pktgen
+        start: '~/bin/tcpreplay -p {rate} -i ens1f0 {pcap}'
+        log:
+            dir: tcpreplay
+            out: tcpreplay.out
+            err: tcpreplay.err
+commands:
+    dataplane:
+        begin: -95
+        drop_rate: '{0.args.drop_rate}'
+        duration: '{0.time.iperf} + 25 + 95'
+    program_fpgas:
+        begin: -90
+    check_huge_pages:
+        begin: -11
+    mcd:
+        begin: -10
+        duration: '{0.time.iperf} + 55 + 10'
+        enforce_duration: True
+    moongen:
+        begin: -11
+        duration: 52
+        enforce_duration: true
+    tcpreplay:
+        - begin: 2
+          pcap: '{0.files.set_pcap_file.dst}'
+          rate: 1000
+          enforce_duration: 10
+        - begin: 15
+          pcap: '{0.files.pcap_file.dst}'
+          rate: 10000
+          enforce_duration: 20
+    ping:
+        begin: 10
+        duration: 21
+    iperf3_server:
+        begin: 15
+        n: 10
+        duration: '{0.time.iperf} + 15'
+        enforce_duration: '{0.time.iperf}'
+    iperf3_client:
+        begin: 20
+        n: 10
+        time: "{0.time.iperf}"
+        enforce_duration: '{0.time.iperf}'

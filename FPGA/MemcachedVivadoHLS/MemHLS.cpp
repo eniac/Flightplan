@@ -1,4 +1,5 @@
 #include "MemHLS.h"
+#include "MemHLS_hash.h"
 #include <iostream>
 #define STORE_FROMSERVER 
 
@@ -12,24 +13,6 @@
 
 static Cache Memory[MAX_MEMORY_SIZE];
 static uint16_t Packet_num;
-uint16_t hash(Data_Word Data)
-{
-#pragma HLS inline
-	Data_Word temp = Data;
-	uint16_t result = 0;
-	Data = (~Data) + (Data << 21);
-	Data = Data ^ (Data >> 24);
-	Data = (Data + (Data << 3)) + (Data << 8);
-	Data = Data ^ (Data >> 14);
-	Data = (Data + (Data << 2)) + (Data << 4);
-	Data = Data ^ (Data >> 28);
-	Data = Data + (Data << 31);
-	result = (uint16_t) (Data % MAX_MEMORY_SIZE);
-	result ^= temp.range(16,0);
-	result %= MAX_MEMORY_SIZE;
-	return result;
-}
-
 
 uint8_t Find_delimiter(Data_Word &buffer)
 {
@@ -1091,27 +1074,52 @@ void Output_packets(//input_tuples Input_tuple,
 		}
 		#endif
 		else if (PKTS_ONLY_FORWARD)
-		{
-			do
+		{	
+			input = Packet_in2.read();
+			End = input.End_of_frame;
+			while(!End)
 			{
 		#pragma HLS pipeline II=1
+				Packet_out.write(input);
 				input = Packet_in2.read();
 				End = input.End_of_frame;
-				Packet_out.write(input);
-			}while(!End);
+			}
+			if (tuple_forward.Hdr.Udp.len < 26)
+			{
+				input.Data.range(63 - 8*input.Count, 0) = 0;
+				input.Count += 26 - tuple_forward.Hdr.Udp.len;
+			}  
+			Packet_out.write(input);
 			Output_tuples.write(tuple_forward);
 		}
 	}
 	else
 	{
-		do
-		{
-	#pragma HLS pipeline II=1
+		//do
+		//{
+//	#pragma HLS pipeline II=1
+//			input = Packet_in2.read();
+//			End = input.End_of_frame;
+//			Packet_out.write(input);
+//		}while(!End);
+//		Output_tuples.write(tuple_out);
 			input = Packet_in2.read();
 			End = input.End_of_frame;
+			while(!End)
+			{
+		#pragma HLS pipeline II=1
+				Packet_out.write(input);
+				input = Packet_in2.read();
+				End = input.End_of_frame;
+			}
+			if (tuple_forward.Hdr.Udp.len < 26)
+			{
+				input.Data.range(63 - 8*input.Count, 0) = 0;
+				input.Count += 26 - tuple_forward.Hdr.Udp.len;
+			}
 			Packet_out.write(input);
-		}while(!End);
-		Output_tuples.write(tuple_out);
+			Output_tuples.write(tuple_forward);
+
 	}
 
 

@@ -85,6 +85,14 @@ class SimpleSwitch : public Switch {
   using TransmitFn = std::function<void(port_t, packet_id_t,
                                         const char *, int)>;
 
+  struct MirroringSessionConfig {
+    port_t egress_port;
+    bool egress_port_valid;
+    unsigned int mgid;
+    bool mgid_valid;
+  };
+
+
  private:
   using clock = std::chrono::high_resolution_clock;
   std::unique_ptr<Packet> create_packet(int engress_port, const u_char *payload, size_t len);
@@ -114,18 +122,13 @@ class SimpleSwitch : public Switch {
 
   void reset_target_state_() override;
 
-  int mirroring_mapping_add(mirror_id_t mirror_id, port_t egress_port) {
-    mirroring_map[mirror_id] = egress_port;
-    return 0;
-  }
+  bool mirroring_add_session(mirror_id_t mirror_id,
+                             const MirroringSessionConfig &config);
 
-  int mirroring_mapping_delete(mirror_id_t mirror_id) {
-    return mirroring_map.erase(mirror_id);
-  }
+  bool mirroring_delete_session(mirror_id_t mirror_id);
 
-  bool mirroring_mapping_get(mirror_id_t mirror_id, port_t *port) const {
-    return get_mirroring_mapping(mirror_id, port);
-  }
+  bool mirroring_get_session(mirror_id_t mirror_id,
+                             MirroringSessionConfig *config) const;
 
   int set_egress_queue_depth(size_t port, const size_t depth_pkts);
   int set_all_egress_queue_depths(const size_t depth_pkts);
@@ -141,7 +144,7 @@ class SimpleSwitch : public Switch {
 
   // returns the packet id of most recently received packet. Not thread-safe.
   static packet_id_t get_packet_id() {
-    return (packet_id-1);
+    return packet_id - 1;
   }
 
   void set_transmit_fn(TransmitFn fn);
@@ -149,6 +152,8 @@ class SimpleSwitch : public Switch {
  private:
   static constexpr size_t nb_egress_threads = 4u;
   static packet_id_t packet_id;
+
+  class MirroringSessions;
 
   enum PktInstanceType {
     PKT_INSTANCE_TYPE_NORMAL,
@@ -202,6 +207,8 @@ class SimpleSwitch : public Switch {
 
   void check_queueing_metadata();
 
+  void multicast(Packet *packet, unsigned int mgid);
+
  private:
   port_t max_port;
   std::vector<std::thread> threads_;
@@ -219,6 +226,7 @@ class SimpleSwitch : public Switch {
   clock::time_point start;
   std::unordered_map<mirror_id_t, port_t> mirroring_map;
   bool with_queueing_metadata{false};
+  std::unique_ptr<MirroringSessions> mirroring_sessions;
 
   void check_booster_queue(packet_id_t id);
 };

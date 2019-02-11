@@ -109,11 +109,10 @@ set files [list \
  "[file normalize "$origin_dir/Sources/design_1.bd"]"\
  "[file normalize "$origin_dir/Sources/design_1_wrapper.vhd"]"\
 ]
-add_files -norecurse -fileset $obj $files
+set imported_files [import_files -fileset sources_1 $files]
 
 # Set 'sources_1' fileset file properties for remote files
-set file "$origin_dir/Sources/design_1_wrapper.vhd"
-set file [file normalize $file]
+set file "design_1_wrapper.vhd"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
 
@@ -135,15 +134,13 @@ set obj [get_filesets constrs_1]
 
 # Add/Import constrs file and set constrs file properties
 set file "[file normalize "$origin_dir/Sources/Constraints.xdc"]"
-set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/Sources/Constraints.xdc"
-set file [file normalize $file]
+set imported_files [import_files -fileset $obj $file]
+set file "Constraints.xdc"
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property -name "file_type" -value "XDC" -objects $file_obj
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
-set_property -name "target_constrs_file" -value "$orig_proj_dir/Sources/Constraints.xdc" -objects $obj
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
