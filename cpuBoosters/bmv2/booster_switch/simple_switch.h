@@ -62,21 +62,36 @@ using bm::McSimplePreLAG;
 using bm::Field;
 using bm::FieldList;
 using bm::packet_id_t;
+using bm::copy_id_t;
 using bm::p4object_id_t;
 
 
 class SimpleSwitch : public Switch {
+ private:
+  static copy_id_t booster_id;
+  std::queue<std::unique_ptr<Packet>> priority_input_buffer;
+  void ingress_action(std::unique_ptr<Packet> packet, bool is_booster);
  public:
-  void enqueue_booster_packet(Packet &src, const u_char *payload, size_t len);
-  void deparse_booster_packet(Packet &src, const u_char *payload, size_t len);
-  void output_booster_packet(Packet &src, const u_char *payload, size_t len);
-  void output_booster_packet(int engress_port, const u_char *payload, size_t len);
-  void recirculate_booster_packet(Packet &src, const u_char *payload, size_t len);
+  void output_booster_packet(std::unique_ptr<Packet> packet);
+  void insert_booster_packet(std::unique_ptr<Packet> packet);
+
+  std::unique_ptr<Packet> create_booster_packet(Packet *src,
+                                                int ingress_port,
+                                                const char *payload,
+                                                size_t len);
 
   using mirror_id_t = int;
 
   using TransmitFn = std::function<void(port_t, packet_id_t,
                                         const char *, int)>;
+
+  struct MirroringSessionConfig {
+    port_t egress_port;
+    bool egress_port_valid;
+    unsigned int mgid;
+    bool mgid_valid;
+  };
+
 
  private:
   using clock = std::chrono::high_resolution_clock;
@@ -84,8 +99,8 @@ class SimpleSwitch : public Switch {
   std::unique_ptr<Packet> duplicate_modified_packet(Packet &src, const u_char *payload, size_t len);
 
   // BOOSTER
-  void booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> packet);
-
+  //void booster_queue_enqueue(packet_id_t id, std::unique_ptr<Packet> packet);
+  //
   using periodic_fn =  std::function<void()>;
 
   std::vector<std::tuple<periodic_fn, std::string> > periodic_calls;
@@ -107,18 +122,13 @@ class SimpleSwitch : public Switch {
 
   void reset_target_state_() override;
 
-  int mirroring_mapping_add(mirror_id_t mirror_id, port_t egress_port) {
-    mirroring_map[mirror_id] = egress_port;
-    return 0;
-  }
+  bool mirroring_add_session(mirror_id_t mirror_id,
+                             const MirroringSessionConfig &config);
 
-  int mirroring_mapping_delete(mirror_id_t mirror_id) {
-    return mirroring_map.erase(mirror_id);
-  }
+  bool mirroring_delete_session(mirror_id_t mirror_id);
 
-  bool mirroring_mapping_get(mirror_id_t mirror_id, port_t *port) const {
-    return get_mirroring_mapping(mirror_id, port);
-  }
+  bool mirroring_get_session(mirror_id_t mirror_id,
+                             MirroringSessionConfig *config) const;
 
   int set_egress_queue_depth(size_t port, const size_t depth_pkts);
   int set_all_egress_queue_depths(const size_t depth_pkts);
@@ -134,7 +144,7 @@ class SimpleSwitch : public Switch {
 
   // returns the packet id of most recently received packet. Not thread-safe.
   static packet_id_t get_packet_id() {
-    return (packet_id-1);
+    return packet_id - 1;
   }
 
   void set_transmit_fn(TransmitFn fn);
@@ -142,6 +152,8 @@ class SimpleSwitch : public Switch {
  private:
   static constexpr size_t nb_egress_threads = 4u;
   static packet_id_t packet_id;
+
+  class MirroringSessions;
 
   enum PktInstanceType {
     PKT_INSTANCE_TYPE_NORMAL,
@@ -195,6 +207,8 @@ class SimpleSwitch : public Switch {
 
   void check_queueing_metadata();
 
+  void multicast(Packet *packet, unsigned int mgid);
+
  private:
   port_t max_port;
   std::vector<std::thread> threads_;
@@ -212,6 +226,7 @@ class SimpleSwitch : public Switch {
   clock::time_point start;
   std::unordered_map<mirror_id_t, port_t> mirroring_map;
   bool with_queueing_metadata{false};
+  std::unique_ptr<MirroringSessions> mirroring_sessions;
 
   void check_booster_queue(packet_id_t id);
 };

@@ -1,0 +1,33 @@
+all:         # All experiments must contain these fields
+    - description
+    - experiment
+    - repositories:
+        - P4Boosters
+    - files:
+        - documentation.md
+
+memcached:   # Memcached must contain these in addition
+    - files:
+        - data
+        - bitstream.tar.gz
+
+e2e:
+    - repositories:
+        - TofinoP4Boosters
+    - files:
+        - data
+        - Encoder.tar.gz
+        - Decoder.tar.gz
+        - Memcached.tar.gz
+
+fec:
+    - files:
+        - data
+        - Encoder.tar.gz
+        - Decoder.tar.gz
+    - repositories:
+        - TofinoP4Boosters
+
+overhead: []
+
+offload: []

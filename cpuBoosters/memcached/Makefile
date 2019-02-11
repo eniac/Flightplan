@@ -4,7 +4,7 @@ CORE_DIR=../../FPGA/MemcachedVivadoHLS
 CORE_SOURCE=$(CORE_DIR)/MemHLS.cpp
 CORE_OBJ=MemHLS.o
 
-XILINX_DIR=/home/iped/
+XILINX_DIR?=/home/${USER}/Xilinx
 
 HLS_INCLUDE_DIR=$(XILINX_DIR)/Vivado_HLS/2017.1/include/
 
@@ -29,8 +29,11 @@ all: p4 pcap
 copy_files: p4
 	rsync -av --exclude='test_output' ./* $(BOOSTER_SWITCH_MEMCD_DIR)
 
-bmv2: copy_files
+bmv2_configure: copy_files
 	cd $(BOOSTER_SWITCH_DIR)/.. && make configure all BOOSTERS=MEMCACHED
+
+bmv2: copy_files
+	cd $(BOOSTER_SWITCH_DIR)/.. && make
 
 memcached.o: memcached.cpp
 	$(CC) $(FLAGS) -c $<
