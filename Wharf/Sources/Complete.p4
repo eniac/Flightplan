@@ -3,6 +3,7 @@
 #include "Memcached_extern.p4"
 #include "FEC.p4"
 #include "FEC_Classify.p4"
+#include "HC_extern.p4"
 
 #if defined(TARGET_BMV2)
 
@@ -48,15 +49,27 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             hdr.fec.setInvalid();
         }
 
-        // If multiplexed link, then header decompress.
-        // TODO add code
-        Forwarder.apply(meta);
-
+        bit<1> compressed_link = 0;
         bit<1> forward = 0;
+
+        // If multiplexed link, then header decompress.
+        get_port_link_compression(meta.ingress_port, compressed_link);
+        if (compressed_link == 1) {
+            header_decompress(forward);
+            if (forward == 0) {
+                drop();
+                return;
+            }
+        }
+
+#if defined(MID_FORWARDING_DECISION)
+        Forwarder.apply(meta);
+#endif
+
         // If Memcached REQ/RES then pass through the cache.
         if (hdr.udp.isValid()) {
             if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
-                memcached(forward); // FIXME check "forward" output value.
+                memcached(forward);
                 if (forward == 0) {
                     drop();
                     return;
@@ -67,10 +80,16 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         bit<1> faulty = 1;
 
         // If heading out on a multiplexed link, then header compress.
-        // TODO add code
+        get_port_link_compression(meta.egress_spec, compressed_link);
+        if (compressed_link == 1) {
+            header_compress(forward);
+            if (forward == 0) {
+                drop();
+                return;
+            }
+        }
 
         // If heading out on a lossy link, then FEC encode.
-        // TODO: Commenting out next line until lldp packets are tested
         get_port_status(meta.egress_spec, faulty);
         if (faulty == 1) {
             if (hdr.tcp.isValid()) {
@@ -91,10 +110,13 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 hdr.eth.type = ETHERTYPE_WHARF;
             }
         }
+
+#if !defined(MID_FORWARDING_DECISION)
+        Forwarder.apply(meta);
+#endif
     }
 }
 
-// FIXME parser and deparser currently only deal with FEC
 V1Switch(BMParser(), NoVerify(), Process(), NoEgress(), NoCheck(), FecDeparser()) main;
 
 #else

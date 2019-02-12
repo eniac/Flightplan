@@ -67,7 +67,6 @@ control FecEncode(inout headers_t hdr, inout metadata_t meta) {
         Forwarder.apply(meta);
         bit<1> faulty = 1;
 
-        // TODO: Commenting out next line until lldp packets are tested
         get_port_status(meta.egress_spec, faulty);
         if (faulty == 1) {
             if (hdr.tcp.isValid()) {
