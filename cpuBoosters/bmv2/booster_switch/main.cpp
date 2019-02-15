@@ -106,9 +106,6 @@ shared_ptr<SimpleSwitchIf> get_handler(SimpleSwitch *sw);
 
 int
 main(int argc, char* argv[]) {
-
-  boosters::init_boosters();
-
   simple_switch = SimpleSwitch::get_instance();
   simple_switch_parser = new SimpleSwitchParser();
   int status = simple_switch->init_from_command_line_options(

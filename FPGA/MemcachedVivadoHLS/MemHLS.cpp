@@ -1,7 +1,14 @@
 #include "MemHLS.h"
 #include <iostream>
+#define STORE_FROMSERVER 
 
-
+#ifdef STORE_FROMSERVER
+#define IS_PKTS_NEED_RESP Metadata.pkt == get_pkt 
+#define PKTS_ONLY_FORWARD Metadata.pkt == get_miss || Metadata.pkt == get_collision || Metadata.pkt == value_pkt || Metadata.pkt == set_pkt
+#else
+#define IS_PKTS_NEED_RESP Metadata.pkt == set_pkt || Metadata.pkt == get_pkt
+#define PKTS_ONLY_FORWARD Metadata.pkt == get_miss || Metadata.pkt == get_collision || Metadata.pkt == value_pkt
+#endif 
 
 static Cache Memory[MAX_MEMORY_SIZE];
 static uint16_t Packet_num;
@@ -35,7 +42,14 @@ uint8_t Find_delimiter(Data_Word &buffer)
 	}
 	return result;
 }
-
+void PrintDataWord(Part_Word Data)
+{
+	for(int i = 0; i<8; i++)
+	{
+		std::cout << (char)Data.Data.range(63,56);
+	}
+	std::cout << std::endl;
+}
 void Pktclassifier(hls::stream<input_tuples> &tuple_in,
 				  hls::stream<input_tuples> &tuple_out,//1,hls::stream<input_tuples> &tuple_out2,
 				  hls::stream<packet_interface> &pkt_in,
@@ -43,7 +57,6 @@ void Pktclassifier(hls::stream<input_tuples> &tuple_in,
 				  hls::stream<MemcachedPkt> &Mempkt)
 {
 	input_tuples tuple = tuple_in.read();
-    tuple_out.write(tuple);
 	//if (tuple.Hdr.Ipv4.protocol != 0x11 || tuple.Hdr.Eth.Type != 0x0800 || tuple.Hdr.Udp.dport !=11211)
 	//if (1)
     if (tuple.Memcached_input.Stateful_valid == 0)
@@ -114,6 +127,8 @@ void Pktclassifier(hls::stream<input_tuples> &tuple_in,
 		MemcachedPkt mempkt = true;
 		Mempkt.write(mempkt);
 	}
+    tuple_out.write(tuple);
+
 }
 void Extract_Data(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 				  hls::stream<packet_interface> &Packet_input, hls::stream<Part_Word> &Data_out)
@@ -214,7 +229,7 @@ void Parse_Memcached_Hdr(hls::stream<MemcachedPkt> &Mempkt, hls::stream<Memcache
 	{	bool pktcomplete;
 		enum Parser_State State;
 		Part_Word tempin;
-		metadata Metadataout = {0,0,0};
+		metadata Metadataout = {0,invalid,0,0,0};
 		State = Consumption;
 		do
 		{
@@ -239,87 +254,120 @@ void Parse_CMD(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 			   hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out, hls::stream<metadata> &Metain, hls::stream<metadata> &Metaout)
 {
 	 MemcachedPkt mempkt = Mempkt.read();
-	 Mempkt_out.write(mempkt);
 	 if (mempkt)
-	 {	 bool pktcomplete;
-		 pktcomplete = false;
-		 enum Parser_State State;
-		 State = Consumption;
-		 int removelength;
-		 uint8_t remainlen;
-		 Part_Word tempin, tempout;
-		 metadata Metadata;
-		 Part_Word remainword;
-		 Part_Word EndWord = {0,0};
-		 Metadata = Metain.read();
-		 do
-		 {
-	#pragma HLS pipeline II=1
-	#pragma HLS loop_tripcount min=8 max=190
-
-			 tempin = Data_in.read();
-			 pktcomplete = tempin.End;
-			 if (State == Consumption)
-			 {
-				 switch (tempin.Data.range(63,32))
-				 {
-					 case (0x73657420):
-					{
-						 Metadata.cmd = 1;
-						 removelength = 4;
-						 break;
-					}
-					 case (0x67657420):
-					{
-						 Metadata.cmd = 0;
-						 removelength = 4;
-						 break;
-					}
-					 case (0x64656c65):
-					{
-						 Metadata.cmd = 2;
-						 removelength = 7;
-						 break;
-					}
-
-
-				 }
-				 std::cout << removelength << std::endl;
-				 State = Alignment;
+	 {	 
+		bool pktcomplete;
+		pktcomplete = false;
+		enum Parser_State State;
+		State = Consumption;
+		int removelength;
+		uint8_t remainlen;
+		Part_Word tempin, tempout;
+		metadata Metadata;
+		Part_Word remainword;
+		Part_Word EndWord = {0,0};
+		Metadata = Metain.read();
+		tempin = Data_in.read();
+		switch (tempin.Data.range(63,32))
+		{
+			case (0x73657420):
+			{
+				Metadata.pkt = set_pkt;
+				removelength = 4;
+			        Metaout.write(Metadata);
+				break;
+			}
+			case (0x67657420):
+			{
+				 Metadata.pkt = get_pkt;
+				 removelength = 4;
 				 Metaout.write(Metadata);
-				 remainlen = BYTES_PER_WORD - removelength;
-				 remainword.Data = 0;
-				 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
-			 }
-			 else
-			 {
-				 if (tempin.len > removelength)
+				 break;
+			}
+			case (0x64656c65):
+			{
+				 Metadata.pkt = delete_pkt;
+				 removelength = 7;
+				 Metaout.write(Metadata);
+				 break;
+			}
+			case (0x56414c55):
+			{
+				 Metadata.pkt = value_pkt;
+				 removelength = 6;
+				 Metaout.write(Metadata);
+				 break;
+			}
+			case (0x53544f52):
+			{
+				 mempkt = false;
+				 break;
+			}
+			case (0x4e4f5420):
+			{
+				mempkt = false;
+				break;
+			}
+			default:
+			{
+				mempkt = false;
+				break;
+			}
 
+
+		}
+		std::cout << Metadata.pkt << std::endl;
+		if (mempkt)
+		{
+			 State = Alignment;
+			 remainlen = BYTES_PER_WORD - removelength;
+		    	 remainword.Data = 0;
+			 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
+			 do
+		 	 {
+		#pragma HLS pipeline II=1
+		#pragma HLS loop_tripcount min=8 max=190
+	
+				 tempin = Data_in.read();
+				 pktcomplete = tempin.End;
+				 {
+					 if (tempin.len > removelength)
 					 {
 						 tempout.len = BYTES_PER_WORD;
 						 tempout.End = false;
 					 }
-				 else if (tempin.len == removelength)
+					 else if (tempin.len == removelength)
 					 {
 						 tempout.len = BYTES_PER_WORD;
 						 tempout.End = true;
 					 }
-				 else
+					 else
 					 {
 						 tempout.len = BYTES_PER_WORD -removelength + tempin.len;
 						 tempout.End = true;
 					 }
-				 tempout.Data = remainword.Data;
-				 tempout.Data(63 - 8 * remainlen, 0) = tempin.Data.range(63, 64 - 8 * removelength);
-				 remainword.len = tempin.len - removelength;
-				 remainword.End = true;
-				 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
-				 Data_out.write(tempout);
-			 }
-		 }while(!pktcomplete);
-		 if (tempin.len > removelength)
-			 Data_out.write(remainword);
-	 }
+				 	tempout.Data = remainword.Data;
+					 tempout.Data(63 - 8 * remainlen, 0) = tempin.Data.range(63, 64 - 8 * removelength);
+					 remainword.len = tempin.len - removelength;
+					 remainword.End = true;
+					 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
+					 Data_out.write(tempout);
+				 }
+			  }while(!pktcomplete);
+			 if (tempin.len > removelength)
+				 Data_out.write(remainword);
+	 	}
+		else
+		{
+			pktcomplete = tempin.End;
+			while(!pktcomplete)
+			{
+				tempin = Data_in.read();
+				pktcomplete = tempin.End;
+			}
+		}	
+  }
+	Mempkt_out.write(mempkt);
 }
 void Parse_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 			   hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out,
@@ -410,7 +458,6 @@ void Parse_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 			 else
 			 {
 				 if (tempin.len > removelength)
-
 					 {
 						 tempout.len = BYTES_PER_WORD;
 						 tempout.End = false;
@@ -440,12 +487,10 @@ void Parse_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mem
 
 void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 				 hls::stream<Part_Word> &Key_in, hls::stream<Part_Word> &Key_out,
-				 //hls::stream<input_tuples> &tuple_in,
-				 //hls::stream<input_tuples> & tuple_out,
-				 hls::stream<metadata> &Metain, hls::stream<instr> &instrout1)//, hls::stream<instr> &instrout2)
+				 hls::stream<metadata> &Metain, hls::stream<metadata> &Metaout)
 {
-	 MemcachedPkt mempkt = Mempkt.read();
-	 Mempkt_out.write(mempkt);
+	MemcachedPkt mempkt = Mempkt.read();
+	Mempkt_out.write(mempkt);
 	if (mempkt)
 	{
 		bool keycomplete;
@@ -454,27 +499,25 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 		uint16_t index;
 		Part_Word key;
 		int count = 0;
-		bool State; //0 for saving; 1 for compare
+		ap_uint<4> State; //0 for saving; 1 for compare
 		metadata Metadata;
-		instr Instruction;
 		Metadata = Metain.read();
-		Instruction.MemHdr = Metadata.MemHdr;
 		index = Metadata.index;
-		Instruction.index = index;
-		std::cout << "Index is " << index << std::endl;
-		if (index == 6) std::cout << "!!!!!" << std::endl;
-		if (Metadata.cmd == 1)
+		std::cout << index << std::endl;
+		if (Metadata.pkt == set_pkt)
 			{
 				State = 0;
-				Instruction.response = 0; //Stored
-				instrout1.write(Instruction);
-				//instrout2.write(Instruction);
-
+				Memory[index].VALID = 1;
 			}
-		else if (Metadata.cmd == 0)
+		else if (Metadata.pkt == get_pkt)
 			{
-				State = 1;
-				Instruction.response = 1;
+				if (Memory[index].VALID == 0) { State = 2; Metadata.pkt = get_miss;}
+				else State = 1;
+			}
+		else if (Metadata.pkt == value_pkt)
+			{
+				State = 0;
+				Memory[index].VALID = 1;
 			}
 		do
 		{
@@ -490,25 +533,18 @@ void Process_Key(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 				count++;
 				Memory[index].KEY_LEN = keylen;
 			}
-			else
+			else if (State == 1)
 			{
 				if (Memory[index].KEY[count] != key.Data)
-					{
-						collision = true;
-						std::cout << "Collision" << std::endl;
-					}
-				count ++;
-				Key_out.write(key);
+				{
+					Metadata.pkt = get_collision;
+				}
+				Key_out.write(key); count++;
 			}
 		}while(!keycomplete);
-		if (collision) Instruction.response = 2;
-		if (State != 0) {
-			instrout1.write(Instruction);
-			//instrout2.write(Instruction);
-		}
-		//input_tuples tuple = tuple_in.read();
-		//tuple_out.write(tuple);
+		Metaout.write(Metadata);
 	}
+
 }
 void Remove(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 			hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out,
@@ -528,7 +564,15 @@ void Remove(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt
 		uint8_t remainlen;
 		Part_Word remainword;
 		Part_Word EndWord = {0,0};
-		if (Metadata.cmd == 1)
+		if (Metadata.pkt == set_pkt) 
+		{
+			removelength = 4;
+		}
+		if (Metadata.pkt == value_pkt)
+		{
+			removelength = 2;
+		}
+		if (Metadata.pkt == set_pkt || Metadata.pkt == value_pkt)
 		{
 			do
 			{
@@ -539,7 +583,6 @@ void Remove(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt
 				if (State == Consumption)
 				{
 					 State = Alignment;
-					 removelength = 4;
 					 remainlen = BYTES_PER_WORD - removelength;
 					 remainword.Data = 0;
 					 remainword.Data(63, 64 - 8 * remainlen) = tempin.Data.range(8*remainlen - 1, 0);
@@ -558,7 +601,7 @@ void Remove(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt
 					}
 					else
 					{
-						 tempout.len = BYTES_PER_WORD -removelength + tempin.len;
+						 tempout.len = BYTES_PER_WORD - removelength + tempin.len;
 						 tempout.End = true;
 					}
 					tempout.Data = remainword.Data;
@@ -577,6 +620,8 @@ void Remove(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt
 			Data_in.read();
 		}
 	}
+	else if (!metain.empty())
+		{ metain.read(); Data_in.read(); }
 }
 void Parse_Datalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 				   hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Data_out,
@@ -600,7 +645,7 @@ void Parse_Datalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> 
 		uint8_t num;
 		bool finish = false;
 		metaout.write(Metadata);
-		if (Metadata.cmd == 1)
+		if (Metadata.pkt == set_pkt || Metadata.pkt == value_pkt)
 		{
 			tempin = Data_in.read();
 			num = Find_delimiter(tempin.Data);
@@ -647,7 +692,7 @@ void Parse_Datalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> 
 			if (tempin.len > removelength)
 				Data_out.write(remainword);
 		}
-		else if(Metadata.cmd == 0)
+		else if(Metadata.pkt == get_pkt)
 		{
 			Datalen = Memory[index].DATA_LEN_WORD;
 			Lengthout2.write(Datalen);
@@ -663,7 +708,7 @@ void ConvertDatalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt>
 	if (mempkt)
 	{	metadata Metadata = metain.read();
 		uint16_t index = Metadata.index;
-		if (Metadata.cmd == 1)
+		if (Metadata.pkt == set_pkt || Metadata.pkt == value_pkt)
 		{
 			Part_Word temp = Datalen.read();
 			uint16_t datalen = 0;
@@ -674,35 +719,35 @@ void ConvertDatalen(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt>
 				datalen = datalen* 10 + temp.Data.range(63 - i * 8, 56 - i * 8) - 48;
 			}
 			datalen += 7;
-			std::cout << datalen << std::endl;
 			Memory[index].DATA_LEN = datalen;
 			Metadata.Datalen = datalen;
-			metaout.write(Metadata);
 		}
-		else
+		else if (Metadata.pkt == get_pkt)
 		{
 			Metadata.Datalen = Memory[index].DATA_LEN;
-			metaout.write(Metadata);
 		}
+		metaout.write(Metadata);
 	}
 
 }
-void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
+void Parse_Data(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempkt_out,
 				 hls::stream<Part_Word> &Data_in,
-				 hls::stream<metadata> & metain, hls::stream<instr> &Instr_in,
-				 hls::stream<instr> &Instr_out,
+				 hls::stream<metadata> &metainfromKey,
+				 hls::stream<metadata> &metainfromLen, 
+				 hls::stream<metadata> &metaout,
 				 hls::stream<Part_Word> &Data_out)
 {
 	MemcachedPkt mempkt = Mempkt.read();
 	Mempkt_out.write(mempkt);
 	if (mempkt)
 	{
-		instr Instruction = Instr_in.read();
-		metadata Metadata = metain.read();
+		metadata Metadata = metainfromKey.read();
+		metadata Metadata2 = metainfromLen.read();
+		Metadata.Datalen = Metadata2.Datalen;
 		uint8_t count = 0;
-		uint16_t index = Instruction.index;
+		uint16_t index = Metadata.index;
 		static Part_Word EndofPacket = {0x454e440d0a000000, 5, 0};
-		if (Instruction.response == 0)
+		if (Metadata.pkt == set_pkt || Metadata.pkt == value_pkt)
 		{
 			Part_Word tempin;
 			bool pktcomplete = false;
@@ -710,7 +755,6 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			{
 	#pragma HLS pipeline II =1
 	#pragma HLS loop_tripcount min=2 max=128
-
 				tempin = Data_in.read();
 				pktcomplete = tempin.End;
 				Memory[index].DATA[count] = tempin.Data;
@@ -727,26 +771,20 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			}
 			else
 			{
-
 				Memory[index].DATA[count - 1].range(63 - 8*tempin.len, 0) = EndofPacket.Data.range(63, 8*tempin.len);
 				Memory[index].DATA[count] =EndofPacket.Data << (64 - 8 * tempin.len);
 			}
-			Memory[index].VALID = 1;
-			//Print_Memory(index);
-			std::cout << "The count is" << (int)count << std::endl;
-
 		}
-		else if(Instruction.response == 1)
+		else if(Metadata.pkt == get_pkt)
 		{
 			Part_Word dataoutput;
 			int totnum = Metadata.Datalen / 8;
-			std::cout << "totnum is" << totnum << std::endl;
 			int remainnum = Metadata.Datalen % 8;
 			if (remainnum == 0)
-				{
-					totnum -=1;
-					remainnum = 8;
-				}
+			{
+				totnum -=1;
+				remainnum = 8;
+			}
 			for (int i = 0; i < totnum; i++)
 			{
 	#pragma HLS pipeline II =1
@@ -760,36 +798,27 @@ void Parse_Data( hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &M
 			dataoutput.len = remainnum;
 			Data_out.write(dataoutput);
 		}
-		else if (Instruction.response == 2)
-		{
-			Part_Word dataoutput;
-			dataoutput.Data = 0;
-			dataoutput.End = 1;
-			dataoutput.len = 8;
-			Data_out.write(dataoutput);
-		}
-		Instr_out.write(Instruction);
-		//input_tuples tuple = tuple_in.read();
-		//tuple_out.write(tuple);
+		metaout.write(Metadata);
 	}
 }
-void Generate_output(hls::stream<MemcachedPkt> &Mempkt,
-		 	 	 	//hls::stream<input_tuples> &tuple_in,
-		 	 	 	//hls::stream<input_tuples> & tuple_out,
-					hls::stream<packet_interface> &Packet_out,
-					hls::stream<instr> &Instruction,
-					hls::stream<instr> &Instr_out,
+void Generate_output(hls::stream<MemcachedPkt> &Mempkt, hls::stream<MemcachedPkt> &Mempktout,
+				   hls::stream<packet_interface> &Packet_out,
+				   hls::stream<metadata> &metain,
+				   hls::stream<metadata> &metaout,
 				   hls::stream<Part_Word> &Data_in, hls::stream<Part_Word> &Key_in,
 				   hls::stream<Part_Word> &Datalen_in)
 {
 	MemcachedPkt mempkt = Mempkt.read();
+	Mempktout.write(mempkt);
 	if (mempkt)
 	{
 		Part_Word Input;
 		packet_interface output;
 		Part_Word remainword;
 		uint16_t totlen = 15;
-		instr Instr = Instruction.read();
+		metadata Metadata = metain.read(); 
+		if (IS_PKTS_NEED_RESP) 
+		{
 			output.Start_of_frame = 1;
 			output.End_of_frame = 0;
 			output.Data = 0;
@@ -802,10 +831,10 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt,
 		#pragma HLS pipeline II = 1
 				Packet_out.write(output);
 			}
-			output.Data.range(47,0) = Instr.MemHdr.range(63, 16);
+			output.Data.range(47,0) = Metadata.MemHdr.range(63, 16);
 			Packet_out.write(output);
-			output.Data.range(63, 48) = Instr.MemHdr.range(15, 0);
-			if (Instr.response == 0)
+			output.Data.range(63, 48) = Metadata.MemHdr.range(15, 0);
+			if (Metadata.pkt == set_pkt)
 			{
 				output.Data.range(47, 0) = 0x53544F524544;
 				Packet_out.write(output);
@@ -815,12 +844,12 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt,
 				output.End_of_frame =1;
 				Packet_out.write(output);
 			}
-			else if (Instr.response == 1 || Instr.response == 2)
+			else if (Metadata.pkt == get_pkt)
 			{
 				bool datacomplete;
 				Part_Word tempin;
 				Part_Word Datalen;
-				if (Instr.response == 1) output.Data.range(47,0) = 0x56414c554520;
+				if (Metadata.pkt == get_pkt) output.Data.range(47,0) = 0x56414c554520;
 				else output.Data.range(47,0) = 0x434f4c4c4920;
 				output.Count = 8;
 				Packet_out.write(output);
@@ -948,9 +977,30 @@ void Generate_output(hls::stream<MemcachedPkt> &Mempkt,
 					Packet_out.write(output);
 				}
 			}
-		Instr_out.write(Instr);
+		}
+		else if (Metadata.pkt == get_miss)
+		{
+			Datalen_in.read();
+		}
+		else if (Metadata.pkt == get_collision)
+		{
+			Datalen_in.read();
+			bool keycomplete = false;
+			Part_Word keytemp;
+			do
+			{
+#pragma HLS pipeline II =1
+				keytemp = Key_in.read();
+				keycomplete = keytemp.End;
+			}
+			while(!keycomplete);
+		}
+		else if (Metadata.pkt == value_pkt)
+		{	
+			std::cout << "Value Pkt" << std::endl;
+		}
+	metaout.write(Metadata);
 	}
-
 }
 
 void Output_packets(//input_tuples Input_tuple,
@@ -959,7 +1009,8 @@ void Output_packets(//input_tuples Input_tuple,
 					hls::stream<packet_interface> &Packet_in1,
 					hls::stream<packet_interface> &Packet_in2,
 					hls::stream<packet_interface> &Packet_out,
-					hls::stream<instr> &Instr_in)
+					hls::stream<metadata> &metain, 
+					hls::stream<MemcachedPkt> &Mempkt)
 {
 	packet_interface input, temp;
 	input_tuples tuple_in;
@@ -975,12 +1026,12 @@ void Output_packets(//input_tuples Input_tuple,
 	tuple_out.Memcached_output = tuple_in.Memcached_input;
 	tuple_out.Parser_extracts = tuple_in.Parser_extracts;
 	tuple_forward = tuple_out;
+ 	MemcachedPkt mempkt = Mempkt.read();
 	bool End = false;
-	//if (tuple_in.Hdr.Eth.Type == 0x0800 && tuple_in.Hdr.Ipv4.protocol == 0x11 && tuple_in.Hdr.Udp.dport ==0x2bcb)
-	if (tuple_in.Memcached_input.Stateful_valid == 1)
+	if (mempkt == 1)
 	{
-		instr Instruction = Instr_in.read();
-		if (Instruction.response == 1)
+		metadata Metadata = metain.read();
+		if (Metadata.pkt == get_pkt)
 		{
 			bool Forward_Pkt_End = false;
 			do
@@ -1007,25 +1058,8 @@ void Output_packets(//input_tuples Input_tuple,
 			tuple_out.Hdr.Udp.sport = tuple_in.Hdr.Udp.dport;
 			Output_tuples.write(tuple_out);
 		}
-		else if (Instruction.response == 2)
-		{
-
-			bool Forward_Pkt_End = false;
-			do
-			{
-		#pragma HLS pipeline II=1
-				input = Packet_in1.read();
-				End = input.End_of_frame;
-				if (!Forward_Pkt_End)
-				{
-					temp = Packet_in2.read();
-					Forward_Pkt_End = temp.End_of_frame;
-					Packet_out.write(temp);
-				}
-			}while(!End);
-			Output_tuples.write(tuple_forward);
-		}
-		else if (Instruction.response == 0)
+		#ifndef STORE_FROMSERVER
+		else if (Metadata.pkt == set_pkt)
 		{
 			do
 			{
@@ -1055,17 +1089,54 @@ void Output_packets(//input_tuples Input_tuple,
 			}while(!End);
 			Output_tuples.write(tuple_forward);
 		}
+		#endif
+		else if (PKTS_ONLY_FORWARD)
+		{	
+			input = Packet_in2.read();
+			End = input.End_of_frame;
+			while(!End)
+			{
+		#pragma HLS pipeline II=1
+				Packet_out.write(input);
+				input = Packet_in2.read();
+				End = input.End_of_frame;
+			}
+			if (tuple_forward.Hdr.Udp.len < 26)
+			{
+				input.Data.range(63 - 8*input.Count, 0) = 0;
+				input.Count += 26 - tuple_forward.Hdr.Udp.len;
+			}  
+			Packet_out.write(input);
+			Output_tuples.write(tuple_forward);
+		}
 	}
 	else
 	{
-		do
-		{
-	#pragma HLS pipeline II=1
+		//do
+		//{
+//	#pragma HLS pipeline II=1
+//			input = Packet_in2.read();
+//			End = input.End_of_frame;
+//			Packet_out.write(input);
+//		}while(!End);
+//		Output_tuples.write(tuple_out);
 			input = Packet_in2.read();
 			End = input.End_of_frame;
+			while(!End)
+			{
+		#pragma HLS pipeline II=1
+				Packet_out.write(input);
+				input = Packet_in2.read();
+				End = input.End_of_frame;
+			}
+			if (tuple_forward.Hdr.Udp.len < 26)
+			{
+				input.Data.range(63 - 8*input.Count, 0) = 0;
+				input.Count += 26 - tuple_forward.Hdr.Udp.len;
+			}
 			Packet_out.write(input);
-		}while(!End);
-		Output_tuples.write(tuple_out);
+			Output_tuples.write(tuple_forward);
+
 	}
 
 
@@ -1127,16 +1198,14 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS STREAM variable=Metadata2ParseDatalen depth=INST_FIFO_SIZE
 	hls::stream<metadata> Metadata2ConvertDatalen;
 #pragma HLS STREAM variable=Metadata2ConvertDatalen depth=INST_FIFO_SIZE
-	hls::stream<metadata> Metadata2ParseData;
-#pragma HLS STREAM variable=Metadata2ParseData depth=INST_FIFO_SIZE
-
-	hls::stream<instr> Instr2ParseData;
-#pragma HLS STREAM variable=Instr2ParseData depth=INST_FIFO_SIZE
-	hls::stream<instr> Instr2Output;
-#pragma HLS STREAM variable=Instr2Output depth=INST_FIFO_SIZE
-	hls::stream<instr> Instr2GenOutput;
-#pragma HLS STREAM variable=Instr2GenOutput depth=INST_FIFO_SIZE
-
+	hls::stream<metadata> MetadatafromKey2ParseData;
+#pragma HLS STREAM variable=MetadatafromKey2ParseData depth=INST_FIFO_SIZE
+	hls::stream<metadata> MetadatafromLen2ParseData;
+#pragma HLS STREAM variable=MetadatafromLen2ParseData depth=INST_FIFO_SIZE
+	hls::stream<metadata> Metadata2GenOut;
+#pragma HLS STREAM variable=Metadata2GenOut depth=INST_FIFO_SIZE
+	hls::stream<metadata> Metadata2Out;
+#pragma HLS STREAM variable=Metadata2Out depth=INST_FIFO_SIZE
 
 	hls::stream<packet_interface> Packet2OutputPacket;
 #pragma HLS STREAM variable=Packet2OutputPacket depth=DATA_FIFO_SIZE
@@ -1182,6 +1251,8 @@ void Memcore(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tuples
 #pragma HLS STREAM variable=Mempkt2ParseData depth=INST_FIFO_SIZE
 	hls::stream<MemcachedPkt> Mempkt2GenerateOutput;
 #pragma HLS STREAM variable=Mempkt2GenerateOutput depth=INST_FIFO_SIZE
+	hls::stream<MemcachedPkt> Mempkt2Output;
+#pragma HLS STREAM variable=Mempkt2Output depth=INST_FIFO_SIZE
 
 #pragma HLS DATA_PACK variable=Tuple2ETH
 #pragma HLS DATA_PACK variable=Tuple2PData
@@ -1200,13 +1271,13 @@ Packet_num ++;
 	 Parse_Memcached_Hdr(Mempkt2ParseMemHdr, Mempkt2ParseCMD, Data_after_EthHdr, Data_after_MemHdr, Metadata);
 	 Parse_CMD(Mempkt2ParseCMD, Mempkt2ParseKey, Data_after_MemHdr, Data_after_cmd, Metadata, Metadata_with_CMD);
 	 Parse_Key(Mempkt2ParseKey, Mempkt2Process, Data_after_cmd, Data_after_Key, Metadata_with_CMD, Metadata2ProcessKey, Metadata2Remove, Key_Stream);
-	 Process_Key(Mempkt2Process, Mempkt2Remove, Key_Stream, Key2Output, Metadata2ProcessKey, Instr2ParseData);
+	 Process_Key(Mempkt2Process, Mempkt2Remove, Key_Stream, Key2Output, Metadata2ProcessKey, MetadatafromKey2ParseData);
 	 Remove(Mempkt2Remove, Mempkt2ParseDatalen, Data_after_Key, Data_after_Remove, Metadata2Remove, Metadata2ParseDatalen);
 	 Parse_Datalen(Mempkt2ParseDatalen,Mempkt2Conv, Data_after_Remove, Data_after_len, Datalen2Convert, Datalen2Output, Metadata2ParseDatalen, Metadata2ConvertDatalen);
-	 ConvertDatalen(Mempkt2Conv, Mempkt2ParseData, Datalen2Convert, Metadata2ConvertDatalen, Metadata2ParseData);
-	 Parse_Data(Mempkt2ParseData,Mempkt2GenerateOutput, Data_after_len, Metadata2ParseData, Instr2ParseData, Instr2GenOutput, Data_Stream);
-	 Generate_output(Mempkt2GenerateOutput, Packet2OutputPacket, Instr2GenOutput, Instr2Output, Data_Stream, Key2Output, Datalen2Output);
-	 Output_packets(Tuple2output, Output_tuples, Packet2OutputPacket, Pkt2Forward, Packet_output, Instr2Output);
+	 ConvertDatalen(Mempkt2Conv, Mempkt2ParseData, Datalen2Convert, Metadata2ConvertDatalen, MetadatafromLen2ParseData);
+	 Parse_Data(Mempkt2ParseData,Mempkt2GenerateOutput, Data_after_len, MetadatafromKey2ParseData, MetadatafromLen2ParseData, Metadata2GenOut, Data_Stream);
+	 Generate_output(Mempkt2GenerateOutput, Mempkt2Output, Packet2OutputPacket, Metadata2GenOut, Metadata2Out, Data_Stream, Key2Output, Datalen2Output);
+	 Output_packets(Tuple2output, Output_tuples, Packet2OutputPacket, Pkt2Forward, Packet_output, Metadata2Out,Mempkt2Output);
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Inside MemCore<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << std::endl;
 
 }

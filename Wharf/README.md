@@ -15,6 +15,9 @@ appropriate target-specific code.
 
 Sample and fec booster bmv2 inputs can both be built with `make bmv2`
 
+- Sources/Complete.p4 : Program to be run on all switches
+  - Performs Memcached'ing, fec-encoding, and/or fec-decoding depending on traffic type
+  - Run one in mininet with `make run-Complete`
 - Sources/targets.h : Target-specific definitions used by fec encoder and decoder
 - Sources/FEC.p4 : Calls to encode, decode, or retrieve parameters based on fec encoding
 - Sources/Forwarding.p4 : Determines the egress port out of which a packet should be sent
@@ -34,6 +37,19 @@ Executing `make run` will start up a network:
 h1 <--> Encoder (s0) <--> Dropper (s1) <--> Decoder (s2) <--> h2
 ```
 
-Execution of `bash e2etest.sh <pcap_file.pcap>` will start the network,
-replay the pcap file on h1, and then check that identical output
-is received by h2.
+## Testing in bmv2
+
+Two test files exist for checking functionality in mininet/bmv2:
+
+```shell
+$ ./bmv2/complete_fec_e2e.sh <input.pcap>
+$ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
+```
+
+The first tests just the FEC functionality. A representative input file is
+located in `bmv2/pcaps/tcp_100.pcap`
+
+The second tests FEC + memcached functionality. Good input files are:
+- `bmv2/pcaps/Memcached_in.pcap` and `bmv2/pcaps/Memcached_expected.pcap`
+- `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap` 
+- `bmv2/pcaps/Memcached_in_shortest.pcap` and `bmv2/pcaps/Memcached_expected_shortest.pcap`

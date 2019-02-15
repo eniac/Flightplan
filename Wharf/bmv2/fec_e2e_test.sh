@@ -13,10 +13,13 @@ if [[ $BMV2_REPO_M == "" ]]; then
     exit
 fi
 
+HERE=`dirname $0`
+BLD=$HERE/../build
+
 USER=`logname`
 INPUT_PCAP=`realpath $1`
 
-TESTDIR=test_output
+TESTDIR=$HERE/test_output
 BASENAME=$(basename $INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
@@ -37,15 +40,15 @@ sudo mn -c
 sleep 1
 
 
-sudo PYTHONPATH=$RUNTIME_CLI_DIR python ./fec_demo.py \
+sudo PYTHONPATH=$RUNTIME_CLI_DIR python $HERE/fec_demo.py \
 		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
-		--encoder-json build/bmv2/Encoder.json \
-		--decoder-json build/bmv2/Decoder.json \
-		--dropper-json build/bmv2/Dropper.json \
+		--encoder-json $BLD/bmv2/Encoder.json \
+		--decoder-json $BLD/bmv2/Decoder.json \
+		--dropper-json $BLD/bmv2/Dropper.json \
 		--pcap-dump $PCAP_DUMPS \
         --log-console $LOG_DUMPS \
-        --dropper-pcap lldp_enable_fec.pcap \
-		--command-file forwarding_commands.txt \
+        --dropper-pcap $HERE/lldp_enable_fec.pcap \
+		--command-file $HERE/forwarding_commands.txt \
 		--e2e $INPUT_PCAP \
 
 sleep 4
@@ -53,8 +56,8 @@ sleep 4
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-python pcap_clean.py  $PCAP_DUMPS/h1_out.pcap $IN_PCAP
-python pcap_clean.py $PCAP_DUMPS/h2_in.pcap $OUT_PCAP
+python $HERE/pcap_clean.py  $PCAP_DUMPS/h1_out.pcap $IN_PCAP
+python $HERE/pcap_clean.py $PCAP_DUMPS/h2_in.pcap $OUT_PCAP
 
 sleep 1
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt

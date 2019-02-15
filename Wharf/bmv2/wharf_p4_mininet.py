@@ -150,7 +150,7 @@ class P4Switch(Switch):
         args.append(self.json_path)
         if self.enable_debugger:
             args.append("--debugger")
-        if self.log_console:
+        if self.verbose:
             args.append("--log-console")
         if isinstance(self.log_console, str):
             logfile = self.log_console

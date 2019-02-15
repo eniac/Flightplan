@@ -36,20 +36,28 @@ parser.add_argument('--dropper-json', help='Path to dropper JSON',
                     type=str, action='store', required=True)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
                     type=str, action="store", required=False, default=False)
-parser.add_argument('--e2e', help='Provide a pcap file to be sent through',
+parser.add_argument('--replay', help='Provide a pcap file to be sent through',
                     type=str, action='store', required=False, default=False)
-parser.add_argument('--log-console', help='Log console to this directory',
+parser.add_argument('--verbose', help='Turn on console logging',
+                    action='store_true', required=False, default=False)
+parser.add_argument('--log', help='Log to this directory',
                     type=str, action='store', required=False, default=None)
 parser.add_argument('--dropper-pcap', help="Provide a pcap file to send from dropper to encoder",
                     type=str, action='store', required=False, default=None)
 parser.add_argument('--command-file', help='Initial commands.txt file to pass over thrift port to all switches',
                     type=str, action='store', required=False, default=None)
+parser.add_argument('--h1-prog', help='Program to run on host 1',
+                    type=str, action='store', required=False, default=None)
+parser.add_argument('--h2-prog', help='Program to run on host 2',
+                    type=str, action='store', required=False, default=None)
+parser.add_argument('--cli', help='Whether to run CLI',
+                    action='store_true', required=False, default=False)
 
 args = parser.parse_args()
 
 class FecTopo(Topo):
 
-    def __init__(self, bm, encoder_json, decoder_json, dropper_json, pcap_dump, log_console, **opts):
+    def __init__(self, bm, encoder_json, decoder_json, dropper_json, pcap_dump, log, verbose, **opts):
         Topo.__init__(self, **opts)
 
         self.switch_params = (
@@ -61,15 +69,17 @@ class FecTopo(Topo):
         switches = []
 
         for i, (name, json, port) in enumerate(self.switch_params):
-            if log_console:
-                console_log = '{}/{}.log'.format(log_console, name)
+            if log:
+                console_log = '{}/{}.log'.format(log, name)
+            else:
+                console_log = None
             switches.append(self.addSwitch('s%d' % i,
                                            sw_path = bm,
                                            json_path = json,
                                            thrift_port = port,
                                            pcap_dump = pcap_dump,
                                            log_console = console_log,
-                                           verbose=True))
+                                           verbose=verbose))
 
         hosts = []
         for i in range(2):
@@ -89,7 +99,8 @@ def main():
                    args.decoder_json,
                    args.dropper_json,
                    args.pcap_dump,
-                   args.log_console)
+                   args.log,
+                   args.verbose)
     net = Mininet(topo = topo,
                   host = P4Host,
                   switch = P4Switch,
@@ -117,6 +128,7 @@ def main():
     if args.dropper_pcap:
         s1 = net.get('s1')
         s1.cmd('tcpreplay -i s1-eth1 {}'.format(args.dropper_pcap))
+        s1.cmd('tcpreplay -i s1-eth2 {}'.format(args.dropper_pcap))
         sleep(1)
 
     if args.command_file is not None:
@@ -125,17 +137,34 @@ def main():
             print("Sending %d commands to %s" %(len(commands), name))
             send_commands(port, json, commands)
 
-    if args.e2e:
+    if args.h2_prog:
+        h2 = net.get('h2')
+        h2.cmd(args.h2_prog)
+        sleep(1)
+
+    if args.h1_prog:
+        h1 = net.get('h1')
+        h1.cmd(args.h1_prog)
+        sleep(1)
+
+    if args.replay:
         h1 = net.get('h1')
         h2 = net.get('h2')
         h1.cmd('tcpdump -Q out -i eth0 -w {}/h1_out.pcap &'.format(args.pcap_dump))
+        h1.cmd('tcpdump -Q in -i eth0 -w {}/h1_in.pcap &'.format(args.pcap_dump))
+        h2.cmd('tcpdump -Q out -i eth0 -w {}/h2_out.pcap &'.format(args.pcap_dump))
         h2.cmd('tcpdump -Q in -i eth0 -w {}/h2_in.pcap &'.format(args.pcap_dump))
-        h1.cmd('tcpreplay -p 200 -i eth0 {}'.format(args.e2e))
-        sleep(3)
+        s0 = net.get('s0')
+        s0.cmd('tcpdump -Q in -i s0-eth1 -w {}/s0_in.pcap &'.format(args.pcap_dump))
+        sleep(1)
+        h1.cmd('tcpreplay -p 10 -i eth0 {}'.format(args.replay))
+        sleep(4)
         h1.cmd('killall tcpdump')
         h2.cmd('killall tcpdump')
-        sleep(1)
-    else:
+        s0.cmd('killall tcpdump')
+        sleep(2)
+
+    if args.cli:
         CLI( net )
 
     net.stop()

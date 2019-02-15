@@ -4,7 +4,7 @@
 #include "Forwarding.p4"
 struct bmv2_meta_t {}
 
-extern void random_drop(in bit<16> before_drop, in bit<16> between_drops);
+extern void random_drop(in bit<16> before_drop, in bit<16> between_drops, in bit<9> egress);
 
 parser BMParser(packet_in pkt, out headers_t hdr,
                 inout bmv2_meta_t m, inout metadata_t meta) {
@@ -15,18 +15,19 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 
 control DropProcess(inout headers_t hdr, inout bmv2_meta_t meta, inout metadata_t smd) {
     action set_drop_rate(bit<16> before_drop, bit<16> between_drops) {
-        random_drop(before_drop, between_drops);
+        random_drop(before_drop, between_drops, smd.egress_spec);
     }
 
     table dropper {
         key = {
-            smd.ingress_port : exact;
+            smd.egress_spec : exact;
         }
         actions = { set_drop_rate; NoAction; }
         default_action = NoAction;
 
         const entries = {
-            1 : set_drop_rate(5, 6);
+            1 : set_drop_rate(3, 5);
+            2 : set_drop_rate(3, 5);
         }
     }
 

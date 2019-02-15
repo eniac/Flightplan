@@ -56,7 +56,7 @@ booster_switch/memcachedBooster:
 	cd ../memcached && make copy_files
 
 booster_switch: copy_files  $(BOOSTER_DEPS)
-	cd $(BOOSTER_TARGET_DIR) && make
+	cd $(BOOSTER_TARGET_DIR) && make -j8
 
 $(BOOSTER_TARGET_DIR):
 	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
@@ -64,7 +64,7 @@ $(BOOSTER_TARGET_DIR):
 configure: $(BMV2_CONFIGURE) all
 
 ${BMV2_CONFIGURE}: .FORCE
-	cd $(BMV2_REPO) && ./configure --disable-logging-macros \
+	cd $(BMV2_REPO) && ./configure \
 	   	P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf
 
 .FORCE:
