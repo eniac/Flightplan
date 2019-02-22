@@ -1,0 +1,36 @@
+ // The graph name and the semicolons are optional
+ digraph G{
+    margin=0
+
+     FS [pos="2,2!", shape="point", width=.25];
+
+    A [pos = "0,2.5!", shape="point", width=.25, fontsize=40 ]
+    B [pos = "1,3.5!", shape="point", width=.25, fontsize=40 ];
+    C [pos = "3,3.5!",  shape="point", width=.25, fontsize=40 ];
+    D [pos = "4,2.5!", shape="point",  width=.25, fontsize=40 ];
+
+    E [pos="0,1!", shape="point", width=.25,  fontsize=40 ];
+    F [pos="1,0!", shape="point", width=.25,  fontsize=40 ];
+    G [pos="3,0!",  shape="point", width=.25, fontsize=40 ];
+    H [pos="4,1!", shape="point", width=.25,  fontsize=40 ];
+
+
+    A->FS [arrowsize=2,penwidth=3];
+    B->FS [arrowsize=2,penwidth=3];
+    C->FS [arrowsize=2,penwidth=3];
+    D->FS [arrowsize=2,penwidth=3];
+    E->FS [arrowsize=2,penwidth=3];
+    F->FS [arrowsize=2,penwidth=3];
+    G->FS [arrowsize=2,penwidth=3];
+    H->FS [arrowsize=2,penwidth=3];
+
+    FS->A [arrowsize=2,penwidth=3];
+    FS->B [arrowsize=2,penwidth=3];
+    FS->C [arrowsize=2,penwidth=3];
+    FS->D [arrowsize=2,penwidth=3];
+    FS->E [arrowsize=2,penwidth=3];
+    FS->F [arrowsize=2,penwidth=3];
+    FS->G [arrowsize=2,penwidth=3];
+    FS->H [arrowsize=2,penwidth=3];
+
+ }

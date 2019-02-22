@@ -1,0 +1,157 @@
+dirs:
+    home: /home/iped
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+
+params:
+    get_pct: '.95'
+    rate: '{0.args.rate}'
+    collision_prob: '{0.args.p_collision}'
+    local_lua_template: ./pktgen_template.lua
+    local_lua: '{0.out}/pktgen.lua'
+    local_pcap: './get_pkts.pcap'
+    local_set_pcap: './set_pkts.pcap'
+    n_set_pkts: 10000
+    n_get_pkts: 50000
+
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+init_cmds:
+    make_lua: >-
+        python format_lua_template.py {0.params.local_lua_template} {0.params.local_lua}
+        --rate {0.params.rate} --log  {0.programs.log_dir}/pktgen.log --count {0.params.n_get_pkts}
+
+
+#    make_pcap: >-
+#        python2 {0.dirs.P4Boosters}/MemPacket/generate_memcached.py
+#        --out {0.params.local_pcap} --hashlog {0.out}/pktlog.json
+#        --smac {0.hosts.pktgen.mac} --sip {0.hosts.pktgen.ip}
+#        --dmac {0.hosts.mcd.mac} --dip {0.hosts.mcd.ip}
+#        --n-get {0.params.n_get_pkts} --n-set {0.params.n_set_pkts}
+#        --collision-prob {0.params.collision_prob}
+#        --get-pct {0.params.get_pct}
+#        --pre-set --set-out {0.params.local_set_pcap}
+
+files:
+    pktgen_script:
+        src: '{0.params.local_lua}'
+        dst: '{0.programs.log_dir}/pktgen.lua'
+        host: pktgen
+    pcap_file:
+        src: '{0.params.local_pcap}'
+        dst: '{0.programs.log_dir}/pkts.pcap'
+        host: pktgen
+    moongen_script:
+        src: 'bounce2.lua'
+        dst: '{0.programs.log_dir}/bounce.lua'
+        host: moongen
+    set_pcap_file:
+        src: '{0.params.local_set_pcap}'
+        dst: '{0.programs.log_dir}/set_pkts.pcap'
+        host: pktgen
+
+hosts:
+    johnshack:
+        addr: johnshack
+    pktgen:
+        addr: tclust5
+        mac: 24:8a:07:8f:eb:00
+        ip: 10.0.0.1
+    mcd:
+        addr: tclust2
+        mac: 24:8a:07:5b:15:35
+        ip: 10.0.0.2
+    moongen:
+        addr: tclust1
+
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+programs:
+    log_dir: '{0.dirs.home}/logs/{0.label}'
+
+    dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./run.sh -d {drop_rate} 
+        stop: cd ~/gits/TofinoP4Boosters/compressionE2e && ./stop.sh
+
+    program_fpga:
+        host: johnshack
+        start: 'cd ~/P4Boosters/FPGA/RSESDx && source ~/.bashrc && ./Run_project.bash'
+        fg: true
+        log:
+            out: program_fpga.out
+            err: program_fpga.err
+    moongen:
+        host: moongen
+        start: 'cd ~/dcomp/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} -s150 0 1 {log}_in.pcap {log}_out.pcap'
+        stop: pkill MoonGen
+        log:
+            dir: moongen
+            log: moongen
+            out: moongen.out
+            err: moongen.err
+    mcd:
+        host: mcd
+        start: 'memcached -U 11211 -l 10.0.0.2'
+        stop: 'pkill memcached'
+        log:
+            out: memcached.out
+            err: memcached.err
+
+    pktgen:
+        host: pktgen
+        start: tmux new -d '~/dcomp/dpdkScripts/run_lua.sh {lua} {pcap}'
+        log:
+            log: pktgen.log
+            out: pktgen.out
+            err: pktgen.err
+
+    check_huge_pages:
+        host: pktgen
+        start: 'bash /home/iped/dcomp/dpdkScripts/printHugePages.sh'
+        log:
+            out: hugepages.txt
+
+    end:
+        host: moongen
+        start: echo 'ENDING EXPERIMENT'
+        stop: pkill echo
+
+    tcpreplay:
+        host: pktgen
+        start: '~/bin/tcpreplay -p 500 -i ens1f0 {pcap}'
+        log:
+            dir: tcpreplay
+            out: tcpreplay.out
+            err: tcpreplay.err
+
+commands:
+    check_huge_pages:
+        begin: -11
+    dataplane:
+        begin: -11
+        drop_rate: 0
+        duration: 80
+    mcd:
+        begin: -10
+        duration: 70
+        enforce_duration: True
+    moongen:
+        duration: 60
+        enforce_duration: true
+    tcpreplay:
+        begin: 10
+        pcap: '{0.files.set_pcap_file.dst}' 
+    pktgen:
+        begin: 40
+        lua: '{0.files.pktgen_script.dst}'
+        pcap: '{0.files.pcap_file.dst}'
+    end:
+        begin: 75
+        duration: 1

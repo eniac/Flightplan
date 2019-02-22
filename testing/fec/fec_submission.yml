@@ -1,0 +1,18 @@
+description: >-
+    Final version of data and analysis scripts for sigcomm submission
+
+experiment: fec
+
+repositories:
+    P4Boosters: c1fd10db
+    TofinoP4Boosters: 1d83cb15853
+
+files:
+    data: iperf_output/
+    config.yml: execution/cfgs/iperf.yml
+    analysis.ipynb: analysis/fecAnalysis.ipynb
+    run_script.sh: execution/run_iperf.sh
+    documentation.md: fec.md
+    throughput: analysis/tcp_throughput.pdf
+    Encoder.tar.gz: ../bitstreams/RSEEncoder1Port.tar.gz
+    Decoder.tar.gz: ../bitstreams/RSEDecoder1Port.tar.gz

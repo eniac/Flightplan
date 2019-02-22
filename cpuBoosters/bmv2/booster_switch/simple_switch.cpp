@@ -68,6 +68,37 @@ extern int import_primitives();
 packet_id_t SimpleSwitch::packet_id = 0;
 copy_id_t SimpleSwitch::booster_id = 0;
 
+class SimpleSwitch::MirroringSessions {
+ public:
+  bool add_session(mirror_id_t mirror_id,
+                   const MirroringSessionConfig &config) {
+    Lock lock(mutex);
+    sessions_map[mirror_id] = config;
+    return true;
+  }
+
+  bool delete_session(mirror_id_t mirror_id) {
+    Lock lock(mutex);
+    return sessions_map.erase(mirror_id) == 1;
+  }
+
+  bool get_session(mirror_id_t mirror_id,
+                   MirroringSessionConfig *config) const {
+    Lock lock(mutex);
+    auto it = sessions_map.find(mirror_id);
+    if (it == sessions_map.end()) return false;
+    *config = it->second;
+    return true;
+  }
+
+ private:
+  using Mutex = std::mutex;
+  using Lock = std::lock_guard<Mutex>;
+
+  mutable std::mutex mutex;
+  std::unordered_map<mirror_id_t, MirroringSessionConfig> sessions_map;
+};
+
 SimpleSwitch::SimpleSwitch(port_t max_port, bool enable_swap)
   : Switch(enable_swap),
     max_port(max_port),
@@ -204,6 +235,23 @@ SimpleSwitch::reset_target_state_() {
   get_component<McSimplePreLAG>()->reset_state();
 }
 
+bool
+SimpleSwitch::mirroring_add_session(mirror_id_t mirror_id,
+                                    const MirroringSessionConfig &config) {
+  return mirroring_sessions->add_session(mirror_id, config);
+}
+
+bool
+SimpleSwitch::mirroring_delete_session(mirror_id_t mirror_id) {
+  return mirroring_sessions->delete_session(mirror_id);
+}
+
+bool
+SimpleSwitch::mirroring_get_session(mirror_id_t mirror_id,
+                                    MirroringSessionConfig *config) const {
+  return mirroring_sessions->get_session(mirror_id, config);
+}
+
 int
 SimpleSwitch::set_egress_queue_depth(size_t port, const size_t depth_pkts) {
   egress_buffers.set_capacity(port, depth_pkts);
@@ -330,6 +378,21 @@ SimpleSwitch::check_queueing_metadata() {
 }
 
 void
+SimpleSwitch::multicast(Packet *packet, unsigned int mgid) {
+  auto *phv = packet->get_phv();
+  auto &f_rid = phv->get_field("intrinsic_metadata.egress_rid");
+  const auto pre_out = pre->replicate({mgid});
+  auto packet_size = packet->get_register(PACKET_LENGTH_REG_IDX);
+  for (const auto &out : pre_out) {
+    auto egress_port = out.egress_port;
+    BMLOG_DEBUG_PKT(*packet, "Replicating packet on port {}", egress_port);
+    f_rid.set(out.rid);
+    std::unique_ptr<Packet> packet_copy = packet->clone_with_phv_ptr();
+    packet_copy->set_register(PACKET_LENGTH_REG_IDX, packet_size);
+    enqueue(egress_port, std::move(packet_copy));
+  }
+}
+void
 SimpleSwitch::ingress_action(std::unique_ptr<Packet> packet, bool is_booster) {
   // TODO(antonin): only update these if swapping actually happened?
   Parser *parser = this->get_parser("parser");
@@ -341,6 +404,8 @@ SimpleSwitch::ingress_action(std::unique_ptr<Packet> packet, bool is_booster) {
   (void) ingress_port;
   BMLOG_DEBUG_PKT(*packet, "Processing packet received on port {}",
                   ingress_port);
+
+  auto ingress_packet_size = packet->get_register(PACKET_LENGTH_REG_IDX);
 
   /* This looks like it comes out of the blue. However this is needed for
      ingress cloning. The parser updates the buffer state (pops the parsed
@@ -381,27 +446,40 @@ SimpleSwitch::ingress_action(std::unique_ptr<Packet> packet, bool is_booster) {
 
   port_t egress_port;
 
-  // INGRESS CLONING
-  if (clone_spec) {
-    BMLOG_DEBUG_PKT(*packet, "Cloning packet at ingress");
-    f_clone_spec.set(0);
-    if (get_mirroring_mapping(clone_spec & 0xFFFF, &egress_port)) {
-      const Packet::buffer_state_t packet_out_state =
-          packet->save_buffer_state();
-      packet->restore_buffer_state(packet_in_state);
-      p4object_id_t field_list_id = clone_spec >> 16;
-      std::unique_ptr<Packet> packet_copy = packet->clone_no_phv_ptr();
-      // we need to parse again
-      // the alternative would be to pay the (huge) price of PHV copy for
-      // every ingress packet
-      parser->parse(packet_copy.get());
-      copy_field_list_and_set_type(packet, packet_copy,
-                                   PKT_INSTANCE_TYPE_INGRESS_CLONE,
-                                   field_list_id);
-      enqueue(egress_port, std::move(packet_copy));
-      packet->restore_buffer_state(packet_out_state);
-    }
-  }
+    // INGRESS CLONING
+    if (clone_spec) {
+      BMLOG_DEBUG_PKT(*packet, "Cloning packet at ingress");
+      f_clone_spec.set(0);
+      MirroringSessionConfig config;
+      bool is_session_configured = mirroring_get_session(
+          static_cast<mirror_id_t>(clone_spec & 0xFFFF), &config);
+      if (is_session_configured) {
+        const Packet::buffer_state_t packet_out_state =
+            packet->save_buffer_state();
+        packet->restore_buffer_state(packet_in_state);
+        p4object_id_t field_list_id = clone_spec >> 16;
+        std::unique_ptr<Packet> packet_copy = packet->clone_no_phv_ptr();
+        packet_copy->set_register(PACKET_LENGTH_REG_IDX, ingress_packet_size);
+        // we need to parse again
+        // the alternative would be to pay the (huge) price of PHV copy for
+        // every ingress packet
+        parser->parse(packet_copy.get());
+        copy_field_list_and_set_type(packet, packet_copy,
+                                     PKT_INSTANCE_TYPE_INGRESS_CLONE,
+                                     field_list_id);
+        if (config.mgid_valid) {
+          BMLOG_DEBUG_PKT(*packet, "Cloning packet to MGID {}", config.mgid);
+          multicast(packet_copy.get(), config.mgid);
+        }
+        if (config.egress_port_valid) {
+          BMLOG_DEBUG_PKT(*packet, "Cloning packet to egress port {}",
+                          config.egress_port);
+          enqueue(config.egress_port, std::move(packet_copy));
+        }
+        packet->restore_buffer_state(packet_out_state);
+      }
+    }  // INGRESS CLONING
+
 
   // LEARNING
   if (learn_id > 0) {
@@ -429,27 +507,12 @@ SimpleSwitch::ingress_action(std::unique_ptr<Packet> packet, bool is_booster) {
     }
   }
 
-  Field &f_instance_type = phv->get_field("standard_metadata.instance_type");
-
   // MULTICAST
-  int instance_type = f_instance_type.get_int();
   if (mgid != 0) {
     BMLOG_DEBUG_PKT(*packet, "Multicast requested for packet");
-    Field &f_rid = phv->get_field("intrinsic_metadata.egress_rid");
-    const auto pre_out = pre->replicate({mgid});
-    auto packet_size = packet->get_register(PACKET_LENGTH_REG_IDX);
-    for (const auto &out : pre_out) {
-      egress_port = out.egress_port;
-      // if (ingress_port == egress_port) continue; // pruning
-      BMLOG_DEBUG_PKT(*packet, "Replicating packet on port {}", egress_port);
-      f_rid.set(out.rid);
-      f_instance_type.set(PKT_INSTANCE_TYPE_REPLICATION);
-      std::unique_ptr<Packet> packet_copy = packet->clone_with_phv_ptr();
-      packet_copy->set_register(PACKET_LENGTH_REG_IDX, packet_size);
-      enqueue(egress_port, std::move(packet_copy));
-    }
-    f_instance_type.set(instance_type);
-
+    auto &f_instance_type = phv->get_field("standard_metadata.instance_type");
+    f_instance_type.set(PKT_INSTANCE_TYPE_REPLICATION);
+    multicast(packet.get(), mgid);
     // when doing multicast, we discard the original packet
     return;
   }
@@ -529,6 +592,11 @@ SimpleSwitch::egress_thread(size_t worker_id) {
 
     phv = packet->get_phv();
 
+    if (phv->has_field("intrinsic_metadata.egress_global_timestamp")) {
+      phv->get_field("intrinsic_metadata.egress_global_timestamp")
+          .set(get_ts().count());
+    }
+
     if (with_queueing_metadata) {
       auto enq_timestamp =
           phv->get_field("queueing_metadata.enq_timestamp").get<ts_res::rep>();
@@ -559,12 +627,14 @@ SimpleSwitch::egress_thread(size_t worker_id) {
     Field &f_clone_spec = phv->get_field("standard_metadata.clone_spec");
     unsigned int clone_spec = f_clone_spec.get_uint();
 
-    port_t egress_port;
     // EGRESS CLONING
     if (clone_spec) {
       BMLOG_DEBUG_PKT(*packet, "Cloning packet at egress");
-      if (get_mirroring_mapping(clone_spec & 0xFFFF, &egress_port)) {
         f_clone_spec.set(0);
+      MirroringSessionConfig config;
+      bool is_session_configured = mirroring_get_session(
+          static_cast<mirror_id_t>(clone_spec & 0xFFFF), &config);
+      if (is_session_configured) {
         p4object_id_t field_list_id = clone_spec >> 16;
         std::unique_ptr<Packet> packet_copy =
             packet->clone_with_phv_reset_metadata_ptr();
@@ -573,7 +643,15 @@ SimpleSwitch::egress_thread(size_t worker_id) {
         field_list->copy_fields_between_phvs(phv_copy, phv);
         phv_copy->get_field("standard_metadata.instance_type")
             .set(PKT_INSTANCE_TYPE_EGRESS_CLONE);
-        enqueue(egress_port, std::move(packet_copy));
+        if (config.mgid_valid) {
+          BMLOG_DEBUG_PKT(*packet, "Cloning packet to MGID {}", config.mgid);
+          multicast(packet_copy.get(), config.mgid);
+        }
+        if (config.egress_port_valid) {
+          BMLOG_DEBUG_PKT(*packet, "Cloning packet to egress port {}",
+                          config.egress_port);
+          enqueue(config.egress_port, std::move(packet_copy));
+        }
       }
     }
 
@@ -605,6 +683,9 @@ SimpleSwitch::egress_thread(size_t worker_id) {
         size_t packet_size = packet_copy->get_data_size();
         packet_copy->set_register(PACKET_LENGTH_REG_IDX, packet_size);
         phv_copy->get_field("standard_metadata.packet_length").set(packet_size);
+        // TODO(antonin): really it may be better to create a new packet here or
+        // to fold this functionality into the Packet class?
+        packet_copy->set_ingress_length(packet_size);
         input_buffer.push_front(std::move(packet_copy));
         continue;
       }
