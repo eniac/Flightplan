@@ -36,13 +36,13 @@ parser.add_argument('--dropper-json', help='Path to dropper JSON',
                     type=str, action='store', required=True)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
                     type=str, action="store", required=False, default=False)
-parser.add_argument('--replay', help='Provide a pcap file to be sent through',
+parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2',
                     type=str, action='store', required=False, default=False)
 parser.add_argument('--verbose', help='Turn on console logging',
                     action='store_true', required=False, default=False)
 parser.add_argument('--log', help='Log to this directory',
                     type=str, action='store', required=False, default=None)
-parser.add_argument('--dropper-pcap', help="Provide a pcap file to send from dropper to encoder",
+parser.add_argument('--dropper-pcap', help="Provide a pcap file to send from dropper to encoder and decoder",
                     type=str, action='store', required=False, default=None)
 parser.add_argument('--command-file', help='Initial commands.txt file to pass over thrift port to all switches',
                     type=str, action='store', required=False, default=None)

@@ -29,6 +29,7 @@ Sample and fec booster bmv2 inputs can both be built with `make bmv2`
   - Run in mininet with `make run-Decoder`
 - Sources/Dropper.p4 : A `main` target that will drop a configurable number of packets
   - Run in mininet with `make run-Dropper`
+  - The dropper's drop rate can be configured using the `set_drop_rate(a, b)` action, which will drop one out of every `(a+b)` packets, but will never drop two of `b` packets.
 - Sources/Sample.p4 : Sample use of a simple exetern that creates a modified copy of a packet
   - Run in mininet with `make run-Sample`
 
@@ -39,7 +40,15 @@ h1 <--> Encoder (s0) <--> Dropper (s1) <--> Decoder (s2) <--> h2
 
 ## Testing in bmv2
 
-Two test files exist for checking functionality in mininet/bmv2:
+Complete.p4 test scripts start up a topology:
+```
+h1 <--> Complete (s0) <--> Dropper (s1) <--> Complete (s2) <--> h2
+```
+
+The scripts also ensure that the pcap file located in `bmv2/lldp_enable_fec.pcap` is sent from s1 to s0 and s2, which enables FEC over the faulty link.
+
+
+Two test files exist for checking complete.p4 functionality in mininet/bmv2:
 
 ```shell
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
@@ -51,5 +60,5 @@ located in `bmv2/pcaps/tcp_100.pcap`
 
 The second tests FEC + memcached functionality. Good input files are:
 - `bmv2/pcaps/Memcached_in.pcap` and `bmv2/pcaps/Memcached_expected.pcap`
-- `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap` 
+- `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
 - `bmv2/pcaps/Memcached_in_shortest.pcap` and `bmv2/pcaps/Memcached_expected_shortest.pcap`
