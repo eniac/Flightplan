@@ -2,7 +2,10 @@
 
 ## Dependencies
 
-Building the p4 files for bmv2 requires global installation of p4c (https://github.com/p4lang/p4c)
+Building the p4 files for bmv2 requires global installation of p4c (https://github.com/p4lang/p4c),
+testing requires installation of the behavioral model (https://github.com/p4lang/behavioral-model/),
+with the additional `booster_switch`, as explained
+[here](../cpuBoosters/bmv2/README.mdyy).
 
 ## Building for SDNet
 
@@ -38,6 +41,25 @@ Executing `make run` will start up a network:
 ```
 h1 <--> Encoder (s0) <--> Dropper (s1) <--> Decoder (s2) <--> h2
 ```
+
+### Bmv2 configuration rewriting
+The behavioral model repository does not support creation of packets
+in the same manner that our boosters do.
+
+Specifically, boosters return multiple packets from the same extern call, while
+the behavioral model only supports the insertion of new packets at the beginning
+of a stage.
+
+To ameliorate this problem, the json output by p4c is rewritten before it
+is loaded into the behavioral model, such that the extern functions which may
+create packets are moved into a unique action.
+
+This allows the `booster_switch` to pass over all action prior to the one in which
+the packet was created, and pass the new packet directly to the booster that
+created it.
+
+The booster can then use the function `is_generated()` to see if it was the one that
+generated that packet, and then it can deal with it accordingly.
 
 ## Testing in bmv2
 
