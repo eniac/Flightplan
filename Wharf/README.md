@@ -5,7 +5,7 @@
 Building the p4 files for bmv2 requires global installation of p4c (https://github.com/p4lang/p4c),
 testing requires installation of the behavioral model (https://github.com/p4lang/behavioral-model/),
 with the additional `booster_switch`, as explained
-[here](../cpuBoosters/bmv2/README.mdyy).
+[here](../cpuBoosters/bmv2/README.md).
 
 ## Building for SDNet
 
