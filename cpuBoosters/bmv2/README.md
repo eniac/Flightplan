@@ -32,6 +32,10 @@ The patches into the behavioral model have been tested with revision:
 
 though it will likely be applicable to newer revisions as well.
 
+If building memcached, `Vivado_HLS` is also required.
+Set the environment variable `XILINX_DIR` to be the parent directory
+of the `VIVADO_HLS` directory to properly build the memcached booster.
+
 ## Testing
 
 The patches and new target can be tested using the `complete_fec_e2e` and
