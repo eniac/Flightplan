@@ -62,3 +62,28 @@ The second tests FEC + memcached functionality. Good input files are:
 - `bmv2/pcaps/Memcached_in.pcap` and `bmv2/pcaps/Memcached_expected.pcap`
 - `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
 - `bmv2/pcaps/Memcached_in_shortest.pcap` and `bmv2/pcaps/Memcached_expected_shortest.pcap`
+
+**NB:** Before running these files, you must set the environment variable:
+`BMV2_REPO` to point to a copy of the behavioral model repository which has
+been built with the `booster_switch`, as detailed:
+[here](../cpuBoosters/bmv2/README.md).
+
+### Mininet file
+
+The file that runs the mininet simulation is ultimately
+[fec_demo.py](./bmv2/fec_demo.py), which depends on
+[wharf_p4_mininet.py](./bmv2/wharf_p4_mininet.py).
+
+The `wharf_p4_mininet` file borrows very heavily from the
+[p4_mininet.py](https://github.com/p4lang/behavioral-model/blob/master/mininet/p4_mininet.py)
+file located in the P4 behavioral model repository.
+
+`fec_demo.py` accepts a variety of command line arguments specifying
+which P4 configuration to load on which of s0, s1, and s2, among other
+configurations.
+
+The full list of arguments can be viewed with:
+```
+cd bmv2
+PYTHONPATH=$BMV2_REPO/tools python fec_demo.py
+```
