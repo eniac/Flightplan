@@ -29,7 +29,8 @@ Sample and fec booster bmv2 inputs can both be built with `make bmv2`
   - Run in mininet with `make run-Decoder`
 - Sources/Dropper.p4 : A `main` target that will drop a configurable number of packets
   - Run in mininet with `make run-Dropper`
-  - The dropper's drop rate can be configured using the `set_drop_rate(a, b)` action, which will drop one out of every `(a+b)` packets, but will never drop two of `b` packets.
+  - The dropper's drop rate can be configured using the `set_drop_rate(a, b)` action, which will
+  drop one out of every `(a+b)` packets, but will never drop more than one of `b` packets.
 - Sources/Sample.p4 : Sample use of a simple exetern that creates a modified copy of a packet
   - Run in mininet with `make run-Sample`
 
