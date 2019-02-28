@@ -86,5 +86,5 @@ configurations.
 The full list of arguments can be viewed with:
 ```
 cd bmv2
-PYTHONPATH=$BMV2_REPO/tools python fec_demo.py
+PYTHONPATH=$BMV2_REPO/tools python fec_demo.py --help
 ```
