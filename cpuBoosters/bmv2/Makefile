@@ -61,7 +61,7 @@ booster_switch: copy_files  $(BOOSTER_DEPS)
 $(BOOSTER_TARGET_DIR):
 	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
 
-configure: patches copy_files $(BMV2_CONFIGURE) booster_switch
+configure: patches copy_files $(BOOSTER_DEPS) $(BMV2_CONFIGURE) booster_switch
 
 ${BMV2_CONFIGURE}: .FORCE
 	cd $(BMV2_REPO) && ./configure \
