@@ -49,7 +49,7 @@ parser.add_argument('--log', help='Log to this directory',
 parser.add_argument('--cli', help='Run CLI',
                     action='store_true')
 parser.add_argument('--bmv2-exe', help='Path to bmv2 executable',
-                    type=str, required=True)
+                    type=str, required=False, default=None)
 parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2',
                     type=str, action='store', required=False, default=False)
 
@@ -185,13 +185,19 @@ class FPTopo(Topo):
 def main():
     global cfg_file
     args = parser.parse_args()
+
+    if args.bmv2_exe is None:
+        bmv2_exe = os.path.join(os.environ['BMV2_REPO'], 'targets', 'booster_switch', 'simple_switch')
+    else:
+        bmv2_exe = args.bmv2_exe
+
     cfg_file = args.config
 
     with open(args.config) as f:
         cfg = yaml.load(f)
 
     topo = FPTopo(cfg['hosts'], cfg['switches'],
-                  args.bmv2_exe, args.log, args.verbose, args.pcap_dump)
+                  bmv2_exe, args.log, args.verbose, args.pcap_dump)
 
     net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
 
