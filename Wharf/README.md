@@ -37,10 +37,9 @@ Sample and fec booster bmv2 inputs can both be built with `make bmv2`
 - Sources/Sample.p4 : Sample use of a simple exetern that creates a modified copy of a packet
   - Run in mininet with `make run-Sample`
 
-Executing `make run` will start up a network:
-```
-h1 <--> Encoder (s0) <--> Dropper (s1) <--> Decoder (s2) <--> h2
-```
+A network of Encoders, Droppers, Decoders, and "Complete"s can be started with
+`sudo -E python bmv2/start_flightplan_mininet.py <config.yml>`
+as described in the testing section below.
 
 ### Bmv2 configuration rewriting
 The behavioral model repository does not support creation of packets
