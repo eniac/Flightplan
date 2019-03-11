@@ -107,6 +107,7 @@ h1 <--> Complete (s0) <--> Dropper (s1) <--> Complete (s2) <--> h2
 The config file also enables FEC from `s0->s1` and `s2->s1`
 (by replaying the appropriate packets from s2 to s1 & s3), in addition
 to setting up the forwarding tables on the different switches
+(by sending the commands in the `cmds` files).
 
 
 ### End-to-end tests
