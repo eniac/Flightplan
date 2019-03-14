@@ -31,7 +31,7 @@ from mininet.topo import Topo
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 
-from wharf_p4_mininet import P4Switch, P4Host, send_commands
+from flightplan_p4_mininet import P4Switch, P4Host, send_commands
 
 from collections import defaultdict
 import argparse
