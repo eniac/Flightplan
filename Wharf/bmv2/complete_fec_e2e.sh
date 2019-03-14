@@ -101,7 +101,7 @@ if [[ $INLINES == $OUTLINES ]]; then
     fi
 else
     echo -e "Difference between input and output:\n"
-    diff $IN_SRT $OUT_SRT | head 100
+    diff $IN_SRT $OUT_SRT | head -100
     echo "(diff possibly truncated)"
 
     echo "Input and output contain different number of lines!"
