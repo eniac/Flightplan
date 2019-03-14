@@ -150,6 +150,5 @@ configurations.
 
 The full list of arguments can be viewed with:
 ```
-cd bmv2
-PYTHONPATH=$BMV2_REPO/tools python fec_demo.py --help
+sudo -E python bmv2/start_flightplan_mininet.py --help
 ```
