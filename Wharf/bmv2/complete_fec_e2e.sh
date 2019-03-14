@@ -36,7 +36,7 @@ echo tail -f `realpath $LOG_DUMPS/dropper.log`
 
 sudo mn -c
 
-sudo -E python $HERE/flightplan_mininet.py \
+sudo -E python $HERE/start_flightplan_mininet.py \
         $HERE/flightplan_fec_topology.yml \
 		--bmv2-exe $BMV2_REPO/targets/booster_switch/simple_switch \
         --pcap-dump $PCAP_DUMPS \
