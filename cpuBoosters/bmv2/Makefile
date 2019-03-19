@@ -10,7 +10,7 @@ endif
 BOOSTER_TARGET=booster_switch
 TEMPLATE_TARGET=simple_switch
 
-BOOSTERS?=MEMCACHED FEC
+BOOSTERS?=MEMCACHED FEC COMPRESSION
 
 ifneq ($(findstring MEMCACHED,$(BOOSTERS)),)
 BUILD_MEMCACHED=true
@@ -22,6 +22,12 @@ ifneq ($(findstring FEC,$(BOOSTERS)),)
 BUILD_FEC=true
 else
 BUILD_FEC=false
+endif
+
+ifneq ($(findstring COMPRESSION,$(BOOSTERS)),)
+BUILD_COMPRESSOR=true
+else
+BUILD_COMPRESSOR=false
 endif
 
 BMV2_CONFIGURE=$(BMV2_REPO)/configure.ac
@@ -42,6 +48,13 @@ CONFIG_FLAGS+=MEMCACHED_BOOSTER=true
 $(info Attempting build of memcached boosters)
 endif
 
+ifeq ($(BUILD_COMPRESSOR),true)
+BOOSTER_DEPS+=booster_switch/compressionBoosters
+CONFIG_FLAGS+=COMPRESSION_BOOSTER=true
+$(info Attempting build of memcached boosters)
+endif
+
+
 .PHONY:booster_switch patches clean copy_files configure
 
 all: patches copy_files booster_switch
@@ -54,6 +67,9 @@ booster_switch/fecBoosters:
 
 booster_switch/memcachedBooster:
 	cd ../memcached && make copy_files
+
+booster_switch/compressionBoosters:
+	cd ../vjCompressor && make copy_files
 
 booster_switch: copy_files  $(BOOSTER_DEPS)
 	cd $(BOOSTER_TARGET_DIR) && make -j8
