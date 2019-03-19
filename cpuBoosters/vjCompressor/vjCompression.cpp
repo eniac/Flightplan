@@ -31,18 +31,27 @@ using namespace std;
 
 #define MTU 1500
 
-uint64_t byteCt, pktCt;
+static uint64_t byteCt, pktCt;
 
-// Memory dump helper.
-void print_hex_memory(void *mem, int len);
+// Memory dump helper
+static void print_hex_memory(void *mem, int len) {
+  int i;
+  unsigned char *p = (unsigned char *)mem;
+  for (i=0;i<len;i++) {
+    printf("0x%02x ", p[i]);
+    // if (i%16==0)
+    //   printf("\n");
+  }
+  printf("\n");
+}
 
 /*=========================================
 =            Compressor.                  =
 =========================================*/
 
 
-compressorTuple_t compressorCache[CACHE_SZ];
-uint32_t compressPktId = 0;
+static compressorTuple_t compressorCache[CACHE_SZ];
+static uint32_t compressPktId = 0;
 /**
  *
  * Main compress function.
@@ -214,8 +223,8 @@ void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPk
 =            Decompressor.            =
 ======================================*/
 
-compressorTuple_t decompressorCache[CACHE_SZ];
-uint32_t decompressPktId = 0;
+static compressorTuple_t decompressorCache[CACHE_SZ];
+static uint32_t decompressPktId = 0;
 
 
 void decompress(const u_char *packet, uint32_t pktLen, forward_fn forward){
@@ -364,14 +373,3 @@ uint32_t buildDecompressedHeaders(compressorTuple_t *curPktTup, const struct com
 /*=====  End of Decompressor.  ======*/
 
 
-
-void print_hex_memory(void *mem, int len) {
-  int i;
-  unsigned char *p = (unsigned char *)mem;
-  for (i=0;i<len;i++) {
-    printf("0x%02x ", p[i]);
-    // if (i%16==0)
-    //   printf("\n");
-  }
-  printf("\n");
-}
