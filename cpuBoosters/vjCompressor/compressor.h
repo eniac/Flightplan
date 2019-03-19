@@ -83,7 +83,7 @@ struct compressorTuple_t {
 // }
 
 
-void printHeaderSizes(){
+static void printHeaderSizes(){
   printf("size compressionControlHeader_t: %li bytes\n",sizeof(compressedHeader_t));
   printf("size ipHeader_t: %li bytes\n", sizeof(ipHeader_t));
   printf("size tcpHeader_t: %li bytes\n", sizeof(tcpHeader_t));
