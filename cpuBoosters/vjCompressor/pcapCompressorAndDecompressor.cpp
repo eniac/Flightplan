@@ -91,7 +91,11 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
     char * payload;
     uint32_t payloadLen;
 
-    compress(packet, pkthdr->len);
+    auto forward_fn = [](const u_char *payload, size_t size) {
+        pcap_inject(pcap, payload, size);
+    };
+
+    compress(packet, pkthdr->len, forward_fn);
     return;
 
 }
@@ -110,7 +114,7 @@ uint32_t compressPktId = 0;
  * Main compress function.
  *
  */
-void compress(const u_char*packet, uint32_t pktLen){
+void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
     compressPktId++;
     const struct ether_header* ethernetHeader;
     const struct ipHeader_t* ipHeader;
@@ -141,7 +145,7 @@ void compress(const u_char*packet, uint32_t pktLen){
 
     // emit packet without compression.
     if (doCompress == false){
-      decompress(packet,pktLen);
+      decompress(packet,pktLen, forward);
       // pcap_inject(pcap,packet,pktLen);
       return;
     }
@@ -154,7 +158,7 @@ void compress(const u_char*packet, uint32_t pktLen){
 
     // 0. Check length.
     if (curPktTup.len < 100) {
-      decompress(packet,pktLen);
+      decompress(packet,pktLen, forward);
       // pcap_inject(pcap,packet,pkthdr -> len);
       return;
     }
@@ -168,7 +172,7 @@ void compress(const u_char*packet, uint32_t pktLen){
     if (!isHit){
       compressorCache[curPktTup.idx] = curPktTup;
       cout << "[" << compressPktId << "@compressor]:" << " NEW FLOW " << pktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      decompress(packet,pktLen);
+      decompress(packet,pktLen, forward);
       // pcap_inject(pcap,packet,pktLen);
       return;
     }
@@ -209,7 +213,7 @@ void compress(const u_char*packet, uint32_t pktLen){
 
       // Compression, emit compressed buffer.
       cout << "[" << compressPktId << "@compressor]:" << " compressed " << pktLen << "B packet to " << compressedPktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      decompress(compressedPktBuf,compressedPktLen);
+      decompress(compressedPktBuf,compressedPktLen, forward);
       // pcap_inject(pcap,compressedPktBuf,compressedPktLen);
       return;
   }
@@ -280,7 +284,7 @@ compressorTuple_t decompressorCache[CACHE_SZ];
 uint32_t decompressPktId = 0;
 
 
-void decompress(const u_char *packet, uint32_t pktLen){
+void decompress(const u_char *packet, uint32_t pktLen, forward_fn forward){
   decompressPktId++;
   // Parsed input.
   const struct ether_header* ethernetHeader;
@@ -314,14 +318,14 @@ void decompress(const u_char *packet, uint32_t pktLen){
 
       // emit packet.
       cout << "[" << compressPktId << "@decompressor]:" << " NEW FLOW " << pktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      pcap_inject(pcap,packet,pktLen);
+      forward(packet, pktLen);
       return;
 
     }
   }
   // Not a TCP packet, but not compressed -- just emit.
   else if (ntohs(ethernetHeader->ether_type) != ETYPE_COMPRESSED){
-    pcap_inject(pcap,packet,pktLen);
+    forward(packet, pktLen);
     return;
   }
   // Compressed packet -- decompress and emit.
@@ -354,7 +358,7 @@ void decompress(const u_char *packet, uint32_t pktLen){
 
     // Emit packet.
     cout << "[" << decompressPktId << "@decompressor]:" << " decompressed " << pktLen << "B packet to " << decompressedPktLen << "B packet [cache idx: " << curPktTup.idx << "]" << endl;
-    pcap_inject(pcap, decompressedPktBuf, decompressedPktLen);
+    forward(decompressedPktBuf, decompressedPktLen);
 
   }
 

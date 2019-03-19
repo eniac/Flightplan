@@ -102,11 +102,15 @@ void printHeaderSizes(){
 //   const struct tcpHeader_t* tcpHeader,
 //   char * payload, uint32_t payloadLen);
 
-void compress(const u_char*packet, uint32_t pktLen);
+#include <functional>
+
+using forward_fn = std::function<void(const u_char *payload, size_t)>;
+
+void compress(const u_char*packet, uint32_t pktLen, forward_fn forward);
 bool checkCache(compressorTuple_t curPktTup);
 void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPktTup);
 
-void decompress(const u_char*packet, uint32_t pktLen);
+void decompress(const u_char*packet, uint32_t pktLen, forward_fn forward);
 uint32_t buildDecompressedHeaders(compressorTuple_t *curPktTup, 
   const struct compressedHeader_t * cHeader);
 
