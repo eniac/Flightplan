@@ -15,7 +15,15 @@ patch_if_diff() {
         patch $1 $2
         if [[ $? != 0 ]]; then
             echo "Failed to patch!"
-            ANY_FAILURES=1;
+            if [[ $3 == 1 ]]; then
+                echo "Trying a checkout and reapply"
+                HERE=$(pwd)
+                cd $(dirname $1) && git checkout -- $(basename $1)
+                cd $HERE
+                patch_if_diff $1 $2 0
+            else
+                ANY_FAILURES=1;
+            fi
         else
             echo "Applied..."
         fi
@@ -26,7 +34,7 @@ patch_if_diff() {
 
 for PATCHFILE in $( find . -name '*.patch'); do
     echo -n "Applying patchfile $PATCHFILE: "
-    patch_if_diff $BMV2_REPO/${PATCHFILE%.patch} $PATCHFILE
+    patch_if_diff $BMV2_REPO/${PATCHFILE%.patch} $PATCHFILE 1
 done
 
 exit $ANY_FAILURES
