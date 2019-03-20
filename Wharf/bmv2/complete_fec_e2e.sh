@@ -5,10 +5,7 @@ if [[ $# != 1 ]]; then
     exit
 fi
 
-BMV2_REPO_M=$BMV2_REPO
-RUNTIME_CLI_DIR=$BMV2_REPO_M/tools
-
-if [[ $BMV2_REPO_M == "" ]]; then
+if [[ $BMV2_REPO == "" ]]; then
     echo "Must set BMV2_REPO before running this test!"
     exit
 fi
@@ -24,6 +21,7 @@ BASENAME=$(basename $INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files/
+rm -f $LOG_DUMPS
 rm -f $OUTDIR/*.pcap
 rm -f $OUTDIR/pcap_dump/*.pcap
 mkdir -p $PCAP_DUMPS
@@ -36,21 +34,22 @@ echo tail -f `realpath $LOG_DUMPS/decoder.log`
 echo "Dropper log:"
 echo tail -f `realpath $LOG_DUMPS/dropper.log`
 
-sudo mn -c 
-sleep 1
+sudo mn -c
 
-
-sudo PYTHONPATH=$RUNTIME_CLI_DIR python $HERE/fec_demo.py \
-		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
-		--encoder-json $BLD/bmv2/Complete.json \
-		--decoder-json $BLD/bmv2/Complete.json \
-		--dropper-json $BLD/bmv2/Dropper.json \
-		--pcap-dump $PCAP_DUMPS \
-        --verbose \
+sudo -E python $HERE/start_flightplan_mininet.py \
+        $HERE/flightplan_fec_topology.yml \
+		--bmv2-exe $BMV2_REPO/targets/booster_switch/simple_switch \
+        --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
-        --dropper-pcap $HERE/lldp_enable_fec.pcap \
-		--command-file $HERE/complete_commands.txt \
-		--replay $INPUT_PCAP \
+        --verbose \
+        --replay h1-s1:$INPUT_PCAP
+
+if [[ $? != 0 ]]; then
+    echo Error running flightplan_mininet.py
+    echo Check logs in $LOG_DUMPS for more details
+    ls -1 $LOG_DUMPS/*
+    exit -1;
+fi
 
 sleep 4
 
@@ -102,8 +101,8 @@ if [[ $INLINES == $OUTLINES ]]; then
     fi
 else
     echo -e "Difference between input and output:\n"
-    diff $IN_SRT $OUT_SRT
-    echo ""
+    diff $IN_SRT $OUT_SRT | head -100
+    echo "(diff possibly truncated)"
 
     echo "Input and output contain different number of lines!"
     echo "($INLINES and $OUTLINES)"

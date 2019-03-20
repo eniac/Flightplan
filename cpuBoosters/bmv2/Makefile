@@ -55,7 +55,7 @@ $(info Attempting build of memcached boosters)
 endif
 
 
-.PHONY:booster_switch patches clean copy_files configure
+.PHONY:booster_switch patches clean copy_files configure $(BOOSTER_DEPS)
 
 all: patches copy_files booster_switch
 
@@ -77,19 +77,17 @@ booster_switch: copy_files  $(BOOSTER_DEPS)
 $(BOOSTER_TARGET_DIR):
 	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
 
-configure: $(BMV2_CONFIGURE) all
+configure: patches $(BOOSTER_DEPS) copy_files clean $(BMV2_CONFIGURE) booster_switch
 
-${BMV2_CONFIGURE}: .FORCE
+${BMV2_CONFIGURE}: FORCE
 	cd $(BMV2_REPO) && ./configure \
-	   	P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf
-
-.FORCE:
+		P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf && automake && make
 
 patches:
 	cd patches && bash patch.sh
 
 clean:
-	cd $(BOOSTER_TARGET_DIR) && make clean
+	- cd $(BOOSTER_TARGET_DIR) && make clean
 
 FORCE:
 

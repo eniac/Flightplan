@@ -1,6 +1,7 @@
 #ifndef TARGETS_H_
 #define TARGETS_H_
 
+extern void drop();
 
 /*********
  * IF THE TARGET IS THE P4 BEHAVIORAL MODEL
