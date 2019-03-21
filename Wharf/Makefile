@@ -15,7 +15,7 @@ $(error Must set BMV2_REPO to run mininet with makefile)
 endif
 endif
 
-DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 Sources/Complete.p4 Sources/Compressor.p4
+DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 Sources/Compression.p4
 
 TARGET=TARGET_BMV2
 
