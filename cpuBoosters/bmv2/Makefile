@@ -12,43 +12,25 @@ TEMPLATE_TARGET=simple_switch
 
 BOOSTERS?=MEMCACHED FEC COMPRESSION
 
-ifneq ($(findstring MEMCACHED,$(BOOSTERS)),)
-BUILD_MEMCACHED=true
-else
-BUILD_MEMCACHED=false
-endif
-
-ifneq ($(findstring FEC,$(BOOSTERS)),)
-BUILD_FEC=true
-else
-BUILD_FEC=false
-endif
-
-ifneq ($(findstring COMPRESSION,$(BOOSTERS)),)
-BUILD_COMPRESSOR=true
-else
-BUILD_COMPRESSOR=false
-endif
-
 BMV2_CONFIGURE=$(BMV2_REPO)/configure.ac
 TARGETS_DIR=$(BMV2_REPO)/targets
 
 TEMPLATE_TARGET_DIR=$(TARGETS_DIR)/$(TEMPLATE_TARGET)/
 BOOSTER_TARGET_DIR=$(TARGETS_DIR)/$(BOOSTER_TARGET)
 
-ifeq ($(BUILD_FEC),true)
+ifneq ($(findstring FEC,$(BOOSTERS)),)
 BOOSTER_DEPS+=booster_switch/fecBoosters
 CONFIG_FLAGS+=FEC_BOOSTER=true
 $(info Attempting build of fec boosters)
 endif
 
-ifeq ($(BUILD_MEMCACHED),true)
+ifneq ($(findstring MEMCACHED,$(BOOSTERS)),)
 BOOSTER_DEPS+=booster_switch/memcachedBooster
 CONFIG_FLAGS+=MEMCACHED_BOOSTER=true
 $(info Attempting build of memcached boosters)
 endif
 
-ifeq ($(BUILD_COMPRESSOR),true)
+ifneq ($(findstring COMPRESSION,$(BOOSTERS)),)
 BOOSTER_DEPS+=booster_switch/compressionBoosters
 CONFIG_FLAGS+=COMPRESSION_BOOSTER=true
 $(info Attempting build of memcached boosters)
