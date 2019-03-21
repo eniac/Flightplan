@@ -88,7 +88,7 @@ void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
 
     // emit packet without compression.
     if (doCompress == false){
-      decompress(packet,pktLen, forward);
+      forward(packet, pktLen);
       // pcap_inject(pcap,packet,pktLen);
       return;
     }
@@ -101,7 +101,7 @@ void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
 
     // 0. Check length.
     if (curPktTup.len < 100) {
-      decompress(packet,pktLen, forward);
+      forward(packet, pktLen);
       // pcap_inject(pcap,packet,pkthdr -> len);
       return;
     }
@@ -114,8 +114,8 @@ void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
     // Save this packet's header to the cache and don't build a compressed packet.
     if (!isHit){
       compressorCache[curPktTup.idx] = curPktTup;
-      cout << "[" << compressPktId << "@compressor]:" << " NEW FLOW " << pktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      decompress(packet,pktLen, forward);
+      cout << "[" << compressPktId << "@compressor]:" << " NEW FLOW " << pktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;
+      forward(packet, pktLen);
       // pcap_inject(pcap,packet,pktLen);
       return;
     }
@@ -155,8 +155,8 @@ void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
       compressorCache[curPktTup.idx] = curPktTup;
 
       // Compression, emit compressed buffer.
-      cout << "[" << compressPktId << "@compressor]:" << " compressed " << pktLen << "B packet to " << compressedPktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      decompress(compressedPktBuf,compressedPktLen, forward);
+      cout << "[" << compressPktId << "@compressor]:" << " compressed " << pktLen << "B packet to " << compressedPktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;
+      forward(compressedPktBuf, compressedPktLen);
       // pcap_inject(pcap,compressedPktBuf,compressedPktLen);
       return;
   }

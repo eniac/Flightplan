@@ -93,7 +93,11 @@ void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_ch
         pcap_inject(pcap, payload, size);
     };
 
-    compress(packet, pkthdr->len, forward_fn);
+    auto decompress_fn = [&](const u_char *payload, size_t size) {
+        decompress(payload, size, forward_fn);
+    };
+
+    compress(packet, pkthdr->len, decompress_fn);
     return;
 
 }
