@@ -152,3 +152,18 @@ The full list of arguments can be viewed with:
 ```
 sudo -E python bmv2/start_flightplan_mininet.py --help
 ```
+
+# Adding new boosters
+New p4 files may be added to the build process in two steps:
+
+First, add the necessary functionality to `Complete.p4`, or to a standalone p4 file which
+implements the booster
+
+Modify the makefile to track the new dependencies and targets.
+
+The modifications to the makefile must be made in three locations:
+
+1) Add the source to the `DEPS` variable (`DEPS=... Sources/XXX.p4`)
+2) Add the output as a dependency of the `bmv2` target (`bmv2: ... $(BLD_BMV2)/XXX.json`)
+3) Add relevant externs to the list `EXTERNS` that are split by `split_extern_events.py`
+(`EXTERNS=... XXX`)
