@@ -3,20 +3,20 @@
 
 control HeaderCompression(in bit<9> ingress_port, inout bit<1> compressed) {
 
-    action set_compression(bit<1> on) {
+    action set_port_compression(bit<1> on) {
         compressed = on;
     }
 
-    table ingress_compression {
+    table port_compression {
         key = {
             ingress_port : exact;
         }
-        actions = { set_compression; NoAction; }
+        actions = { set_port_compression; NoAction; }
         default_action = NoAction;
     }
 
     apply {
-        ingress_compression.apply();
+        port_compression.apply();
     }
 }
 
