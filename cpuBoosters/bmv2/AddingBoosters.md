@@ -110,8 +110,8 @@ the new booster. To do so, add one additional line to `patches/configure.ac.patc
 ```
 +AM_CONDITIONAL([BUILD_XXX_BOOSTER], [test x$XXX_BOOSTER != x ] )
 ```
-** NB: Be sure to modify the number of lines affected at the top of the file as well.
-e.g. `270,11 -> 270,12` **
+**NB: Be sure to modify the number of lines affected at the top of the file as well.
+e.g. `270,11 -> 270,12`**
 
 
 ## Booster Addition
@@ -220,3 +220,37 @@ file, and then add the relevant `import_XXX_booster_primitives()` call to
     import_XXX_booster_primitives(sswitch);
 #endif
 ```
+
+## Use in bmv2, flightplan
+
+At this point, the booster should be able to be used in bmv2 with the same name as passed
+into the first argument of `REGISTER_BOOSTER_EXTERN`.
+
+However, to get proper functionality with respect to the creation of new packets, an
+additional modification must be made to the output .json after compilation with p4c.
+
+### Splitting extern event
+
+The output .json file from p4c splits a P4 program into a pipeline of actions,
+where each action may contain one or more primitives. The patches made to bmv2 allow
+a newly-created packet to start execution at the same action where it was created,
+but do not allow for starting halfway through an action.
+
+Thus, a modification must be made to the output to move the "primitive" (i.e. the extern)
+into its own, isolated action.
+
+The python script `split_extern_event.py`, located in [P4Boosters/Wharf](../../Wharf)
+does that, and  must be applied to the output file before it is read into the `behavioral_model`.
+
+The script can be used with the following syntax:
+
+```shell
+python split_extern_event.py <input_file.json> <output_file.json> <booster_name>
+```
+Where `booster_name` is the name of the booster which creates new packets. In this case,
+`boost_XXX`.
+
+### Integration into Complete.p4 build process
+
+Instructions regarding adding the extern to the Complete.p4 build process can be found in
+[Wharf](../../Wharf/README.md).
