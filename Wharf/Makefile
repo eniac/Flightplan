@@ -15,13 +15,13 @@ $(error Must set BMV2_REPO to run mininet with makefile)
 endif
 endif
 
-DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 Sources/Complete.p4
+DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 Sources/Complete.p4 Sources/Compressor.p4
 
 TARGET=TARGET_BMV2
 
 USER=$(shell logname)
 
-EXTERNS=fec_encode fec_decode memcached
+EXTERNS=fec_encode fec_decode memcached header_compress header_decompress
 
 All: bmv2 Sample
 
@@ -31,7 +31,7 @@ test:
 	${P4TEST} -DTARGET_BMV2 -I../FPGA/RSEVivadoHLS/ -I../FPGA/RSEConfig  -I../FPGA/MemcachedP4 
 
 bmv2: $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json \
-	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json
+	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json $(BLD_BMV2)/Compressor.json
 
 complete: $(BLD_BMV2)/Complete.json
 
@@ -59,7 +59,7 @@ run-%: $(BLD_BMV2)/%.json
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BLD_BMV2)
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION
 	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@
-	python split_extern_event.py $@ $@ ${EXTERNS}
+	python2 split_extern_event.py $@ $@ ${EXTERNS}
 
 clean:
 	rm -fr $(BLD)

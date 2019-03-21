@@ -1,0 +1,42 @@
+#!/bin/bash
+
+if [[ $# != 1 ]]; then
+    echo "Usage $0 <test_file.pcap>"
+    exit
+fi
+
+if [[ $BMV2_REPO == "" ]]; then
+    echo "Must set BMV2_REPO before running this test!"
+    exit
+fi
+
+INPUT_PCAP=$1
+HERE=`dirname $0`
+TESTDIR=$HERE/test_output
+BASENAME=$(basename $INPUT_PCAP .pcap)
+OUTDIR=$TESTDIR/HC_$BASENAME
+PCAP_DUMPS=$OUTDIR/pcap_dump/
+LOG_DUMPS=$OUTDIR/log_files/
+
+rm -rf $OUTDIR
+mkdir -p $PCAP_DUMPS
+mkdir -p $LOG_DUMPS
+
+sudo mn -c
+
+sudo -E python $HERE/start_flightplan_mininet.py \
+        $HERE/compression_topology.yml \
+        --pcap-dump $PCAP_DUMPS \
+        --log $LOG_DUMPS \
+        --verbose \
+        --replay h1-s1:$INPUT_PCAP
+
+if [[ $? != 0 ]]; then
+    echo Error running start_flightplan_mininet.py
+    echo Check logs in $LOG_DUMPS for more details
+    ls -1 $LOG_DUMPS/*
+    exit -1;
+fi
+
+echo Comparing $PCAP_DUMPS/h1_out.pcap and $PCAP_DUMPS/h2_in.pcap
+python $HERE/comparePcaps.py $PCAP_DUMPS/h1_out.pcap $PCAP_DUMPS/h2_in.pcap
