@@ -3,7 +3,7 @@
 #include "Memcached_extern.p4"
 #include "FEC.p4"
 #include "FEC_Classify.p4"
-#include "HC_extern.p4"
+#include "Compression.p4"
 
 #if defined(TARGET_BMV2)
 
@@ -23,6 +23,11 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     FEC_Classify() classification;
     FecClassParams() decoder_params;
     FecClassParams() encoder_params;
+
+#if defined(HEADER_COMPRESSION)
+    HeaderCompression() ingress_compression;
+    HeaderCompression() egress_compression;
+#endif
 
     apply {
         if (!hdr.eth.isValid()) {
@@ -54,9 +59,9 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 
 #if defined(HEADER_COMPRESSION)
         // If multiplexed link, then header decompress.
-        get_port_link_compression(meta.ingress_port, compressed_link);
+        ingress_compression.apply(meta.ingress_port, compressed_link);
         if (compressed_link == 1) {
-        header_decompress(forward);
+            header_decompress(forward);
             if (forward == 0) {
                 drop();
                 return;
@@ -83,9 +88,9 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 
 #if defined(HEADER_COMPRESSION)
         // If heading out on a multiplexed link, then header compress.
-        get_port_link_compression(meta.egress_spec, compressed_link);
+        egress_compression.apply(meta.egress_spec, compressed_link);
         if (compressed_link == 1) {
-        header_compress(forward);
+            header_compress(forward);
             if (forward == 0) {
                 drop();
                 return;

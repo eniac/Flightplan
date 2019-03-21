@@ -57,7 +57,7 @@ run-%: $(BLD_BMV2)/%.json
 	sudo PYTHONPATH=$(RUNTIME_CLI_DIR) python bmv2/1sw_demo.py --behavioral-exe $(BMV2_REPO_M)/targets/booster_switch/simple_switch --json $<  --pcap-dump pcap_output/ --command-file bmv2/complete_commands.txt
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BLD_BMV2)
-	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION
+	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION -DHEADER_COMPRESSION
 	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@
 	python2 split_extern_event.py $@ $@ ${EXTERNS}
 
