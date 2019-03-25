@@ -42,17 +42,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             return;
         }
 
-        // If lossy link, then FEC decode.
-        if (hdr.fec.isValid()) {
-            decoder_params.apply(hdr.fec.traffic_class, k, h);
-            hdr.eth.type = hdr.fec.orig_ethertype;
-            FEC_DECODE(hdr.fec, k, h);
-            if (hdr.fec.packet_index >= k) {
-                drop();
-                return;
-            }
-            hdr.fec.setInvalid();
-        }
 
         bit<1> compressed_link = 0;
         bit<1> forward = 0;
@@ -68,6 +57,18 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             }
         }
 #endif
+
+        // If lossy link, then FEC decode.
+        if (hdr.fec.isValid()) {
+            decoder_params.apply(hdr.fec.traffic_class, k, h);
+            hdr.eth.type = hdr.fec.orig_ethertype;
+            FEC_DECODE(hdr.fec, k, h);
+            if (hdr.fec.packet_index >= k) {
+                drop();
+                return;
+            }
+            hdr.fec.setInvalid();
+        }
 
 #if defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
@@ -85,18 +86,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         }
 
         bit<1> faulty = 1;
-
-#if defined(HEADER_COMPRESSION)
-        // If heading out on a multiplexed link, then header compress.
-        egress_compression.apply(meta.egress_spec, compressed_link);
-        if (compressed_link == 1) {
-            header_compress(forward);
-            if (forward == 0) {
-                drop();
-                return;
-            }
-        }
-#endif
 
         // If heading out on a lossy link, then FEC encode.
         get_port_status(meta.egress_spec, faulty);
@@ -119,6 +108,18 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 hdr.eth.type = ETHERTYPE_WHARF;
             }
         }
+
+#if defined(HEADER_COMPRESSION)
+        // If heading out on a multiplexed link, then header compress.
+        egress_compression.apply(meta.egress_spec, compressed_link);
+        if (compressed_link == 1) {
+            header_compress(forward);
+            if (forward == 0) {
+                drop();
+                return;
+            }
+        }
+#endif
 
 #if !defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
