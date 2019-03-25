@@ -37,10 +37,9 @@ Sample and fec booster bmv2 inputs can both be built with `make bmv2`
 - Sources/Sample.p4 : Sample use of a simple exetern that creates a modified copy of a packet
   - Run in mininet with `make run-Sample`
 
-Executing `make run` will start up a network:
-```
-h1 <--> Encoder (s0) <--> Dropper (s1) <--> Decoder (s2) <--> h2
-```
+A network of Encoders, Droppers, Decoders, and "Complete"s can be started with
+`sudo -E python bmv2/start_flightplan_mininet.py <config.yml>`
+as described in the testing section below.
 
 ### Bmv2 configuration rewriting
 The behavioral model repository does not support creation of packets
@@ -61,30 +60,74 @@ created it.
 The booster can then use the function `is_generated()` to see if it was the one that
 generated that packet, and then it can deal with it accordingly.
 
-## Testing in bmv2
+## Testing in bmv2 and mininet
 
-Complete.p4 test scripts start up a topology:
+The `Complete.p4` program starts up the encoder, decoder, and memcached on the same switch
+(except if such features are disabled via `#define`'s).
+
+To run a topology for flightplan in bmv2 and mininet, use the command:
+
+```shell
+sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
+```
+
+Where the `cfg_file` specifies the topology and initial state of mininet.
+
+The most complete topology at this time is defined in `bmv2/flightplan_mcd_topology.yml`,
+and is duplicated here:
+
+``` yaml
+hosts:
+    h1 : {}
+    h2 :
+        program: memcached -vv -u $USER -U 11211 -B ascii
+
+switches:
+    s1:
+        cfg: ../build/bmv2/Complete.json
+        links: [h1, s2]
+        cmds: complete_commands.txt
+    s2:
+        cfg: ../build/bmv2/Dropper.json
+        replay:
+            s1: lldp_enable_fec.pcap
+            s3: lldp_enable_fec.pcap
+        cmds: dropper_commands.txt
+    s3:
+        cfg: ../build/bmv2/Complete.json
+        links: [h2, s2]
+        cmds: complete_commands.txt
+```
+
+Running `start_flightplan_mininet.py` with this config file will start up a topology:
 ```
 h1 <--> Complete (s0) <--> Dropper (s1) <--> Complete (s2) <--> h2
 ```
 
-The scripts also ensure that the pcap file located in `bmv2/lldp_enable_fec.pcap` is sent from s1 to s0 and s2, which enables FEC over the faulty link.
+The config file also enables FEC from `s0->s1` and `s2->s1`
+(by replaying the appropriate packets from s2 to s1 & s3), in addition
+to setting up the forwarding tables on the different switches
+(by sending the commands in the `cmds` files).
 
 
-Two test files exist for checking complete.p4 functionality in mininet/bmv2:
+### End-to-end tests
+
+Two end-to-end tests exist, one for the FEC functionality and one for memcached.
+They are:
 
 ```shell
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
 
-The first tests just the FEC functionality. A representative input file is
-located in `bmv2/pcaps/tcp_100.pcap`
+The first tests just the FEC functionality, ensuring that the packets received by
+h2 and identical to those sent by h1, even in the presence of drops.
 
-The second tests FEC + memcached functionality. Good input files are:
-- `bmv2/pcaps/Memcached_in.pcap` and `bmv2/pcaps/Memcached_expected.pcap`
+A sample input file is `bmv2/pcaps/tcp_100.pcap`
+
+The second tests FEC + memcached functionality, ensuring that the memcached
+responses received by h1 are as expected. Good input files are:
 - `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
-- `bmv2/pcaps/Memcached_in_shortest.pcap` and `bmv2/pcaps/Memcached_expected_shortest.pcap`
 
 **NB:** Before running these files, you must set the environment variable:
 `BMV2_REPO` to point to a copy of the behavioral model repository which has
@@ -107,6 +150,5 @@ configurations.
 
 The full list of arguments can be viewed with:
 ```
-cd bmv2
-PYTHONPATH=$BMV2_REPO/tools python fec_demo.py --help
+sudo -E python bmv2/start_flightplan_mininet.py --help
 ```
