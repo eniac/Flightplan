@@ -4,16 +4,22 @@ hosts:
 
 switches:
     s1:
-        cfg: ../build/bmv2/Complete.json
+        cfg: ../../build/bmv2/Complete.json
         links: [h1, s2]
-        cmds: complete_commands.txt
+        cmds:
+            - ../controller_files/compressor_commands.txt
+            - ../controller_files/forwarding_commands.txt
+            - ../controller_files/fec_commands.txt
     s2:
-        cfg: ../build/bmv2/Dropper.json
+        cfg: ../../build/bmv2/Dropper.json
         replay:
-            s1: lldp_enable_fec.pcap
-            s3: lldp_enable_fec.pcap
-        cmds: dropper_commands.txt
+            s1: ../pcaps/lldp_enable_fec.pcap
+            s3: ../pcaps/lldp_enable_fec.pcap
+        cmds: [../controller_files/forwarding_commands.txt]
     s3:
-        cfg: ../build/bmv2/Complete.json
+        cfg: ../../build/bmv2/Complete.json
         links: [h2, s2]
-        cmds: complete_commands.txt
+        cmds:
+            - ../controller_files/decompressor_commands.txt
+            - ../controller_files/forwarding_commands.txt
+            - ../controller_files/fec_commands.txt
