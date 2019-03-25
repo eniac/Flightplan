@@ -2,12 +2,12 @@
 
 if [[ $# != 1 ]]; then
     echo "Usage $0 <test_file.pcap>"
-    exit
+    exit 1
 fi
 
 if [[ $BMV2_REPO == "" ]]; then
     echo "Must set BMV2_REPO before running this test!"
-    exit
+    exit 1
 fi
 
 INPUT_PCAP=$1
@@ -22,14 +22,14 @@ rm -rf $OUTDIR
 mkdir -p $PCAP_DUMPS
 mkdir -p $LOG_DUMPS
 
-sudo mn -c
+sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
 sudo -E python $HERE/start_flightplan_mininet.py \
-        $HERE/compression_topology.yml \
+        $HERE/topologies/compression_topology.yml \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
-        --replay h1-s1:$INPUT_PCAP
+        --replay h1-s1:$INPUT_PCAP 2> $LOG_DUMPS/flightlpan_mininet_log.err
 
 if [[ $? != 0 ]]; then
     echo Error running start_flightplan_mininet.py
@@ -39,4 +39,4 @@ if [[ $? != 0 ]]; then
 fi
 
 echo Comparing $PCAP_DUMPS/h1_out.pcap and $PCAP_DUMPS/h2_in.pcap
-python $HERE/comparePcaps.py $PCAP_DUMPS/h1_out.pcap $PCAP_DUMPS/h2_in.pcap
+python $HERE/pcap_tools/comparePcaps.py $PCAP_DUMPS/h1_out.pcap $PCAP_DUMPS/h2_in.pcap
