@@ -1,0 +1,16 @@
+hosts:
+    h1 : {}
+    h2 : {}
+
+switches:
+    s1:
+        cfg: ../../build/bmv2/Complete.json
+        links: [h1, s2]
+        cmds: [../controller_files/forwarding_commands.txt]
+    s2:
+        cfg: ../../build/bmv2/Dropper.json
+        cmds: [../controller_files/forwarding_commands.txt]
+    s3:
+        cfg: ../../build/bmv2/Complete.json
+        links: [h2, s2]
+        cmds: [../controller_files/forwarding_commands.txt]
