@@ -1,3 +1,1 @@
-table_add forward set_egress 0 => 1
-table_add forward set_egress 1 => 0
 table_add ingress_compression.port_compression ingress_compression.set_port_compression 0 => 1
