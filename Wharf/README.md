@@ -19,23 +19,18 @@ appropriate target-specific code.
 Sample and fec booster bmv2 inputs can both be built with `make bmv2`
 
 - Sources/Complete.p4 : Program to be run on all switches
-  - Performs Memcached'ing, fec-encoding, and/or fec-decoding depending on traffic type
-  - Run one in mininet with `make run-Complete`
+  - Performs Memcached'ing, fec, and/or header compression depending on traffic type
 - Sources/targets.h : Target-specific definitions used by fec encoder and decoder
 - Sources/FEC.p4 : Calls to encode, decode, or retrieve parameters based on fec encoding
 - Sources/Forwarding.p4 : Determines the egress port out of which a packet should be sent
 - Sources/Parsing.p4 : Parsing and deparsing of packets
 - Sources/LLDP.p4 : Activation of FEC on ports through LLDP
 - Sources/Encoder.p4 : Definition of `main` switch target for encoder
-  - Run in mininet with `make run-Encoder`
 - Sources/Decoder.p4 : Definition of `main` switch target for decoder
-  - Run in mininet with `make run-Decoder`
 - Sources/Dropper.p4 : A `main` target that will drop a configurable number of packets
-  - Run in mininet with `make run-Dropper`
   - The dropper's drop rate can be configured using the `set_drop_rate(a, b)` action, which will
   drop one out of every `(a+b)` packets, but will never drop more than one of `b` packets.
 - Sources/Sample.p4 : Sample use of a simple exetern that creates a modified copy of a packet
-  - Run in mininet with `make run-Sample`
 
 A network of Encoders, Droppers, Decoders, and "Complete"s can be started with
 `sudo -E python bmv2/start_flightplan_mininet.py <config.yml>`
@@ -137,14 +132,14 @@ been built with the `booster_switch`, as detailed:
 ### Mininet file
 
 The file that runs the mininet simulation is ultimately
-[fec_demo.py](./bmv2/fec_demo.py), which depends on
+[start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py), which depends on
 [wharf_p4_mininet.py](./bmv2/wharf_p4_mininet.py).
 
 The `wharf_p4_mininet` file borrows very heavily from the
 [p4_mininet.py](https://github.com/p4lang/behavioral-model/blob/master/mininet/p4_mininet.py)
 file located in the P4 behavioral model repository.
 
-`fec_demo.py` accepts a variety of command line arguments specifying
+`start_flightplan_mininet.py` accepts a variety of command line arguments specifying
 which P4 configuration to load on which of s0, s1, and s2, among other
 configurations.
 
