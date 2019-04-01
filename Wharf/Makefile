@@ -15,6 +15,10 @@ $(error Must set BMV2_REPO to run mininet with makefile)
 endif
 endif
 
+BOOSTERS?=FEC COMPRESSION MEMCACHED
+
+BOOSTER_DEFINES=$(foreach B, ${BOOSTERS}, -D$B_BOOSTER)
+
 DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 Sources/Compression.p4
 
 TARGET=TARGET_BMV2
@@ -39,7 +43,7 @@ $(BLD_BMV2):
 	@mkdir -p $@
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS)
-	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION -DHEADER_COMPRESSION
+	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
 	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@
 	python2 split_extern_event.py $@ $@ ${EXTERNS}
 
