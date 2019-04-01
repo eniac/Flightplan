@@ -40,6 +40,7 @@ To build only header compression boosters, run:
 To build multiple boosters (i.e. fec and compression), run:
 `make configure BOOSTERS="FEC COMPRESSION"`
 
+After running `make configure`, run `make` to finish building the `booster_switch`.
 
 ## Testing
 

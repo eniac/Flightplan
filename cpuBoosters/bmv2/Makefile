@@ -59,11 +59,12 @@ booster_switch: copy_files  $(BOOSTER_DEPS)
 $(BOOSTER_TARGET_DIR):
 	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
 
-configure: patches $(BOOSTER_DEPS) copy_files $(BMV2_CONFIGURE) clean booster_switch
+configure: patches $(BOOSTER_DEPS) copy_files $(BMV2_CONFIGURE)
 
 ${BMV2_CONFIGURE}: FORCE
 	cd $(BMV2_REPO) && ./configure \
 		P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf && automake && make
+	make clean
 
 patches:
 	cd patches && bash patch.sh
