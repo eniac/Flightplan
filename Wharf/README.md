@@ -7,6 +7,26 @@ testing requires installation of the behavioral model (https://github.com/p4lang
 with the additional `booster_switch`, as explained
 [here](../cpuBoosters/bmv2/README.md).
 
+## Selecting Boosters
+
+If the booster switch was built with only certain boosters enabled, those same
+boosters (and only those boosters) will have to be enabled in the build process
+here.
+
+To build Complete.p4 with only FEC enabled, run:
+```
+make BOOSTERS=FEC
+```
+
+To build Complete.p4 with only FEC And Compression boosters, run
+```
+make BOOSTERS="FEC COMPRESSION"
+```
+
+To build with all boosters, simply run `make`.
+
+**NB:** Build may have to be cleaned with `make clean` before changing enabled boosters.
+
 ## Building for SDNet
 
 SDNet build is not yet added to the makefile.
