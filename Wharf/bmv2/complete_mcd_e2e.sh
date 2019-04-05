@@ -5,10 +5,7 @@ if [[ $# != 2 ]]; then
     exit
 fi
 
-BMV2_REPO_M=$BMV2_REPO
-RUNTIME_CLI_DIR=$BMV2_REPO_M/tools
-
-if [[ $BMV2_REPO_M == "" ]]; then
+if [[ $BMV2_REPO == "" ]]; then
     echo "Must set BMV2_REPO before running this test!"
     exit
 fi
@@ -25,6 +22,7 @@ BASENAME=$(basename $PRE_INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files/
+rm -f $LOG_DUMPS
 rm -f $OUTDIR/*.pcap
 rm -f $OUTDIR/pcap_dump/*.pcap
 mkdir -p $PCAP_DUMPS
@@ -34,30 +32,15 @@ INPUT_PCAP=$OUTDIR/${BASENAME}_in.pcap
 echo "Putting pcap in $INPUT_PCAP"
 python $HERE/pcap_sub.py $PRE_INPUT_PCAP $INPUT_PCAP 0
 
-echo "Encoder log:"
-echo tail -f `realpath $LOG_DUMPS/encoder.log`
-echo "Decoder log:"
-echo tail -f `realpath $LOG_DUMPS/decoder.log`
-echo "Dropper log:"
-echo tail -f `realpath $LOG_DUMPS/dropper.log`
+sudo mn -c
 
-sudo mn -c 
-sleep 1
-
-
-sudo PYTHONPATH=$RUNTIME_CLI_DIR python $HERE/fec_demo.py \
-		--behavioral-exe $BMV2_REPO_M/targets/booster_switch/simple_switch \
-		--encoder-json $BLD/bmv2/Complete.json \
-		--decoder-json $BLD/bmv2/Complete.json \
-		--dropper-json $BLD/bmv2/Dropper.json \
-		--pcap-dump $PCAP_DUMPS \
+sudo -E python $HERE/start_flightplan_mininet.py \
+        $HERE/flightplan_mcd_topology.yml \
+        --bmv2-exe $BMV2_REPO/targets/booster_switch/simple_switch \
+        --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
-		--command-file $HERE/complete_commands.txt \
-        --h2-prog "memcached -vv -u $USER -U 11211 -l 10.0.1.1 -B ascii > $LOG_DUMPS/mcd_out.txt 2> $LOG_DUMPS/mcd_err.txt  &" \
-		--replay $INPUT_PCAP  \
-        --dropper-pcap $HERE/lldp_enable_fec.pcap \
-        --verbose
-
+        --verbose \
+        --replay h1-s1:$INPUT_PCAP
 sleep 4
 
 REQ_PCAP=$OUTDIR/${BASENAME}_req.pcap

@@ -52,15 +52,17 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         bit<1> compressed_link = 0;
         bit<1> forward = 0;
 
+#if defined(HEADER_COMPRESSION)
         // If multiplexed link, then header decompress.
         get_port_link_compression(meta.ingress_port, compressed_link);
         if (compressed_link == 1) {
-            header_decompress(forward);
+        header_decompress(forward);
             if (forward == 0) {
                 drop();
                 return;
             }
         }
+#endif
 
 #if defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
@@ -79,15 +81,17 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 
         bit<1> faulty = 1;
 
+#if defined(HEADER_COMPRESSION)
         // If heading out on a multiplexed link, then header compress.
         get_port_link_compression(meta.egress_spec, compressed_link);
         if (compressed_link == 1) {
-            header_compress(forward);
+        header_compress(forward);
             if (forward == 0) {
                 drop();
                 return;
             }
         }
+#endif
 
         // If heading out on a lossy link, then FEC encode.
         get_port_status(meta.egress_spec, faulty);

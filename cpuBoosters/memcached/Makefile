@@ -4,7 +4,10 @@ CORE_DIR=../../FPGA/MemcachedVivadoHLS
 CORE_SOURCE=$(CORE_DIR)/MemHLS.cpp
 CORE_OBJ=MemHLS.o
 
+ifeq ($(XILINX_DIR),)
 XILINX_DIR?=/home/${USER}/Xilinx
+$(warning XILINX_DIR not set. Assuming Vivado_HLS installed in ${XILINX_DIR})
+endif
 
 HLS_INCLUDE_DIR=$(XILINX_DIR)/Vivado_HLS/2017.1/include/
 
