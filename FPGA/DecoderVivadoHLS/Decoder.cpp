@@ -21,8 +21,6 @@
 #include "Decoder.h"
 #include "Decoder_core.h"
 
-static const unsigned HEADER_SIZE = FEC_TRAFFIC_CLASS_WIDTH + FEC_BLOCK_INDEX_WIDTH
-    + FEC_PACKET_INDEX_WIDTH + FEC_ETHER_TYPE_WIDTH + FEC_PACKET_LENGTH_WIDTH;
 static const unsigned TRAFFIC_CLASS_COUNT = 1 << FEC_TRAFFIC_CLASS_WIDTH;
 static const unsigned PING_PONG_BUFFER_SIZE = DIVIDE_AND_ROUND_UP(
     FEC_MAX_PACKET_SIZE + FEC_PACKET_LENGTH_WIDTH / 8, BYTES_PER_WORD);
@@ -122,22 +120,21 @@ static void Collect_packets(hls::stream<input_tuples> & Tuple_input,
   input_tuples Input_tuples = Tuple_input.read();
   tuple_Decoder_input Decoder_input = Input_tuples.Decoder_input;
   bool Bypass = !Decoder_input.Stateful_valid;
-  unsigned k = Decoder_input.k;
-  unsigned h = Decoder_input.h;
+  unsigned K = Decoder_input.K;
+  unsigned H = Decoder_input.H;
 
-  tuple_fec Header = Input_tuples.Hdr.FEC;
-  unsigned Traffic_class = Header.Traffic_class;
-  unsigned Block_index = Header.Block_index;
-  unsigned Packet_index = Header.Packet_index;
-  unsigned Original_type = Header.Original_type;
-  unsigned Packet_length = Header.Packet_length;
+  unsigned Packet_length = Input_tuples.Hdr.Fec.range(FEC_PACKET_LENGTH_END, FEC_PACKET_LENGTH_START);
+  unsigned Original_type = Input_tuples.Hdr.Fec.range(FEC_ORIGINAL_TYPE_END, FEC_ORIGINAL_TYPE_START);
+  unsigned Packet_index = Input_tuples.Hdr.Fec.range(FEC_PACKET_INDEX_END, FEC_PACKET_INDEX_START);
+  unsigned Block_index = Input_tuples.Hdr.Fec.range(FEC_BLOCK_INDEX_END, FEC_BLOCK_INDEX_START);
+  unsigned Traffic_class = Input_tuples.Hdr.Fec.range(FEC_TRAFFIC_CLASS_END, FEC_TRAFFIC_CLASS_START);
 
   parameters Parameters;
   Parameters.Input_tuples = Input_tuples;
 
   bool New_block = Block_index != Current_blocks[Traffic_class];
-  bool Data_packet = Packet_index < k;
-  bool Drop = Decide_to_drop(Wait_for_data, Traffic_class, New_block, k);
+  bool Data_packet = Packet_index < K;
+  bool Drop = Decide_to_drop(Wait_for_data, Traffic_class, New_block, K);
 
   bool End = false;
   packet_interface Input;
@@ -182,7 +179,7 @@ static void Collect_packets(hls::stream<input_tuples> & Tuple_input,
     Parameters.Packet_count = Packet_counts[Traffic_class];
   }
 
-  Parameters.Command = Select_command(Wait_for_data, Data_packet, New_block, Traffic_class, k,
+  Parameters.Command = Select_command(Wait_for_data, Data_packet, New_block, Traffic_class, K,
       Bypass);
 
   if (!Bypass && New_block)
@@ -209,12 +206,14 @@ static void Select_packets(hls::stream<parameters> & Input_parameter_FIFO,
   Output_parameter_FIFO.write(Parameters);
   command Command = Parameters.Command;
   Packet_count = Parameters.Packet_count;
-  unsigned Traffic_class = Parameters.Input_tuples.Hdr.FEC.Traffic_class;
-  unsigned k = Parameters.Input_tuples.Decoder_input.k;
+
+  unsigned Start = FEC_PACKET_LENGTH_WIDTH + FEC_ETHER_TYPE_WIDTH + FEC_PACKET_INDEX_WIDTH + FEC_BLOCK_INDEX_WIDTH;
+  unsigned Traffic_class = Parameters.Input_tuples.Hdr.Fec.range(FEC_TRAFFIC_CLASS_END, FEC_TRAFFIC_CLASS_START);
+  unsigned K = Parameters.Input_tuples.Decoder_input.K;
 
   if (Command == COMMAND_DECODE || Command == COMMAND_OUTPUT_DATA)
   {
-    unsigned Count = Command == COMMAND_DECODE ? k : Packet_count;
+    unsigned Count = Command == COMMAND_DECODE ? K : Packet_count;
     Packet_count = 0;
     for (unsigned Packet = 0; Packet < Count; Packet++)
     {
@@ -250,18 +249,18 @@ static void Preprocess_headers(hls::stream<parameters> & Input_parameter_FIFO,
   parameters Parameters = Input_parameter_FIFO.read();
   Output_parameter_FIFO.write(Parameters);
   command Command = Parameters.Command;
-  unsigned k = Parameters.Input_tuples.Decoder_input.k;
+  unsigned K = Parameters.Input_tuples.Decoder_input.K;
 
   if (Command == COMMAND_DECODE)
   {
-    for (unsigned Packet = 0; Packet < k; Packet++)
+    for (unsigned Packet = 0; Packet < K; Packet++)
     {
 #pragma HLS LOOP_TRIPCOUNT min=5 max=50
       packet_info Info = Input_info_FIFO.read();
       unsigned Bytes_per_packet = Info.Bytes_per_packet;
       unsigned Words_per_packet = DIVIDE_AND_ROUND_UP(Bytes_per_packet, BYTES_PER_WORD);
 
-      ap_uint<2 * FEC_AXI_BUS_WIDTH> Data = Bytes_per_packet - HEADER_SIZE / 8;
+      ap_uint<2 * FEC_AXI_BUS_WIDTH> Data = Bytes_per_packet - FEC_HEADER_SIZE / 8;
 
       unsigned Count = Info.Data_packet ? FEC_PACKET_LENGTH_WIDTH / 8 : 0;
       unsigned Offset = 0;
@@ -274,10 +273,10 @@ static void Preprocess_headers(hls::stream<parameters> & Input_parameter_FIFO,
 
         for (unsigned Byte_offset = 0; Byte_offset < BYTES_PER_WORD; Byte_offset++)
         {
-          bool Output = (Info.Data_packet && Offset < FEC_ETH_HEADER_SIZE / 8)
-              || (Offset >= (FEC_ETH_HEADER_SIZE + HEADER_SIZE) / 8 && Offset < Bytes_per_packet);
+          bool Output = (Info.Data_packet && Offset < ETH_HEADER_SIZE / 8)
+              || (Offset >= (ETH_HEADER_SIZE + FEC_HEADER_SIZE) / 8 && Offset < Bytes_per_packet);
           unsigned Byte = (Input >> (8 * (BYTES_PER_WORD - Byte_offset - 1))) & 0xFF;
-          if (Offset >= 12 && Offset < FEC_ETH_HEADER_SIZE / 8)
+          if (Offset >= 12 && Offset < ETH_HEADER_SIZE / 8)
           {
             Byte = (Packet_type >> (FEC_ETHER_TYPE_WIDTH - 8)) & 0xFF;
             Packet_type <<= 8;
@@ -297,9 +296,9 @@ static void Preprocess_headers(hls::stream<parameters> & Input_parameter_FIFO,
       if (Count > 0)
         Output_FIFO.write(Data << (8 * (BYTES_PER_WORD - Count)));
 
-      Info.Bytes_per_packet -= HEADER_SIZE / 8;
+      Info.Bytes_per_packet -= FEC_HEADER_SIZE / 8;
       if (!Info.Data_packet)
-        Info.Bytes_per_packet -= FEC_ETH_HEADER_SIZE / 8;
+        Info.Bytes_per_packet -= ETH_HEADER_SIZE / 8;
       else
         Info.Bytes_per_packet += FEC_PACKET_LENGTH_WIDTH / 8;
       Output_info_FIFO.write(Info);
@@ -317,11 +316,11 @@ static void Reorder_packets(hls::stream<parameters> & Input_parameter_FIFO,
   parameters Parameters = Input_parameter_FIFO.read();
   Output_parameter_FIFO.write(Parameters);
   command Command = Parameters.Command;
-  unsigned k = Parameters.Input_tuples.Decoder_input.k;
+  unsigned K = Parameters.Input_tuples.Decoder_input.K;
 
   if (Command == COMMAND_DECODE)
   {
-    for (unsigned Packet = 0; Packet < k; Packet++)
+    for (unsigned Packet = 0; Packet < K; Packet++)
     {
 #pragma HLS LOOP_TRIPCOUNT min=5 max=50
       packet_info Info = Input_info_FIFO.read();
@@ -363,21 +362,21 @@ static void Decode_packets(hls::stream<parameters> & Input_parameter_FIFO,
   parameters Parameters = Input_parameter_FIFO.read();
   Output_parameter_FIFO.write(Parameters);
   command Command = Parameters.Command;
-  unsigned k = Parameters.Input_tuples.Decoder_input.k;
-  unsigned h = Parameters.Input_tuples.Decoder_input.h;
+  unsigned K = Parameters.Input_tuples.Decoder_input.K;
+  unsigned H = Parameters.Input_tuples.Decoder_input.H;
 
   if (Command == COMMAND_DECODE)
   {
     unsigned Missing_packet;
-    if (h == 1)
-      Missing_packet = Find_missing_packet(Packet_indices, k);
+    if (H == 1)
+      Missing_packet = Find_missing_packet(Packet_indices, K);
 
-    for (unsigned Packet = 0; Packet < k; Packet++)
+    for (unsigned Packet = 0; Packet < K; Packet++)
     {
 #pragma HLS LOOP_TRIPCOUNT min=5 max=50
       fec_sym Coefficients[FEC_MAX_K];
 #pragma HLS array_partition variable=Coefficients complete
-      Lookup_coefficients(Coefficients, k, h, Packet, Missing_packet);
+      Lookup_coefficients(Coefficients, K, H, Packet, Missing_packet);
 
       packet_info Info = Input_info_FIFO.read();
       unsigned Offset = 0;
@@ -405,7 +404,7 @@ static void Decode_packets(hls::stream<parameters> & Input_parameter_FIFO,
           Input[Packet_2] = Word;
         }
 
-        data_word Output = Matrix_multiply_word(Input, Coefficients, k);
+        data_word Output = Matrix_multiply_word(Input, Coefficients, K);
 
         End = Offset == Words_per_packet - 1;
         Words_per_packet = DIVIDE_AND_ROUND_UP(Length, BYTES_PER_WORD);
@@ -432,11 +431,11 @@ static void Postprocess_headers(hls::stream<parameters> & Input_parameter_FIFO,
   parameters Parameters = Input_parameter_FIFO.read();
   Output_parameter_FIFO.write(Parameters);
   command Command = Parameters.Command;
-  unsigned k = Parameters.Input_tuples.Decoder_input.k;
+  unsigned K = Parameters.Input_tuples.Decoder_input.K;
 
   if (Command == COMMAND_DECODE)
   {
-    for (unsigned Packet = 0; Packet < k; Packet++)
+    for (unsigned Packet = 0; Packet < K; Packet++)
     {
 #pragma HLS LOOP_TRIPCOUNT min=5 max=50
       packet_info Info = Input_info_FIFO.read();
@@ -536,19 +535,19 @@ static void Output_packets(input_tuples Input_tuples, hls::stream<output_tuples>
     output_tuples Tuples;
     Tuples.Decoder_output.Packet_count = Packet_count;
     Tuples.Hdr = Input_tuples.Hdr;
-    Tuples.Hdr.Eth.Type = Info.Original_type;
+    Tuples.Hdr.Eth.range(ETH_TYPE_END, ETH_TYPE_START) = Info.Original_type;
     Tuples.Ioports = Input_tuples.Ioports;
     Tuples.Local_state = Input_tuples.Local_state;
     Tuples.Update_fl = Input_tuples.Update_fl;
     Tuples.Control = Input_tuples.Control;
     if (Command != COMMAND_DECODE)
     {
-      Tuples.Hdr.Eth.Is_valid = 1;
+      Tuples.Hdr.Eth[ETH_IS_VALID_START] = 1;
       Tuples.Parser_extracts = Input_tuples.Parser_extracts;
     }
     else
     {
-      Tuples.Hdr.Eth.Is_valid = 0;
+      Tuples.Hdr.Eth[ETH_IS_VALID_START] = 1;
       Tuples.Parser_extracts.Size = 0;
     }
     Tuple_output.write(Tuples);
@@ -563,20 +562,20 @@ static void Output_packets(hls::stream<parameters> & Parameter_FIFO,
 {
   parameters Parameters = Parameter_FIFO.read();
   command Command = Parameters.Command;
-  unsigned k = Parameters.Input_tuples.Decoder_input.k;
+  unsigned K = Parameters.Input_tuples.Decoder_input.K;
   input_tuples Input_tuples = Parameters.Input_tuples;
 
   if (Command == COMMAND_BYPASS)
     Forward_packet(Input_tuples, Tuple_output, Bypass_FIFO, Packet_output);
   else if (Command == COMMAND_DECODE)
-    Output_packets(Input_tuples, Tuple_output, Decoded_data_FIFO, Decoded_info_FIFO, k,
+    Output_packets(Input_tuples, Tuple_output, Decoded_data_FIFO, Decoded_info_FIFO, K,
         Packet_output, Command);
   else if (Command == COMMAND_OUTPUT_DATA)
     Output_packets(Input_tuples, Tuple_output, Raw_data_FIFO, Raw_info_FIFO, Packet_count,
         Packet_output, Command);
 }
 
-void Decode(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> & Tuple_output,
+void Decoder(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> & Tuple_output,
     hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output)
 {
 #pragma HLS DATA_PACK variable=Tuple_input
