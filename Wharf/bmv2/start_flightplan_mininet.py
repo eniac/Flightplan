@@ -136,6 +136,16 @@ class FPTopo(Topo):
 
     def init(self, net):
 
+        for h in net.hosts:
+            h.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
+            h.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
+            h.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
+
+        for s in net.switches:
+            s.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
+            s.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
+            s.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
+
         for node1 in self.host_spec:
             #for node2 in self.host_spec:
                 #if node1 == node2:
