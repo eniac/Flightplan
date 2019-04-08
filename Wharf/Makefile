@@ -43,9 +43,9 @@ $(BLD_BMV2):
 	@mkdir -p $@
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS)
-	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@ --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
-	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@
-	python2 split_extern_event.py $@ $@ ${EXTERNS}
+	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@_orig --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
+	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@_orig
+	python2 split_extern_event.py $@_orig $@ ${EXTERNS}
 
 clean:
 	rm -fr $(BLD)
