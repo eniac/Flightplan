@@ -49,18 +49,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         bit<1> compressed_link = 0;
         bit<1> forward = 0;
 
-#if defined(COMPRESSION_BOOSTER)
-        // If multiplexed link, then header decompress.
-        ingress_compression.apply(meta.ingress_port, compressed_link);
-        if (compressed_link == 1) {
-            header_decompress(forward);
-            if (forward == 0) {
-                drop();
-                return;
-            }
-        }
-#endif
-
 #if defined(FEC_BOOSTER)
         // If lossy link, then FEC decode.
         if (hdr.fec.isValid()) {
@@ -72,6 +60,18 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 return;
             }
             hdr.fec.setInvalid();
+        }
+#endif
+
+#if defined(COMPRESSION_BOOSTER)
+        // If multiplexed link, then header decompress.
+        ingress_compression.apply(meta.ingress_port, compressed_link);
+        if (compressed_link == 1) {
+            header_decompress(forward);
+            if (forward == 0) {
+                drop();
+                return;
+            }
         }
 #endif
 
@@ -88,6 +88,19 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                     drop();
                     return;
                 }
+            }
+        }
+#endif
+
+#if defined(COMPRESSION_BOOSTER)
+        compressed_link = 0;
+        // If heading out on a multiplexed link, then header compress.
+        egress_compression.apply(meta.egress_spec, compressed_link);
+        if (compressed_link == 1) {
+            header_compress(forward);
+            if (forward == 0) {
+                drop();
+                return;
             }
         }
 #endif
@@ -114,18 +127,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 hdr.fec.orig_ethertype = hdr.eth.type;
                 FEC_ENCODE(hdr.fec, k, h);
                 hdr.eth.type = ETHERTYPE_WHARF;
-            }
-        }
-#endif
-
-#if defined(COMPRESSION_BOOSTER)
-        // If heading out on a multiplexed link, then header compress.
-        egress_compression.apply(meta.egress_spec, compressed_link);
-        if (compressed_link == 1) {
-            header_compress(forward);
-            if (forward == 0) {
-                drop();
-                return;
             }
         }
 #endif
