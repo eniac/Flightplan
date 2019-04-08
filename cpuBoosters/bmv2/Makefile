@@ -64,7 +64,7 @@ configure: patches $(BOOSTER_DEPS) copy_files $(BMV2_CONFIGURE)
 ${BMV2_CONFIGURE}: FORCE
 	cd $(BMV2_REPO) && ./configure \
 		P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf && automake && make
-	make clean
+	- cd $(BOOSTER_TARGET_DIR) && make clean
 
 patches:
 	cd patches && bash patch.sh

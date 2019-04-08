@@ -33,9 +33,14 @@ class header_compress : public boosters::BoosterExtern<Data &> {
         bool no_forward = true;
 
         auto forwarder = [&](const u_char *payload, size_t len) {
-            BMLOG_DEBUG("Generating new packet");
-            no_forward = false;
-            generate_packet((const char *)payload, len, ingress_port);
+            if (buff_size == len && memcmp((char*)payload, buff, len) == 0) {
+                BMLOG_DEBUG("Packet unchanged, not generating anew");
+                return;
+            } else {
+                no_forward = false;
+                BMLOG_DEBUG("Generating new packet (orig len:{}, new len:{}", buff_size, len);
+                generate_packet((const char *)payload, len, ingress_port);
+            }
         };
 
         BMLOG_DEBUG("Compressing packet...");
@@ -72,9 +77,14 @@ class header_decompress : public boosters::BoosterExtern<Data &> {
         bool no_forward = true;
 
         auto forwarder = [&](const u_char *payload, size_t len) {
-            no_forward = false;
-            BMLOG_DEBUG("Generating new packet");
-            generate_packet((const char *)payload, len, ingress_port);
+            if (buff_size == len && memcmp((char*)payload, buff, len) == 0) {
+                BMLOG_DEBUG("Packet unchanged, not generating anew");
+                return;
+            } else {
+                no_forward = false;
+                BMLOG_DEBUG("Generating new packet (orig len:{}, new len:{}", buff_size, len);
+                generate_packet((const char *)payload, len, ingress_port);
+            }
         };
 
         BMLOG_DEBUG("Decompressing packet...");
