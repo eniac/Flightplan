@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ $# != 1 ]]; then
-    echo "Usage $0 <test_file.pcap>"
+if [[ $# < 1 ]]; then
+    echo "Usage $0 <test_file.pcap> [use_header_compression=1]"
     exit 1
 fi
 
@@ -29,6 +29,14 @@ mkdir -p $LOG_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
+if [[ $# == 1 || $2 != 0 ]]; then
+    echo "Using complete topology WITH header compression";
+    TOPO=$HERE/topologies/complete_topology.yml;
+else
+    echo "Using complete topology WITHOUT header compression";
+    TOPO=$HERE/topologies/complete_no_hc_topology.yml
+fi
+
 sudo -E python $HERE/start_flightplan_mininet.py \
         $HERE/topologies/complete_topology.yml \
         --pcap-dump $PCAP_DUMPS \
@@ -43,11 +51,12 @@ if [[ $? != 0 ]]; then
     exit -1;
 fi
 
+cp $INPUT_PCAP $OUTDIR/input.pcap
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-python $HERE/pcap_tools/pcap_clean.py  $PCAP_DUMPS/h1_to_s1.pcap $IN_PCAP --ipv4-only
-python $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h2_from_s3.pcap $OUT_PCAP --ipv4-only
+python2 $HERE/pcap_tools/pcap_clean.py  $PCAP_DUMPS/h1_to_s1.pcap $IN_PCAP --rm-chksum
+python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h2_from_s3.pcap $OUT_PCAP --rm-chksum
 
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
 IN_TXT=$OUTDIR/${BASENAME}_in.txt
@@ -73,8 +82,8 @@ NC='\033[0m' # No Color
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
     echo "Running diff:"
-    diff $IN_SRT $OUT_SRT
-    echo "Diff complete"
+    diff $IN_SRT $OUT_SRT | head -100
+    echo "Diff complete (possibly truncated)"
 
     if [[ $INLINES == 0 ]]; then
         echo -e ${RED}TEST FAILED${NC}
@@ -83,6 +92,7 @@ if [[ $INLINES == $OUTLINES ]]; then
 
     if [[ `diff $IN_SRT $OUT_SRT | wc -l` != '0' ]]; then
         echo -e ${RED}TEST FAILED${NC}
+        echo "Check $IN_TXT $OUT_TXT to compare"
         exit 1
     else
         echo -e ${GREEN}TEST SUCCEEDED${NC}
