@@ -66,10 +66,10 @@ def cfgpath(path):
 
 class FPTopo(Topo):
 
-    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, pcap_dump):
+    def __init__(self, host_spec, switch_spec, sw_path, log, verbose):
         Topo.__init__(self)
 
-        link_names = []
+        self.link_names = []
         self.all_links = {}
 
         self.log_dir = log
@@ -90,7 +90,6 @@ class FPTopo(Topo):
                                     sw_path = sw_path,
                                     json_path = cfgpath(sw_opts['cfg']),
                                     thrift_port = base_thrift + i,
-                                    pcap_dump = pcap_dump,
                                     log_console = console_log,
                                     verbose = verbose)
 
@@ -99,15 +98,14 @@ class FPTopo(Topo):
                     port=base_thrift+i)
 
 
-            link_names.extend([(sw_name, link) for link in sw_opts.get('links', [])])
+            self.link_names.extend([(sw_name, link) for link in sw_opts.get('links', [])])
             print("SWITCH: %s" % self.all_nodes[sw_name])
 
         for i, host in enumerate(sorted(host_spec)):
             self.all_nodes[host] = dict(
                     node = (self.addHost(host,
                                          ip = '10.0.{}.1/24'.format(i),
-                                         mac = '00:04:00:00:00:{:02x}'.format(i),
-                                         pcap_dump= pcap_dump)),
+                                         mac = '00:04:00:00:00:{:02x}'.format(i))),
                     ip = '10.0.{}.1'.format(i),
                     mac = '00:04:00:00:00:{:02x}'.format(i),
             )
@@ -117,7 +115,7 @@ class FPTopo(Topo):
 
         n_links = defaultdict(int)
 
-        for i, (name1, name2) in enumerate(link_names):
+        for i, (name1, name2) in enumerate(self.link_names):
             n1 = self.all_nodes[name1]['node']
             n2 = self.all_nodes[name2]['node']
 
@@ -159,25 +157,44 @@ class FPTopo(Topo):
             n.describe()
 
     def start_host_dump(self, net, directory):
-        for host in self.host_spec:
-            fname = os.path.join(directory, host + '_out.pcap')
-            print("Dumping {} output to {}".format(host, fname))
-            net.get(host).cmd('tcpdump -i eth0 -Q out -w {}&'.format(fname))
-            fname = os.path.join(directory, host + '_in.pcap')
-            print("Dumping {} input to {}".format(host, fname))
-            net.get(host).cmd('tcpdump -i eth0 -Q in -w {}&'.format(fname))
+        for i, (name1, name2) in enumerate(self.link_names):
+            iface_num = self.all_links['{}-{}'.format(name1, name2)]
+            if name1.startswith('h'):
+                iface_name = 'eth{}'.format(iface_num)
+            else:
+                iface_name = '{}-eth{}'.format(name1, iface_num)
+
+            fname = os.path.join(directory, name1 + '_to_' + name2 + '.pcap')
+            net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface_name, fname))
+
+            fname = os.path.join(directory, name1 + '_from_' + name2 + '.pcap')
+            net.get(name1).cmd('tcpdump -i {} -Q in -w {}&'.format(iface_name, fname))
+
+            iface_num = self.all_links['{}-{}'.format(name2, name1)]
+            if name2.startswith('h'):
+                iface_name = 'eth{}'.format(iface_num)
+            else:
+                iface_name = '{}-eth{}'.format(name2, iface_num)
+
+            fname = os.path.join(directory, name2 + '_to_' + name1 + '.pcap')
+            net.get(name2).cmd('tcpdump -i {} -Q out -w {}&'.format(iface_name, fname))
+
+            fname = os.path.join(directory, name2 + '_from_' + name1 + '.pcap')
+            net.get(name2).cmd('tcpdump -i {} -Q in -w {}&'.format(iface_name, fname))
 
     def stop_host_dump(self, net):
         print("Stopping tcpdump on hosts")
         for host in self.host_spec:
             net.get(host).cmd('pkill tcpdump')
+        for switch in self.switch_spec:
+            net.get(switch).cmd('pkill tcpdump')
 
 
     def do_switch_replay(self, net):
         for sw1_name, sw_opts in self.switch_spec.items():
             for sw2_name, filename in sw_opts.get('replay',{}).items():
-                print("Replaying {} from {} to {}".format(filename, sw1_name, sw2_name))
                 num = self.all_links['{}-{}'.format(sw1_name, sw2_name)]
+                print("Replaying {} from {} on {}-eth{} to {}".format(filename, sw1_name, sw1_name, num, sw2_name))
                 net.get(sw1_name).cmd(
                         'tcpreplay -i {}-eth{} {}'.format(sw1_name, num, cfgpath(filename))
                 )
@@ -226,7 +243,7 @@ def main():
         cfg = yaml.load(f)
 
     topo = FPTopo(cfg['hosts'], cfg['switches'],
-                  bmv2_exe, args.log, args.verbose, args.pcap_dump)
+                  bmv2_exe, args.log, args.verbose)
 
     print("Starting mininet")
     net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
@@ -235,7 +252,11 @@ def main():
 
     topo.init(net)
 
+    net.staticArp()
+
+
     if args.pcap_dump:
+        sleep(1)
         topo.start_host_dump(net, args.pcap_dump)
 
 
