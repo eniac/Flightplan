@@ -21,7 +21,7 @@ BASENAME=$(basename $INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files/
-rm -rf $LOG_DUMPS
+rm -rf $OUTDIR
 rm -f $OUTDIR/*.pcap
 rm -f $OUTDIR/pcap_dump/*.pcap
 mkdir -p $PCAP_DUMPS
@@ -46,8 +46,8 @@ fi
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-python $HERE/pcap_tools/pcap_clean.py  $PCAP_DUMPS/h1_out.pcap $IN_PCAP --ipv4-only
-python $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h2_in.pcap $OUT_PCAP --ipv4-only
+python $HERE/pcap_tools/pcap_clean.py  $PCAP_DUMPS/h1_to_s1.pcap $IN_PCAP --ipv4-only
+python $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h2_from_s3.pcap $OUT_PCAP --ipv4-only
 
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
 IN_TXT=$OUTDIR/${BASENAME}_in.txt
@@ -86,6 +86,11 @@ if [[ $INLINES == $OUTLINES ]]; then
         exit 1
     else
         echo -e ${GREEN}TEST SUCCEEDED${NC}
+
+        echo Bytes Transferred:
+        python $HERE/pcap_tools/pcap_size.py \
+            $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+
         exit 0
     fi
 else

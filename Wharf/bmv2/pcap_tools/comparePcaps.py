@@ -34,6 +34,8 @@ def comparePcaps(src, dst):
 
     if not fail:
         print("Success! All packets from src in dst")
+        exit(0)
+    exit(-1)
 
 
 if __name__ == '__main__':

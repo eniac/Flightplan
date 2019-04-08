@@ -39,4 +39,9 @@ if [[ $? != 0 ]]; then
 fi
 
 echo Comparing $PCAP_DUMPS/h1_out.pcap and $PCAP_DUMPS/h2_in.pcap
-python $HERE/pcap_tools/comparePcaps.py $PCAP_DUMPS/h1_out.pcap $PCAP_DUMPS/h2_in.pcap
+python $HERE/pcap_tools/comparePcaps.py $PCAP_DUMPS/h1_to_s1.pcap $PCAP_DUMPS/h2_from_s2.pcap
+
+if [[ $? == 0 ]]; then
+    echo Bytes Transferred:
+    python $HERE/pcap_tools/pcap_size.py  $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_h2}.pcap
+fi

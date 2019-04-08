@@ -57,7 +57,7 @@ OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
 python2 $HERE/pcap_tools/pcap_clean.py $INPUT_PCAP $REQ_PCAP --rm-chksum &
 python2 $HERE/pcap_tools/pcap_sub.py $EXPECTED $EXP_PCAP 1 &
-python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h1_in.pcap $OUT_PCAP --rm-chksum &
+python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h1_from_s1.pcap $OUT_PCAP --rm-chksum &
 wait
 python2 $HERE/pcap_tools/pcap_clean.py $EXP_PCAP $EXP_PCAP --rm-chksum
 
