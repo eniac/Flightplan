@@ -1,7 +1,7 @@
 #include "targets.h"
 #include "HC_extern.p4"
 
-control HeaderCompression(in bit<9> ingress_port, inout bit<1> compressed) {
+control HeaderCompression(in bit<9> port, inout bit<1> compressed) {
 
     action set_port_compression(bit<1> on) {
         compressed = on;
@@ -9,7 +9,7 @@ control HeaderCompression(in bit<9> ingress_port, inout bit<1> compressed) {
 
     table port_compression {
         key = {
-            ingress_port : exact;
+            port : exact;
         }
         actions = { set_port_compression; NoAction; }
         default_action = NoAction;
