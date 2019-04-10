@@ -78,6 +78,14 @@ NC='\033[0m' # No Color
 
 python2 $HERE/pcap_tools/pcap_mcd_compare.py $EXP_PCAP $OUT_PCAP
 
+echo "Requests:"
+python $HERE/pcap_tools/pcap_size.py \
+    $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+
+echo "Replies:"
+python $HERE/pcap_tools/pcap_size.py \
+    $PCAP_DUMPS/{h2_to_s3,s3_to_s2,s2_to_s1,s1_to_h1}.pcap
+
 if [[ $? == 0 ]]; then
     echo -e ${GREEN}TEST SUCCEEDED${NC}
     echo "Check $EXP_TXT $OUT_TXT to compare"
