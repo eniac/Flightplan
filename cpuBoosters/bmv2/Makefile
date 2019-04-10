@@ -11,6 +11,9 @@ BOOSTER_TARGET=booster_switch
 TEMPLATE_TARGET=simple_switch
 
 BOOSTERS?=MEMCACHED FEC COMPRESSION
+ifneq ($(filter configure,$(MAKECMDGOALS)),)
+BOOSTERS=$(shell ./enabled_boosters.sh ${BOOSTERS})
+endif
 
 BMV2_CONFIGURE=$(BMV2_REPO)/configure.ac
 TARGETS_DIR=$(BMV2_REPO)/targets
@@ -59,18 +62,22 @@ booster_switch: copy_files  $(BOOSTER_DEPS)
 $(BOOSTER_TARGET_DIR):
 	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
 
-configure: patches $(BOOSTER_DEPS) copy_files $(BMV2_CONFIGURE)
+configure: patches $(BOOSTER_DEPS) copy_files bmv2_clean_configure
+	cd $(BOOSTER_TARGET_DIR) && make -j8
 
-${BMV2_CONFIGURE}: FORCE
-	cd $(BMV2_REPO) && ./configure \
-		P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf && automake && make
+bmv2_clean_configure: patches FORCE
+	-rm -fr $(BOOSTER_TARGET_DIR)
+	rsync -av $(TEMPLATE_TARGET_DIR) $(BOOSTER_TARGET_DIR)
+	rsync -av $(BOOSTER_TARGET)/* $(BOOSTER_TARGET_DIR)
+	cd $(BMV2_REPO) && ./autogen.sh && ./configure \
+		P4BOOSTERS_REPO=$(P4BOOSTERS_REPO) $(CONFIG_FLAGS) && autoconf && automake && make -j8
 	- cd $(BOOSTER_TARGET_DIR) && make clean
 
 patches:
 	cd patches && bash patch.sh
 
 clean:
-	- cd $(BOOSTER_TARGET_DIR) && make clean
+	cd $(BOOSTER_TARGET_DIR) && make clean
 
 FORCE:
 
