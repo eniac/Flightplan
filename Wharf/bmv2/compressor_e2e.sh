@@ -38,7 +38,7 @@ if [[ $? != 0 ]]; then
     exit -1;
 fi
 
-echo Comparing $PCAP_DUMPS/h1_out.pcap and $PCAP_DUMPS/h2_in.pcap
+echo Comparing $PCAP_DUMPS/h1_to_s1.pcap and $PCAP_DUMPS/h2_from_s2.pcap
 python $HERE/pcap_tools/comparePcaps.py $PCAP_DUMPS/h1_to_s1.pcap $PCAP_DUMPS/h2_from_s2.pcap
 
 if [[ $? == 0 ]]; then
