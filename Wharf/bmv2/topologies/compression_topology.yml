@@ -5,13 +5,13 @@ hosts:
 switches:
     s1:
         cfg: ../../build/bmv2/Compressor.json
-        links: [h1, s2]
+        links: [h1]
         cmds:
             - ../controller_files/forwarding_commands.txt
             - ../controller_files/compressor_commands.txt
     s2:
         cfg: ../../build/bmv2/Compressor.json
-        links: [h2]
+        links: [h2, s1]
         cmds:
             - ../controller_files/decompressor_commands.txt
             - ../controller_files/forwarding_commands.txt
