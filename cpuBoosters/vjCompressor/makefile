@@ -7,7 +7,7 @@ pcap: compressorAndDecompressor
 
 p4: copy_files
 
-copy_files:
+copy_files: p4
 	rsync -av --exclude='*.log' ./* $(BOOSTER_SWITCH_COMPRESSION_DIR)
 
 compressorAndDecompressor: pcapCompressorAndDecompressor.cpp vjCompression.cpp
