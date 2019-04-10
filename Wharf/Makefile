@@ -17,7 +17,11 @@ endif
 
 BOOSTERS?=FEC COMPRESSION MEMCACHED
 
-BOOSTER_DEFINES=$(foreach B, ${BOOSTERS}, -D$B_BOOSTER)
+ifneq ($(MAKECMDGOALS),configure_runtime)
+BOOSTERS:=$(shell ../cpuBoosters/bmv2/enabled_boosters.sh ${BOOSTERS})
+endif
+
+BOOSTER_DEFINES:=$(foreach B, ${BOOSTERS}, -D$B_BOOSTER)
 
 DEPS=Makefile Sources/FEC.p4 Sources/Forwarding.p4 Sources/LLDP.p4 Sources/Parsing.p4 Sources/Compression.p4
 
@@ -42,7 +46,10 @@ complete: $(BLD_BMV2)/Complete.json
 $(BLD_BMV2):
 	@mkdir -p $@
 
-$(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS)
+configure_runtime: bmv2
+	cd ../cpuBoosters/bmv2 && make configure BOOSTERS="${BOOSTERS}" && make BOOSTERS="${BOOSTERS}"
+
+$(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BMV2_REPO_M)/targets/booster_switch/Makefile
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@_orig --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
 	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@_orig
 	python2 split_extern_event.py $@_orig $@ ${EXTERNS}
