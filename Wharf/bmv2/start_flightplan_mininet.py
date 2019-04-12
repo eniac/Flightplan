@@ -69,8 +69,8 @@ class FPTopo(Topo):
     def __init__(self, host_spec, switch_spec, sw_path, log, verbose):
         Topo.__init__(self)
 
-        self.link_names = []
         self.all_links = {}
+        max_link_port = defaultdict(int)
 
         self.log_dir = log
         self.host_spec = host_spec
@@ -97,40 +97,42 @@ class FPTopo(Topo):
                     node=switch,
                     port=base_thrift+i)
 
+            for link_name, link_num  in sw_opts.get('links', {}).items():
+                self.all_links[(sw_name, link_name)] = link_num
+                max_link_port[sw_name] = max(max_link_port[sw_name], link_num+1)
 
-            self.link_names.extend([(sw_name, link) for link in sw_opts.get('links', [])])
             print("SWITCH: %s" % self.all_nodes[sw_name])
 
-        for i, host in enumerate(sorted(host_spec)):
-            self.all_nodes[host] = dict(
-                    node = (self.addHost(host,
+        for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
+            self.all_nodes[host_name] = dict(
+                    node = (self.addHost(host_name,
                                          ip = '10.0.{}.1/24'.format(i),
                                          mac = '00:04:00:00:00:{:02x}'.format(i))),
                     ip = '10.0.{}.1'.format(i),
                     mac = '00:04:00:00:00:{:02x}'.format(i),
             )
-            print("HOST: %s" % self.all_nodes[host])
+            print("HOST: %s" % self.all_nodes[host_name])
 
-            #nodes[host].setDefaultRoute('dev eth0 via 10.0.%d.1' %i)
+            for link_name, link_num in host_ops.get('links', {}):
+                self.all_links[(host_name, link_name)] = link_num
+                max_link_port[host_name] = max(max_link_port[host_name], link_num+1)
 
-        n_links = defaultdict(int)
+        created_links = defaultdict(set)
+        for (name1, name2), port1 in self.all_links.items():
 
-        for i, (name1, name2) in enumerate(self.link_names):
-            n1 = self.all_nodes[name1]['node']
-            n2 = self.all_nodes[name2]['node']
+            # Already added in the other direction
+            if name1 in created_links[name2]:
+                continue
 
-            i1 = n_links[n1]
-            n_links[n1] += 1
+            if (name2, name1) not in self.all_links:
+                self.all_links[(name2, name1)] = max_link_port[name2]
+                max_link_port[name2] += 1
 
-            i2 = n_links[n2]
-            n_links[n2] += 1
-
-            self.addLink(n1, n2,
-                         port1=i1,
-                         port2=i2)
-            self.all_links['{}-{}'.format(name1,name2)] = i1
-            self.all_links['{}-{}'.format(name2,name1)] = i2
-
+            self.addLink(name1, name2,
+                         port1 = port1,
+                         port2 = self.all_links[(name2, name1)])
+            created_links[name1].add(name2)
+            created_links[name2].add(name1)
 
     def init(self, net):
 
@@ -156,33 +158,24 @@ class FPTopo(Topo):
             n = net.get(node)
             n.describe()
 
-    def start_host_dump(self, net, directory):
-        for i, (name1, name2) in enumerate(self.link_names):
-            iface_num = self.all_links['{}-{}'.format(name1, name2)]
-            if name1.startswith('h'):
-                iface_name = 'eth{}'.format(iface_num)
-            else:
-                iface_name = '{}-eth{}'.format(name1, iface_num)
+    def start_tcp_dump(self, net, directory, name1, name2):
+        if_num = self.all_links[(name1, name2)]
+        if name1.startswith('h'):
+            iface = 'eth{}'.format(if_num)
+        else:
+            iface = '{}-eth{}'.format(name1, if_num)
 
-            fname = os.path.join(directory, name1 + '_to_' + name2 + '.pcap')
-            net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface_name, fname))
+        fname = os.path.join(directory, '{}_to_{}.pcap'.format(name1, name2))
+        net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface, fname))
 
-            fname = os.path.join(directory, name1 + '_from_' + name2 + '.pcap')
-            net.get(name1).cmd('tcpdump -i {} -Q in -w {}&'.format(iface_name, fname))
+        fname = os.path.join(directory, '{}_from_{}.pcap'.format(name1, name2))
+        net.get(name1).cmd('tcpdump -i {} -Q in -w {}&'.format(iface, fname))
 
-            iface_num = self.all_links['{}-{}'.format(name2, name1)]
-            if name2.startswith('h'):
-                iface_name = 'eth{}'.format(iface_num)
-            else:
-                iface_name = '{}-eth{}'.format(name2, iface_num)
+    def start_tcp_dumps(self, net, directory):
+        for name1, name2 in self.all_links:
+            self.start_tcp_dump(net, directory, name1, name2)
 
-            fname = os.path.join(directory, name2 + '_to_' + name1 + '.pcap')
-            net.get(name2).cmd('tcpdump -i {} -Q out -w {}&'.format(iface_name, fname))
-
-            fname = os.path.join(directory, name2 + '_from_' + name1 + '.pcap')
-            net.get(name2).cmd('tcpdump -i {} -Q in -w {}&'.format(iface_name, fname))
-
-    def stop_host_dump(self, net):
+    def stop_tcp_dumps(self, net):
         print("Stopping tcpdump on hosts")
         for host in self.host_spec:
             net.get(host).cmd('pkill tcpdump')
@@ -193,7 +186,7 @@ class FPTopo(Topo):
     def do_switch_replay(self, net):
         for sw1_name, sw_opts in self.switch_spec.items():
             for sw2_name, filename in sw_opts.get('replay',{}).items():
-                num = self.all_links['{}-{}'.format(sw1_name, sw2_name)]
+                num = self.all_links[(sw1_name, sw2_name)]
                 print("Replaying {} from {} on {}-eth{} to {}".format(filename, sw1_name, sw1_name, num, sw2_name))
                 net.get(sw1_name).cmd(
                         'tcpreplay -i {}-eth{} {}'.format(sw1_name, num, cfgpath(filename))
@@ -257,7 +250,7 @@ def main():
 
     if args.pcap_dump:
         sleep(1)
-        topo.start_host_dump(net, args.pcap_dump)
+        topo.start_tcp_dumps(net, args.pcap_dump)
 
 
     sleep(1)
@@ -284,7 +277,7 @@ def main():
         CLI(net)
 
     if args.pcap_dump:
-        topo.stop_host_dump(net)
+        topo.stop_tcp_dumps(net)
     print("Stoping mininet")
 
 if __name__ == '__main__':
