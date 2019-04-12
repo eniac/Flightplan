@@ -40,7 +40,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --log $LOG_DUMPS \
         --verbose \
         --replay h1-s1:$INPUT_PCAP \
-        --host-prog "h2:memcached -u $USER -U 11211 -B ascii" \
+        --host-prog "h2:memcached -u $USER -U 11211 -B ascii -vvv" \
         2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then

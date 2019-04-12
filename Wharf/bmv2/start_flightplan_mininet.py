@@ -106,9 +106,9 @@ class FPTopo(Topo):
         for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
             self.all_nodes[host_name] = dict(
                     node = (self.addHost(host_name,
-                                         ip = '10.0.{}.1/24'.format(i),
+                                         ip = '10.0.{}.{}/24'.format(i, i),
                                          mac = '00:04:00:00:00:{:02x}'.format(i))),
-                    ip = '10.0.{}.1'.format(i),
+                    ip = '10.0.{}.{}'.format(i, i),
                     mac = '00:04:00:00:00:{:02x}'.format(i),
             )
             print("HOST: %s" % self.all_nodes[host_name])

@@ -15,7 +15,7 @@ for i, filename in enumerate(sys.argv[1:]):
     sizes.append(size)
 
     if i > 0:
-        print("%s %d bytes (%.2f%%)" % (filename, size, 100*float(size) / sizes[0]))
+        print("%s %d bytes (%.2f%%)" % (filename, size, 100*float(size) / sizes[0] if sizes[0] > 0 else -1))
     else:
         print("%s %d bytes" % (filename, size))
 
