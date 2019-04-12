@@ -76,7 +76,7 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
                           int k, int h, int t,
                           encode_forward_fn forward) {
     // Must put egress on odd numbers to not overlap with ingress
-    egress_port = egress_port * 2 - 1;
+    egress_port = egress_port * 2 + 1;
 
     LOG_INFO("Hitting lock guard");
     // Lock while encoding in progress
