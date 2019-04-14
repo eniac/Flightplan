@@ -37,12 +37,21 @@ else
     TOPO=$HERE/topologies/complete_no_hc_topology.yml
 fi
 
+if [[ $TWO_HALVES == "" ]]; then
 sudo -E python $HERE/start_flightplan_mininet.py \
         $HERE/topologies/complete_topology.yml \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
         --replay h1-s1:$INPUT_PCAP 2> $LOG_DUMPS/flightplan_mininet_log.err
+else
+sudo -E python $HERE/start_flightplan_mininet.py \
+        $HERE/topologies/complete_topology_split.yml \
+        --pcap-dump $PCAP_DUMPS \
+        --log $LOG_DUMPS \
+        --verbose \
+        --replay h1-s1:$INPUT_PCAP 2> $LOG_DUMPS/flightplan_mininet_log.err
+fi
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py
