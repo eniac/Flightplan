@@ -52,8 +52,10 @@ parser.add_argument('--bmv2-exe', help='Path to bmv2 executable',
                     type=str, required=False, default=None)
 parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2',
                     type=str, action='store', required=False, default=False)
-
-
+parser.add_argument('--host-prog', help='Run a program on a host. Syntax = "hostname:program to run"',
+                    type=str, action='append', required=False, default=[])
+parser.add_argument('--time', help='Time to run mininet for',
+                    type=int, required=False, default=1)
 # Modified below in main execution
 # (sorry for the global)
 global cfg_file
@@ -64,11 +66,11 @@ def cfgpath(path):
 
 class FPTopo(Topo):
 
-    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, pcap_dump):
+    def __init__(self, host_spec, switch_spec, sw_path, log, verbose):
         Topo.__init__(self)
 
-        link_names = []
         self.all_links = {}
+        max_link_port = defaultdict(int)
 
         self.log_dir = log
         self.host_spec = host_spec
@@ -88,7 +90,6 @@ class FPTopo(Topo):
                                     sw_path = sw_path,
                                     json_path = cfgpath(sw_opts['cfg']),
                                     thrift_port = base_thrift + i,
-                                    pcap_dump = pcap_dump,
                                     log_console = console_log,
                                     verbose = verbose)
 
@@ -96,42 +97,54 @@ class FPTopo(Topo):
                     node=switch,
                     port=base_thrift+i)
 
+            for link_name, link_num  in sw_opts.get('links', {}).items():
+                self.all_links[(sw_name, link_name)] = link_num
+                max_link_port[sw_name] = max(max_link_port[sw_name], link_num+1)
 
-            link_names.extend([(sw_name, link) for link in sw_opts.get('links', [])])
+            print("SWITCH: %s" % self.all_nodes[sw_name])
 
-        for i, host in enumerate(sorted(host_spec)):
-            self.all_nodes[host] = dict(
-                    node = (self.addHost(host,
-                                         ip = '10.0.{}.1/24'.format(i),
-                                         mac = '00:04:00:00:00:{:02x}'.format(i),
-                                         pcap_dump= pcap_dump)),
-                    ip = '10.0.{}.1'.format(i),
+        for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
+            self.all_nodes[host_name] = dict(
+                    node = (self.addHost(host_name,
+                                         ip = '10.0.{}.{}/24'.format(i, i),
+                                         mac = '00:04:00:00:00:{:02x}'.format(i))),
+                    ip = '10.0.{}.{}'.format(i, i),
                     mac = '00:04:00:00:00:{:02x}'.format(i),
             )
-            print("HOSTS",self.all_nodes[host])
+            print("HOST: %s" % self.all_nodes[host_name])
 
-            #nodes[host].setDefaultRoute('dev eth0 via 10.0.%d.1' %i)
+            for link_name, link_num in host_ops.get('links', {}).items():
+                self.all_links[(host_name, link_name)] = link_num
+                max_link_port[host_name] = max(max_link_port[host_name], link_num+1)
 
-        n_links = defaultdict(int)
+        created_links = defaultdict(set)
+        for (name1, name2), port1 in self.all_links.items():
 
-        for i, (name1, name2) in enumerate(link_names):
-            n1 = self.all_nodes[name1]['node']
-            n2 = self.all_nodes[name2]['node']
+            # Already added in the other direction
+            if name1 in created_links[name2]:
+                continue
 
-            i1 = n_links[n1]
-            n_links[n1] += 1
+            if (name2, name1) not in self.all_links:
+                self.all_links[(name2, name1)] = max_link_port[name2]
+                max_link_port[name2] += 1
 
-            i2 = n_links[n2]
-            n_links[n2] += 1
-
-            self.addLink(n1, n2,
-                         port1=i1,
-                         port2=i2)
-            self.all_links['{}-{}'.format(name1,name2)] = i1
-            self.all_links['{}-{}'.format(name2,name1)] = i2
-
+            self.addLink(name1, name2,
+                         port1 = port1,
+                         port2 = self.all_links[(name2, name1)])
+            created_links[name1].add(name2)
+            created_links[name2].add(name1)
 
     def init(self, net):
+
+        for h in net.hosts:
+            h.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
+            h.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
+            h.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
+
+        for s in net.switches:
+            s.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
+            s.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
+            s.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
 
         for node1 in self.host_spec:
             #for node2 in self.host_spec:
@@ -145,20 +158,36 @@ class FPTopo(Topo):
             n = net.get(node)
             n.describe()
 
-    def start_host_dump(self, net, directory):
-        for host in self.host_spec:
-            net.get(host).cmd('tcpdump -i eth0 -Q out -w {}&'.format(os.path.join(directory, host + '_out.pcap')))
-            net.get(host).cmd('tcpdump -i eth0 -Q in -w {}&'.format(os.path.join(directory, host + '_in.pcap')))
+    def start_tcp_dump(self, net, directory, name1, name2):
+        if_num = self.all_links[(name1, name2)]
+        if name1.startswith('h'):
+            iface = 'eth{}'.format(if_num)
+        else:
+            iface = '{}-eth{}'.format(name1, if_num)
 
-    def stop_host_dump(self, net):
+        fname = os.path.join(directory, '{}_to_{}.pcap'.format(name1, name2))
+        net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface, fname))
+
+        fname = os.path.join(directory, '{}_from_{}.pcap'.format(name1, name2))
+        net.get(name1).cmd('tcpdump -i {} -Q in -w {}&'.format(iface, fname))
+
+    def start_tcp_dumps(self, net, directory):
+        for name1, name2 in self.all_links:
+            self.start_tcp_dump(net, directory, name1, name2)
+
+    def stop_tcp_dumps(self, net):
+        print("Stopping tcpdump on hosts")
         for host in self.host_spec:
             net.get(host).cmd('pkill tcpdump')
+        for switch in self.switch_spec:
+            net.get(switch).cmd('pkill tcpdump')
 
 
     def do_switch_replay(self, net):
         for sw1_name, sw_opts in self.switch_spec.items():
             for sw2_name, filename in sw_opts.get('replay',{}).items():
-                num = self.all_links['{}-{}'.format(sw1_name, sw2_name)]
+                num = self.all_links[(sw1_name, sw2_name)]
+                print("Replaying {} from {} on {}-eth{} to {}".format(filename, sw1_name, sw1_name, num, sw2_name))
                 net.get(sw1_name).cmd(
                         'tcpreplay -i {}-eth{} {}'.format(sw1_name, num, cfgpath(filename))
                 )
@@ -167,17 +196,27 @@ class FPTopo(Topo):
     def do_commands(self, net):
         for sw_name, sw_opts in self.switch_spec.items():
             if 'cmds' in sw_opts:
-                commands = open(cfgpath(sw_opts['cmds'])).readlines()
-                send_commands(self.all_nodes[sw_name]['port'], cfgpath(sw_opts['cfg']), commands)
+                for cmd_file in sw_opts['cmds']:
+                    commands = open(cfgpath(cmd_file)).readlines()
+                    send_commands(self.all_nodes[sw_name]['port'], cfgpath(sw_opts['cfg']), commands)
 
-    def run_host_programs(self, net):
+    def run_host_programs(self, net, extras):
         for name, spec in self.host_spec.items():
             if 'program' in spec:
+                print("Running {} on {}".format(spec['program'], name))
                 net.get(name).cmd('{} > {}/{}_prog.log 2>&1 &'.format(spec['program'], self.log_dir, name))
-                sleep(10)
+
+        for extra_prog in extras:
+            try:
+                name, program = extra_prog.split(':')
+            except:
+                print("Programs provided from cli must be of form 'h1:program to run'")
+                raise
+            print("Running {} on {}".format(program, name))
+            net.get(name).cmd('{} > {}/{}_prog.log 2>&1 &'.format(program, self.log_dir, name))
 
     def do_host_replay(self, net, host, towards, file):
-        net.get(host).cmd('ifconfig')
+        print("Replaying {} on {}.eth0".format(file, host))
         net.get(host).cmd(
                 'tcpreplay -p 100 -i eth0 {}'.format(file)
         )
@@ -197,16 +236,21 @@ def main():
         cfg = yaml.load(f)
 
     topo = FPTopo(cfg['hosts'], cfg['switches'],
-                  bmv2_exe, args.log, args.verbose, args.pcap_dump)
+                  bmv2_exe, args.log, args.verbose)
 
+    print("Starting mininet")
     net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
 
     net.start()
 
     topo.init(net)
 
+    net.staticArp()
+
+
     if args.pcap_dump:
-        topo.start_host_dump(net, args.pcap_dump)
+        sleep(1)
+        topo.start_tcp_dumps(net, args.pcap_dump)
 
 
     sleep(1)
@@ -217,7 +261,7 @@ def main():
 
     topo.do_commands(net)
 
-    topo.run_host_programs(net)
+    topo.run_host_programs(net, args.host_prog)
 
     if args.replay:
         replay_args = args.replay.split(":")
@@ -225,13 +269,16 @@ def main():
         if len(replay_args) != 2 or len(replay_arg1) != 2:
             raise Exception("args.replay must have form Host-Switch:File")
         topo.do_host_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1])
-        sleep(2)
+        sleep(1)
+
+    sleep(args.time)
 
     if args.cli:
         CLI(net)
 
     if args.pcap_dump:
-        topo.stop_host_dump(net)
+        topo.stop_tcp_dumps(net)
+    print("Stoping mininet")
 
 if __name__ == '__main__':
     setLogLevel('debug')

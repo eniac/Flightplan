@@ -6,7 +6,6 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <pcap.h>
 #include <net/ethernet.h>
 #include <netinet/in.h>
 // #include <netinet/ip.h>
@@ -32,85 +31,33 @@ using namespace std;
 
 #define MTU 1500
 
-pcap_t * pcap;
+static uint64_t byteCt, pktCt;
 
-uint64_t byteCt, pktCt;
-
-// The function that we pass to libpcap.
-void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
-// Memory dump helper.
-void print_hex_memory(void *mem, int len);
-
-
-
-
-
-
-int main(int argc, char *argv[]){
-  // printHeaderSizes();
-  // return 1;
-  int opt = 0;
-  char *if_name = nullptr;
-  while ((opt =  getopt(argc, argv, "i:")) != EOF)
-  {
-    switch (opt)
-    {
-    case 'i':
-      if_name = optarg;
-      break;
-    default:
-      printf("\nNot yet defined opt = %d\n", opt);
-      abort();
-    }
+// Memory dump helper
+static void print_hex_memory(void *mem, int len) {
+  int i;
+  unsigned char *p = (unsigned char *)mem;
+  for (i=0;i<len;i++) {
+    printf("0x%02x ", p[i]);
+    // if (i%16==0)
+    //   printf("\n");
   }
-  cout << "booster running on interface: " << if_name << endl;
-
-  char pcap_errbuf[PCAP_ERRBUF_SIZE];
-  pcap_errbuf[0]='\0';
-  pcap=pcap_open_live(if_name,MTU,1,0,pcap_errbuf);
-  if (pcap_errbuf[0]!='\0') {
-      fprintf(stderr,"%s",pcap_errbuf);
-  }
-  if (!pcap) {
-      exit(1);
-  }
-  // start packet processing loop.
-  if (pcap_loop(pcap, 0, boostHandler, NULL) < 0) {
-      cerr << "pcap_loop() failed: " << pcap_geterr(pcap);
-      return 1;
-  }
-  return 0;
+  printf("\n");
 }
-
-
-void boostHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
-    const struct ether_header* ethernetHeader;
-    const struct ipHeader_t* ipHeader;
-    const struct tcpHeader_t* tcpHeader;
-    const struct udphdr* udpHeader;
-    char * payload;
-    uint32_t payloadLen;
-
-    compress(packet, pkthdr->len);
-    return;
-
-}
-
-
 
 /*=========================================
 =            Compressor.                  =
 =========================================*/
 
 
-compressorTuple_t compressorCache[CACHE_SZ];
-uint32_t compressPktId = 0;
+static compressorTuple_t compressorCache[CACHE_SZ];
+static uint32_t compressPktId = 0;
 /**
  *
  * Main compress function.
  *
  */
-void compress(const u_char*packet, uint32_t pktLen){
+void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
     compressPktId++;
     const struct ether_header* ethernetHeader;
     const struct ipHeader_t* ipHeader;
@@ -141,7 +88,7 @@ void compress(const u_char*packet, uint32_t pktLen){
 
     // emit packet without compression.
     if (doCompress == false){
-      decompress(packet,pktLen);
+      forward(packet, pktLen);
       // pcap_inject(pcap,packet,pktLen);
       return;
     }
@@ -154,7 +101,7 @@ void compress(const u_char*packet, uint32_t pktLen){
 
     // 0. Check length.
     if (curPktTup.len < 100) {
-      decompress(packet,pktLen);
+      forward(packet, pktLen);
       // pcap_inject(pcap,packet,pkthdr -> len);
       return;
     }
@@ -167,8 +114,8 @@ void compress(const u_char*packet, uint32_t pktLen){
     // Save this packet's header to the cache and don't build a compressed packet.
     if (!isHit){
       compressorCache[curPktTup.idx] = curPktTup;
-      cout << "[" << compressPktId << "@compressor]:" << " NEW FLOW " << pktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      decompress(packet,pktLen);
+      cout << "[" << compressPktId << "@compressor]:" << " NEW FLOW " << pktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;
+      forward(packet, pktLen);
       // pcap_inject(pcap,packet,pktLen);
       return;
     }
@@ -208,8 +155,8 @@ void compress(const u_char*packet, uint32_t pktLen){
       compressorCache[curPktTup.idx] = curPktTup;
 
       // Compression, emit compressed buffer.
-      cout << "[" << compressPktId << "@compressor]:" << " compressed " << pktLen << "B packet to " << compressedPktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      decompress(compressedPktBuf,compressedPktLen);
+      cout << "[" << compressPktId << "@compressor]:" << " compressed " << pktLen << "B packet to " << compressedPktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;
+      forward(compressedPktBuf, compressedPktLen);
       // pcap_inject(pcap,compressedPktBuf,compressedPktLen);
       return;
   }
@@ -276,11 +223,11 @@ void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPk
 =            Decompressor.            =
 ======================================*/
 
-compressorTuple_t decompressorCache[CACHE_SZ];
-uint32_t decompressPktId = 0;
+static compressorTuple_t decompressorCache[CACHE_SZ];
+static uint32_t decompressPktId = 0;
 
 
-void decompress(const u_char *packet, uint32_t pktLen){
+void decompress(const u_char *packet, uint32_t pktLen, forward_fn forward){
   decompressPktId++;
   // Parsed input.
   const struct ether_header* ethernetHeader;
@@ -314,14 +261,14 @@ void decompress(const u_char *packet, uint32_t pktLen){
 
       // emit packet.
       cout << "[" << compressPktId << "@decompressor]:" << " NEW FLOW " << pktLen << "B packet [cache idx: " << curPktTup.idx << "]"  << endl;      
-      pcap_inject(pcap,packet,pktLen);
+      forward(packet, pktLen);
       return;
 
     }
   }
   // Not a TCP packet, but not compressed -- just emit.
   else if (ntohs(ethernetHeader->ether_type) != ETYPE_COMPRESSED){
-    pcap_inject(pcap,packet,pktLen);
+    forward(packet, pktLen);
     return;
   }
   // Compressed packet -- decompress and emit.
@@ -354,7 +301,7 @@ void decompress(const u_char *packet, uint32_t pktLen){
 
     // Emit packet.
     cout << "[" << decompressPktId << "@decompressor]:" << " decompressed " << pktLen << "B packet to " << decompressedPktLen << "B packet [cache idx: " << curPktTup.idx << "]" << endl;
-    pcap_inject(pcap, decompressedPktBuf, decompressedPktLen);
+    forward(decompressedPktBuf, decompressedPktLen);
 
   }
 
@@ -426,14 +373,3 @@ uint32_t buildDecompressedHeaders(compressorTuple_t *curPktTup, const struct com
 /*=====  End of Decompressor.  ======*/
 
 
-
-void print_hex_memory(void *mem, int len) {
-  int i;
-  unsigned char *p = (unsigned char *)mem;
-  for (i=0;i<len;i++) {
-    printf("0x%02x ", p[i]);
-    // if (i%16==0)
-    //   printf("\n");
-  }
-  printf("\n");
-}

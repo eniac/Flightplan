@@ -43,6 +43,11 @@ struct tclass {
 static struct tclass tclasses[TCLASS_MAX + 1];
 
 struct tclass_buffer *get_tclass_buffer(tclass_type tclass, int port) {
+    assert(port >= 0);
+    if (port < 0 || port > MAX_PORT) {
+        LOG_ERR("Port %d not valid!", port);
+        return NULL;
+    }
     return &tclasses[tclass].buffers[port];
 }
 
@@ -86,6 +91,10 @@ void decode_block(tclass_type tclass, int port, int blockId) {
 	D0(fec_block_print(FB_INDEX));
 
     struct tclass_buffer *tcb = get_tclass_buffer(tclass, port);
+    if (!tcb) {
+        LOG_ERR("Error getting tclass buffer");
+        return;
+    }
 	for (int i=0; i < tclasses[tclass].k; i++) {
 		if (fbk[FB_INDEX].pstat[i] == FEC_FLAG_GENNED) {
 			tcb->status[blockId][i] = PACKET_RECOVERED;
@@ -102,7 +111,11 @@ void decode_block(tclass_type tclass, int port, int blockId) {
  * @return true if no absent packets, false otherwise
  */
 bool is_all_data_pkts_recieved_for_block(tclass_type tclass, int port, int blockId) {
-        struct tclass_buffer *tcb = get_tclass_buffer(tclass, port);
+    struct tclass_buffer *tcb = get_tclass_buffer(tclass, port);
+    if (!tcb) {
+        LOG_ERR("Error getting tclass buffer");
+        return false;
+    }
 	for (int i = 0; i < tclasses[tclass].k; i++) {
 		if (tcb->status[blockId][i] == PACKET_ABSENT) {
 			return false;
@@ -119,6 +132,10 @@ bool is_all_data_pkts_recieved_for_block(tclass_type tclass, int port, int block
  */
 void mark_pkts_absent(tclass_type tclass, int port, int blockId) {
     struct tclass_buffer *tcb = get_tclass_buffer(tclass, port);
+    if (!tcb) {
+        LOG_ERR("Error getting tclass buffer");
+        return;
+    }
 	for (int i = 0; i < TOTAL_NUM_PACKETS; i++) {
 		tcb->status[blockId][i] = PACKET_ABSENT;
 	}
@@ -134,9 +151,15 @@ void mark_pkts_absent(tclass_type tclass, int port, int blockId) {
  * @param[in] pktSize Size of the packet
  * @param[in] packet The packet to be stored
  */
-void insert_into_pkt_buffer(tclass_type tclass, int port, int blockId, int pktIdx,
+int insert_into_pkt_buffer(tclass_type tclass, int port, int blockId, int pktIdx,
                             FRAME_SIZE_TYPE pktSize, const u_char *packet) {
+    LOG_INFO("Getting tclass_buffer for tclass %d port %d", (int)tclass, port);
     struct tclass_buffer *tcb = get_tclass_buffer(tclass, port);
+    if (!tcb) {
+        LOG_ERR("Error getting tclass buffer");
+        return -1;
+    }
+    LOG_INFO("Got tclass_buffer for tclass %d port %d", (int)tclass, port);
 	size_t offset = 0;
 
 	u_char *buff = tcb->pkts[blockId][pktIdx];
@@ -153,6 +176,7 @@ void insert_into_pkt_buffer(tclass_type tclass, int port, int blockId, int pktId
 	LOG_INFO("Inserted packet %d (size %d) into block %d",
 	         (int)pktIdx, (int)(offset + pktSize), (int)blockId);
 	LOG_HEX(tcb->pkts[blockId][pktIdx], 42);
+    return 0;
 }
 
 /**

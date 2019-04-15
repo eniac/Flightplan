@@ -3,7 +3,7 @@
 #include "Memcached_extern.p4"
 #include "FEC.p4"
 #include "FEC_Classify.p4"
-#include "HC_extern.p4"
+#include "Compression.p4"
 
 #if defined(TARGET_BMV2)
 
@@ -16,19 +16,27 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 }
 
 control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
+
+#if defined(FEC_BOOSTER)
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
-
     bit<24> proto_and_port = 0;
     FEC_Classify() classification;
     FecClassParams() decoder_params;
     FecClassParams() encoder_params;
+#endif
+
+#if defined(COMPRESSION_BOOSTER)
+    HeaderCompression() ingress_compression;
+    HeaderCompression() egress_compression;
+#endif
 
     apply {
         if (!hdr.eth.isValid()) {
             drop();
         }
 
+#if defined (FEC_BOOSTER)
         // If we received an FEC update, then update the table.
         bit<1> is_ctrl;
         FECController.apply(hdr, meta, is_ctrl);
@@ -36,7 +44,12 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             drop();
             return;
         }
+#endif
 
+        bit<1> compressed_link = 0;
+        bit<1> forward = 0;
+
+#if defined(FEC_BOOSTER)
         // If lossy link, then FEC decode.
         if (hdr.fec.isValid()) {
             decoder_params.apply(hdr.fec.traffic_class, k, h);
@@ -48,15 +61,13 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             }
             hdr.fec.setInvalid();
         }
+#endif
 
-        bit<1> compressed_link = 0;
-        bit<1> forward = 0;
-
-#if defined(HEADER_COMPRESSION)
+#if defined(COMPRESSION_BOOSTER)
         // If multiplexed link, then header decompress.
-        get_port_link_compression(meta.ingress_port, compressed_link);
+        ingress_compression.apply(meta.ingress_port, compressed_link);
         if (compressed_link == 1) {
-        header_decompress(forward);
+            header_decompress(forward);
             if (forward == 0) {
                 drop();
                 return;
@@ -68,6 +79,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         Forwarder.apply(meta);
 #endif
 
+#if defined(MEMCACHED_BOOSTER)
         // If Memcached REQ/RES then pass through the cache.
         if (hdr.udp.isValid()) {
             if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
@@ -78,20 +90,23 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 }
             }
         }
+#endif
 
-        bit<1> faulty = 1;
-
-#if defined(HEADER_COMPRESSION)
+#if defined(COMPRESSION_BOOSTER)
+        compressed_link = 0;
         // If heading out on a multiplexed link, then header compress.
-        get_port_link_compression(meta.egress_spec, compressed_link);
+        egress_compression.apply(meta.egress_spec, compressed_link);
         if (compressed_link == 1) {
-        header_compress(forward);
+            header_compress(forward);
             if (forward == 0) {
                 drop();
                 return;
             }
         }
 #endif
+
+#if defined(FEC_BOOSTER)
+        bit<1> faulty = 1;
 
         // If heading out on a lossy link, then FEC encode.
         get_port_status(meta.egress_spec, faulty);
@@ -114,6 +129,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 hdr.eth.type = ETHERTYPE_WHARF;
             }
         }
+#endif
 
 #if !defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);

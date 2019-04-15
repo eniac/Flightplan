@@ -12,7 +12,7 @@ print("Swapping out IP addresses for mininet from {} to {} ".format(sys.argv[1],
 
 src_mac = '00:04:00:00:00:00'
 dst_mac = '00:04:00:00:00:01'
-src_ip = '10.0.0.1'
+src_ip = '10.0.0.0'
 dst_ip = '10.0.1.1'
 
 if sys.argv[3] == '1':

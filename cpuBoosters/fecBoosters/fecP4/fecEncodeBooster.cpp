@@ -76,8 +76,9 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
                           int k, int h, int t,
                           encode_forward_fn forward) {
     // Must put egress on odd numbers to not overlap with ingress
-    egress_port = egress_port * 2 - 1;
+    egress_port = egress_port * 2 + 1;
 
+    LOG_INFO("Hitting lock guard");
     // Lock while encoding in progress
     std::lock_guard<std::mutex> lock(encoder_mutex);
 
@@ -91,7 +92,11 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
 
     LOG_INFO("Inserting pkt of tclass %d size %zu into buffer (block %d)",
             (int)tclass, pkt_size, (int)fec->block_id);
-    insert_into_pkt_buffer(tclass, egress_port, fec->block_id, fec->index, pkt_size, pkt);
+    int rtn = insert_into_pkt_buffer(tclass, egress_port, fec->block_id, fec->index, pkt_size, pkt);
+    if (rtn != 0) {
+        LOG_ERR("Error inserting into pkt buffer");
+        return;
+    }
 
     // If advancing the packet index would start a new block
     if (fec->index == (k - 1)) {

@@ -1,0 +1,1 @@
+table_add egress_compression.port_compression egress_compression.set_port_compression 1 => 1

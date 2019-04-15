@@ -8,12 +8,19 @@
 #include "memcached_booster_primitives.h"
 #endif
 
+#ifdef COMPRESSION_BOOSTER
+#include "compression_booster_primitives.h"
+#endif
+
 void boosters::import_booster_externs(SimpleSwitch *sswitch) {
 #ifdef FEC_BOOSTER
     import_fec_booster_primitives(sswitch);
 #endif
 #ifdef MEMCACHED_BOOSTER
     import_memcached_booster_primitives(sswitch);
+#endif
+#ifdef COMPRESSION_BOOSTER
+    import_compression_booster_primitives(sswitch);
 #endif
 }
 
