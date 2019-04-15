@@ -1,1 +1,1 @@
-table_add ingress_compression.port_compression ingress_compression.set_port_compression 1 => 1
+table_add ingress_compression.port_compression ingress_compression.set_port_compression 0 => 1

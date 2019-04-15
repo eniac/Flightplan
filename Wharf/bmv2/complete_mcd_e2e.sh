@@ -40,7 +40,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --log $LOG_DUMPS \
         --verbose \
         --replay h1-s1:$INPUT_PCAP \
-        --host-prog "h2:memcached -u $USER -U 11211 -B ascii" \
+        --host-prog "h2:memcached -u $USER -U 11211 -B ascii -vvv" \
         2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
@@ -76,7 +76,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-python2 $HERE/pcap_tools/pcap_mcd_compare.py $EXP_PCAP $OUT_PCAP
 
 echo "Requests:"
 python $HERE/pcap_tools/pcap_size.py \
@@ -85,6 +84,9 @@ python $HERE/pcap_tools/pcap_size.py \
 echo "Replies:"
 python $HERE/pcap_tools/pcap_size.py \
     $PCAP_DUMPS/{h2_to_s3,s3_to_s2,s2_to_s1,s1_to_h1}.pcap
+
+
+python2 $HERE/pcap_tools/pcap_mcd_compare.py $EXP_PCAP $OUT_PCAP
 
 if [[ $? == 0 ]]; then
     echo -e ${GREEN}TEST SUCCEEDED${NC}

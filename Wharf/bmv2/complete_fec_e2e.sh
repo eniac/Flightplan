@@ -39,7 +39,7 @@ fi
 
 if [[ $TWO_HALVES == "" ]]; then
 sudo -E python $HERE/start_flightplan_mininet.py \
-        $HERE/topologies/complete_topology.yml \
+        $TOPO \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
@@ -107,7 +107,7 @@ if [[ $INLINES == $OUTLINES ]]; then
         echo -e ${GREEN}TEST SUCCEEDED${NC}
 
         echo Bytes Transferred:
-        python $HERE/pcap_tools/pcap_size.py \
+        python2 $HERE/pcap_tools/pcap_size.py \
             $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
 
         exit 0

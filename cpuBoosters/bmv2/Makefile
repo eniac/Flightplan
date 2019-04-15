@@ -42,7 +42,7 @@ endif
 
 .PHONY:booster_switch patches clean copy_files configure $(BOOSTER_DEPS)
 
-all: patches copy_files booster_switch
+all: $(BOOSTER_DEPS) patches copy_files booster_switch
 
 copy_files: $(BOOSTER_TARGET_DIR)
 	rsync -av $(BOOSTER_TARGET)/* $(BOOSTER_TARGET_DIR)
