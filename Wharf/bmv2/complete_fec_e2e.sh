@@ -1,7 +1,13 @@
 #!/bin/bash
 
-if [[ $# < 1 ]]; then
-    echo "Usage $0 <test_file.pcap> [use_header_compression=1]"
+usage() {
+    echo "Usage $0 <test_file.pcap> [--no-header-compression]"
+    exit 1
+}
+
+
+if [[ $# < 1 || $# > 2 ]]; then
+    usage;
     exit 1
 fi
 
@@ -9,6 +15,23 @@ if [[ $BMV2_REPO == "" ]]; then
     echo "Must set BMV2_REPO before running this test!"
     exit 1
 fi
+
+NO_HC=0
+
+if [[ $# > 1 ]]; then
+    ## getopt parsing:
+    for PARAM in ${@:2}; do
+        case $PARAM in
+            --no-header-compression)
+                NO_HC=1
+                ;;
+            *)
+                usage
+                ;;
+        esac
+    done
+fi
+
 
 HERE=`dirname $0`
 BLD=$HERE/../build
@@ -29,7 +52,7 @@ mkdir -p $LOG_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-if [[ $# == 1 || $2 != 0 ]]; then
+if [[ $NO_HC == 0  ]]; then
     echo "Using complete topology WITH header compression";
     TOPO=$HERE/topologies/complete_topology.yml;
 else
