@@ -31,27 +31,22 @@ sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
 if [[ $# == 1 || $2 != 0 ]]; then
     echo "Using complete topology WITH header compression";
-    TOPO=$HERE/topologies/complete_topology.yml;
+    if [[ $TWO_HALVES == "" ]]; then
+        TOPO=$HERE/topologies/complete_topology.yml;
+    else
+        TOPO=$HERE/topologies/complete_topology_split.yml;
+    fi
 else
     echo "Using complete topology WITHOUT header compression";
     TOPO=$HERE/topologies/complete_no_hc_topology.yml
 fi
 
-if [[ $TWO_HALVES == "" ]]; then
 sudo -E python $HERE/start_flightplan_mininet.py \
         $TOPO \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
         --replay h1-s1:$INPUT_PCAP 2> $LOG_DUMPS/flightplan_mininet_log.err
-else
-sudo -E python $HERE/start_flightplan_mininet.py \
-        $HERE/topologies/complete_topology_split.yml \
-        --pcap-dump $PCAP_DUMPS \
-        --log $LOG_DUMPS \
-        --verbose \
-        --replay h1-s1:$INPUT_PCAP 2> $LOG_DUMPS/flightplan_mininet_log.err
-fi
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py
