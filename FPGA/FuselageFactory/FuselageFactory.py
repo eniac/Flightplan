@@ -34,7 +34,12 @@ def parseStub(filename):
     content = stubFile.read()
   result = re.search(r'module (\S+) \(\n(.*?)\n\);', content, re.MULTILINE | re.DOTALL)
   parseInfo = {'module': result.group(1), 'ports': result.group(2)}
-  parseInfo['io'] = re.search(r'(^input clk_line.*wire.*?$)', content, re.MULTILINE | re.DOTALL).group(1)
+  io = re.search(r'(^(input|output).*^(input|output).*?$)', content, re.MULTILINE | re.DOTALL).group(1)
+  io = io.replace(' /* unused */ ', '')
+  parseInfo['io'] = io.replace(' /* undriven */ ', '')
+  wires = re.search(r'(^wire.*^wire.*?$)', content, re.MULTILINE | re.DOTALL).group(1)
+  wires = wires.replace(' /* unused */ ', '')
+  parseInfo['wires'] = wires.replace(' /* undriven */ ', '')
   extractTuples(parseInfo, content)
   parseInfo['function'] = re.match(r'(\S+)_.*_.*', parseInfo['module']).group(1)
   return parseInfo
@@ -48,8 +53,8 @@ def extractTuples(parseInfo, content):
         name = result.group(2)
         width = int(result.group(1)) + 1
         tuples[name] = OrderedDict([('width', width)])
-    for tuple in tuples:
-      pattern = r'/\* Tuple format for ' + direction + 'put: ' + tuple + '\n(.*?)\n\n\*/'
+    for tup in tuples:
+      pattern = r'/\* Tuple format for ' + direction + 'put: ' + tup + '\n(.*?)\n\n\*/'
       result = re.search(pattern, content, re.MULTILINE | re.DOTALL)
       if result == None:
         continue
@@ -62,7 +67,7 @@ def extractTuples(parseInfo, content):
       for name, width in reversed(list(fields.items())):
         fields[name] -= offset
         offset = width
-      tuples[tuple]['fields'] = fields
+      tuples[tup]['fields'] = fields
     parseInfo[direction + 'put_tuples'] = tuples
 
 def generateFuselage(parseInfo, filename):
@@ -80,58 +85,106 @@ def generateFuselage(parseInfo, filename):
     outputFile.write('\tbackpressure_out\n')
     outputFile.write(');\n\n')
 
-    outputFile.write(parseInfo['io'] + '\n\n')
+    outputFile.write(parseInfo['io'] + '\n')
+    outputFile.write('input backpressure_in;\n')
+    outputFile.write('output backpressure_out;\n\n')
+
+    outputFile.write(parseInfo['wires'] + '\n\n')
 
     writeWires(parseInfo, outputFile)
-
     writeFunction(parseInfo, outputFile)
+    writeTupleFIFO(parseInfo, outputFile)
+    writePacketFIFO(parseInfo, outputFile)
+    writeLogic(parseInfo, outputFile)
 
-    writePacketFIFO(outputFile)
-
-    for tuple in parseInfo['input_tuples'].keys():
-      writeTupleFIFO(tuple, parseInfo['input_tuples'][tuple], outputFile)
-
-    writeLogic(outputFile)
+    outputFile.write('endmodule\n')
 
 def writeWires(parseInfo, outputFile):
-  for tuple, info in parseInfo['input_tuples'].items():
-    outputFile.write('wire [' + str(info['width'] - 1) + ':0] ' + tuple + '_dout;\n')
-    outputFile.write('wire ' + tuple + '_empty;\n')
-    outputFile.write('wire ' + tuple + '_read;\n')
-  outputFile.write('wire [70:0] packet_fifo_din;\n\n')
-  outputFile.write('wire [70:0] packet_fifo_dout;\n')
+  function = parseInfo['function']
+
+  input_width = 0
+  for tup, info in parseInfo['input_tuples'].items():
+    input_width += info['width']
+
+  output_width = 0
+  for tup, info in parseInfo['output_tuples'].items():
+    output_width += info['width']
+
+  outputFile.write('wire ' + function + '_ap_clk;\n')
+  outputFile.write('wire ' + function + '_ap_rst;\n')
+  outputFile.write('wire ' + function + '_ap_start;\n')
+  outputFile.write('wire ' + function + '_ap_done;\n')
+  outputFile.write('wire ' + function + '_ap_idle;\n')
+  outputFile.write('wire ' + function + '_ap_ready;\n')
+  outputFile.write('wire [' + str(input_width - 1) + ':0] ' + function + '_tuple_input_v_dout;\n')
+  outputFile.write('wire ' + function + '_tuple_input_v_empty_n;\n')
+  outputFile.write('wire ' + function + '_tuple_input_v_read;\n')
+  outputFile.write('wire [' + str(output_width - 1) + ':0] ' + function + '_tuple_output_v;\n')
+  outputFile.write('wire ' + function + '_tuple_output_v_ap_vld;\n')
+  outputFile.write('wire ' + function + '_tuple_output_v_ap_ack;\n')
+  outputFile.write('wire [70:0] ' + function + '_packet_input_v_dout;\n')
+  outputFile.write('wire ' + function + '_packet_input_v_empty_n;\n')
+  outputFile.write('wire ' + function + '_packet_input_v_read;\n')
+  outputFile.write('wire [70:0] ' + function + '_packet_output_v;\n')
+  outputFile.write('wire ' + function + '_packet_output_v_ap_vld;\n')
+  outputFile.write('wire ' + function + '_packet_output_v_ap_ack;\n\n')
+
+  outputFile.write('wire tuple_fifo_wr_en;\n')
+  outputFile.write('wire tuple_fifo_rd_en;\n')
+  outputFile.write('wire [' + str(input_width - 1) + ':0] tuple_fifo_din;\n')
+  outputFile.write('wire [' + str(input_width - 1) + ':0] tuple_fifo_dout;\n')
+  outputFile.write('wire tuple_fifo_empty;\n')
+  outputFile.write('wire tuple_fifo_almost_full;\n')
+  outputFile.write('wire tuple_fifo_full;\n\n')
+
+  outputFile.write('wire packet_fifo_wr_en;\n')
   outputFile.write('wire packet_fifo_rd_en;\n')
+  outputFile.write('wire [70:0] packet_fifo_din;\n')
+  outputFile.write('wire [70:0] packet_fifo_dout;\n')
   outputFile.write('wire packet_fifo_empty;\n')
-  outputFile.write('wire [70:0] packet_out;\n')
-  outputFile.write('wire packet_out_ap_vld;\n')
+  outputFile.write('wire packet_fifo_almost_full;\n')
+  outputFile.write('wire packet_fifo_full;\n\n')
 
 def writeFunction(parseInfo, outputFile):
-  outputFile.write(parseInfo['function'] + ' ' + parseInfo['function'] + '_inst\n')
+  function = parseInfo['function']
+  outputFile.write(function + ' ' + function + '_inst\n')
   outputFile.write('(\n')
-  outputFile.write('  .ap_clk(clk_line),\n')
-  outputFile.write('  .ap_rst(rst),\n')
-  outputFile.write('  .ap_start(1),\n')
-  outputFile.write('  .ap_done(),\n')
-  outputFile.write('  .ap_idle(),\n')
-  outputFile.write('  .ap_ready(),\n')
-  for tuple in parseInfo['input_tuples'].keys():
-    outputFile.write('  .' + tuple + '_V_dout(' + tuple + '_dout),\n')
-    outputFile.write('  .' + tuple + '_V_empty_n(~' + tuple + '_empty),\n')
-    outputFile.write('  .' + tuple + '_V_read(' + tuple + '_read),\n')
-  for tuple in parseInfo['output_tuples'].keys():
-    outputFile.write('  .' + tuple + '_V(tuple_out_' + tuple + '_DATA),\n')
-    outputFile.write('  .' + tuple + '_V_ap_vld(tuple_out_' + tuple + '_VALID),\n')
-    outputFile.write('  .' + tuple + '_V_ap_ack(1),\n')
-  outputFile.write('  .packet_in_V_dout(packet_fifo_dout),\n')
-  outputFile.write('  .packet_in_V_empty_n(~packet_fifo_empty),\n')
-  outputFile.write('  .packet_in_V_read(packet_fifo_rd_en),\n')
-  outputFile.write('  .packet_out_V(packet_out),\n')
-  outputFile.write('  .packet_out_V_ap_vld(packet_out_ap_vld),\n')
-  outputFile.write('  .packet_out_V_ap_ack(~backpressure_in),\n')
+  outputFile.write('  .ap_clk(' + function + '_ap_clk),\n')
+  outputFile.write('  .ap_rst(' + function + '_ap_rst),\n')
+  outputFile.write('  .ap_start(' + function + '_ap_start),\n')
+  outputFile.write('  .ap_done(' + function + '_ap_done),\n')
+  outputFile.write('  .ap_idle(' + function + '_ap_idle),\n')
+  outputFile.write('  .ap_ready(' + function + '_ap_ready),\n')
+  outputFile.write('  .Tuple_input_V_dout(' + function + '_tuple_input_v_dout),\n')
+  outputFile.write('  .Tuple_input_V_empty_n(' + function + '_tuple_input_v_empty_n),\n')
+  outputFile.write('  .Tuple_input_V_read(' + function + '_tuple_input_v_read),\n')
+  outputFile.write('  .Tuple_output_V(' + function + '_tuple_output_v),\n')
+  outputFile.write('  .Tuple_output_V_ap_vld(' + function + '_tuple_output_v_ap_vld),\n')
+  outputFile.write('  .Tuple_output_V_ap_ack(' + function + '_tuple_output_v_ap_ack),\n')
+  outputFile.write('  .Packet_input_V_dout(' + function + '_packet_input_v_dout),\n')
+  outputFile.write('  .Packet_input_V_empty_n(' + function + '_packet_input_v_empty_n),\n')
+  outputFile.write('  .Packet_input_V_read(' + function + '_packet_input_v_read),\n')
+  outputFile.write('  .Packet_output_V(' + function + '_packet_output_v),\n')
+  outputFile.write('  .Packet_output_V_ap_vld(' + function + '_packet_output_v_ap_vld),\n')
+  outputFile.write('  .Packet_output_V_ap_ack(' + function + '_packet_output_v_ap_ack)\n')
   outputFile.write(');\n\n')
 
-def writeTupleFIFO(tuple, dataWidth, outputFile):
-  outputFile.write('defparam tuple_fifo.WRITE_DATA_WIDTH = ' + str(dataWidth) + ';\n');
+  outputFile.write('assign ' + function + '_ap_clk = clk_line;\n')
+  outputFile.write('assign ' + function + '_ap_rst = rst;\n')
+  outputFile.write('assign ' + function + '_ap_start = 1;\n')
+  outputFile.write('assign ' + function + '_tuple_input_v_dout = tuple_fifo_dout;\n')
+  outputFile.write('assign ' + function + '_tuple_input_v_empty_n = ~tuple_fifo_empty;\n')
+  outputFile.write('assign ' + function + '_tuple_output_v_ap_ack = 1;\n')
+  outputFile.write('assign ' + function + '_packet_input_v_dout = packet_fifo_dout;\n')
+  outputFile.write('assign ' + function + '_packet_input_v_empty_n = ~packet_fifo_empty;\n')
+  outputFile.write('assign ' + function + '_packet_output_v_ap_ack = ~backpressure_in;\n\n')
+
+def writeTupleFIFO(parseInfo, outputFile):
+  width = 0
+  for tup, info in parseInfo['input_tuples'].items():
+    width += info['width']
+
+  outputFile.write('defparam tuple_fifo.WRITE_DATA_WIDTH = ' + str(width) + ';\n');
   outputFile.write('defparam tuple_fifo.FIFO_WRITE_DEPTH = 512;\n');
   outputFile.write('defparam tuple_fifo.PROG_FULL_THRESH = 287;\n');
   outputFile.write('defparam tuple_fifo.PROG_EMPTY_THRESH = 287;\n');
@@ -140,18 +193,19 @@ def writeTupleFIFO(tuple, dataWidth, outputFile):
   outputFile.write('defparam tuple_fifo.RD_DATA_COUNT_WIDTH = 9;\n');
   outputFile.write('defparam tuple_fifo.DOUT_RESET_VALUE = "0";\n');
   outputFile.write('defparam tuple_fifo.FIFO_MEMORY_TYPE = "bram";\n\n');
-  outputFile.write('xpm_fifo_sync tuple_in_' + tuple + '_fifo (\n')
-  outputFile.write('\t.wr_en(tuple_in_' + tuple + '_VALID),\n')
-  outputFile.write('\t.din(tuple_in_' + tuple + '_DATA),\n')
-  outputFile.write('\t.rd_en(' + tuple + '_read),\n')
+
+  outputFile.write('xpm_fifo_sync tuple_fifo (\n')
+  outputFile.write('\t.wr_en(tuple_fifo_wr_en),\n')
+  outputFile.write('\t.din(tuple_fifo_din),\n')
+  outputFile.write('\t.rd_en(tuple_fifo_rd_en),\n')
   outputFile.write('\t.sleep(1\'b0),\n')
   outputFile.write('\t.injectsbiterr(),\n')
   outputFile.write('\t.injectdbiterr(),\n')
   outputFile.write('\t.prog_empty(),\n')
-  outputFile.write('\t.dout(' + tuple + '_dout), \n')
-  outputFile.write('\t.empty(' + tuple + '_empty), \n')
-  outputFile.write('\t.prog_full(),\n')
-  outputFile.write('\t.full(),\n')
+  outputFile.write('\t.dout(tuple_fifo_dout), \n')
+  outputFile.write('\t.empty(tuple_fifo_empty), \n')
+  outputFile.write('\t.prog_full(tuple_fifo_almost_full),\n')
+  outputFile.write('\t.full(tuple_fifo_full),\n')
   outputFile.write('\t.rd_data_count(),\n')
   outputFile.write('\t.wr_data_count(),\n') 
   outputFile.write('\t.wr_rst_busy(),\n')
@@ -164,18 +218,25 @@ def writeTupleFIFO(tuple, dataWidth, outputFile):
   outputFile.write('\t.rst(rst)\n')
   outputFile.write(');\n\n')
 
-def writePacketFIFO(outputFile):
-  outputFile.write('defparam tuple_fifo.WRITE_DATA_WIDTH = 71;\n');
-  outputFile.write('defparam tuple_fifo.FIFO_WRITE_DEPTH = 512;\n');
-  outputFile.write('defparam tuple_fifo.PROG_FULL_THRESH = 287;\n');
-  outputFile.write('defparam tuple_fifo.PROG_EMPTY_THRESH = 287;\n');
-  outputFile.write('defparam tuple_fifo.READ_MODE = "fwft";\n');
-  outputFile.write('defparam tuple_fifo.WR_DATA_COUNT_WIDTH = 9;\n');
-  outputFile.write('defparam tuple_fifo.RD_DATA_COUNT_WIDTH = 9;\n');
-  outputFile.write('defparam tuple_fifo.DOUT_RESET_VALUE = "0";\n');
-  outputFile.write('defparam tuple_fifo.FIFO_MEMORY_TYPE = "bram";\n\n');
+  first_tuple = next(iter(parseInfo['input_tuples']))
+  tuples = reversed([tup + '_DATA' for tup in parseInfo['input_tuples'].keys()])
+
+  outputFile.write('assign tuple_fifo_wr_en = ' + first_tuple + '_VALID;\n')
+  outputFile.write('assign tuple_fifo_din = {' + ', '.join(tuples) + '};\n')
+  outputFile.write('assign tuple_fifo_rd_en = ' + parseInfo['function'] + '_tuple_input_v_read;\n\n')
+
+def writePacketFIFO(parseInfo, outputFile):
+  outputFile.write('defparam packet_fifo.WRITE_DATA_WIDTH = 71;\n');
+  outputFile.write('defparam packet_fifo.FIFO_WRITE_DEPTH = 512;\n');
+  outputFile.write('defparam packet_fifo.PROG_FULL_THRESH = 287;\n');
+  outputFile.write('defparam packet_fifo.PROG_EMPTY_THRESH = 287;\n');
+  outputFile.write('defparam packet_fifo.READ_MODE = "fwft";\n');
+  outputFile.write('defparam packet_fifo.WR_DATA_COUNT_WIDTH = 9;\n');
+  outputFile.write('defparam packet_fifo.RD_DATA_COUNT_WIDTH = 9;\n');
+  outputFile.write('defparam packet_fifo.DOUT_RESET_VALUE = "0";\n');
+  outputFile.write('defparam packet_fifo.FIFO_MEMORY_TYPE = "bram";\n\n');
   outputFile.write('xpm_fifo_sync packet_fifo (\n')
-  outputFile.write('\t.wr_en(packet_in_packet_in_VAL),\n')
+  outputFile.write('\t.wr_en(packet_fifo_wr_en),\n')
   outputFile.write('\t.din(packet_fifo_din),\n')
   outputFile.write('\t.rd_en(packet_fifo_rd_en),\n')
   outputFile.write('\t.sleep(1\'b0),\n')
@@ -184,8 +245,8 @@ def writePacketFIFO(outputFile):
   outputFile.write('\t.prog_empty(),\n')
   outputFile.write('\t.dout(packet_fifo_dout), \n')
   outputFile.write('\t.empty(packet_fifo_empty), \n')
-  outputFile.write('\t.prog_full(backpressure_out),\n')
-  outputFile.write('\t.full(),\n')
+  outputFile.write('\t.prog_full(packet_fifo_almost_full),\n')
+  outputFile.write('\t.full(packet_fifo_full),\n')
   outputFile.write('\t.rd_data_count(),\n')
   outputFile.write('\t.wr_data_count(),\n') 
   outputFile.write('\t.wr_rst_busy(),\n')
@@ -198,61 +259,106 @@ def writePacketFIFO(outputFile):
   outputFile.write('\t.rst(rst)\n')
   outputFile.write(');\n\n')
 
-def writeLogic(outputFile):
+  outputFile.write('assign packet_fifo_wr_en = packet_in_packet_in_VAL;\n')
   outputFile.write('assign packet_fifo_din = {packet_in_packet_in_SOF, packet_in_packet_in_EOF, packet_in_packet_in_DAT,\n')
   outputFile.write('                          packet_in_packet_in_CNT, packet_in_packet_in_ERR};\n')
+  outputFile.write('assign packet_fifo_rd_en = ' + parseInfo['function'] + '_packet_input_v_read;\n')
+
+def writeLogic(parseInfo, outputFile):
+
+  function = parseInfo['function']
+
+  outputFile.write('assign packet_in_packet_in_RDY = 1;\n\n')
+
   outputFile.write('assign {packet_out_packet_out_SOF, packet_out_packet_out_EOF, packet_out_packet_out_DAT,\n')
-  outputFile.write('        packet_out_packet_out_CNT, packet_out_packet_out_ERR} = packet_out;\n')
-  outputFile.write('assign packet_out_packet_out_VAL = dec_packet_out_ap_vld & ~backpressure_in;\n')
+  outputFile.write('        packet_out_packet_out_CNT, packet_out_packet_out_ERR} = ' + function + '_packet_output_v;\n')
+  outputFile.write('assign packet_out_packet_out_VAL = ' + function + '_packet_output_v_ap_vld & ~backpressure_in;\n\n')
+
+  start = 0
+  end = 0
+  for tup, info in parseInfo['output_tuples'].items():
+    end += info['width']
+    outputFile.write('assign ' + tup + '_DATA  = ' + function + '_tuple_output_v[' + str(end - 1) + ':' + str(start) + '];\n')
+    start = end
+  outputFile.write('\n')
+
+  for tup in parseInfo['output_tuples']:
+    outputFile.write('assign ' + tup + '_VALID  = ' + function + '_tuple_output_v_ap_vld;\n')
+  outputFile.write('\n')
+
+  outputFile.write('assign backpressure_out = packet_fifo_almost_full;\n\n')
 
 def generateStub(parseInfo, hlsFilename, headerFilename):
   with open(hlsFilename, "wt") as outputFile:
     outputFile.write('// Code generated by the Fuselage Factory\n\n')
     outputFile.write('#include <' + os.path.basename(headerFilename) + '>\n\n')
     outputFile.write('#include <hls_stream.h>\n\n')
-    outputFile.write('void ' + parseInfo['function'])
-    outputFile.write('(\n')
-    for direction in ['in', 'out']:
-      for tuple in parseInfo[direction + 'put_tuples'].keys():
-        outputFile.write('  hls::stream<' + tuple + '_type> & ' + tuple + ',\n')
-    outputFile.write('  hls::stream<packet_type> & packet_in,\n')
-    outputFile.write('  hls::stream<packet_type> & packet_out\n')
-    outputFile.write(')\n')
+    outputFile.write('void ' + parseInfo['function'] + '(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> & Tuple_output,\n')
+    outputFile.write('    hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output)\n')
     outputFile.write('{\n')
-    for direction in ['in', 'out']:
-      for tuple in parseInfo[direction + 'put_tuples'].keys():
-        outputFile.write('#pragma HLS DATA_PACK variable=' + tuple + '\n')
-    outputFile.write('#pragma HLS DATA_PACK variable=packet_in\n')
-    outputFile.write('#pragma HLS DATA_PACK variable=packet_out\n')
-    for direction in ['in', 'out']:
-      for tuple in parseInfo[direction + 'put_tuples'].keys():
-        outputFile.write('#pragma HLS INTERFACE ap_fifo port=' + tuple + '\n')
-    outputFile.write('#pragma HLS INTERFACE ap_fifo port=packet_in\n')
-    outputFile.write('#pragma HLS INTERFACE ap_hs port=packet_out\n\n')
+    outputFile.write('#pragma HLS DATA_PACK variable=Tuple_input\n')
+    outputFile.write('#pragma HLS DATA_PACK variable=Tuple_output\n')
+    outputFile.write('#pragma HLS DATA_PACK variable=Packet_input\n')
+    outputFile.write('#pragma HLS DATA_PACK variable=Packet_output\n')
+    outputFile.write('#pragma HLS INTERFACE ap_fifo port=Tuple_input\n')
+    outputFile.write('#pragma HLS INTERFACE ap_hs port=Tuple_output\n')
+    outputFile.write('#pragma HLS INTERFACE ap_fifo port=Packet_input\n')
+    outputFile.write('#pragma HLS INTERFACE ap_hs port=Packet_output\n\n')
     outputFile.write('  /* Fill in your code here. */\n')
     outputFile.write('}\n')
 
 def generateHeader(parseInfo, filename):
   with open(filename, "wt") as outputFile:
     outputFile.write('// Code generated by the Fuselage Factory\n\n')
+
     outputFile.write('// WE DISCOURAGE MODIFYING THIS FILE DIRECTLY!!!\n')
     outputFile.write('// Changes to P4 code that do not affect the external function signature in P4\n')
     outputFile.write('// may still result in different variable widths.\n\n')
+
     outputFile.write('#ifndef FUSELAGE_HEADER_INCLUDED\n')
     outputFile.write('#define FUSELAGE_HEADER_INCLUDED\n\n')
-    outputFile.write('#include <ap_int.h>\n\n')
+
+    outputFile.write('#include <cstddef>\n')
+    outputFile.write('#include <ap_int.h>\n')
+    outputFile.write('#include <hls_stream.h>\n\n')
+
+    tuples = set()
     for direction in ['in', 'out']:
-      for tuple, info in parseInfo[direction + 'put_tuples'].items():
-        outputFile.write('typedef struct\n')
-        outputFile.write('{\n')
-        fields = info.get('fields')
-        if fields != None:
-          offset = 0
-          for name, width in fields.items():
-            outputFile.write('  ap_uint<' + str(width) + '> ' + name + ';\n')
-        else:
-          outputFile.write('  ap_uint<' + str(info['width']) + '> ' + tuple + ';\n')
-        outputFile.write('} ' + tuple + '_type\n\n')
+      for tup, info in parseInfo[direction + 'put_tuples'].items():
+        tuple_name = re.match(r'tuple_.*?_(.*)', tup).group(1)
+        if tuple_name not in tuples:
+          outputFile.write('struct tuple_' + tuple_name + '\n')
+          outputFile.write('{\n')
+          fields = info.get('fields')
+          if fields != None:
+            offset = 0
+            for name, width in reversed(fields.items()):
+              outputFile.write('  ap_uint<' + str(width) + '> ' + name.capitalize() + ';\n')
+          else:
+            outputFile.write('  ap_uint<' + str(info['width']) + '> ' + tuple_name.capitalize() + ';\n')
+          outputFile.write('};\n\n')
+          tuples.add(tuple_name)
+
+    for direction in ['in', 'out']:
+      outputFile.write('struct ' + direction + 'put_tuples\n')
+      outputFile.write('{\n')
+      for tup in parseInfo[direction + 'put_tuples']:
+        tuple_name = re.match(r'tuple_.*?_(.*)', tup).group(1)
+        outputFile.write('  tuple_' + tuple_name + ' ' + tuple_name.capitalize() + ';\n')
+      outputFile.write('};\n\n')
+
+    outputFile.write('struct packet_interface\n')
+    outputFile.write('{\n')
+    outputFile.write('  ap_uint<1> Error;\n')
+    outputFile.write('  ap_uint<4> Count;\n')
+    outputFile.write('  ap_uint<64> Data;\n')
+    outputFile.write('  ap_uint<1> End_of_frame;\n')
+    outputFile.write('  ap_uint<1> Start_of_frame;\n')
+    outputFile.write('};\n\n')
+
+    outputFile.write('void ' + parseInfo['function'] + '(hls::stream<input_tuples> & Tuple_input, hls::stream<output_tuples> & Tuple_output,\n')
+    outputFile.write('    hls::stream<packet_interface> & Packet_input, hls::stream<packet_interface> & Packet_output);\n\n')
+
     outputFile.write('#endif\n')
 
 if __name__ == '__main__':

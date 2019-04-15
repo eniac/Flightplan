@@ -261,6 +261,32 @@ public:
 	Decoder_0_t(std::string _n, std::string _filename = "") : _name(_n), Packet_count(0) {
 	}
 
+	template<unsigned long Input_width, int Output_width> void Convert(ap_uint<Output_width> & Output, const _LV<Input_width> & Input) {
+		assert(Input_width == Output_width);
+		for (unsigned long i = 0; i < Input_width; i++)
+			Output[i] = Input[i];
+	}
+
+	template<class input_class, int Width> void Convert_struct(ap_uint<Width> & Output, input_class & Input) {
+		assert(Input._SIZE == Width);
+		for (unsigned long i = 0; i < Width; i++)
+			Output[i] = Input.get_LV()[i];
+	}
+
+	template<int Input_width, unsigned long Output_width> void Convert(_LV<Output_width> & Output, const ap_uint<Input_width> & Input) {
+		assert(Input_width == Output_width);
+		for (unsigned long i = 0; i < Output_width; i++)
+			Output[i] = Input[i];
+	}
+
+	template<int Width, class output_class> void Convert_struct(output_class & Output, const ap_uint<Width> & Input) {
+		assert(Width == Output._SIZE);
+		_LV<Output._SIZE> Temp;
+		for (unsigned long i = 0; i < Width; i++)
+			Temp[i] = Input[i];
+		Output = Temp;
+	}
+
 	// engine function
 	void operator()() {
 		std::cout << "===================================================================" << std::endl;
@@ -286,26 +312,18 @@ public:
 			hls::stream<input_tuples> Tuple_input;
 
 			input_tuples Tuple;
-			Tuple.Decoder_input.Stateful_valid = Decoder_input.stateful_valid.to_ulong();
-			Tuple.Decoder_input.k = Decoder_input.k.to_ulong();
-			Tuple.Decoder_input.h = Decoder_input.h.to_ulong();
-			Tuple.Hdr.Eth.Is_valid = hdr.eth.isValid.to_ulong();
-			Tuple.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
-			Tuple.Hdr.Eth.Src = hdr.eth.src.to_ulong();
-			Tuple.Hdr.Eth.Type = hdr.eth.type.to_ulong();
-			Tuple.Hdr.FEC.Is_valid = hdr.fec.isValid.to_ulong();
-			Tuple.Hdr.FEC.Traffic_class = hdr.fec.traffic_class.to_ulong();
-			Tuple.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
-			Tuple.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
-			Tuple.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
-			Tuple.Hdr.FEC.Packet_length = hdr.fec.packet_length.to_ulong();
-			Tuple.Update_fl.Packet_count = Update_fl.packet_count_1.to_ulong();
-			Tuple.Update_fl.k = Update_fl.k_1.to_ulong();
-			Tuple.Update_fl.h = Update_fl.h_1.to_ulong();
-			Tuple.Ioports.Egress_port = ioports.egress_port.to_ulong();
-			Tuple.Ioports.Ingress_port = ioports.ingress_port.to_ulong();
-			Tuple.Local_state.Id = local_state.id.to_ulong();
-			Tuple.Parser_extracts.Size = Parser_extracts.size.to_ulong();
+			Convert(Tuple.Decoder_input.Stateful_valid, Decoder_input.stateful_valid);
+			Convert(Tuple.Decoder_input.K, Decoder_input.k);
+			Convert(Tuple.Decoder_input.H, Decoder_input.h);
+			Convert_struct(Tuple.Hdr.Eth, hdr.eth);
+			Convert_struct(Tuple.Hdr.Fec, hdr.fec);
+			Convert(Tuple.Update_fl.Packet_count_1, Update_fl.packet_count_1);
+			Convert(Tuple.Update_fl.K_1, Update_fl.k_1);
+			Convert(Tuple.Update_fl.H_1, Update_fl.h_1);
+			Convert(Tuple.Ioports.Egress_port, ioports.egress_port);
+			Convert(Tuple.Ioports.Ingress_port, ioports.ingress_port);
+			Convert(Tuple.Local_state.Id, local_state.id);
+			Convert(Tuple.Parser_extracts.Size, Parser_extracts.size);
 			Tuple_input.write(Tuple);
 
 			hls::stream<packet_interface> Packet_input;
@@ -334,7 +352,7 @@ public:
 			hls::stream<output_tuples> Tuple_output;
 			hls::stream<packet_interface> Packet_output;
 
-			Decode(Tuple_input, Tuple_output, Packet_input, Packet_output);
+			Decoder(Tuple_input, Tuple_output, Packet_input, Packet_output);
 
 			Packet_count = 0;
 			while (!Tuple_output.empty())
@@ -360,23 +378,15 @@ public:
 		else {
 			packet_out = Packets[0];
 			
-			hdr.eth.isValid = Tuples[0].Hdr.Eth.Is_valid.to_uint();
-			hdr.eth.dst = Tuples[0].Hdr.Eth.Dst.to_uint64();
-			hdr.eth.src = Tuples[0].Hdr.Eth.Src.to_uint64();
-			hdr.eth.type = Tuples[0].Hdr.Eth.Type.to_uint();
-			hdr.fec.isValid = Tuples[0].Hdr.FEC.Is_valid.to_uint();
-			hdr.fec.traffic_class = Tuples[0].Hdr.FEC.Traffic_class.to_uint();
-			hdr.fec.block_index = Tuples[0].Hdr.FEC.Block_index.to_uint();
-			hdr.fec.packet_index = Tuples[0].Hdr.FEC.Packet_index.to_uint();
-			hdr.fec.original_type = Tuples[0].Hdr.FEC.Original_type.to_uint();
-			hdr.fec.packet_length = Tuples[0].Hdr.FEC.Packet_length.to_uint();
-			Update_fl.packet_count_1 = Tuples[0].Update_fl.Packet_count.to_uint();
-			Update_fl.k_1 = Tuples[0].Update_fl.k.to_uint();
-			Update_fl.h_1 = Tuples[0].Update_fl.h.to_uint();
-			ioports.egress_port = Tuples[0].Ioports.Egress_port.to_uint();
-			ioports.ingress_port = Tuples[0].Ioports.Ingress_port.to_uint();
-			local_state.id = Tuples[0].Local_state.Id.to_uint();
-			Parser_extracts.size = Tuples[0].Parser_extracts.Size.to_uint();
+			Convert_struct(hdr.eth, Tuples[0].Hdr.Eth);
+			Convert_struct(hdr.fec, Tuples[0].Hdr.Fec);
+			Convert(Update_fl.packet_count_1, Tuples[0].Update_fl.Packet_count_1);
+			Convert(Update_fl.k_1, Tuples[0].Update_fl.K_1);
+			Convert(Update_fl.h_1, Tuples[0].Update_fl.H_1);
+			Convert(ioports.egress_port, Tuples[0].Ioports.Egress_port);
+			Convert(ioports.ingress_port, Tuples[0].Ioports.Ingress_port);
+			Convert(local_state.id, Tuples[0].Local_state.Id);
+			Convert(Parser_extracts.size, Tuples[0].Parser_extracts.Size);
 			
 			for (int i = 1; i < Packet_count; i++)
 			{
