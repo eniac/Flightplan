@@ -113,7 +113,7 @@ class FPTopo(Topo):
             )
             print("HOST: %s" % self.all_nodes[host_name])
 
-            for link_name, link_num in host_ops.get('links', {}):
+            for link_name, link_num in host_ops.get('links', {}).items():
                 self.all_links[(host_name, link_name)] = link_num
                 max_link_port[host_name] = max(max_link_port[host_name], link_num+1)
 
