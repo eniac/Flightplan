@@ -102,6 +102,11 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+echo Bytes Transferred:
+python2 $HERE/pcap_tools/pcap_size.py \
+    $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+
+
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
     echo "Running diff:"
@@ -119,11 +124,6 @@ if [[ $INLINES == $OUTLINES ]]; then
         exit 1
     else
         echo -e ${GREEN}TEST SUCCEEDED${NC}
-
-        echo Bytes Transferred:
-        python2 $HERE/pcap_tools/pcap_size.py \
-            $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
-
         exit 0
     fi
 else
