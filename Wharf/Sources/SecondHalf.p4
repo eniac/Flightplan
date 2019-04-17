@@ -20,14 +20,14 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
     bit<24> proto_and_port = 0;
-    FEC_Classify() classification;
+//    FEC_Classify() classification; -- only matters to FirstHalf
     FecClassParams() decoder_params;
-    FecClassParams() encoder_params;
+//    FecClassParams() encoder_params; -- only matters to FirstHalf
 #endif
 
 #if defined(COMPRESSION_BOOSTER)
     HeaderCompression() ingress_compression;
-    HeaderCompression() egress_compression;
+//    HeaderCompression() egress_compression; -- only matters to FirstHalf
 #endif
 
     apply {
