@@ -141,11 +141,13 @@ def generate_packets(smac, dmac, sip, dip, n_pkt, n_get, n_set, get_pct, collisi
                 pkts.append(gen.get(key))
                 log.append(dict(type='get', h=mcdh.str_hash(key), k=key, idx=i))
         else:
+            print("n_get is %d n_set %d" % (n_get, len(pkts)))
             for i in range(n_get):
                 if i % (n_get / 10) == 0:
                     print('%d,' % len(pkts), end='')
                     sys.stdout.flush()
-                elif uniform_random:
+
+                if uniform_random:
                     key = random.choice(sets)
                     pkts.append(gen.get(key))
                     log.append(dict(type='get', h = mcdh.str_hash(key), k=key, collide='?', idx=i))
