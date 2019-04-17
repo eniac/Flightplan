@@ -149,6 +149,14 @@ responses received by h1 are as expected. Good input files are:
 been built with the `booster_switch`, as detailed:
 [here](../cpuBoosters/bmv2/README.md).
 
+#### Running different programs on switches
+The default test runs the same program on switches. The "two halves" test runs
+different programs on different switches, but has the same effect of running
+the same program on all switches. To use this test add `TWO_HALVES=1` to the environment:
+```shell
+TWO_HALVES=1 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
+```
+
 ### Mininet file
 
 The file that runs the mininet simulation is ultimately
