@@ -35,6 +35,12 @@ To build only fec boosters, run:
 `make configure BOOSTERS=FEC`
 To build only memcached boosters, run
 `make configure BOOSTERS=MEMCACHED`
+To build only header compression boosters, run:
+`make configure BOOSTERS=COMPRESSION`
+To build multiple boosters (i.e. fec and compression), run:
+`make configure BOOSTERS="FEC COMPRESSION"`
+
+After running `make configure`, run `make` to finish building the `booster_switch`.
 
 ## Testing
 

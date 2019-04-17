@@ -1,14 +1,37 @@
 #!/bin/bash
 
-if [[ $# != 1 ]]; then
-    echo "Usage $0 <test_file.pcap>"
-    exit
+usage() {
+    echo "Usage $0 <test_file.pcap> [--no-header-compression]"
+    exit 1
+}
+
+
+if [[ $# < 1 || $# > 2 ]]; then
+    usage;
+    exit 1
 fi
 
 if [[ $BMV2_REPO == "" ]]; then
     echo "Must set BMV2_REPO before running this test!"
-    exit
+    exit 1
 fi
+
+NO_HC=0
+
+if [[ $# > 1 ]]; then
+    ## getopt parsing:
+    for PARAM in ${@:2}; do
+        case $PARAM in
+            --no-header-compression)
+                NO_HC=1
+                ;;
+            *)
+                usage
+                ;;
+        esac
+    done
+fi
+
 
 HERE=`dirname $0`
 BLD=$HERE/../build
@@ -21,45 +44,43 @@ BASENAME=$(basename $INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files/
-rm -f $LOG_DUMPS
+rm -rf $OUTDIR
 rm -f $OUTDIR/*.pcap
 rm -f $OUTDIR/pcap_dump/*.pcap
 mkdir -p $PCAP_DUMPS
 mkdir -p $LOG_DUMPS
 
-echo "Encoder log:"
-echo tail -f `realpath $LOG_DUMPS/encoder.log`
-echo "Decoder log:"
-echo tail -f `realpath $LOG_DUMPS/decoder.log`
-echo "Dropper log:"
-echo tail -f `realpath $LOG_DUMPS/dropper.log`
+sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-sudo mn -c
+if [[ $NO_HC == 0  ]]; then
+    echo "Using complete topology WITH header compression";
+    TOPO=$HERE/topologies/complete_topology.yml;
+else
+    echo "Using complete topology WITHOUT header compression";
+    TOPO=$HERE/topologies/complete_no_hc_topology.yml
+fi
 
 sudo -E python $HERE/start_flightplan_mininet.py \
-        $HERE/flightplan_fec_topology.yml \
-		--bmv2-exe $BMV2_REPO/targets/booster_switch/simple_switch \
+        $TOPO \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
-        --replay h1-s1:$INPUT_PCAP
+        --replay h1-s1:$INPUT_PCAP 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py
-    echo Check logs in $LOG_DUMPS for more details
+    echo Check logs in $LOG_DUMPS for more details:
     ls -1 $LOG_DUMPS/*
     exit -1;
 fi
 
-sleep 4
-
+cp $INPUT_PCAP $OUTDIR/input.pcap
 IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
-python $HERE/pcap_clean.py  $PCAP_DUMPS/h1_out.pcap $IN_PCAP --ipv4-only
-python $HERE/pcap_clean.py $PCAP_DUMPS/h2_in.pcap $OUT_PCAP --ipv4-only
+python2 $HERE/pcap_tools/pcap_clean.py  $PCAP_DUMPS/h1_to_s1.pcap $IN_PCAP --rm-chksum
+python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h2_from_s3.pcap $OUT_PCAP --rm-chksum
 
-sleep 1
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
 IN_TXT=$OUTDIR/${BASENAME}_in.txt
 
@@ -81,11 +102,16 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+echo Bytes Transferred:
+python2 $HERE/pcap_tools/pcap_size.py \
+    $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+
+
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
     echo "Running diff:"
-    diff $IN_SRT $OUT_SRT
-    echo "Diff complete"
+    diff $IN_SRT $OUT_SRT | head -100
+    echo "Diff complete (possibly truncated)"
 
     if [[ $INLINES == 0 ]]; then
         echo -e ${RED}TEST FAILED${NC}
@@ -94,6 +120,7 @@ if [[ $INLINES == $OUTLINES ]]; then
 
     if [[ `diff $IN_SRT $OUT_SRT | wc -l` != '0' ]]; then
         echo -e ${RED}TEST FAILED${NC}
+        echo "Check $IN_TXT $OUT_TXT to compare"
         exit 1
     else
         echo -e ${GREEN}TEST SUCCEEDED${NC}

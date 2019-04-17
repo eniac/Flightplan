@@ -1,4 +1,2 @@
-table_add forward set_egress 0 => 1
-table_add forward set_egress 1 => 0
 table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
 table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1

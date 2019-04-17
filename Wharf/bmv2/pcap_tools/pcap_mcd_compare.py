@@ -27,7 +27,7 @@ print("Comparing {} and {} for memcached".format(args.expected, args.output))
 for j, pkt in enumerate(exp_cap):
 
     if (j + 1) % (len(exp_cap) / 10) == 0:
-        print 100.0 * j  / len(exp_cap)
+        print(100.0 * j  / len(exp_cap))
 
     try:
         exp = strrep(pkt)
@@ -49,7 +49,7 @@ for j, pkt in enumerate(exp_cap):
             missing.append((pkt,j))
 
     except Exception as e:
-        print "EXCEPTION", e
+        print("EXCEPTION", e)
 
 def classify(pkts):
     nos = dict(STORED=0, VALUE=0, other=0, stored_i = [], value_i = [])
@@ -65,11 +65,11 @@ def classify(pkts):
     return nos
 
 def show_classf(classf):
-    print "\tStored: {STORED}\n\tValue: {VALUE}\n\tOther: {other}".format(**classf)
+    print("\tStored: {STORED}\n\tValue: {VALUE}\n\tOther: {other}".format(**classf))
 
 extras = []
 
-print ("Classifying duplicates and extras")
+print("Classifying duplicates and extras")
 
 for pkt in out_cap:
     if strrep(pkt) in found_pkts:
@@ -85,10 +85,10 @@ extranos = classify(extras)
 rtn = 0
 if len(missing) > 0:
     rtn = 1
-    print "MISSING PACKETS:"
+    print("MISSING PACKETS:")
     show_classf(missingnos)
-    print missingnos['stored_i']
-    print missingnos['value_i']
+    print(missingnos['stored_i'])
+    print(missingnos['value_i'])
     if args.show == 'missing':
         for pkt, _ in missing:
             pkt.show()
@@ -96,17 +96,17 @@ if len(missing) > 0:
 if len(extras) > 0:
     if len(extras) != extranos['other']:
         rtn = -1
-    print "EXTRA PACKETS:"
+    print("EXTRA PACKETS:")
     show_classf(extranos)
     if args.show == 'extra':
         for pkt, _ in extras:
             pkt.show()
 
 if len(dups) > 0:
-    print "DUPLICATE PACKETS:"
+    print("DUPLICATE PACKETS:")
     show_classf(dupnos)
 
-print "SUCCESSFUL PACKETS:"
+print("SUCCESSFUL PACKETS:")
 show_classf(classify([(x, 0) for x in found_pkts]))
 
 exit(rtn)

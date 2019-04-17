@@ -1,0 +1,21 @@
+hosts:
+    h1 : {}
+    h2 : {}
+
+switches:
+    s1:
+        cfg: ../../build/bmv2/Compressor.json
+        links:
+            h1: 0
+            s2: 1
+        cmds:
+            - ../controller_files/forwarding_commands.txt
+            - ../controller_files/compressor_commands.txt
+    s2:
+        cfg: ../../build/bmv2/Compressor.json
+        links:
+            s1: 0
+            h2: 1
+        cmds:
+            - ../controller_files/decompressor_commands.txt
+            - ../controller_files/forwarding_commands.txt

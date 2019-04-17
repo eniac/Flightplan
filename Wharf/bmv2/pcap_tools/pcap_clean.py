@@ -16,7 +16,6 @@ out = []
 for pkt in scapy_cap:
     try:
         if (IP not in pkt or pkt[IP].version != 4) and args.ipv4_only:
-            print("Skipping non-IPv4 packet")
             continue
         if IP not in pkt:
             out.append(pkt)

@@ -72,7 +72,7 @@ void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h);
 void get_fec_params(tclass_type tclass, fec_sym *k, fec_sym *h);
 
 /** Inserts a packet, tagged with its size, into the buffer */
-void insert_into_pkt_buffer(tclass_type tclass, int port, int blockId, int pktIdx,
+int insert_into_pkt_buffer(tclass_type tclass, int port, int blockId, int pktIdx,
                             FRAME_SIZE_TYPE pkt_size, const u_char *packet);
 
 /** Gets a packet without its tagged size from the buffer */
