@@ -10,13 +10,6 @@ import dpkt
 import numpy.random
 import numpy as np
 
-try:
-    from Memoizer import memoize_to_folder
-except:
-    def memoize_to_folder(_):
-        def inner(fn):
-            return fn
-
 class PacketGenerator:
 
     SET_SYNTAX = '{cmd} {key} 0 0 {bytes} \r\n{payload}\r\n'
@@ -24,7 +17,7 @@ class PacketGenerator:
 
     def __init__(self, src_mac, dst_mac, src_ip, dst_ip, sport = 12345, dport = 11211):
 
-        self.Pkt = Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport)
+        self.Pkt = bytes(Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport))
         random.seed(time.time())
         self.cur_id = random.randint(0, 100)
 
@@ -34,19 +27,19 @@ class PacketGenerator:
         self.cur_id %= 65535
         return h
 
-    def set(self, key, bytes=512):
+    def set(self, key, nbytes=512):
         key = "{:}".format(key)
 
-        load = (key + '-') * (bytes)
-        load = load[:bytes]
+        load = (key + '-') * (nbytes)
+        load = load[:nbytes]
 
-        pkt = self.Pkt/(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=bytes, payload=load).encode('utf-8'))
+        pkt = self.Pkt + bytes(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=nbytes, payload=load))
 
         return pkt
 
     def get(self, key):
 
-        return self.Pkt/(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key).encode('utf-8'))
+        return self.Pkt + bytes(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key))
 
 def send_and_show(pkt, iface):
     print("Sending: {}".format(pkt.load[8:]))
@@ -84,7 +77,6 @@ def parse_args():
 def zipf_freq(k, beta):
     return (1/k**beta)
 
-#@memoize_to_folder("pkts_pickled")
 def generate_packets(smac, dmac, sip, dip, n_pkt, n_get, n_set, get_pct, collision_prob,
                      set_sip, iface, pre_set, uniform_random, zipf_random):
     gen = PacketGenerator(smac, dmac, sip, dip)
@@ -266,7 +258,7 @@ def generate_packets(smac, dmac, sip, dip, n_pkt, n_get, n_set, get_pct, collisi
             else:
                 send_and_show(pkt, iface)
 
-    return [str(p) for p in pkts], log
+    return pkts, log
 
 def write_pkt_group(pkts, out):
     with open(out, 'w') as f:
