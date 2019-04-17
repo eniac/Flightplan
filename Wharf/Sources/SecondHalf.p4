@@ -73,6 +73,8 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             }
         }
 #endif
+
+        Forwarder.apply(meta); // FIXME think whether this is best placed elsewhere
     }
 }
 
