@@ -54,7 +54,11 @@ sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
 if [[ $NO_HC == 0  ]]; then
     echo "Using complete topology WITH header compression";
-    TOPO=$HERE/topologies/complete_topology.yml;
+    if [[ $TWO_HALVES == "" ]]; then
+        TOPO=$HERE/topologies/complete_topology.yml;
+    else
+        TOPO=$HERE/topologies/complete_topology_split.yml;
+    fi
 else
     echo "Using complete topology WITHOUT header compression";
     TOPO=$HERE/topologies/complete_no_hc_topology.yml

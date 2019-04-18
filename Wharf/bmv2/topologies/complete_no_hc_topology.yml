@@ -14,7 +14,8 @@ switches:
             s2: 1
         cmds:
             - ../controller_files/forwarding_commands.txt
-            - ../controller_files/fec_commands.txt
+            - ../controller_files/fec_encoder_commands.txt
+            - ../controller_files/fec_decoder_commands.txt
     s2:
         cfg: ../../build/bmv2/Dropper.json
         links:
@@ -31,4 +32,5 @@ switches:
             h2: 1
         cmds:
             - ../controller_files/forwarding_commands.txt
-            - ../controller_files/fec_commands.txt
+            - ../controller_files/fec_encoder_commands.txt
+            - ../controller_files/fec_decoder_commands.txt
