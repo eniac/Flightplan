@@ -15,8 +15,8 @@ the location of the cloned `behavioral_model` repository.
 One should build the behavioral model first, then run `make configure` here
 to apply the appropriate patches and rebuild.
 
-The patches into the behavioral model have been tested with revision:
-- `8284c59f77e6c8df9d8a23ae4bf036b3d38fde8c - Fri, 19 Oct 2018 11:06:51`
+The patches into the behavioral model have been tested with:
+- commit `884e01b531c6fd078cc2438a40258ecae011a65b` of the `behavioral_model` repo
 
 though it will likely be applicable to newer revisions as well.
 
