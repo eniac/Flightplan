@@ -35,6 +35,8 @@ All: bmv2 Sample
 
 Sample: $(BLD_BMV2)/Sample.json
 
+ExternObj: $(BLD_BMV2)/ExternObj.json
+
 test:
 	${P4TEST} -DTARGET_BMV2 -I../FPGA/RSEVivadoHLS/ -I../FPGA/RSEConfig  -I../FPGA/MemcachedP4 
 
