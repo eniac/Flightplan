@@ -40,7 +40,7 @@ class SampleExtern : public ExternType {
 
   void is_1_more_than(const Data &d, Data &out) {
     int value = d.get<int>();
-    if (value > (int)sample_state_1_) {
+    if (sample_state_1_ > value) {
         BMLOG_DEBUG("SampleExtern Value {} > {}", value, sample_state_1_);
         out.set(1);
     } else {
