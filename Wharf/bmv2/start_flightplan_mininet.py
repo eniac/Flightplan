@@ -69,8 +69,10 @@ class FPTopo(Topo):
     def __init__(self, host_spec, switch_spec, sw_path, log, verbose):
         Topo.__init__(self)
 
-        self.all_links = {}
+        self.all_links = defaultdict(dict)
         max_link_port = defaultdict(int)
+        self.used_mac_addresses = set()
+        self.used_ip_addresses = set()
 
         self.log_dir = log
         self.host_spec = host_spec
@@ -97,42 +99,101 @@ class FPTopo(Topo):
                     node=switch,
                     port=base_thrift+i)
 
-            for link_name, link_num  in sw_opts.get('links', {}).items():
-                self.all_links[(sw_name, link_name)] = link_num
-                max_link_port[sw_name] = max(max_link_port[sw_name], link_num+1)
+            for iface_ops in sw_opts.get('interfaces', []):
+                port_num = iface_ops.get('port', max_link_port[sw_name])
+                link_name = iface_ops['link']
+                self.all_links[sw_name][link_name] = port_num
+                max_link_port[sw_name] = max(max_link_port[sw_name], port_num+1)
+                iface_ops['port'] = port_num
 
             print("SWITCH: %s" % self.all_nodes[sw_name])
 
         for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
+
+            ifaces = host_ops.get('interfaces', [])
+
+            default_ip = self.next_ip_address()
+            default_mac = self.next_mac_address()
+
+            for iface_ops in host_ops.get('interfaces', []):
+                port_num = iface_ops.get('port', max_link_port[host_name])
+                if 'link' in iface_ops:
+                    link_name = iface_ops['link']
+                    self.all_links[host_name][link_name] = port_num
+                elif None not in self.all_links[host_name]:
+                    self.all_links[host_name][None] = port_num
+                elif port_num != 0:
+                    print("WARNING: Ignoring interface entry {}-{},"
+                          "as it is neither linked nor default".format(host_name, port_num))
+
+                max_link_port[host_name] = max(max_link_port[host_name], port_num+1)
+                iface_ops['port'] = port_num
+
+                ip = iface_ops.get('ip', self.next_ip_address())
+                mac = iface_ops.get('mac', self.next_mac_address())
+
+                self.used_ip_addresses.add(ip.split('/')[0])
+                self.used_mac_addresses.add(mac)
+
+                if port_num == 0:
+                    default_ip = ip
+                    default_mac = mac
+
+            self.addHost(host_name,
+                         ip = '{}'.format(default_ip),
+                         mac = default_mac)
+
+            self.used_ip_addresses.add(default_ip.split('/')[0])
+            self.used_mac_addresses.add(default_mac)
+
             self.all_nodes[host_name] = dict(
-                    node = (self.addHost(host_name,
-                                         ip = '10.0.{}.{}/24'.format(i, i),
-                                         mac = '00:04:00:00:00:{:02x}'.format(i))),
-                    ip = '10.0.{}.{}'.format(i, i),
-                    mac = '00:04:00:00:00:{:02x}'.format(i),
+                    ip = default_ip.split('/')[0],
+                    mac = default_mac
             )
             print("HOST: %s" % self.all_nodes[host_name])
 
-            for link_name, link_num in host_ops.get('links', {}).items():
-                self.all_links[(host_name, link_name)] = link_num
-                max_link_port[host_name] = max(max_link_port[host_name], link_num+1)
+
+        print(self.all_links)
 
         created_links = defaultdict(set)
-        for (name1, name2), port1 in self.all_links.items():
+        for name1, links1 in self.all_links.items():
 
-            # Already added in the other direction
-            if name1 in created_links[name2]:
-                continue
+            for name2, port1 in links1.items():
 
-            if (name2, name1) not in self.all_links:
-                self.all_links[(name2, name1)] = max_link_port[name2]
-                max_link_port[name2] += 1
+                # Already added in the other direction
+                if name1 in created_links[name2]:
+                    continue
 
-            self.addLink(name1, name2,
-                         port1 = port1,
-                         port2 = self.all_links[(name2, name1)])
-            created_links[name1].add(name2)
-            created_links[name2].add(name1)
+                if name1 not in self.all_links[name2]:
+                    if None in self.all_links[name2]:
+                        self.all_links[name2][name1] = self.all_links[name2][None]
+                        del self.all_links[name2][None]
+                    else:
+                        self.all_links[name2][name1] = max_link_port[name2]
+                        max_link_port[name2] += 1
+
+                port2 = self.all_links[name2][name1]
+                print("Adding link between {}.{} and {}.{}".format(name1, port1, name2, port2))
+                self.addLink(name1, name2,
+                             port1 = port1,
+                             port2 = port2)
+                created_links[name1].add(name2)
+                created_links[name2].add(name1)
+
+        print(self.all_links)
+
+    def next_mac_address(self):
+        for i in range(1, len(self.used_mac_addresses)+2):
+            mac = '00:00:00:00:00:{:02x}'.format(i)
+            if mac not in self.used_mac_addresses:
+                return mac
+
+    def next_ip_address(self):
+        print(self.used_ip_addresses)
+        for i in range(len(self.used_ip_addresses)+1):
+            ip = '10.0.0.{}'.format(i)
+            if ip not in self.used_ip_addresses:
+                return ip
 
     def init(self, net):
 
@@ -146,24 +207,30 @@ class FPTopo(Topo):
             s.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
             s.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
 
-        for node1 in self.host_spec:
-            #for node2 in self.host_spec:
-                #if node1 == node2:
-                #    continue
-            h1 = net.get(node1)
-            h1.cmd('ip route add default dev eth0 via ' + self.all_nodes[node1]['ip'])
-            #h1.setDefaultRoute('dev eth0 via ' + self.all_nodes[node1]['ip'])
+        for name, host_ops in self.host_spec.items():
+            h = net.get(name)
+            for iface_ops in host_ops.get('interfaces', {}):
+                if 'ip' in iface_ops:
+                    h.setIP(iface_ops['ip'], intf='{}-eth{}'.format(name, iface_ops['port']))
+                if 'mac' in iface_ops:
+                    h.setMAC(iface_ops['mac'], intf='{}-eth{}'.format(name, iface_ops['port']))
+            #h1.cmd('ip route add default dev eth0 via ' + self.all_nodes[node1]['ip'])
+
+        for name, sw_ops in self.switch_spec.items():
+            s = net.get(name)
+            for iface_ops in sw_ops.get('interfaces', {}):
+                if 'ip' in iface_ops:
+                    s.setIP(iface_ops['ip'], intf='{}-eth{}'.format(name, iface_ops['port']))
+                if 'mac' in iface_ops:
+                    s.setMAC(iface_ops['mac'], intf='{}-eth{}'.format(name, iface_ops['port']))
 
         for node in self.host_spec:
             n = net.get(node)
             n.describe()
 
     def start_tcp_dump(self, net, directory, name1, name2):
-        if_num = self.all_links[(name1, name2)]
-        if name1.startswith('h'):
-            iface = 'eth{}'.format(if_num)
-        else:
-            iface = '{}-eth{}'.format(name1, if_num)
+        if_num = self.all_links[name1][name2]
+        iface = '{}-eth{}'.format(name1, if_num)
 
         fname = os.path.join(directory, '{}_to_{}.pcap'.format(name1, name2))
         net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface, fname))
@@ -172,8 +239,9 @@ class FPTopo(Topo):
         net.get(name1).cmd('tcpdump -i {} -Q in -w {}&'.format(iface, fname))
 
     def start_tcp_dumps(self, net, directory):
-        for name1, name2 in self.all_links:
-            self.start_tcp_dump(net, directory, name1, name2)
+        for name1 in self.all_links:
+            for name2 in self.all_links[name1]:
+                self.start_tcp_dump(net, directory, name1, name2)
 
     def stop_tcp_dumps(self, net):
         print("Stopping tcpdump on hosts")
@@ -186,7 +254,7 @@ class FPTopo(Topo):
     def do_switch_replay(self, net):
         for sw1_name, sw_opts in self.switch_spec.items():
             for sw2_name, filename in sw_opts.get('replay',{}).items():
-                num = self.all_links[(sw1_name, sw2_name)]
+                num = self.all_links[sw1_name][sw2_name]
                 print("Replaying {} from {} on {}-eth{} to {}".format(filename, sw1_name, sw1_name, num, sw2_name))
                 net.get(sw1_name).cmd(
                         'tcpreplay -i {}-eth{} {}'.format(sw1_name, num, cfgpath(filename))
@@ -217,8 +285,9 @@ class FPTopo(Topo):
 
     def do_host_replay(self, net, host, towards, file):
         print("Replaying {} on {}.eth0".format(file, host))
+        port_num = self.all_links[host][towards]
         net.get(host).cmd(
-                'tcpreplay -p 100 -i eth0 {}'.format(file)
+                'tcpreplay -p 100 -i {}-eth{} {}'.format(host, port_num, file)
         )
 
 def main():
@@ -243,42 +312,52 @@ def main():
 
     net.start()
 
-    topo.init(net)
+    try:
+        topo.init(net)
 
-    net.staticArp()
-
-
-    if args.pcap_dump:
-        sleep(1)
-        topo.start_tcp_dumps(net, args.pcap_dump)
+        net.staticArp()
 
 
-    sleep(1)
+        if args.pcap_dump:
+            sleep(1)
+            topo.start_tcp_dumps(net, args.pcap_dump)
 
-    topo.do_switch_replay(net)
 
-    sleep(1)
-
-    topo.do_commands(net)
-
-    topo.run_host_programs(net, args.host_prog)
-
-    if args.replay:
-        replay_args = args.replay.split(":")
-        replay_arg1 = replay_args[0].split('-')
-        if len(replay_args) != 2 or len(replay_arg1) != 2:
-            raise Exception("args.replay must have form Host-Switch:File")
-        topo.do_host_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1])
         sleep(1)
 
-    sleep(args.time)
+        topo.do_switch_replay(net)
 
-    if args.cli:
-        CLI(net)
+        sleep(1)
 
-    if args.pcap_dump:
-        topo.stop_tcp_dumps(net)
-    print("Stoping mininet")
+        topo.do_commands(net)
+
+        topo.run_host_programs(net, args.host_prog)
+
+        if args.replay:
+            replay_args = args.replay.split(":")
+            replay_arg1 = replay_args[0].split('-')
+            if len(replay_args) != 2 or len(replay_arg1) != 2:
+                raise Exception("args.replay must have form Host-Switch:File")
+            topo.do_host_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1])
+            sleep(1)
+
+        sleep(args.time)
+
+        if args.cli:
+            CLI(net)
+
+        if args.pcap_dump:
+            topo.stop_tcp_dumps(net)
+        print("Stoping mininet")
+        net.stop()
+
+    except:
+        print("Encountered exception running mininet")
+        try:
+            net.stop()
+        except:
+            pass
+        raise
 
 if __name__ == '__main__':
     setLogLevel('debug')
