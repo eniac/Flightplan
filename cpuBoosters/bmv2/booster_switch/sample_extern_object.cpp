@@ -15,8 +15,8 @@ class SampleExtern : public ExternType {
 
   /** Called on construction, after attributes have been set */
   void init() override {
-    sample_state_1_ = sample_state_1.get<unsigned int>();
-    sample_state_2_ = sample_state_2.get<unsigned int>();
+    sample_state_1_ = sample_state_1.get<int>();
+    sample_state_2_ = sample_state_2.get<int>();
     BMLOG_DEBUG("Initialized SampleExtern with values 1: {} & 2: {}",
                 sample_state_1_, sample_state_2_);
   }
@@ -29,13 +29,24 @@ class SampleExtern : public ExternType {
   }
 
   void increment_1(const Data &d) {
-    sample_state_1_ += d.get<unsigned int>();
+    sample_state_1_ += d.get<int>();
     BMLOG_DEBUG("SampleExtern state_1 : {}", sample_state_1_);
   }
 
   void increment_2(const Data &d) {
-    sample_state_2_ += d.get<unsigned int>();
+    sample_state_2_ += d.get<int>();
     BMLOG_DEBUG("SampleExtern state_2 : {}", sample_state_2_);
+  }
+
+  void is_1_more_than(const Data &d, Data &out) {
+    int value = d.get<int>();
+    if (value > (int)sample_state_1_) {
+        BMLOG_DEBUG("SampleExtern Value {} > {}", value, sample_state_1_);
+        out.set(1);
+    } else {
+        BMLOG_DEBUG("SampleExtern Value {} <= {}", value, sample_state_1_);
+        out.set(0);
+    }
   }
 
  private:
@@ -44,13 +55,14 @@ class SampleExtern : public ExternType {
   Data sample_state_2{0};
 
   // implementation members
-  unsigned int sample_state_1_;
-  unsigned int sample_state_2_;
+  int sample_state_1_;
+  int sample_state_2_;
 };
 
 BM_REGISTER_EXTERN(SampleExtern);
 BM_REGISTER_EXTERN_METHOD(SampleExtern, increment_1, const Data &);
 BM_REGISTER_EXTERN_METHOD(SampleExtern, increment_2, const Data &);
+BM_REGISTER_EXTERN_METHOD(SampleExtern, is_1_more_than, const Data &, Data &);
 BM_REGISTER_EXTERN_METHOD(SampleExtern, increment_both_by_1);
 
 /** This function stops the linker from discarding this file*/
