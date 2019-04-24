@@ -74,13 +74,9 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 //            }
 //        }
 //#endif
-//
-//#if defined(MID_FORWARDING_DECISION)
-//        Forwarder.apply(meta);
-//#endif
 
 #if defined(MID_FORWARDING_DECISION)
-#warning MID_FORWARDING_DECISION isn't compatible with this program
+        Forwarder.apply(meta);
 #endif
 
 #if defined(MEMCACHED_BOOSTER)
@@ -135,9 +131,9 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         }
 #endif
 
-//#if !defined(MID_FORWARDING_DECISION)
+#if !defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
-//#endif
+#endif
     }
 }
 
