@@ -80,7 +80,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 //#endif
 
 #if defined(MID_FORWARDING_DECISION)
-#error MID_FORWARDING_DECISION isn't compatible with this program
+#warning MID_FORWARDING_DECISION isn't compatible with this program
 #endif
 
 #if defined(MEMCACHED_BOOSTER)
