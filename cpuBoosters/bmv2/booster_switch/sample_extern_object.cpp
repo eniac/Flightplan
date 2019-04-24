@@ -38,6 +38,17 @@ class SampleExtern : public ExternType {
     BMLOG_DEBUG("SampleExtern state_2 : {}", sample_state_2_);
   }
 
+  void is_1_more_than(const Data &d, Data &out) {
+    int value = d.get<int>();
+    if (value > (int)sample_state_1_) {
+        BMLOG_DEBUG("SampleExtern Value {} > {}", value, sample_state_1_);
+        out.set(1);
+    } else {
+        BMLOG_DEBUG("SampleExtern Value {} <= {}", value, sample_state_1_);
+        out.set(0);
+    }
+  }
+
  private:
   // declared attributes
   Data sample_state_1{0};
@@ -51,6 +62,7 @@ class SampleExtern : public ExternType {
 BM_REGISTER_EXTERN(SampleExtern);
 BM_REGISTER_EXTERN_METHOD(SampleExtern, increment_1, const Data &);
 BM_REGISTER_EXTERN_METHOD(SampleExtern, increment_2, const Data &);
+BM_REGISTER_EXTERN_METHOD(SampleExtern, is_1_more_than, const Data &, Data &);
 BM_REGISTER_EXTERN_METHOD(SampleExtern, increment_both_by_1);
 
 /** This function stops the linker from discarding this file*/
