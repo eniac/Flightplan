@@ -56,8 +56,10 @@ if [[ $NO_HC == 0  ]]; then
     echo "Using complete topology WITH header compression";
     if [[ $TWO_HALVES == "" ]]; then
         TOPO=$HERE/topologies/complete_topology.yml;
-    else
+    elif [[ $TWO_HALVES == "1" ]]; then
         TOPO=$HERE/topologies/complete_topology_split.yml;
+    else
+        TOPO=$HERE/topologies/complete_topology_split_further.yml;
     fi
 else
     echo "Using complete topology WITHOUT header compression";
