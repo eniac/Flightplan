@@ -4,10 +4,12 @@ Prototype for Flightplan customised API
 Nik Sultana, UPenn, January 2019
 */
 
+#include "Parsing.p4"
+#include "EmptyBMDefinitions.p4"
 #include <FlightplanHeader.p4>
 #include <FlightplanParser.p4>
 
-control FlightplanControl(inout headers_t hdr, inout switch_metadata_t ctrl) {
+control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, inout metadata_t ctrl) {
   bit<MAX_DATAPLANE_CLIQUE_SIZE> next_dataplane = 0;
 
   action set_egress (switch_port_t port) {
@@ -42,4 +44,4 @@ control FlightplanControl(inout headers_t hdr, inout switch_metadata_t ctrl) {
 
 #include <FlightplanDeparser.p4>
 
-XilinxSwitch(Parser(), FlightplanControl(), Deparser()) main;
+V1Switch(Parser(), NoVerify(), FlightplanControl(), NoEgress(), NoCheck(), Deparser()) main;

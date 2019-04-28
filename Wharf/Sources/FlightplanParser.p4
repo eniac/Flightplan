@@ -13,7 +13,7 @@ struct headers_t {
 typedef flightplanReceive1_h flightplanReceive2_h;
 typedef flightplanReceive1_h flightplanSend1_h;
 typedef flightplanReceive1_h flightplanSend2_h;
-struct headers_t {
+struct fp_headers_t {
   eth_h        eth;
   flightplan_h fp;
   flightplanReceive1_h fpReceive1;
@@ -22,7 +22,8 @@ struct headers_t {
   flightplanSend2_h fpSend2;
 }
 
-parser Parser(packet_in pkt, out headers_t hdr) {
+parser Parser(packet_in pkt, out fp_headers_t hdr,
+              inout booster_metadata_t m, inout metadata_t meta) {
   state start {
     pkt.extract(hdr.eth);
     transition select(hdr.eth.eth_type) {
