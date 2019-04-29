@@ -17,9 +17,22 @@ class PacketGenerator:
 
     def __init__(self, src_mac, dst_mac, src_ip, dst_ip, sport = 12345, dport = 11211):
 
-        self.Pkt = bytes(Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport))
+        self.Pkt = bytes(Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport,chksum=0))
         random.seed(time.time())
         self.cur_id = random.randint(0, 100)
+
+    def udp_hdr(self, payload_len):
+        hdr = list(self.Pkt[:])
+        # Replace udp length
+        pktlen = struct.pack('!H', payload_len+8)
+        hdr[-4] = pktlen[0]
+        hdr[-3] = pktlen[1]
+
+        iplen = struct.pack('!H', payload_len+28)
+        hdr[16] = iplen[0]
+        hdr[17] = iplen[1]
+
+        return b''.join(hdr)
 
     def hdr(self):
         h = b''.join([struct.pack(">H", x) for x in [self.cur_id, 0, 1, 0]])
@@ -33,13 +46,18 @@ class PacketGenerator:
         load = (key + '-') * (nbytes)
         load = load[:nbytes]
 
-        pkt = self.Pkt + bytes(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=nbytes, payload=load))
+        load = bytes(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=nbytes, payload=load))
+
+        pkt = self.udp_hdr(len(load)) + load
 
         return pkt
 
     def get(self, key):
 
-        return self.Pkt + bytes(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key))
+        load = bytes(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key))
+        pkt = self.udp_hdr(len(load)) + load
+
+        return pkt
 
 def send_and_show(pkt, iface):
     print("Sending: {}".format(pkt.load[8:]))
