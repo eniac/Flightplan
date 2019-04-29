@@ -22,11 +22,11 @@ struct fp_headers_t {
   flightplanSend2_h fpSend2;
 }
 
-parser Parser(packet_in pkt, out fp_headers_t hdr,
+parser FlightplanParser(packet_in pkt, out fp_headers_t hdr,
               inout booster_metadata_t m, inout metadata_t meta) {
   state start {
     pkt.extract(hdr.eth);
-    transition select(hdr.eth.eth_type) {
+    transition select(hdr.eth.type) {
       ETHERTYPE_FLIGHTPLAN : parse_flightplan;
       default        : reject;
     }

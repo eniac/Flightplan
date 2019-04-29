@@ -12,8 +12,8 @@ Nik Sultana, UPenn, January 2019
 control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, inout metadata_t ctrl) {
   bit<MAX_DATAPLANE_CLIQUE_SIZE> next_dataplane = 0;
 
-  action set_egress (switch_port_t port) {
-    ctrl.egress_port = (bit<4>/*FIXME to agree with xilinx.p4 metadata*/)port;
+  action set_egress(bit<9> port) {
+      SET_EGRESS(ctrl, port);
   }
 
   table flightplan_forward {
@@ -44,4 +44,4 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
 
 #include <FlightplanDeparser.p4>
 
-V1Switch(Parser(), NoVerify(), FlightplanControl(), NoEgress(), NoCheck(), Deparser()) main;
+V1Switch(FlightplanParser(), NoVerify(), FlightplanControl(), NoEgress(), NoCheck(), FlightplanDeparser()) main;

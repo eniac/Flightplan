@@ -4,7 +4,7 @@ Prototype for Flightplan customised API
 Nik Sultana, UPenn, January 2019
 */
 
-control Deparser(packet_out pkt, in fp_headers_t hdr) {
+control FlightplanDeparser(packet_out pkt, in fp_headers_t hdr) {
   apply
   {
     pkt.emit(hdr.eth);

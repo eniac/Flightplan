@@ -4,16 +4,8 @@ Prototype for Flightplan customised API
 Nik Sultana, UPenn, January 2019
 */
 
-#include <xilinx.p4>
-
 #define ACKing
 #define NAKing
-
-header eth_h {
-  bit<48> eth_dst;
-  bit<48> eth_src;
-  bit<16> eth_type;
-}
 
 #define FLIGHTPLAN_VERSION_SIZE 4 /*FIXME fudge*/
 #define ETHERTYPE_FLIGHTPLAN 0x2222 /*FIXME fudge*/
