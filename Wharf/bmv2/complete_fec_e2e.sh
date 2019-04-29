@@ -83,7 +83,7 @@ IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
 python2 $HERE/pcap_tools/pcap_clean.py  $PCAP_DUMPS/h1_to_s1.pcap $IN_PCAP --rm-chksum
-python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h2_from_s3.pcap $OUT_PCAP --rm-chksum
+python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/s3_to_h2.pcap $OUT_PCAP --rm-chksum
 
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
 IN_TXT=$OUTDIR/${BASENAME}_in.txt
