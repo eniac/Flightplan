@@ -31,7 +31,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             drop();
         }
 
-if (2/*FIXME const*/ == meta.ingress_port) {
+if (2/*FIXME const*/ != meta.ingress_port) {
 
 #if defined (FEC_BOOSTER)
         // If we received an FEC update, then update the table.
@@ -91,6 +91,8 @@ if (2/*FIXME const*/ == meta.ingress_port) {
 #if defined(COMPRESSION_BOOSTER)
         SET_EGRESS(meta, 2/*FIXME const*/);
 #endif
+} else {
+        SET_EGRESS(meta, 1/*FIXME const*/);
 }
 
 #if defined(FEC_BOOSTER)
