@@ -196,9 +196,13 @@ class FPTopo(Topo):
     def do_commands(self, net):
         for sw_name, sw_opts in self.switch_spec.items():
             if 'cmds' in sw_opts:
-                for cmd_file in sw_opts['cmds']:
-                    commands = open(cfgpath(cmd_file)).readlines()
-                    send_commands(self.all_nodes[sw_name]['port'], cfgpath(sw_opts['cfg']), commands)
+                for cmd in sw_opts['cmds']:
+                    if os.path.isfile(cfgpath(cmd)):
+                        commands = open(cfgpath(cmd)).readlines()
+                    else:
+                        commands = [cmd]
+                    send_commands(self.all_nodes[sw_name]['port'],
+                                  cfgpath(sw_opts['cfg']), commands)
 
     def run_host_programs(self, net, extras):
         for name, spec in self.host_spec.items():
