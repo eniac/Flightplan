@@ -17,8 +17,8 @@ switches:
         links:
             s1: 0
         cmds:
-            - ../controller_files/compressor_commands.txt
-            - ../controller_files/offload_forwarding_commands.txt
+            - table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
+            - table_add forward set_egress 0 => 0
     s2:
         cfg: ../../build/bmv2/Dropper.json
         links:
