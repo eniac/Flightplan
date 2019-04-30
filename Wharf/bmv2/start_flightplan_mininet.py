@@ -191,7 +191,6 @@ class FPTopo(Topo):
                 net.get(sw1_name).cmd(
                         'tcpreplay -i {}-eth{} {}'.format(sw1_name, num, cfgpath(filename))
                 )
-                sleep(1)
 
     def do_commands(self, net):
         for sw_name, sw_opts in self.switch_spec.items():
@@ -257,13 +256,16 @@ def main():
         topo.start_tcp_dumps(net, args.pcap_dump)
 
 
-    sleep(1)
+
+    sleep(.25)
+
+    topo.do_commands(net)
+
+    sleep(.25)
 
     topo.do_switch_replay(net)
 
-    sleep(1)
-
-    topo.do_commands(net)
+    sleep(.25)
 
     topo.run_host_programs(net, args.host_prog)
 
