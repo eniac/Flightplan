@@ -26,12 +26,17 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     FecClassParams() encoder_params;
 #endif
 
+    Offload() compression_offload;
+
     apply {
         if (!hdr.eth.isValid()) {
             drop();
         }
 
-if (2/*FIXME const*/ != meta.ingress_port) {
+        bit<1> is_offload_port = 0;
+        compression_offload.apply(meta.ingress_port, is_offload_port);
+
+        if (is_offload_port == 0) {
 
 #if defined (FEC_BOOSTER)
         // If we received an FEC update, then update the table.
@@ -71,10 +76,6 @@ if (2/*FIXME const*/ != meta.ingress_port) {
 //        }
 //#endif
 
-#if defined(MID_FORWARDING_DECISION)
-        Forwarder.apply(meta);
-#endif
-
 #if defined(MEMCACHED_BOOSTER)
         // If Memcached REQ/RES then pass through the cache.
         if (hdr.udp.isValid()) {
@@ -87,13 +88,11 @@ if (2/*FIXME const*/ != meta.ingress_port) {
             }
         }
 #endif
+        }
 
-#if defined(COMPRESSION_BOOSTER)
-        SET_EGRESS(meta, 2/*FIXME const*/);
+#if defined(MID_FORWARDING_DECISION)
+        Forwarder.apply(meta);
 #endif
-} else {
-        SET_EGRESS(meta, 1/*FIXME const*/);
-}
 
 #if defined(FEC_BOOSTER)
         bit<1> faulty = 1;
