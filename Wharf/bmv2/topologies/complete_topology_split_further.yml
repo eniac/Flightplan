@@ -10,7 +10,10 @@ switches:
             s2: 1
             s1compress: 2
         cmds:
-            - ../controller_files/forwarding_commands.txt
+            - table_add forward set_egress 0 => 2
+            - table_add forward set_egress 2 => 1
+            - table_add forward set_egress 1 => 0
+            - table_add compression_offload.offloaded_port compression_offload.is_offload_port 2 => 1
             - ../controller_files/fec_encoder_commands.txt
     s1compress:
         cfg: ../../build/bmv2/Compress.json
@@ -25,7 +28,7 @@ switches:
             s1: 0
             s3: 1
         replay:
-            s1: ../pcaps/lldp_enable_fec.pcap
+            #s1: ../pcaps/lldp_enable_fec.pcap
             s3: ../pcaps/lldp_enable_fec.pcap
         cmds: [../controller_files/forwarding_commands.txt]
     s3:
