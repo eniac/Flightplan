@@ -17,15 +17,17 @@ extern void drop();
 #define metadata_t standard_metadata_t
 #define SET_EGRESS(meta, port) meta.egress_spec = port
 
-extern void fec_encode(
-          in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h
-);
-#define FEC_ENCODE(fec, k, h) \
-    fec_encode(fec, k, h)
-
-extern void fec_decode(
-        in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h
-);
+// FIXME temporarily commented since specific to FEC test -- these
+//       declarations depend on "fec_h" having been defined.
+//extern void fec_encode(
+//          in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h
+//);
+//#define FEC_ENCODE(fec, k, h) \
+//    fec_encode(fec, k, h)
+//
+//extern void fec_decode(
+//        in fec_h fec, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h
+//);
 #define FEC_DECODE(fec, k, h) \
     fec_decode(fec, k, h)
 
