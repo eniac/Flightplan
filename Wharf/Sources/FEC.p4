@@ -4,6 +4,14 @@
 #include "Forwarding.p4"
 
 
+extern void fec_encode(in fec_h fec,
+                       in bit<FEC_K_WIDTH> k,
+                       in bit<FEC_H_WIDTH> h);
+
+extern void fec_decode(in fec_h fec,
+                       in bit<FEC_K_WIDTH> k,
+                       in bit<FEC_H_WIDTH> h);
+
 @Xilinx_MaxLatency(200)
 extern void update_fec_state(in tclass_t tclass, in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
                              out bindex_t block_index, out pindex_t packet_index);
