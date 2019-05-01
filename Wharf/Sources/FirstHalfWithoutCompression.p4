@@ -90,6 +90,9 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 #endif
         }
 
+//FIXME the offload for header compression is hidden inside forwarding table.
+//FIXME currently all traffic is sent to to compressor, not only the traffic
+//      that it can compress (i.e., TCP). This could be optimised.
 #if defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
 #endif
