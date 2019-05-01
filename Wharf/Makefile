@@ -56,7 +56,6 @@ configure_runtime: bmv2
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BMV2_REPO_M)/targets/booster_switch/Makefile
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/ -I Sources $< -o $@_orig --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
-	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@_orig
 	python2 split_extern_event.py $@_orig $@ ${EXTERNS}
 
 clean:
