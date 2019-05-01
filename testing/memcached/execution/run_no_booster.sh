@@ -1,21 +1,15 @@
 #!/bin/bash
 OUT=$1
 LABEL=$2
-ZIPF=$3
-RATES=$4
+RATES=$3
 
 if [[ $LABEL == "" || $OUT == "" ]]; then
-    echo "usage $0 OUT LABEL ZIPF RATES"
+    echo "usage $0 OUT LABEL RATES"
     exit -1;
 fi
 
-if [[ $ZIPF == "" ]]; then
-    echo "Setting ZIPF=0.9";
-    ZIPF=0.9
-fi
-
 if [[ $RATES == "" ]]; then
-    RATES="0.10 0.50 1.00 $(seq -f "%.02f" 2 2 30)";
+    RATES="1.00 $(seq -f "%.02f" 2 2 30)";
 fi
 
 mkdir -p $OUT/$LABEL
