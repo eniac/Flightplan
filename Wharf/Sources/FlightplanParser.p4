@@ -22,6 +22,12 @@ struct fp_headers_t {
   flightplanSend2_h fpSend2;
 }
 
+struct booster_metadata_t {
+    bit<1> generated;
+}
+control NoVerify(inout fp_headers_t hdr, inout booster_metadata_t m) { apply {} }
+control NoCheck(inout fp_headers_t hdr, inout booster_metadata_t m) { apply {} }
+control NoEgress(inout fp_headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) { apply {} }
 parser FlightplanParser(packet_in pkt, out fp_headers_t hdr,
               inout booster_metadata_t m, inout metadata_t meta) {
   state start {

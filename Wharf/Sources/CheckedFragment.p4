@@ -5,7 +5,6 @@ Nik Sultana, UPenn, January 2019
 */
 
 #include "Parsing.p4"
-#include "EmptyBMDefinitions.p4"
 #include <FlightplanHeader.p4>
 #include <FlightplanParser.p4>
 
