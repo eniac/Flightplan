@@ -28,22 +28,28 @@ struct booster_metadata_t {
 control NoVerify(inout fp_headers_t hdr, inout booster_metadata_t m) { apply {} }
 control NoCheck(inout fp_headers_t hdr, inout booster_metadata_t m) { apply {} }
 control NoEgress(inout fp_headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) { apply {} }
+
+error {
+    fpError
+}
+
 parser FlightplanParser(packet_in pkt, out fp_headers_t hdr,
               inout booster_metadata_t m, inout metadata_t meta) {
   state start {
     pkt.extract(hdr.eth);
+    verify(hdr.eth.type == ETHERTYPE_FLIGHTPLAN, error.fpError);
     transition select(hdr.eth.type) {
       ETHERTYPE_FLIGHTPLAN : parse_flightplan;
-      default        : reject;
     }
   }
 
   state parse_flightplan {
     pkt.extract(hdr.fp);
+    verify(hdr.fp.from_segment == 1 ||
+           hdr.fp.from_segment == 2, error.fpError);
     transition select(hdr.fp.from_segment) {
       1 : parse_fpReceive1;
       2 : parse_fpReceive2;
-      default        : reject;
     }
   }
 
