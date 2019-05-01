@@ -1,22 +1,16 @@
 description: >-
-    Final submission to SIGCOMM, including analysis.
-    Data has been consolidated to single folder.
-    Opted to omit 50% collision rate due to complications,
-    analysis instead only covers 0, 10, 100% collisions.
+    Updated for post-SIGCOMM submission.
+    Contains data for booster and no booster with a zipf coefficient of 1.00,
+    and key space of 10,000.
 
 experiment: memcached
 
 repositories:
-    P4Boosters: 5f88a383
+    P4Boosters: 036cd6d9
 
 files:
     documentation.md: Memcached.md
-    data: output/
-    analysis: analysis/
-    cfg_booster: execution/cfgs/booster_alone_preset.yml
-    cfg_mcd: execution/cfgs/mcd_alone_preset.yml
-    cfg_misses: execution/cfgs/booster_mcd_preset.yml
+    data: data/
+    analysis/notebook.ipynb: analysis/TofinoMemcached.ipynb
+    shremote_config.yml: execution/cfgs/tofino_moongen.yml
     bitstream.tar.gz: /home/iped/MemcachedFPGA.tar.gz
-    booster_alone.sh: execution/run_all_booster_misses.sh
-    mcd_alone.sh: execution/run_all_mcd_alone_preset.sh
-    booster_misses.sh: execution/run_both_booster_misses.sh
