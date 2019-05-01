@@ -20,6 +20,7 @@ header flightplan_h {
   bit<16> encapsulated_ethertype;
   bit<SEGMENT_DESC_SIZE> from_segment; // This is implicit in ingress port, so could be spared.
   bit<SEGMENT_DESC_SIZE> to_segment; // This is implicit in ingress port, so could be spared.
+  bit<4> pad;
 }
 header flightplanReceive1_h {
   // FIXME replace with fields for actual values that need to be sent.
@@ -36,9 +37,15 @@ header flightplanReceive1_h {
 #endif
 #if defined(ACKing)
   bit<1> ack;
+#ifndef NAKing
+  bit<7> pad;
+#endif
 #endif
 #if defined(NAKing)
   bit<1> nak;
+#ifdef ACKing
+  bit<6> pad;
+#endif
 #endif
 }
 
