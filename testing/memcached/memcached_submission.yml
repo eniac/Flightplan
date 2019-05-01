@@ -11,6 +11,6 @@ repositories:
 files:
     documentation.md: Memcached.md
     data: data/
-    analysis/notebook.ipynb: analysis/TofinoMemcached.ipynb
+    analysis.ipynb: analysis/TofinoMemcached.ipynb
     shremote_config.yml: execution/cfgs/tofino_moongen.yml
     bitstream.tar.gz: /home/iped/MemcachedFPGA.tar.gz
