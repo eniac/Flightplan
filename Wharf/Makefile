@@ -42,6 +42,10 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json $(BLD_BMV2)/Compressor.json \
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json
 
+%: $(BLD_BMV2) $(BLD_BMV2)/%.json;
+
+$(BLD_BMV2)/CheckedFragment.json: Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4
+
 complete: $(BLD_BMV2)/Complete.json
 
 $(BLD_BMV2):
@@ -51,7 +55,7 @@ configure_runtime: bmv2
 	cd ../cpuBoosters/bmv2 && make configure BOOSTERS="${BOOSTERS}" && make BOOSTERS="${BOOSTERS}"
 
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BMV2_REPO_M)/targets/booster_switch/Makefile
-	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/  $< -o $@_orig --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
+	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/ -I Sources $< -o $@_orig --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
 	sed -i.orig 's/"name" : "parse_/"name" : "FecParser_parse_/g' $@_orig
 	python2 split_extern_event.py $@_orig $@ ${EXTERNS}
 
