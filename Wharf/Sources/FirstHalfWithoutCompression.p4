@@ -37,18 +37,17 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         compression_offload.apply(meta.ingress_port, is_offload_port);
 
         if (is_offload_port == 0) {
-
 #if defined (FEC_BOOSTER)
-        // If we received an FEC update, then update the table.
-        bit<1> is_ctrl;
-        FECController.apply(hdr, meta, is_ctrl);
-        if (is_ctrl == 1) {
-            drop();
-            return;
-        }
+            // If we received an FEC update, then update the table.
+            bit<1> is_ctrl;
+            FECController.apply(hdr, meta, is_ctrl);
+            if (is_ctrl == 1) {
+                drop();
+                return;
+            }
 #endif
 
-        bit<1> forward = 0;
+            bit<1> forward = 0;
 
 //#if defined(FEC_BOOSTER)
 //        // If lossy link, then FEC decode.
@@ -77,16 +76,16 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 //#endif
 
 #if defined(MEMCACHED_BOOSTER)
-        // If Memcached REQ/RES then pass through the cache.
-        if (hdr.udp.isValid()) {
-            if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
-                memcached(forward);
-                if (forward == 0) {
-                    drop();
-                    return;
+            // If Memcached REQ/RES then pass through the cache.
+            if (hdr.udp.isValid()) {
+                if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
+                    memcached(forward);
+                    if (forward == 0) {
+                        drop();
+                        return;
+                    }
                 }
             }
-        }
 #endif
         }
 
