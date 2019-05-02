@@ -1,0 +1,25 @@
+hosts:
+    h1 : {}
+    h2 : {}
+
+switches:
+    s1:
+        cfg: ../../build/bmv2/CheckedFragment.json
+        links:
+            h1: 0
+            s2: 1
+        cmds:
+            - ../controller_files/forwarding_commands.txt
+    s2:
+        cfg: ../../build/bmv2/Dropper.json
+        links:
+            s1: 0
+            s3: 1
+        cmds: [../controller_files/forwarding_commands.txt]
+    s3:
+        cfg: ../../build/bmv2/CheckedFragment.json
+        links:
+            s2: 0
+            h2: 1
+        cmds:
+            - ../controller_files/forwarding_commands.txt
