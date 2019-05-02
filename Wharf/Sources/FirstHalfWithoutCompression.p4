@@ -96,31 +96,33 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         Forwarder.apply(meta);
 #endif
 
+        if (is_offload_port == 1) {
 #if defined(FEC_BOOSTER)
-        bit<1> faulty = 1;
+            bit<1> faulty = 1;
 
-        // If heading out on a lossy link, then FEC encode.
-        get_port_status(meta.egress_spec, faulty);
-        if (faulty == 1) {
-            if (hdr.tcp.isValid()) {
-                proto_and_port = hdr.ipv4.proto ++ hdr.tcp.dport;
-            } else if (hdr.udp.isValid()) {
-                proto_and_port = hdr.ipv4.proto ++ hdr.udp.dport;
-            } else {
-                proto_and_port = hdr.ipv4.proto ++ (bit<16>)0;
-            }
+            // If heading out on a lossy link, then FEC encode.
+            get_port_status(meta.egress_spec, faulty);
+            if (faulty == 1) {
+                if (hdr.tcp.isValid()) {
+                    proto_and_port = hdr.ipv4.proto ++ hdr.tcp.dport;
+                } else if (hdr.udp.isValid()) {
+                    proto_and_port = hdr.ipv4.proto ++ hdr.udp.dport;
+                } else {
+                    proto_and_port = hdr.ipv4.proto ++ (bit<16>)0;
+                }
 
-            classification.apply(hdr, proto_and_port);
-            if (hdr.fec.isValid()) {
-                encoder_params.apply(hdr.fec.traffic_class, k, h);
-                update_fec_state(hdr.fec.traffic_class, k, h,
-                                 hdr.fec.block_index, hdr.fec.packet_index);
-                hdr.fec.orig_ethertype = hdr.eth.type;
-                FEC_ENCODE(hdr.fec, k, h);
-                hdr.eth.type = ETHERTYPE_WHARF;
+                classification.apply(hdr, proto_and_port);
+                if (hdr.fec.isValid()) {
+                    encoder_params.apply(hdr.fec.traffic_class, k, h);
+                    update_fec_state(hdr.fec.traffic_class, k, h,
+                                     hdr.fec.block_index, hdr.fec.packet_index);
+                    hdr.fec.orig_ethertype = hdr.eth.type;
+                    FEC_ENCODE(hdr.fec, k, h);
+                    hdr.eth.type = ETHERTYPE_WHARF;
+                }
             }
-        }
 #endif
+        }
 
 #if !defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
