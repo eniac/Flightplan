@@ -44,7 +44,7 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 
 %: $(BLD_BMV2) $(BLD_BMV2)/%.json;
 
-$(BLD_BMV2)/CheckedFragment.json: Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4
+$(BLD_BMV2)/CheckedFragment.json: $(BLD_BMV2) Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4
 
 complete: $(BLD_BMV2)/Complete.json
 
