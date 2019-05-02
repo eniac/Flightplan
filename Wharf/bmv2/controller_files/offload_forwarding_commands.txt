@@ -1,0 +1,1 @@
+table_add forward set_egress 0 => 0
