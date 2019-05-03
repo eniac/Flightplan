@@ -84,6 +84,11 @@ class FPTopo(Topo):
         switch_items = sorted(switch_spec.items(), key=lambda x: x[0])
 
         for i, (sw_name, sw_opts) in enumerate(switch_items):
+
+            if 'links' in sw_opts:
+                raise TopoSpecError("top level 'links' specification no longer supported. " \
+                                    "Use 'interfaces' instead")
+
             if log:
                 console_log = os.path.join(log, sw_name+'.log')
             else:
@@ -125,6 +130,9 @@ class FPTopo(Topo):
 
         for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
 
+            if 'links' in host_ops:
+                raise TopoSpecError("top level 'links' specification no longer supported. " \
+                                    "Use 'interfaces' instead")
             host = dict(
                     name = host_name,
                     interfaces = [],
