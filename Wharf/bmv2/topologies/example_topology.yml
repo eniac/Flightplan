@@ -1,0 +1,84 @@
+hosts:
+    # All fields in a host object are optional!
+    # Interfaces can be defined by connections from switches
+    # The following is the simplest host:
+    h1 : {}
+
+    # Hosts can optionally define interfaces
+    h2 :
+        interfaces:
+            - ip: 10.0.0.11/24
+              # _MUST_ put mac address in quotes.
+              # Otherwise yaml thinks it's a ratio?
+              mac: '11:11:11:11:11:11'
+              # First interface without a specified port is set
+              # to the default port, port: 0
+            - ip: 11.0.0.13/8
+              port: 1  # The port can also be specified explicitly
+              link: s3 # If it is a non-0 port, link must be specified explicitly
+
+    # All nodes must be connected _somehow_, so if no interfaces are defined here,
+    # a switch must define a link to this node
+    h3 :
+        # Hosts can also have programs specified to run on startup
+        # These programs can also be specified from the command line with:
+        # --host-prog "h2:echo 'Hello from host 2'"
+        programs:
+            - "echo 'Hello from host 2'"
+
+switches:
+    # Each switch MUST specify a cfg file pointing to a valid json,
+    # compiled with p4c-bm2-ss
+    s1:
+        # cfg is a required field
+        # (all paths are relative to this yaml file)
+        cfg: ../../build/bmv2/Complete.json
+
+        # Switch interfaces function the same as hosts, except
+        # that the "link" field is not optional
+        interfaces:
+            - link: h1
+              ip: 10.1.2.3
+              mac: FF:FF:FF:FF:EE:DD
+            - link: h2
+            - link: s2
+              port: 5 # Port can be specified explicitly. Otherwise,
+                      # it will be set to the index of the iface in the list
+
+        # Specification of commands to be sent to switch from controller
+        cmds:
+            # Commands can be specified as a file, containing
+            # newline-delimited lists of commands:
+            - ../controller_files/compressor_commands.txt
+            # Or verbatim:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
+
+    s2:
+        cfg: ../../build/bmv2/Dropper.json
+
+        # If interfaces are not specified, they will be inferred
+        # from connecting switches.
+        # This can potentially obfuscate port numbers, however
+
+        # "replay" specifies pcap files to be tcpreplay'd from
+        # this switch to the specified switches
+        # (e.g. this sends the lldp_* file from s2 to s1 & s3)
+        replay:
+            s1: ../pcaps/lldp_enable_fec.pcap
+            s3: ../pcaps/lldp_enable_fec.pcap
+
+        # This is simply a different format for yaml lists. Take your pick
+        cmds: [../controller_files/forwarding_commands.txt]
+
+    s3:
+        cfg: ../../build/bmv2/Complete.json
+        interfaces:
+            - link: s2
+            - link: h2
+            - link: h3 # Must link to h3 somewhere, because it doesn't self-define links
+        cmds:
+            - ../controller_files/decompressor_commands.txt
+            - ../controller_files/forwarding_commands.txt
+            - ../controller_files/fec_encoder_commands.txt
+            - ../controller_files/fec_decoder_commands.txt
