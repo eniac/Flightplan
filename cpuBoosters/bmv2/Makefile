@@ -12,7 +12,7 @@ TEMPLATE_TARGET=simple_switch
 
 BOOSTERS?=MEMCACHED FEC COMPRESSION
 ifneq ($(filter configure,$(MAKECMDGOALS)),)
-BOOSTERS=$(shell ./enabled_boosters.sh ${BOOSTERS})
+BOOSTERS:=$(shell ./enabled_boosters.sh ${BOOSTERS})
 endif
 
 BMV2_CONFIGURE=$(BMV2_REPO)/configure.ac

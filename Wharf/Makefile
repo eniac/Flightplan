@@ -35,12 +35,14 @@ All: bmv2 Sample
 
 Sample: $(BLD_BMV2)/Sample.json
 
+ExternObj: $(BLD_BMV2)/ExternObj.json
+
 test:
 	${P4TEST} -DTARGET_BMV2 -I../FPGA/RSEVivadoHLS/ -I../FPGA/RSEConfig  -I../FPGA/MemcachedP4 
 
 bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json \
 	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json $(BLD_BMV2)/Compressor.json \
-	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json
+	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json
 
 %: $(BLD_BMV2) $(BLD_BMV2)/%.json;
 
