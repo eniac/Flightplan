@@ -183,6 +183,11 @@ class FPTopo(Topo):
         created_links = defaultdict(set)
         for name1, links1 in self.link_ports.items():
             for name2, port1 in links1.items():
+                if name2 is None:
+                    # Port is so-far unspecified
+                    # Wait for it to be defined in the other direction
+                    continue
+
                 # Already added in the other direction
                 if name1 in created_links[name2]:
                     continue
@@ -197,12 +202,22 @@ class FPTopo(Topo):
                         next_link_port[name2] += 1
 
                 port2 = self.link_ports[name2][name1]
+
                 print("Adding link between {}.{} and {}.{}".format(name1, port1, name2, port2))
                 self.addLink(name1, name2,
                              port1 = port1,
                              port2 = port2)
                 created_links[name1].add(name2)
                 created_links[name2].add(name1)
+
+        for name1, links1 in self.link_ports.items():
+            for name2, port1 in links1.items():
+                if name2 is None:
+                    raise TopoSpecError("Link from {}->{} on unspecified port".format(name1, name2))
+
+        for name in self.all_nodes:
+            if name not in self.link_ports:
+                raise TopoSpecError("Node {} is not connected to anything".format(name))
 
     def iter_interfaces(self):
         for node in self.all_nodes.values():
@@ -248,6 +263,7 @@ class FPTopo(Topo):
             s.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
 
         for name, opts in self.all_nodes.items():
+            print(name, opts)
             if 'interfaces' not in opts:
                 continue
             node = net.get(name)
