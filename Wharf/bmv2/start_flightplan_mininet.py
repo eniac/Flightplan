@@ -349,11 +349,11 @@ def main():
             topo.start_tcp_dumps(net, args.pcap_dump)
 
 
-        sleep(1)
+        sleep(.1)
 
         topo.do_switch_replay(net)
 
-        sleep(1)
+        sleep(.1)
 
         topo.do_commands(net)
 
@@ -365,7 +365,7 @@ def main():
             if len(replay_args) != 2 or len(replay_arg1) != 2:
                 raise Exception("args.replay must have form Host-Switch:File")
             topo.do_host_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1])
-            sleep(1)
+            sleep(.1)
 
         sleep(args.time)
 
