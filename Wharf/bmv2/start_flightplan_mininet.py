@@ -263,7 +263,6 @@ class FPTopo(Topo):
             s.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
 
         for name, opts in self.all_nodes.items():
-            print(name, opts)
             if 'interfaces' not in opts:
                 continue
             node = net.get(name)
