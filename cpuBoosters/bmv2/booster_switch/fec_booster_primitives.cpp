@@ -11,6 +11,7 @@
 #include <bm/bm_sim/logger.h>
 #include <bm/spdlog/spdlog.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #include "booster_primitives.hpp"
 #include "simple_switch.h"
@@ -75,12 +76,15 @@ class update_fec_state : public BoosterExtern<const Data &, const Data &, const 
         uint8_t block_id = get_fec_block_id(tclass, egress_port);
         uint8_t packet_idx = get_fec_frame_idx(tclass, egress_port);
 
-        BMLOG_DEBUG("Tclass {:03b} has block id {:d}, packet idx {:d}", tclass, block_id, packet_idx);
+        BMLOG_DEBUG("Tclass {:03b} egress {} has block id {:d}, packet idx {:d}", 
+                tclass, egress_port, block_id, packet_idx);
 
         block_id_d.set(block_id);
         packet_idx_d.set(packet_idx);
 
         advance_packet_idx(tclass, egress_port);
+        egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
+        BMLOG_DEBUG("Egress port is now {}", egress_port);
     }
 };
 
@@ -122,6 +126,7 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
         Packet &packet = this->get_packet();
         PHV *phv = packet.get_phv();
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
+        BMLOG_DEBUG("Attempting fec encode of pkt with egress {}", egress_port);
         int ingress_port = packet.get_ingress_port();
 
         // Must save packet state so it can be restored after deparsing
@@ -249,7 +254,7 @@ class random_drop : public BoosterExtern<const Data &, const Data &, const Data 
         int egress = egress_d.get_int();
 
         if (packet_idx[egress] == 0) {
-            drop_idx[egress] = rand() % n1;
+            drop_idx[egress] = n2 + rand() % n1;
             BMLOG_DEBUG("Setting drop index to {}/{}", drop_idx[egress], n1 + n2);
         }
 

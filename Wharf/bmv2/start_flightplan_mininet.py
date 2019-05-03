@@ -357,6 +357,8 @@ def main():
 
         topo.do_commands(net)
 
+        sleep(.1)
+
         topo.run_host_programs(net, args.host_prog)
 
         if args.replay:

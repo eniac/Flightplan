@@ -150,11 +150,18 @@ been built with the `booster_switch`, as detailed:
 [here](../cpuBoosters/bmv2/README.md).
 
 #### Running different programs on switches
-The default test runs the same program on switches. The "two halves" test runs
+The default test runs the same program on switches. The "two halves" tests run
 different programs on different switches, but has the same effect of running
-the same program on all switches. To use this test add `TWO_HALVES=1` to the environment:
+the same program on all switches.
+
+To use simpler test add `TWO_HALVES=1` to the environment:
 ```shell
 TWO_HALVES=1 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
+```
+
+The more complex test further offloads header compression to a separate switch. To run this test add `TWO_HALVES=2` to the environment:
+```shell
+TWO_HALVES=2 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 ```
 
 ### Mininet file

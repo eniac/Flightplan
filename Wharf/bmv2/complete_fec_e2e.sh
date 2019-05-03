@@ -56,8 +56,10 @@ if [[ $NO_HC == 0  ]]; then
     echo "Using complete topology WITH header compression";
     if [[ $TWO_HALVES == "" ]]; then
         TOPO=$HERE/topologies/complete_topology.yml;
-    else
+    elif [[ $TWO_HALVES == "1" ]]; then
         TOPO=$HERE/topologies/complete_topology_split.yml;
+    elif [[ $TWO_HALVES == "2" ]]; then
+        TOPO=$HERE/topologies/complete_topology_split_further.yml;
     fi
 else
     echo "Using complete topology WITHOUT header compression";
@@ -107,8 +109,13 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 echo Bytes Transferred:
-python2 $HERE/pcap_tools/pcap_size.py \
-    $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+if [[ $TWO_HALVES == "2" ]]; then
+  python2 $HERE/pcap_tools/pcap_size.py \
+      $PCAP_DUMPS/{h1_to_s1,s1_to_s1compress,s1compress_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+else
+  python2 $HERE/pcap_tools/pcap_size.py \
+      $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+fi
 
 
 if [[ $INLINES == $OUTLINES ]]; then
