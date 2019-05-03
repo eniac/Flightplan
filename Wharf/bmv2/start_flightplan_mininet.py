@@ -128,6 +128,9 @@ class FPTopo(Topo):
                 switch['interfaces'].append(iface_opts)
                 switch['interfaces'][-1]['port'] = port_num
 
+                if 'name' not in iface_opts:
+                    iface_opts['name'] = self.default_iface_name(sw_name, port_num)
+
         for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
 
             if 'links' in host_ops:
@@ -165,6 +168,9 @@ class FPTopo(Topo):
                 if 'ip' not in iface_opts:
                     iface_opts['ip'] = self.next_ip_address()
                     iface_opts['mac'] = self.next_mac_address()
+
+                if 'name' not in iface_opts:
+                    iface_opts['name'] = self.default_iface_name(host_name, port_num)
 
                 if port_num == 0:
                     host['default_ip'] = iface_opts['ip']
@@ -206,7 +212,10 @@ class FPTopo(Topo):
                 print("Adding link between {}.{} and {}.{}".format(name1, port1, name2, port2))
                 self.addLink(name1, name2,
                              port1 = port1,
-                             port2 = port2)
+                             port2 = port2,
+                             intfName1 = self.iface_name(name1, port1),
+                             intfName2 = self.iface_name(name2, port2)
+                             )
                 created_links[name1].add(name2)
                 created_links[name2].add(name1)
 
@@ -250,6 +259,19 @@ class FPTopo(Topo):
                 return ip
             i += 1
 
+    @staticmethod
+    def default_iface_name(node, num):
+        return '{}-eth{}'.format(node, num)
+
+    def iface_name(self, node, num):
+        opts = self.all_nodes[node]
+        if 'interfaces' not in opts:
+            return self.default_iface_name(node, num)
+        for interface in opts['interfaces']:
+            if interface['port'] == num:
+                return interface.get('name', self.default_iface_name(node, num))
+        return self.default_iface_name(node, num)
+
     def init(self, net):
 
         # Disable ipv6 manually
@@ -267,13 +289,14 @@ class FPTopo(Topo):
                 continue
             node = net.get(name)
             for iface_ops in opts['interfaces']:
+                ifname = self.iface_name(name, iface_ops['port'])
                 if 'ip' in iface_ops:
-                    node.setIP(iface_ops['ip'], intf='{}-eth{}'.format(name, iface_ops['port']))
+                    node.setIP(iface_ops['ip'], intf=ifname)
                 if 'mac' in iface_ops:
-                    node.setMAC(iface_ops['mac'], intf='{}-eth{}'.format(name, iface_ops['port']))
+                    node.setMAC(iface_ops['mac'], intf=ifname)
 
     def start_tcp_dump(self, net, directory, name1, name2, if1):
-        iface = '{}-eth{}'.format(name1, if1)
+        iface = self.iface_name(name1, if1)
 
         fname = os.path.join(directory, '{}_to_{}.pcap'.format(name1, name2))
         net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface, fname))
@@ -295,11 +318,11 @@ class FPTopo(Topo):
                     raise TopoSpecError("Replay attempted between disconnected nodes {}->{}"
                                         .format(sw1_name, sw2_name))
                 num = self.link_ports[sw1_name][sw2_name]
-                print("Replaying {} from {} on {}-eth{} to {}"
-                      .format(filename, sw1_name, sw1_name, num, sw2_name))
+                print("Replaying {} from {} on {} to {}"
+                      .format(filename, sw1_name, self.iface_name(sw1_name, num), sw2_name))
                 net.get(sw1_name).cmd(
-                        'tcpreplay -i {}-eth{} {}'
-                        .format(sw1_name, num, self.cfgpath(filename))
+                        'tcpreplay -i {} {}'
+                        .format(self.iface_name(sw1_name, num), self.cfgpath(filename))
                 )
 
     def do_commands(self, net):
@@ -329,10 +352,10 @@ class FPTopo(Topo):
                               .format(program, self.log_dir, name, i))
 
     def do_host_replay(self, net, host, towards, file):
-        print("Replaying {} on {}.eth0".format(file, host))
         port_num = self.link_ports[host][towards]
+        print("Replaying {} on {}.{}".format(file, host, self.iface_name(host, port_num)))
         net.get(host).cmd(
-                'tcpreplay -p 100 -i {}-eth{} {}'.format(host, port_num, file)
+                'tcpreplay -p 100 -i {} {}'.format(self.iface_name(host, port_num), file)
         )
 
 def main():

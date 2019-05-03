@@ -11,6 +11,9 @@ hosts:
               # _MUST_ put mac address in quotes.
               # Otherwise yaml thinks it's a ratio?
               mac: '11:11:11:11:11:11'
+              # You can set the name of the interface here
+              # Relevant mostly for replaying or sending packets on that interface
+              name: 'IAmAnInterface'
               # First interface without a specified port is set
               # to the default port, port: 0
             - ip: 11.0.0.13/8
