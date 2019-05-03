@@ -114,9 +114,30 @@ def split_op(j, op):
 
         pipeline['tables'] = tables
 
+def add_externs(j):
+    externs = dict()
+    for action in j['actions']:
+        for primitive in action['primitives']:
+            if len(primitive['parameters']) == 0:
+                continue
+            parameter = primitive['parameters'][0]
+            if parameter['type'] == 'extern':
+                if primitive['op'].startswith('_'):
+                    externs[parameter['value']] = primitive['op'].split('_')[1]
+    print(externs)
+    for extern_instance in j['extern_instances']:
+        if extern_instance['name'] in externs:
+            del externs[extern_instance['name']]
+
+    for name, typ in externs.items():
+        j['extern_instances'].append({"name": name, "type": typ, "id": len(j['extern_instances'])})
+
+
+
 j = json.load(open(args.input), object_pairs_hook=OrderedDict)
 for op in args.ops:
     split_op(j, op)
+add_externs(j)
 
 
 
