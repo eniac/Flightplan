@@ -52,10 +52,10 @@ class P4Host(Host):
     def config(self, **params):
         r = super(Host, self).config(**params)
 
-        self.defaultIntf().rename("eth0")
+        intf = self.intfNames()[0]
 
         for off in ["rx", "tx", "sg"]:
-            cmd = "/sbin/ethtool --offload eth0 %s off" % off
+            cmd = "/sbin/ethtool --offload %s %s off" % (intf, off)
             self.cmd(cmd)
 
         # disable IPv6
