@@ -1,0 +1,54 @@
+hosts:
+    h1 : {}
+    h2 : {}
+
+switches:
+    tofino1:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: h1
+            - link: dropper
+            - link: fpga1
+            - link: fpga2
+        cmds:
+            - table_add forward set_egress 0 => 1
+    fpga1:
+        cfg: ../../build/bmv2/Compress.json
+        interfaces:
+            - link: tofino1
+        cmds:
+            - table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
+            - table_add forward set_egress 0 => 0
+    dropper:
+        cfg: ../../build/bmv2/Dropper.json
+        interfaces:
+            - link: tofino1
+            - link: tofino2
+        replay:
+            s1: ../pcaps/lldp_enable_fec.pcap
+            s3: ../pcaps/lldp_enable_fec.pcap
+        cmds: [../controller_files/forwarding_commands.txt]
+    tofino2:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: dropper
+            - link: h2
+            - link: fpga3
+        cmds:
+            - ../controller_files/decompressor_commands.txt
+            - ../controller_files/forwarding_commands.txt
+            - ../controller_files/fec_decoder_commands.txt
+    fpga2:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino1
+        cmds:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
+    fpga3:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino1
+        cmds:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
