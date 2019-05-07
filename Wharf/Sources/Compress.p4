@@ -27,7 +27,12 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         Forwarder.apply(meta);
 
         header_compress(forward);
-        // FIXME in which case would forward==0?
+/* NOTE the check for forward==0 is done because the extern creates a new
+  packet (which must be forwarded) yet also returns the old packet (which
+  must be dropped). The extern function returns twice -- first with the old
+  packet (and setting forward==0) and then with the compressed packet (and
+  setting forward==1).
+*/
         if (forward == 0) {
             drop();
             return;
