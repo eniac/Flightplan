@@ -27,8 +27,8 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 #endif
 
 #if defined(COMPRESSION_BOOSTER)
-    HeaderCompression() ingress_compression;
-    HeaderCompression() egress_compression;
+    CompressedLink() ingress_compression;
+    CompressedLink() egress_compression;
 #endif
 
     apply {
