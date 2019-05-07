@@ -1,13 +1,16 @@
 hosts:
-    h1 : {}
-    h2 : {}
+    mcd_client : {}
+    mcd_server : {}
+    iperf_client : {}
+    iperf_server : {}
 
 switches:
     tofino1:
         cfg: ../../build/bmv2/Forwarder.json
         interfaces:
-            - link: h1
             - link: dropper
+            - link: mcd_client
+            - link: iperf_client
             - link: fpga1
             - link: fpga2
         cmds:
@@ -32,7 +35,8 @@ switches:
         cfg: ../../build/bmv2/Forwarder.json
         interfaces:
             - link: dropper
-            - link: h2
+            - link: mcd_server
+            - link: iperf_server
             - link: fpga3
         cmds:
             - ../controller_files/decompressor_commands.txt
