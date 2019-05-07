@@ -25,9 +25,24 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
   }
 
   apply {
-    if (hdr.fpReceive1.isValid()) {
+    if (!hdr.fp.isValid()) {
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
+      hdr.fp.setValid();
+      hdr.fp.version = 1;
+      hdr.fp.encapsulated_ethertype = hdr.eth.type;
+      hdr.fp.from_segment = 1;
+      hdr.fp.to_segment = 2;
+      // Context packaging for the next dataplane.
+      hdr.fpReceive1.setValid();
+      hdr.fpReceive1.byte1 = 1;
+
+      flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
+    } else if (hdr.fpReceive1.isValid()) {
+      next_dataplane = 1; // It's fine for this value to be hardcoded.
+
+      hdr.fp.from_segment = 2;
+      hdr.fp.to_segment = 3;
       // Context packaging for the next dataplane.
       hdr.fpReceive1.setInvalid();
       hdr.fpSend1.setValid();
@@ -35,9 +50,11 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       // FIXME invoke Sender and Receiver functions
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
-    } else if (hdr.fpReceive2.isValid()) {
+    } /* FIXME incomplete
+      else if (hdr.fpReceive2.isValid()) {
       // TODO Work relative to the other upstream dataplane.
-    } // FIXME else drop  
+    } // FIXME else drop 
+      */ 
   }
 }
 
