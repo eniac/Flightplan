@@ -16,7 +16,6 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 }
 
 control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
-
 #if defined(FEC_BOOSTER)
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
@@ -32,6 +31,8 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         if (!hdr.eth.isValid()) {
             drop();
         }
+
+        Forwarder.apply(meta);
 
         bit<1> is_offload_port = 0;
         compression_offload.apply(meta.ingress_port, is_offload_port);
@@ -87,14 +88,10 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 }
             }
 #endif
-        }
-
-//FIXME the offload for header compression is hidden inside forwarding table.
 //FIXME currently all traffic is sent to to compressor, not only the traffic
 //      that it can compress (i.e., TCP). This could be optimised.
-#if defined(MID_FORWARDING_DECISION)
-        Forwarder.apply(meta);
-#endif
+            exit;
+        }
 
         if (is_offload_port == 1) {
 #if defined(FEC_BOOSTER)
@@ -123,10 +120,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             }
 #endif
         }
-
-#if !defined(MID_FORWARDING_DECISION)
-        Forwarder.apply(meta);
-#endif
     }
 }
 
