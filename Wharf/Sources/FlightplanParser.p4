@@ -30,14 +30,15 @@ control NoCheck(inout fp_headers_t hdr, inout booster_metadata_t m) { apply {} }
 control NoEgress(inout fp_headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) { apply {} }
 
 error {
-    fpError
+    from_segment_error,
+    ethertype_error
 }
 
 parser FlightplanParser(packet_in pkt, out fp_headers_t hdr,
               inout booster_metadata_t m, inout metadata_t meta) {
   state start {
     pkt.extract(hdr.eth);
-    verify(hdr.eth.type == ETHERTYPE_FLIGHTPLAN, error.fpError);
+    verify(hdr.eth.type == ETHERTYPE_FLIGHTPLAN, error.ethertype_error);
     transition select(hdr.eth.type) {
       ETHERTYPE_FLIGHTPLAN : parse_flightplan;
     }
@@ -46,7 +47,7 @@ parser FlightplanParser(packet_in pkt, out fp_headers_t hdr,
   state parse_flightplan {
     pkt.extract(hdr.fp);
     verify(hdr.fp.from_segment == 1 ||
-           hdr.fp.from_segment == 2, error.fpError);
+           hdr.fp.from_segment == 2, error.from_segment_error);
     transition select(hdr.fp.from_segment) {
       1 : parse_fpReceive1;
       2 : parse_fpReceive2;
