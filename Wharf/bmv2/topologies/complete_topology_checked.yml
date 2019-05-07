@@ -7,7 +7,9 @@ switches:
         cfg: ../../build/bmv2/CheckedFragment.json
         interfaces:
             - link: h1
+              port: 0
             - link: s2
+              port: 1
         cmds:
             - table_add flightplan_forward set_egress 0 => 0
             - table_add flightplan_forward set_egress 1 => 1
@@ -15,7 +17,9 @@ switches:
         cfg: ../../build/bmv2/Dropper.json
         interfaces:
             - link: s1
+              port: 0
             - link: s3
+              port: 1
         cmds:
             - table_add forward set_egress 0 => 1
             - table_add forward set_egress 1 => 0
@@ -23,7 +27,9 @@ switches:
         cfg: ../../build/bmv2/CheckedFragment.json
         interfaces:
             - link: s2
+              port: 0
             - link: h2
+              port: 1
         cmds:
             - table_add flightplan_forward set_egress 0 => 0
             - table_add flightplan_forward set_egress 1 => 1
