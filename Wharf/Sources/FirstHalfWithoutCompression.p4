@@ -25,6 +25,10 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     FecClassParams() encoder_params;
 #endif
 
+#if defined(COMPRESSION_BOOSTER)
+    HeaderCompression() egress_compression;
+#endif
+
     Offload() compression_offload;
 
     apply {
@@ -88,9 +92,23 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 }
             }
 #endif
-//FIXME currently all traffic is sent to to compressor, not only the traffic
-//      that it can compress (i.e., TCP). This could be optimised.
-            exit;
+
+//NOTE traffic is sent to to compressor only if the compressor ir active,
+//     and if the traffice can be compressed (i.e., TCP).
+#if defined(COMPRESSION_BOOSTER)
+        bit<1> compressed_link = 0;
+        if (hdr.tcp.isValid()) {
+            compressed_link = 0;
+            // If heading out on a multiplexed link, then header compress.
+            egress_compression.apply(meta.egress_spec, compressed_link);
+            if (compressed_link == 1) {
+                SET_EGRESS(meta, 2/*FIXME hardcoded*/);
+                exit; // FIXME or "return"?
+            }
+        }
+#endif
+
+
         }
 
         if (is_offload_port == 1) {
