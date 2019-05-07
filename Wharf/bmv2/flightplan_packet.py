@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# Run quick tests which create and parse packet with
+# pytest -s flightplan_packet.py
+
 from scapy.all import *
 from argparse import ArgumentParser
 
@@ -70,7 +74,8 @@ def test_show_packet():
     (Ether()/FPPacket()/FPRcv()).show()
 
 def test_str_packet():
-    print("As bytes", hexdump(Ether()/FPPacket()/FPRcv()))
+    print("As Bytes:")
+    hexdump(Ether()/FPPacket()/FPRcv())
 
 def test_whole_packet():
     build_fp_packet().show()
