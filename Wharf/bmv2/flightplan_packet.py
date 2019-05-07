@@ -82,15 +82,16 @@ def test_parse_packet():
     pkt.show()
 
 
-def send_packet(iface):
+def send_packet(iface, n):
     pkt = build_fp_packet()
 
-    for i in range(10):
+    for i in range(n):
         sendp(pkt, iface=iface)
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
+    parser = ArgumentParser("Sends flightplan packets on specified interface")
     parser.add_argument("iface")
+    parser.add_argument('n', nargs='?', default=10)
     args = parser.parse_args()
 
-    send_packet(args.iface)
+    send_packet(args.iface, args.n)
