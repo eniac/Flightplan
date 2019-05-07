@@ -16,7 +16,6 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 }
 
 control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
-
 #if defined(FEC_BOOSTER)
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
@@ -26,12 +25,18 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     FecClassParams() encoder_params;
 #endif
 
+#if defined(COMPRESSION_BOOSTER)
+    CompressedLink() egress_compression;
+#endif
+
     Offload() compression_offload;
 
     apply {
         if (!hdr.eth.isValid()) {
             drop();
         }
+
+        Forwarder.apply(meta);
 
         bit<1> is_offload_port = 0;
         compression_offload.apply(meta.ingress_port, is_offload_port);
@@ -87,14 +92,24 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
                 }
             }
 #endif
-        }
 
-//FIXME the offload for header compression is hidden inside forwarding table.
-//FIXME currently all traffic is sent to to compressor, not only the traffic
-//      that it can compress (i.e., TCP). This could be optimised.
-#if defined(MID_FORWARDING_DECISION)
-        Forwarder.apply(meta);
+//NOTE traffic is sent to to compressor only if the compressor ir active,
+//     and if the traffice can be compressed (i.e., TCP).
+#if defined(COMPRESSION_BOOSTER)
+        bit<1> compressed_link = 0;
+        if (hdr.tcp.isValid()) {
+            compressed_link = 0;
+            // If heading out on a multiplexed link, then header compress.
+            egress_compression.apply(meta.egress_spec, compressed_link);
+            if (compressed_link == 1) {
+                SET_EGRESS(meta, 2/*FIXME hardcoded*/);
+                exit; // FIXME or "return"?
+            }
+        }
 #endif
+
+
+        }
 
         if (is_offload_port == 1) {
 #if defined(FEC_BOOSTER)
@@ -123,10 +138,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             }
 #endif
         }
-
-#if !defined(MID_FORWARDING_DECISION)
-        Forwarder.apply(meta);
-#endif
     }
 }
 
