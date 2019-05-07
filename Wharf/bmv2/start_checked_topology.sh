@@ -26,6 +26,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
     --log $LOG_DUMPS \
     --verbose \
     --host-prog "h1:python $HERE/flightplan_packet.py h1-eth0" \
+    --host-prog "h2:python $HERE/flightplan_packet.py h2-eth0" \
     --time 2 \
     2> $LOG_DUMPS/flightplan_mininet_log.err
 
