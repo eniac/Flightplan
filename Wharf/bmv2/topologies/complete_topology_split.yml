@@ -5,27 +5,33 @@ hosts:
 switches:
     s1:
         cfg: ../../build/bmv2/FirstHalf.json
-        links:
-            h1: 0
-            s2: 1
+        interfaces:
+            - link: h1
+              port: 0
+            - link: s2
+              port: 1
         cmds:
             - ../controller_files/compressor_commands.txt
             - ../controller_files/forwarding_commands.txt
             - ../controller_files/fec_encoder_commands.txt
     s2:
         cfg: ../../build/bmv2/Dropper.json
-        links:
-            s1: 0
-            s3: 1
+        interfaces:
+            - link: s1
+              port: 0
+            - link: s3
+              port: 1
         replay:
             s1: ../pcaps/lldp_enable_fec.pcap
             s3: ../pcaps/lldp_enable_fec.pcap
         cmds: [../controller_files/forwarding_commands.txt]
     s3:
         cfg: ../../build/bmv2/SecondHalf.json
-        links:
-            s2: 0
-            h2: 1
+        interfaces:
+            - link: s2
+              port: 0
+            - link: h2
+              port: 1
         cmds:
             - ../controller_files/decompressor_commands.txt
             - ../controller_files/forwarding_commands.txt

@@ -5,10 +5,10 @@ hosts:
 switches:
     s1:
         cfg: ../../build/bmv2/FirstHalfWithoutCompression.json
-        links:
-            h1: 0
-            s2: 1
-            s1compress: 2
+        interfaces:
+            - link: h1
+            - link: s2
+            - link: s1compress
         cmds:
             - table_add forward set_egress 0 => 2
             - table_add forward set_egress 2 => 1
@@ -17,25 +17,25 @@ switches:
             - ../controller_files/fec_encoder_commands.txt
     s1compress:
         cfg: ../../build/bmv2/Compress.json
-        links:
-            s1: 0
+        interfaces:
+            - link: s1
         cmds:
             - table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
             - table_add forward set_egress 0 => 0
     s2:
         cfg: ../../build/bmv2/Dropper.json
-        links:
-            s1: 0
-            s3: 1
+        interfaces:
+            - link: s1
+            - link: s3
         replay:
-            #s1: ../pcaps/lldp_enable_fec.pcap
+            s1: ../pcaps/lldp_enable_fec.pcap
             s3: ../pcaps/lldp_enable_fec.pcap
         cmds: [../controller_files/forwarding_commands.txt]
     s3:
         cfg: ../../build/bmv2/SecondHalf.json
-        links:
-            s2: 0
-            h2: 1
+        interfaces:
+            - link: s2
+            - link: h2
         cmds:
             - ../controller_files/decompressor_commands.txt
             - ../controller_files/forwarding_commands.txt
