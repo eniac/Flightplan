@@ -57,7 +57,6 @@ def load_paths(topo_file):
         paths[(h2, h1)] = prev
 
     to_show = defaultdict(list)
-    print(paths)
     unshown_links = connections.copy()
 
     for (h1, h2), path in paths.items():
