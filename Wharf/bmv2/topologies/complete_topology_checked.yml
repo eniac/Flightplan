@@ -24,9 +24,19 @@ switches:
             - table_add forward set_egress 0 => 1
             - table_add forward set_egress 1 => 0
     s3:
-        cfg: ../../build/bmv2/CheckedFragment.json
+        cfg: ../../build/bmv2/Forwarder.json
         interfaces:
             - link: s2
+              port: 0
+            - link: s4
+              port: 1
+        cmds:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
+    s4:
+        cfg: ../../build/bmv2/CheckedFragment.json
+        interfaces:
+            - link: s3
               port: 0
             - link: h2
               port: 1
