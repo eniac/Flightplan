@@ -56,10 +56,10 @@ def build_fp_packet():
             FPPacket(version=0xA,
                      enc_eth_type=0xABCD,
                      from_segment=1) / \
-            FPRcv1(seqno=1) / \
-            FPRcv2(seqno=2) / \
-            FPSnd1(seqno=3) / \
-            FPSnd2(seqno=4)
+            FPRcv1(seqno=1)
+            #FPRcv2(seqno=2) / \
+            #FPSnd1(seqno=3) / \
+            #FPSnd2(seqno=4)
 
 
 
