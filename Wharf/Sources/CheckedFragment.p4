@@ -58,11 +58,11 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
-      if (1 == this_dataplane) {
+//      if (1 == this_dataplane) {
         hdr.fpReceive1.setInvalid();
         hdr.eth.type = hdr.fp.encapsulated_ethertype;
         hdr.fp.setInvalid();
-      }
+//      }
 
 // FIXME disabled this for the time being -- this dataplane will simply forward traffic forward
 /*
