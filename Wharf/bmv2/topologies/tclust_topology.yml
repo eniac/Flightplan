@@ -34,9 +34,6 @@ switches:
         interfaces:
             - link: tofino1
             - link: tofino2
-        replay:
-            s1: ../pcaps/lldp_enable_fec.pcap
-            s3: ../pcaps/lldp_enable_fec.pcap
         cmds: [../controller_files/forwarding_commands.txt]
     tofino2:
         cfg: ../../build/bmv2/Forwarder.json
