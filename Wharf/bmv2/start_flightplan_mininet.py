@@ -99,7 +99,8 @@ class FPTopo(Topo):
                            json_path = self.cfgpath(sw_opts['cfg']),
                            thrift_port = base_thrift + i,
                            log_console = console_log,
-                           verbose = verbose)
+                           verbose = verbose,
+                           dpid = '{:16x}'.format(i))
 
             switch = dict(
                     name = sw_name,
