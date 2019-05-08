@@ -4,12 +4,9 @@ import yaml
 import sys
 from collections import defaultdict
 from itertools import permutations
+from argparse import ArgumentParser
 
-if len(sys.argv) < 3:
-    print("Usage %s TOPOLOGY_FILE OUT_DIR" % sys.argv[0])
-    exit(-1)
-
-def load_paths(topo_file):
+def load_paths(topo_file, endpoint_sets):
 
     topo = yaml.load(open(topo_file))
 
@@ -36,25 +33,26 @@ def load_paths(topo_file):
 
     paths = {}
 
-    for h1, h2 in permutations(hosts, 2):
-        used_links = set()
-        dists = {l: 999 for l in connections}
-        prev = {l: '' for l in connections}
+    for endpoints in endpoint_sets:
+        for h2, h1 in zip(endpoints, endpoints[1:]):
+            used_links = set()
+            dists = {l: 999 for l in connections}
+            prev = {l: '' for l in connections}
 
-        dists[h1] = 0
-        unused_links = set(connections.keys())
+            dists[h1] = 0
+            unused_links = set(connections.keys())
 
-        while len(unused_links) > 0:
-            cur = [h for h in unused_links if dists[h] == min([dists[x] for x in unused_links])][0]
+            while len(unused_links) > 0:
+                cur = [h for h in unused_links if dists[h] == min([dists[x] for x in unused_links])][0]
 
-            unused_links.remove(cur)
+                unused_links.remove(cur)
 
-            for conn in connections[cur]:
-                alt = dists[cur] + 1
-                if alt < dists[conn]:
-                    dists[conn] = alt
-                    prev[conn] = cur
-        paths[(h2, h1)] = prev
+                for conn in connections[cur]:
+                    alt = dists[cur] + 1
+                    if alt < dists[conn]:
+                        dists[conn] = alt
+                        prev[conn] = cur
+            paths[(h2, h1)] = prev
 
     to_show = defaultdict(list)
     unshown_links = connections.copy()
@@ -70,19 +68,9 @@ def load_paths(topo_file):
                 unshown_links[u].remove(path[u])
             u = path[u]
 
-    def insert_unshown(n, path, i):
-        for i2, n3 in enumerate(list(unshown_links[n]), i):
-            path.insert(i2, (n, n3))
-            unshown_links[n].remove(n3)
-            insert_unshown(n3, path, i2+1)
-
-    for ends, path in sorted(to_show.items(), key = lambda e: e[0]):
-        for i, (n1, _) in enumerate(path[:]):
-            insert_unshown(n1, path, i)
-
     return to_show
 
-def show_size(i, n1, n2, sizes, out_dir):
+def show_size(n1, n2, sizes, out_dir):
     filename = os.path.join(out_dir, '{}_to_{}.pcap'.format(n1, n2))
     size = 0
     n = 0
@@ -93,21 +81,33 @@ def show_size(i, n1, n2, sizes, out_dir):
 
     sizes.append(size)
 
-    if i > 0:
+    if len(sizes) > 1:
         print("%s %d pkts, %d bytes (%.2f%%)" % (filename, n, size, 100*float(size) / sizes[0] if sizes[0] > 0 else float('nan')))
     else:
         print("%s %d pkts, %d bytes" % (filename, n, size))
 
 
-def main(topo_file, pcap_dir):
-    to_show = load_paths(topo_file)
+def main(topo_file, pcap_dir, endpoint_sets):
+    to_show = load_paths(topo_file, endpoint_sets)
 
-    for ends, path in sorted(to_show.items(), key = lambda e: e[0]):
-        for p1, _ in path:
-            print("{} -> ".format(p1), end='')
-        print(ends[1])
+    for endpoints in endpoint_sets:
+        print(endpoints[0]+" ", end='')
+        for h1, h2 in zip(endpoints, endpoints[1:]):
+            path = to_show[(h1, h2)]
+            for p1, _ in path[1:]:
+                print("-> {} ".format(p1), end='')
+            print("-> {} ".format(h2), end='')
+        print()
         sizes = []
-        for i, (n1, n2) in enumerate(path):
-            show_size(i, n1, n2, sizes, pcap_dir)
+        for h1, h2 in zip(endpoints, endpoints[1:]):
+            for i, (n1, n2) in enumerate(to_show[(h1, h2)]):
+                show_size(n1, n2, sizes, pcap_dir)
 
-main(sys.argv[1], sys.argv[2])
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument("topology")
+    parser.add_argument("pcap_dir")
+    parser.add_argument("endpoints", nargs="+", help="Endpoints to hit on traversal")
+    args = parser.parse_args()
+
+    main(args.topology, args.pcap_dir, [args.endpoints])
