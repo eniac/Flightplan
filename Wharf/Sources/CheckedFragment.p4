@@ -26,6 +26,8 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
 
   apply {
     if (!hdr.fp.isValid()) {
+      // Sender will initialise the headers, maybe do some processing,  and send encapsulated packet to receiver.
+
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
       hdr.fp.setValid();
@@ -39,7 +41,11 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
     } else if (hdr.fpReceive1.isValid()) {
+      // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
       next_dataplane = 1; // It's fine for this value to be hardcoded.
+
+// FIXME disabled this for the time being -- this dataplane will simply forward traffic forward
+/*
 
       hdr.fp.from_segment = 2;
       hdr.fp.to_segment = 3;
@@ -48,6 +54,7 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       hdr.fpSend1.setValid();
       hdr.fpSend1.byte1 = hdr.fpReceive1.byte1;
       // FIXME invoke Sender and Receiver functions
+*/
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
     } /* FIXME incomplete
