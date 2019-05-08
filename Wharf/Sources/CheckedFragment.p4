@@ -9,6 +9,7 @@ Nik Sultana, UPenn, January 2019
 #include <FlightplanParser.p4>
 
 control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, inout metadata_t ctrl) {
+  bit<MAX_DATAPLANE_CLIQUE_SIZE> this_dataplane = 0;
   bit<MAX_DATAPLANE_CLIQUE_SIZE> next_dataplane = 0;
 
   action set_egress(bit<9> port) {
@@ -24,7 +25,20 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
     default_action = NoAction/*FIXME report an error if we can't find where to forward to*/;
   }
 
+  action set_id(bit<MAX_DATAPLANE_CLIQUE_SIZE> did) {
+      this_dataplane = did;
+  }
+
+  table flightplan_id {
+    key = {
+      this_dataplane : exact;
+    }
+    actions = { set_id; NoAction; }
+    default_action = NoAction/*FIXME report an error if resolution fails*/;
+  }
+
   apply {
+    flightplan_id.apply();
     if (!hdr.fp.isValid()) {
       // Sender will initialise the headers, maybe do some processing,  and send encapsulated packet to receiver.
 
@@ -43,6 +57,12 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
     } else if (hdr.fpReceive1.isValid()) {
       // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
       next_dataplane = 1; // It's fine for this value to be hardcoded.
+
+      if (1 == this_dataplane) {
+        hdr.fpReceive1.setInvalid();
+        hdr.eth.type = hdr.fp.encapsulated_ethertype;
+        hdr.fp.setInvalid();
+      }
 
 // FIXME disabled this for the time being -- this dataplane will simply forward traffic forward
 /*

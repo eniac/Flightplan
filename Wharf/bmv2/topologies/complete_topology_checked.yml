@@ -13,6 +13,7 @@ switches:
         cmds:
             - table_add flightplan_forward set_egress 0 => 0
             - table_add flightplan_forward set_egress 1 => 1
+            - table_add flightplan_id set_id 0 => 0
     s2:
         cfg: ../../build/bmv2/Dropper.json
         interfaces:
@@ -43,3 +44,4 @@ switches:
         cmds:
             - table_add flightplan_forward set_egress 0 => 0
             - table_add flightplan_forward set_egress 1 => 1
+            - table_add flightplan_id set_id 0 => 1
