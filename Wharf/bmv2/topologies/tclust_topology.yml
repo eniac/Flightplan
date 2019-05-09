@@ -34,8 +34,7 @@ switches:
             - link: tofino1
               port: 0
         cmds:
-            - table_add forward set_egress 0 => 1
-            - table_add forward set_egress 1 => 0
+            - table_add forward set_egress 0 => 0
     dropper:
         cfg: ../../build/bmv2/Dropper.json
         interfaces:
@@ -43,7 +42,9 @@ switches:
               port: 0
             - link: tofino2
               port: 1
-        cmds: [../controller_files/forwarding_commands.txt]
+        cmds:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
     tofino2:
         cfg: ../../build/bmv2/Forwarder.json
         interfaces:
@@ -56,13 +57,10 @@ switches:
             - link: fpga3
               port: 3
         cmds:
-            - ../controller_files/decompressor_commands.txt
             - ../controller_files/forwarding_commands.txt
-            - ../controller_files/fec_decoder_commands.txt
     fpga3:
         cfg: ../../build/bmv2/Forwarder.json
         interfaces:
             - link: tofino2
         cmds:
-            - table_add forward set_egress 0 => 1
-            - table_add forward set_egress 1 => 0
+            - table_add forward set_egress 0 => 0
