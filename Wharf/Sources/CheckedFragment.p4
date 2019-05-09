@@ -55,15 +55,13 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       hdr.fpReceive1.byte1 = 1;
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
-    } else if (hdr.fpReceive1.isValid()) {
+    } else if (hdr.fpReceive1.isValid() && 1 == this_dataplane) {
       // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
-      if (1 == this_dataplane) {
-        hdr.fpReceive1.setInvalid();
-        hdr.eth.type = hdr.fp.encapsulated_ethertype;
-        hdr.fp.setInvalid();
-      }
+      hdr.fpReceive1.setInvalid();
+      hdr.eth.type = hdr.fp.encapsulated_ethertype;
+      hdr.fp.setInvalid();
 
 // FIXME disabled this for the time being -- this dataplane will simply forward traffic forward
 /*
