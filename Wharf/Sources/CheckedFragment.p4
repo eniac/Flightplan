@@ -81,8 +81,9 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
     } /* FIXME incomplete
       else if (hdr.fpReceive2.isValid()) {
       // TODO Work relative to the other upstream dataplane.
-    } // FIXME else drop 
-      */ 
+    } */ else {
+      drop();
+    }
   }
 }
 
