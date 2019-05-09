@@ -47,6 +47,7 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       hdr.fp.setValid();
       hdr.fp.version = 1;
       hdr.fp.encapsulated_ethertype = hdr.eth.type;
+      hdr.eth.type = ETHERTYPE_FLIGHTPLAN;
       hdr.fp.from_segment = 1;
       hdr.fp.to_segment = 2;
       // Context packaging for the next dataplane.
