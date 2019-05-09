@@ -37,6 +37,8 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
     default_action = NoAction/*FIXME report an error if resolution fails*/;
   }
 
+  SenderSeqState() sender_seq_state;
+
   apply {
     flightplan_id.apply();
     if (!hdr.fp.isValid()) {
@@ -50,9 +52,11 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       hdr.eth.type = ETHERTYPE_FLIGHTPLAN;
       hdr.fp.from_segment = 1;
       hdr.fp.to_segment = 2;
-      // Context packaging for the next dataplane.
+
       hdr.fpReceive1.setValid();
+      hdr.fpReceive1.seqno = sender_seq_state.nextSeq();
       hdr.fpReceive1.byte1 = 1;
+      // Context packaging for the next dataplane.
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
     } else if (hdr.fpReceive1.isValid() && 1 == this_dataplane) {
