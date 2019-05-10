@@ -54,7 +54,7 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       hdr.fp.to_segment = 2;
 
       hdr.fpReceive1.setValid();
-      hdr.fpReceive1.seqno = sender_seq_state.nextSeq();
+      sender_seq_state.nextSeq(hdr.fpReceive1.seqno);
       hdr.fpReceive1.byte1 = 1;
       // Context packaging for the next dataplane.
 
