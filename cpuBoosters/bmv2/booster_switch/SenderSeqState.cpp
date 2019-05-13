@@ -35,6 +35,6 @@ BM_REGISTER_EXTERN(SenderSeqState);
 BM_REGISTER_EXTERN_METHOD(SenderSeqState, nextSeq, Data &);
 
 /** This function stops the linker from discarding this file*/
-void import_sample_extern_object(SimpleSwitch *sswitch) {
+void import_seq_extern_object(SimpleSwitch *sswitch) {
     (void)sswitch; // Avoids unused warning
 }
