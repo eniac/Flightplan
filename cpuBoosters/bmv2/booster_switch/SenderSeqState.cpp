@@ -19,8 +19,10 @@ class SenderSeqState : public ExternType {
   }
 
   void nextSeq(Data &next_seq) {
+    const int pre_seq = seq_;
     seq_++;
     next_seq.set(seq_);
+    BMLOG_DEBUG("Updated SenderSeqState seq: {} to {}", pre_seq, seq_);
   }
 
  private:
