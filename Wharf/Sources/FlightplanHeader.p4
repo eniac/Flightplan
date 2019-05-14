@@ -52,6 +52,7 @@ header flightplanReceive1_h {
 #if defined(ACKing) || defined(NAKing)
 extern SenderSeqState {
   SenderSeqState();
+  void initSeq(bit<SEQ_WIDTH> init_seq);
   void nextSeq(out bit<SEQ_WIDTH> next_seq);
 }
 #endif

@@ -9,13 +9,22 @@ class SenderSeqState : public ExternType {
 
   /** These attributes should be settable in the SenderSeqState constructor */
   BM_EXTERN_ATTRIBUTES {
-    BM_EXTERN_ATTRIBUTE_ADD(seq);
+    BM_EXTERN_ATTRIBUTE_ADD(initial_seq);
   }
 
   /** Called on construction, after attributes have been set */
   void init() override {
-    seq_ = seq.get<int>();
-    BMLOG_DEBUG("Initialized SenderSeqState with seq: {}", seq_);
+    seq_ = initial_seq.get<int>();
+    BMLOG_DEBUG("Constructed SenderSeqState with initial_seq: {}", seq_);
+  }
+
+  void initSeq(Data &initial_seq) {
+    if (!initialised) {
+        this->initial_seq.set<int>(initial_seq.get<int>());
+        seq_ = initial_seq.get<int>();
+        BMLOG_DEBUG("Initialized SenderSeqState with initial_seq: {}", seq_);
+        initialised = true;
+    }
   }
 
   void nextSeq(Data &next_seq) {
@@ -27,13 +36,15 @@ class SenderSeqState : public ExternType {
 
  private:
   // declared attributes
-  Data seq{0};
+  Data initial_seq{0};
 
   // implementation members
   int seq_;
+  bool initialised = false;
 };
 
 BM_REGISTER_EXTERN(SenderSeqState);
+BM_REGISTER_EXTERN_METHOD(SenderSeqState, initSeq, Data &);
 BM_REGISTER_EXTERN_METHOD(SenderSeqState, nextSeq, Data &);
 
 /** This function stops the linker from discarding this file*/

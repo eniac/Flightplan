@@ -40,6 +40,7 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
   SenderSeqState() sender_seq_state;
 
   apply {
+    //sender_seq_state.initSeq(5);
     flightplan_id.apply();
     if (!hdr.fp.isValid()) {
       // Sender will initialise the headers, maybe do some processing,  and send encapsulated packet to receiver.
