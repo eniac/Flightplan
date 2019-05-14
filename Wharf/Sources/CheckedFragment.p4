@@ -66,9 +66,8 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
-      bit<SEQ_WIDTH> seq = hdr.fpReceive1.seqno;
       bit<1> ok = 0;
-      receiver_seq_state.nextSeq(seq, ok);
+      receiver_seq_state.nextSeq(hdr.fpReceive1.seqno, ok);
       if (ok == 0) {
           receiver_seq_state.relink(ok); // FIXME not using "ok"
       }

@@ -19,7 +19,6 @@ class ReceiverNakState : public ExternType {
   }
 
   void initSeq(const Data &initial_seq) {
-    BMLOG_DEBUG("ReceiverNakState initSeq..."); // FIXME
     if (!initialised) {
         this->initial_seq.set<int>(initial_seq.get<int>());
         seq_ = initial_seq.get<int>();
@@ -29,7 +28,6 @@ class ReceiverNakState : public ExternType {
   }
 
   void nextSeq(const Data &next_seq, Data &ok) {
-    BMLOG_DEBUG("ReceiverNakState nextSeq..."); // FIXME
     const int pre_seq = seq_;
     if (next_seq.get<int>() == seq_ + 1) {
         seq_++;
