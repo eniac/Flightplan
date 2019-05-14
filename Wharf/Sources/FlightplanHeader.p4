@@ -79,8 +79,8 @@ extern ReceiverNakState {
   ReceiverNakState();
   void initSeq(bit<SEQ_WIDTH> init_seq);
   //bit<SEQ_WIDTH> lastSeq();
-  void nextSeq(in bit<SEQ_WIDTH> received_seq, out bool result); // if result==true then send NAK.
+  void nextSeq(in bit<SEQ_WIDTH> received_seq, out bit<1> result); // if result==true then send NAK.
   //void should_relink(out bool result); // if result==true then relink.
-  void relink(out bool result);
+  void relink(out bit<1> result);
 }
 #endif

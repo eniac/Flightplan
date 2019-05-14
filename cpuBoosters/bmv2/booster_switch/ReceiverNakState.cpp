@@ -33,16 +33,16 @@ class ReceiverNakState : public ExternType {
     const int pre_seq = seq_;
     if (next_seq.get<int>() == seq_ + 1) {
         seq_++;
-        ok.set<bool>(true);
+        ok.set<int>(1);
     } else {
-        ok.set<bool>(false);
+        ok.set<int>(0);
     }
-    BMLOG_DEBUG("ReceiverNakState nextSeq({} -> {}, {})", next_seq.get<int>(), seq_, ok.get<bool>());
+    BMLOG_DEBUG("ReceiverNakState nextSeq({} -> {}, {})", next_seq.get<int>(), seq_, ok.get<int>());
   }
 
   void relink(Data &ok) {
     // TODO
-    ok.set<bool>(true);
+    ok.set<int>(1);
     BMLOG_DEBUG("ReceiverNakState relink");
   }
 
