@@ -3,6 +3,5 @@
 
 
 void import_seq_extern_object(SimpleSwitch *sswitch);
-void import_nak_extern_object(SimpleSwitch *sswitch);
 
 #endif

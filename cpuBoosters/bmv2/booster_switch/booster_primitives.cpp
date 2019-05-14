@@ -1,6 +1,7 @@
 #include "booster_primitives.hpp"
 #include "sample_extern_object.h"
 #include "SenderSeqState.h"
+#include "ReceiverNakState.h"
 
 #ifdef FEC_BOOSTER
 #include "fec_booster_primitives.h"
