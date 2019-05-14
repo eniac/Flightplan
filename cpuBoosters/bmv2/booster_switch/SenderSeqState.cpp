@@ -18,7 +18,7 @@ class SenderSeqState : public ExternType {
     BMLOG_DEBUG("Constructed SenderSeqState with initial_seq: {}", seq_);
   }
 
-  void initSeq(Data &initial_seq) {
+  void initSeq(const Data &initial_seq) {
     if (!initialised) {
         this->initial_seq.set<int>(initial_seq.get<int>());
         seq_ = initial_seq.get<int>();
@@ -44,7 +44,7 @@ class SenderSeqState : public ExternType {
 };
 
 BM_REGISTER_EXTERN(SenderSeqState);
-BM_REGISTER_EXTERN_METHOD(SenderSeqState, initSeq, Data &);
+BM_REGISTER_EXTERN_METHOD(SenderSeqState, initSeq, const Data &);
 BM_REGISTER_EXTERN_METHOD(SenderSeqState, nextSeq, Data &);
 
 /** This function stops the linker from discarding this file*/
