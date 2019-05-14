@@ -62,7 +62,7 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       // Context packaging for the next dataplane.
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
-    } else if (hdr.fpReceive1.isValid() && 1 == this_dataplane) {
+    } else if (hdr.fpReceive1.isValid() && 1 == this_dataplane && 2 == hdr.fp.to_segment) {
       // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
