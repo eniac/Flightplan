@@ -43,7 +43,9 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
   apply {
     sender_seq_state.initSeq(0);
     receiver_seq_state.initSeq(0);
+
     flightplan_id.apply();
+
     if (!hdr.fp.isValid()) {
       // Sender will initialise the headers, maybe do some processing,  and send encapsulated packet to receiver.
 
@@ -64,11 +66,11 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
     } else if (hdr.fpReceive2.isValid() && 0 == this_dataplane && 1 == hdr.fp.to_segment) {
       next_dataplane = 0; // It's fine for this value to be hardcoded.
-      //bit<1> ok = 0;
-      //receiver_seq_state.nextSeq(hdr.fpReceive2.seqno, ok);
-      //if (ok == 0) {
-      //    receiver_seq_state.relink(ok); // FIXME not using "ok"
-      //}
+      bit<1> ok = 0;
+      receiver_seq_state.nextSeq(hdr.fpReceive2.seqno, ok);
+      if (ok == 0) {
+          receiver_seq_state.relink(ok); // FIXME not using "ok"
+      }
       hdr.fpReceive2.setInvalid();
       hdr.eth.type = hdr.fp.encapsulated_ethertype;
       hdr.fp.setInvalid();
@@ -88,6 +90,7 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
 
       hdr.fp.from_segment = 2;
       hdr.fp.to_segment = 1;
+      sender_seq_state.nextSeq(hdr.fpReceive1.seqno);
 #if 0
 FIXME for now just send the traffic back to s1
       // Context packaging for the next dataplane.
