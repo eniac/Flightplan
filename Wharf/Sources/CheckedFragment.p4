@@ -38,9 +38,11 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
   }
 
   SenderSeqState() sender_seq_state;
+  ReceiverNakState() receiver_seq_state;
 
   apply {
-    sender_seq_state.initSeq(5);
+    sender_seq_state.initSeq(0);
+    receiver_seq_state.initSeq(0);
     flightplan_id.apply();
     if (!hdr.fp.isValid()) {
       // Sender will initialise the headers, maybe do some processing,  and send encapsulated packet to receiver.
@@ -64,6 +66,11 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
+      bool ok = false;
+      receiver_seq_state.nextSeq(hdr.fpReceive1.seqno, ok);
+      if (!ok) {
+          receiver_seq_state.relink(ok); // FIXME not using "ok"
+      }
       hdr.fpReceive1.setInvalid();
       hdr.eth.type = hdr.fp.encapsulated_ethertype;
       hdr.fp.setInvalid();
