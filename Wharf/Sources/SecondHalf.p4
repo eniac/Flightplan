@@ -16,19 +16,18 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 }
 
 control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
-
 #if defined(FEC_BOOSTER)
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
     bit<24> proto_and_port = 0;
-    FEC_Classify() classification;
+//    FEC_Classify() classification; -- only matters to FirstHalf
     FecClassParams() decoder_params;
-    FecClassParams() encoder_params;
+//    FecClassParams() encoder_params; -- only matters to FirstHalf
 #endif
 
 #if defined(COMPRESSION_BOOSTER)
     CompressedLink() ingress_compression;
-    CompressedLink() egress_compression;
+//    CompressedLink() egress_compression; -- only matters to FirstHalf
 #endif
 
     apply {
@@ -75,65 +74,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         }
 #endif
 
-#if defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
-#endif
-
-#if defined(MEMCACHED_BOOSTER)
-        // If Memcached REQ/RES then pass through the cache.
-        if (hdr.udp.isValid()) {
-            if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
-                memcached(forward);
-                if (forward == 0) {
-                    drop();
-                    return;
-                }
-            }
-        }
-#endif
-
-#if defined(COMPRESSION_BOOSTER)
-        compressed_link = 0;
-        // If heading out on a multiplexed link, then header compress.
-        egress_compression.apply(meta.egress_spec, compressed_link);
-        if (compressed_link == 1) {
-            header_compress(forward);
-            if (forward == 0) {
-                drop();
-                return;
-            }
-        }
-#endif
-
-#if defined(FEC_BOOSTER)
-        bit<1> faulty = 1;
-
-        // If heading out on a lossy link, then FEC encode.
-        get_port_status(meta.egress_spec, faulty);
-        if (faulty == 1) {
-            if (hdr.tcp.isValid()) {
-                proto_and_port = hdr.ipv4.proto ++ hdr.tcp.dport;
-            } else if (hdr.udp.isValid()) {
-                proto_and_port = hdr.ipv4.proto ++ hdr.udp.dport;
-            } else {
-                proto_and_port = hdr.ipv4.proto ++ (bit<16>)0;
-            }
-
-            classification.apply(hdr, proto_and_port);
-            if (hdr.fec.isValid()) {
-                encoder_params.apply(hdr.fec.traffic_class, k, h);
-                update_fec_state(hdr.fec.traffic_class, k, h,
-                                 hdr.fec.block_index, hdr.fec.packet_index);
-                hdr.fec.orig_ethertype = hdr.eth.type;
-                FEC_ENCODE(hdr.fec, k, h);
-                hdr.eth.type = ETHERTYPE_WHARF;
-            }
-        }
-#endif
-
-#if !defined(MID_FORWARDING_DECISION)
-        Forwarder.apply(meta);
-#endif
     }
 }
 

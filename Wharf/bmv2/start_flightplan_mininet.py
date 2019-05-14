@@ -36,6 +36,7 @@ from flightplan_p4_mininet import P4Switch, P4Host, send_commands
 from collections import defaultdict
 import argparse
 import yaml
+from pprint import pprint
 from time import sleep
 
 parser = argparse.ArgumentParser(description="Flightplan Mininet Layout")
@@ -56,173 +57,308 @@ parser.add_argument('--host-prog', help='Run a program on a host. Syntax = "host
                     type=str, action='append', required=False, default=[])
 parser.add_argument('--time', help='Time to run mininet for',
                     type=int, required=False, default=1)
-# Modified below in main execution
-# (sorry for the global)
-global cfg_file
 
-def cfgpath(path):
-    cfg_dir = os.path.dirname(os.path.realpath(cfg_file))
-    return os.path.join(cfg_dir, path)
+class TopoSpecError(Exception):
+    pass
 
 class FPTopo(Topo):
 
-    def __init__(self, host_spec, switch_spec, sw_path, log, verbose):
+    def cfgpath(self, path):
+        return os.path.join(self.cfgbase, path)
+
+    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file):
         Topo.__init__(self)
 
-        self.all_links = {}
-        max_link_port = defaultdict(int)
+        self.cfgbase = os.path.dirname(os.path.realpath(cfg_file))
+        self.link_ports = defaultdict(dict)
+        next_link_port = defaultdict(int)
 
         self.log_dir = log
-        self.host_spec = host_spec
-        self.switch_spec = switch_spec
+
         self.all_nodes = {}
+        self.all_switches = {}
+        self.all_hosts = {}
+
         base_thrift = 9090
 
         switch_items = sorted(switch_spec.items(), key=lambda x: x[0])
 
         for i, (sw_name, sw_opts) in enumerate(switch_items):
+
+            if 'links' in sw_opts:
+                raise TopoSpecError("top level 'links' specification no longer supported. " \
+                                    "Use 'interfaces' instead")
+
             if log:
                 console_log = os.path.join(log, sw_name+'.log')
             else:
                 console_log = None
 
-            switch = self.addSwitch(sw_name,
-                                    sw_path = sw_path,
-                                    json_path = cfgpath(sw_opts['cfg']),
-                                    thrift_port = base_thrift + i,
-                                    log_console = console_log,
-                                    verbose = verbose)
+            self.addSwitch(sw_name,
+                           sw_path = sw_path,
+                           json_path = self.cfgpath(sw_opts['cfg']),
+                           thrift_port = base_thrift + i,
+                           log_console = console_log,
+                           verbose = verbose)
 
-            self.all_nodes[sw_name] = dict(
-                    node=switch,
-                    port=base_thrift+i)
-
-            for link_name, link_num  in sw_opts.get('links', {}).items():
-                self.all_links[(sw_name, link_name)] = link_num
-                max_link_port[sw_name] = max(max_link_port[sw_name], link_num+1)
-
-            print("SWITCH: %s" % self.all_nodes[sw_name])
-
-        for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
-            self.all_nodes[host_name] = dict(
-                    node = (self.addHost(host_name,
-                                         ip = '10.0.{}.{}/24'.format(i, i),
-                                         mac = '00:04:00:00:00:{:02x}'.format(i))),
-                    ip = '10.0.{}.{}'.format(i, i),
-                    mac = '00:04:00:00:00:{:02x}'.format(i),
+            switch = dict(
+                    name = sw_name,
+                    cfg = sw_opts['cfg'],
+                    thrift_port = base_thrift + i,
+                    interfaces = [],
+                    replay = sw_opts.get('replay', {}),
+                    cmds = sw_opts.get('cmds', []),
             )
-            print("HOST: %s" % self.all_nodes[host_name])
 
-            for link_name, link_num in host_ops.get('links', {}).items():
-                self.all_links[(host_name, link_name)] = link_num
-                max_link_port[host_name] = max(max_link_port[host_name], link_num+1)
+            self.all_nodes[sw_name] = switch
+            self.all_switches[sw_name] = switch
 
-        created_links = defaultdict(set)
-        for (name1, name2), port1 in self.all_links.items():
-
-            # Already added in the other direction
-            if name1 in created_links[name2]:
+            if 'interfaces' not in sw_opts:
                 continue
 
-            if (name2, name1) not in self.all_links:
-                self.all_links[(name2, name1)] = max_link_port[name2]
-                max_link_port[name2] += 1
+            for iface_opts in sw_opts['interfaces']:
+                if 'link' not in iface_opts:
+                    raise TopoSpecError("Switch interface must specify at least 'link'")
+                link_name = iface_opts['link']
+                port_num = iface_opts.get('port', next_link_port[sw_name])
 
-            self.addLink(name1, name2,
-                         port1 = port1,
-                         port2 = self.all_links[(name2, name1)])
-            created_links[name1].add(name2)
-            created_links[name2].add(name1)
+                self.link_ports[sw_name][link_name] = port_num
+                next_link_port[sw_name] = max(next_link_port[sw_name], port_num+1)
+
+                switch['interfaces'].append(iface_opts)
+                switch['interfaces'][-1]['port'] = port_num
+
+                if 'name' not in iface_opts:
+                    iface_opts['name'] = self.default_iface_name(sw_name, port_num)
+
+        for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
+
+            if 'links' in host_ops:
+                raise TopoSpecError("top level 'links' specification no longer supported. " \
+                                    "Use 'interfaces' instead")
+            host = dict(
+                    name = host_name,
+                    interfaces = [],
+                    # IP and MAC will be changed below if specified
+                    default_ip = self.next_ip_address(),
+                    default_mac = self.next_mac_address(),
+                    programs = host_ops.get('programs', [])
+            )
+
+            for iface_opts in host_ops.get('interfaces', []):
+                port_num = iface_opts.get('port', next_link_port[host_name])
+
+                # If linked-to switch is specified
+                if 'link' in iface_opts:
+                    link_name = iface_opts['link']
+                    self.link_ports[host_name][link_name] = port_num
+                elif None not in self.link_ports[host_name]:
+                    # Otherwise, this interface can be used as the default
+                    self.link_ports[host_name][None] = port_num
+                elif port_num != 0:
+                    raise TopoSpecError("Interface {}-{} is neither explicitly linked, "
+                                        "nor is it the default (0) interface"
+                                        .format(host_name, port_num))
+
+                next_link_port[host_name] = max(next_link_port[host_name], port_num+1)
+
+                host['interfaces'].append(iface_opts)
+                iface_opts['port'] = port_num
+
+                if 'ip' not in iface_opts:
+                    iface_opts['ip'] = self.next_ip_address()
+                    iface_opts['mac'] = self.next_mac_address()
+
+                if 'name' not in iface_opts:
+                    iface_opts['name'] = self.default_iface_name(host_name, port_num)
+
+                if port_num == 0:
+                    host['default_ip'] = iface_opts['ip']
+                    host['default_mac'] = iface_opts['mac']
+
+            self.addHost(host_name,
+                         ip = host['default_ip'],
+                         port = host['default_mac'],
+                         )
+
+
+            self.all_nodes[host_name] = host
+            self.all_hosts[host_name] = host
+
+
+        created_links = defaultdict(set)
+        for name1, links1 in self.link_ports.items():
+            for name2, port1 in links1.items():
+                if name2 is None:
+                    # Port is so-far unspecified
+                    # Wait for it to be defined in the other direction
+                    continue
+
+                # Already added in the other direction
+                if name1 in created_links[name2]:
+                    continue
+
+                if name1 not in self.link_ports[name2]:
+                    # If the default interface hasn't been assigned, assign it
+                    if None in self.link_ports[name2]:
+                        self.link_ports[name2][name1] = self.link_ports[name2][None]
+                        del self.link_ports[name2][None]
+                    else:
+                        self.link_ports[name2][name1] = next_link_port[name2]
+                        next_link_port[name2] += 1
+
+                port2 = self.link_ports[name2][name1]
+
+                print("Adding link between {}.{} and {}.{}".format(name1, port1, name2, port2))
+                self.addLink(name1, name2,
+                             port1 = port1,
+                             port2 = port2,
+                             intfName1 = self.iface_name(name1, port1),
+                             intfName2 = self.iface_name(name2, port2)
+                             )
+                created_links[name1].add(name2)
+                created_links[name2].add(name1)
+
+        for name1, links1 in self.link_ports.items():
+            for name2, port1 in links1.items():
+                if name2 is None:
+                    raise TopoSpecError("Link from {}->{} on unspecified port".format(name1, name2))
+
+        for name in self.all_nodes:
+            if name not in self.link_ports:
+                raise TopoSpecError("Node {} is not connected to anything".format(name))
+
+    def iter_interfaces(self):
+        for node in self.all_nodes.values():
+            for interface in node['interfaces']:
+                yield interface
+
+    def next_mac_address(self):
+        i = 1
+        while True:
+            mac = '00:00:00:00:00:{:02x}'.format(i)
+            used = False
+            for interface in self.iter_interfaces():
+                if interface.get('mac','') == mac:
+                    used = True
+                    break
+            if not used:
+                return mac
+            i += 1
+
+    def next_ip_address(self):
+        i = 1
+        while True:
+            ip = '10.0.0.{}'.format(i)
+            used = False
+            for interface in self.iter_interfaces():
+                if interface.get('ip','').split('/')[0] == ip:
+                    used = True
+                    break
+            if not used:
+                return ip
+            i += 1
+
+    @staticmethod
+    def default_iface_name(node, num):
+        return '{}-eth{}'.format(node, num)
+
+    def iface_name(self, node, num):
+        opts = self.all_nodes[node]
+        if 'interfaces' not in opts:
+            return self.default_iface_name(node, num)
+        for interface in opts['interfaces']:
+            if interface['port'] == num:
+                return interface.get('name', self.default_iface_name(node, num))
+        return self.default_iface_name(node, num)
 
     def init(self, net):
 
+        # Disable ipv6 manually
         for h in net.hosts:
             h.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
             h.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
             h.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
-
         for s in net.switches:
             s.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
             s.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
             s.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
 
-        for node1 in self.host_spec:
-            #for node2 in self.host_spec:
-                #if node1 == node2:
-                #    continue
-            h1 = net.get(node1)
-            h1.cmd('ip route add default dev eth0 via ' + self.all_nodes[node1]['ip'])
-            #h1.setDefaultRoute('dev eth0 via ' + self.all_nodes[node1]['ip'])
+        for name, opts in self.all_nodes.items():
+            if 'interfaces' not in opts:
+                continue
+            node = net.get(name)
+            for iface_ops in opts['interfaces']:
+                ifname = self.iface_name(name, iface_ops['port'])
+                if 'ip' in iface_ops:
+                    node.setIP(iface_ops['ip'], intf=ifname)
+                if 'mac' in iface_ops:
+                    node.setMAC(iface_ops['mac'], intf=ifname)
 
-        for node in self.host_spec:
-            n = net.get(node)
-            n.describe()
-
-    def start_tcp_dump(self, net, directory, name1, name2):
-        if_num = self.all_links[(name1, name2)]
-        if name1.startswith('h'):
-            iface = 'eth{}'.format(if_num)
-        else:
-            iface = '{}-eth{}'.format(name1, if_num)
+    def start_tcp_dump(self, net, directory, name1, name2, if1):
+        iface = self.iface_name(name1, if1)
 
         fname = os.path.join(directory, '{}_to_{}.pcap'.format(name1, name2))
         net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface, fname))
 
-        fname = os.path.join(directory, '{}_from_{}.pcap'.format(name1, name2))
-        net.get(name1).cmd('tcpdump -i {} -Q in -w {}&'.format(iface, fname))
-
     def start_tcp_dumps(self, net, directory):
-        for name1, name2 in self.all_links:
-            self.start_tcp_dump(net, directory, name1, name2)
+        for name1, links in self.link_ports.items():
+            for name2, if1 in links.items():
+                self.start_tcp_dump(net, directory, name1, name2, if1)
 
     def stop_tcp_dumps(self, net):
-        print("Stopping tcpdump on hosts")
-        for host in self.host_spec:
-            net.get(host).cmd('pkill tcpdump')
-        for switch in self.switch_spec:
-            net.get(switch).cmd('pkill tcpdump')
-
+        print("Stopping tcpdump")
+        for node in self.all_nodes:
+            net.get(node).cmd('pkill tcpdump')
 
     def do_switch_replay(self, net):
-        for sw1_name, sw_opts in self.switch_spec.items():
-            for sw2_name, filename in sw_opts.get('replay',{}).items():
-                num = self.all_links[(sw1_name, sw2_name)]
-                print("Replaying {} from {} on {}-eth{} to {}".format(filename, sw1_name, sw1_name, num, sw2_name))
+        for sw1_name, sw_opts in self.all_switches.items():
+            for sw2_name, filename in sw_opts['replay'].items():
+                if sw2_name not in self.link_ports[sw1_name]:
+                    raise TopoSpecError("Replay attempted between disconnected nodes {}->{}"
+                                        .format(sw1_name, sw2_name))
+                num = self.link_ports[sw1_name][sw2_name]
+                print("Replaying {} from {} on {} to {}"
+                      .format(filename, sw1_name, self.iface_name(sw1_name, num), sw2_name))
                 net.get(sw1_name).cmd(
-                        'tcpreplay -i {}-eth{} {}'.format(sw1_name, num, cfgpath(filename))
+                        'tcpreplay -i {} {}'
+                        .format(self.iface_name(sw1_name, num), self.cfgpath(filename))
                 )
-                sleep(1)
 
     def do_commands(self, net):
-        for sw_name, sw_opts in self.switch_spec.items():
-            if 'cmds' in sw_opts:
-                for cmd_file in sw_opts['cmds']:
-                    commands = open(cfgpath(cmd_file)).readlines()
-                    send_commands(self.all_nodes[sw_name]['port'], cfgpath(sw_opts['cfg']), commands)
+        for sw_name, sw_opts in self.all_switches.items():
+            for cmd in sw_opts['cmds']:
+                if os.path.isfile(self.cfgpath(cmd)):
+                    commands = open(self.cfgpath(cmd)).readlines()
+                else:
+                    commands = [cmd]
+                send_commands(self.all_nodes[sw_name]['thrift_port'],
+                              self.cfgpath(sw_opts['cfg']), commands)
 
     def run_host_programs(self, net, extras):
-        for name, spec in self.host_spec.items():
-            if 'program' in spec:
-                print("Running {} on {}".format(spec['program'], name))
-                net.get(name).cmd('{} > {}/{}_prog.log 2>&1 &'.format(spec['program'], self.log_dir, name))
+        for name, opts in self.all_hosts.items():
+            for i, program in enumerate(opts['programs']):
+                print("Running {} on {}".format(program, name))
+                net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 &'
+                                  .format(program, self.log_dir, name, i))
 
-        for extra_prog in extras:
+        for i, extra_prog in enumerate(extras):
             try:
                 name, program = extra_prog.split(':')
             except:
-                print("Programs provided from cli must be of form 'h1:program to run'")
-                raise
+                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program'")
             print("Running {} on {}".format(program, name))
-            net.get(name).cmd('{} > {}/{}_prog.log 2>&1 &'.format(program, self.log_dir, name))
+            net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 &'
+                              .format(program, self.log_dir, name, i))
 
     def do_host_replay(self, net, host, towards, file):
-        print("Replaying {} on {}.eth0".format(file, host))
+        port_num = self.link_ports[host][towards]
+        print("Replaying {} on {}.{}".format(file, host, self.iface_name(host, port_num)))
         net.get(host).cmd(
-                'tcpreplay -p 100 -i eth0 {}'.format(file)
+                'tcpreplay -p 100 -i {} {}'.format(self.iface_name(host, port_num), file)
         )
 
 def main():
-    global cfg_file
     args = parser.parse_args()
 
     if args.bmv2_exe is None:
@@ -230,55 +366,64 @@ def main():
     else:
         bmv2_exe = args.bmv2_exe
 
-    cfg_file = args.config
-
     with open(args.config) as f:
         cfg = yaml.load(f)
 
     topo = FPTopo(cfg['hosts'], cfg['switches'],
-                  bmv2_exe, args.log, args.verbose)
+                  bmv2_exe, args.log, args.verbose, args.config)
 
     print("Starting mininet")
     net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
 
     net.start()
 
-    topo.init(net)
+    try:
+        topo.init(net)
 
-    net.staticArp()
-
-
-    if args.pcap_dump:
-        sleep(1)
-        topo.start_tcp_dumps(net, args.pcap_dump)
+        net.staticArp()
 
 
-    sleep(1)
+        if args.pcap_dump:
+            topo.start_tcp_dumps(net, args.pcap_dump)
 
-    topo.do_switch_replay(net)
 
-    sleep(1)
+        sleep(.1)
 
-    topo.do_commands(net)
+        topo.do_switch_replay(net)
 
-    topo.run_host_programs(net, args.host_prog)
+        sleep(.1)
 
-    if args.replay:
-        replay_args = args.replay.split(":")
-        replay_arg1 = replay_args[0].split('-')
-        if len(replay_args) != 2 or len(replay_arg1) != 2:
-            raise Exception("args.replay must have form Host-Switch:File")
-        topo.do_host_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1])
-        sleep(1)
+        topo.do_commands(net)
 
-    sleep(args.time)
+        sleep(.1)
 
-    if args.cli:
-        CLI(net)
+        topo.run_host_programs(net, args.host_prog)
 
-    if args.pcap_dump:
-        topo.stop_tcp_dumps(net)
-    print("Stoping mininet")
+        if args.replay:
+            replay_args = args.replay.split(":")
+            replay_arg1 = replay_args[0].split('-')
+            if len(replay_args) != 2 or len(replay_arg1) != 2:
+                raise Exception("args.replay must have form Host-Switch:File")
+            topo.do_host_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1])
+            sleep(.1)
+
+        sleep(args.time)
+
+        if args.cli:
+            CLI(net)
+
+        if args.pcap_dump:
+            topo.stop_tcp_dumps(net)
+        print("Stoping mininet")
+        net.stop()
+
+    except:
+        print("Encountered exception running mininet")
+        try:
+            net.stop()
+        except:
+            pass
+        raise
 
 if __name__ == '__main__':
     setLogLevel('debug')

@@ -1,4 +1,5 @@
 #include "booster_primitives.hpp"
+#include "sample_extern_object.h"
 
 #ifdef FEC_BOOSTER
 #include "fec_booster_primitives.h"
@@ -22,6 +23,7 @@ void boosters::import_booster_externs(SimpleSwitch *sswitch) {
 #ifdef COMPRESSION_BOOSTER
     import_compression_booster_primitives(sswitch);
 #endif
+    import_sample_extern_object(sswitch);
 }
 
 /** TODO IMP: static functions should go in .cpp rather than defining as static in headers */

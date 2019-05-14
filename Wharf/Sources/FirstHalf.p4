@@ -22,12 +22,12 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     bit<FEC_H_WIDTH> h = 0;
     bit<24> proto_and_port = 0;
     FEC_Classify() classification;
-    FecClassParams() decoder_params;
+//    FecClassParams() decoder_params; -- only matters to SecondHalf
     FecClassParams() encoder_params;
 #endif
 
 #if defined(COMPRESSION_BOOSTER)
-    CompressedLink() ingress_compression;
+//    CompressedLink() ingress_compression; -- only matters to SecondHalf
     CompressedLink() egress_compression;
 #endif
 
@@ -49,31 +49,31 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         bit<1> compressed_link = 0;
         bit<1> forward = 0;
 
-#if defined(FEC_BOOSTER)
-        // If lossy link, then FEC decode.
-        if (hdr.fec.isValid()) {
-            decoder_params.apply(hdr.fec.traffic_class, k, h);
-            hdr.eth.type = hdr.fec.orig_ethertype;
-            FEC_DECODE(hdr.fec, k, h);
-            if (hdr.fec.packet_index >= k) {
-                drop();
-                return;
-            }
-            hdr.fec.setInvalid();
-        }
-#endif
-
-#if defined(COMPRESSION_BOOSTER)
-        // If multiplexed link, then header decompress.
-        ingress_compression.apply(meta.ingress_port, compressed_link);
-        if (compressed_link == 1) {
-            header_decompress(forward);
-            if (forward == 0) {
-                drop();
-                return;
-            }
-        }
-#endif
+//#if defined(FEC_BOOSTER)
+//        // If lossy link, then FEC decode.
+//        if (hdr.fec.isValid()) {
+//            decoder_params.apply(hdr.fec.traffic_class, k, h);
+//            hdr.eth.type = hdr.fec.orig_ethertype;
+//            FEC_DECODE(hdr.fec, k, h);
+//            if (hdr.fec.packet_index >= k) {
+//                drop();
+//                return;
+//            }
+//            hdr.fec.setInvalid();
+//        }
+//#endif
+//
+//#if defined(COMPRESSION_BOOSTER)
+//        // If multiplexed link, then header decompress.
+//        ingress_compression.apply(meta.ingress_port, compressed_link);
+//        if (compressed_link == 1) {
+//            header_decompress(forward);
+//            if (forward == 0) {
+//                drop();
+//                return;
+//            }
+//        }
+//#endif
 
 #if defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);

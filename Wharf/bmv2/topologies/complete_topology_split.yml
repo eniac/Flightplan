@@ -1,26 +1,19 @@
 hosts:
-    h1 :
-        interfaces:
-            - ip: 10.0.0.11/24
-              mac: '11:11:11:11:11:11'
-    h2 :
-        interfaces:
-            - ip: 10.0.0.12/24
-              mac: '22:22:22:22:22:22'
+    h1 : {}
+    h2 : {}
 
 switches:
     s1:
-        cfg: ../../build/bmv2/Complete.json
+        cfg: ../../build/bmv2/FirstHalf.json
         interfaces:
             - link: h1
-              ip: 10.1.2.3
-              mac: FF:FF:FF:FF:EE:DD
+              port: 0
             - link: s2
+              port: 1
         cmds:
             - ../controller_files/compressor_commands.txt
             - ../controller_files/forwarding_commands.txt
             - ../controller_files/fec_encoder_commands.txt
-            - ../controller_files/fec_decoder_commands.txt
     s2:
         cfg: ../../build/bmv2/Dropper.json
         interfaces:
@@ -33,12 +26,13 @@ switches:
             s3: ../pcaps/lldp_enable_fec.pcap
         cmds: [../controller_files/forwarding_commands.txt]
     s3:
-        cfg: ../../build/bmv2/Complete.json
+        cfg: ../../build/bmv2/SecondHalf.json
         interfaces:
             - link: s2
+              port: 0
             - link: h2
+              port: 1
         cmds:
             - ../controller_files/decompressor_commands.txt
             - ../controller_files/forwarding_commands.txt
-            - ../controller_files/fec_encoder_commands.txt
             - ../controller_files/fec_decoder_commands.txt
