@@ -62,30 +62,40 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       // Context packaging for the next dataplane.
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
+    } else if (hdr.fpReceive2.isValid() && 0 == this_dataplane && 1 == hdr.fp.to_segment) {
+      next_dataplane = 0; // It's fine for this value to be hardcoded.
+      //bit<1> ok = 0;
+      //receiver_seq_state.nextSeq(hdr.fpReceive2.seqno, ok);
+      //if (ok == 0) {
+      //    receiver_seq_state.relink(ok); // FIXME not using "ok"
+      //}
+      hdr.fpReceive2.setInvalid();
+      hdr.eth.type = hdr.fp.encapsulated_ethertype;
+      hdr.fp.setInvalid();
+      flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
     } else if (hdr.fpReceive1.isValid() && 1 == this_dataplane && 2 == hdr.fp.to_segment) {
       // Receiver will interpret the headers, maybe do some processing, and send packet to receiver.
-      next_dataplane = 1; // It's fine for this value to be hardcoded.
+      next_dataplane = 0; // It's fine for this value to be hardcoded.
 
       bit<1> ok = 0;
       receiver_seq_state.nextSeq(hdr.fpReceive1.seqno, ok);
       if (ok == 0) {
           receiver_seq_state.relink(ok); // FIXME not using "ok"
       }
-      hdr.fpReceive1.setInvalid();
-      hdr.eth.type = hdr.fp.encapsulated_ethertype;
-      hdr.fp.setInvalid();
-
-// FIXME disabled this for the time being -- this dataplane will simply forward traffic forward
-/*
+      //hdr.fpReceive1.setInvalid();
+      //hdr.eth.type = hdr.fp.encapsulated_ethertype;
+      //hdr.fp.setInvalid();
 
       hdr.fp.from_segment = 2;
-      hdr.fp.to_segment = 3;
+      hdr.fp.to_segment = 1;
+#if 0
+FIXME for now just send the traffic back to s1
       // Context packaging for the next dataplane.
       hdr.fpReceive1.setInvalid();
       hdr.fpSend1.setValid();
       hdr.fpSend1.byte1 = hdr.fpReceive1.byte1;
       // FIXME invoke Sender and Receiver functions
-*/
+#endif
 
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
     } /* FIXME incomplete
