@@ -87,8 +87,8 @@ struct headers_t {
     eth_h  eth;
     fec_h  fec;
     ipv4_h ipv4;
-	tcp_h tcp;
-	udp_h udp;
+    tcp_h tcp;
+    udp_h udp;
 
     tlv_t              lldp_tlv_chassis_id;
     tlv_t              lldp_tlv_port_id;
