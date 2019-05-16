@@ -94,7 +94,7 @@ class P4Switch(Switch):
         pathCheck(sw_path)
         # make sure that the provided JSON file exists
         if not os.path.isfile(json_path):
-            error("Invalid JSON file.\n")
+            error("Could not find JSON file: " + json_path + "\n")
             exit(1)
         self.sw_path = sw_path
         self.json_path = json_path

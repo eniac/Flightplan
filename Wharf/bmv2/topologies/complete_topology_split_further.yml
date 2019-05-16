@@ -10,17 +10,17 @@ switches:
             - link: s2
             - link: s1compress
         cmds:
-            - table_add forward set_egress 0 => 2
+            - table_add forward set_egress 0 => 1
             - table_add forward set_egress 2 => 1
             - table_add forward set_egress 1 => 0
             - table_add compression_offload.offloaded_port compression_offload.is_offload_port 2 => 1
+            - table_add egress_compression.port_compression egress_compression.set_port_compression 1 => 1
             - ../controller_files/fec_encoder_commands.txt
     s1compress:
         cfg: ../../build/bmv2/Compress.json
         interfaces:
             - link: s1
         cmds:
-            - table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
             - table_add forward set_egress 0 => 0
     s2:
         cfg: ../../build/bmv2/Dropper.json
@@ -30,7 +30,10 @@ switches:
         replay:
             s1: ../pcaps/lldp_enable_fec.pcap
             s3: ../pcaps/lldp_enable_fec.pcap
-        cmds: [../controller_files/forwarding_commands.txt]
+        cmds:
+            - ../controller_files/forwarding_commands.txt
+            - table_add dropper set_drop_rate 1 => 3 5
+            - table_add dropper set_drop_rate 0 => 3 5
     s3:
         cfg: ../../build/bmv2/SecondHalf.json
         interfaces:
