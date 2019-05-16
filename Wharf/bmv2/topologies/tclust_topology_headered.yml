@@ -1,0 +1,86 @@
+hosts:
+    mcd_c :
+        interfaces:
+            - link: tofino1
+              mac: '11:11:11:11:11:11'
+    mcd_s :
+        interfaces:
+            - link: tofino2
+              mac: '11:11:11:11:11:12'
+    iperf_c :
+        interfaces:
+            - link: tofino1
+              mac: '11:11:11:11:11:13'
+    iperf_s :
+        interfaces:
+            - link: tofino2
+              mac: '11:11:11:11:11:14'
+
+switches:
+    tofino1:
+        cfg: ../../build/bmv2/CompleteHeadered.json
+        interfaces:
+            - link: dropper
+              port: 0
+            - link: mcd_c
+              port: 1
+            - link: iperf_c
+              port: 2
+            - link: fpga1
+              port: 3
+            - link: fpga2
+              port: 4
+        cmds:
+            - table_add flightplan_forward set_egress 2 => 3
+            - table_add flightplan_forward set_egress 3 => 4
+            - table_add flightplan_forward set_egress 4 => 0
+            - table_add forward set_egress '11:11:11:11:11:11' => 1
+            - table_add forward set_egress '11:11:11:11:11:13' => 2
+            - table_add default_forward set_egress 0 => 0
+    fpga1:
+        cfg: ../../build/bmv2/CompressHeadered.json
+        interfaces:
+            - link: tofino1
+              port: 0
+        cmds:
+            - table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
+            - table_add forward set_egress 0 => 0
+    fpga2:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino1
+              port: 0
+        cmds:
+            - table_add forward set_egress 0 => 0
+    dropper:
+        cfg: ../../build/bmv2/Dropper.json
+        interfaces:
+            - link: tofino1
+              port: 0
+            - link: tofino2
+              port: 1
+        cmds:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
+    tofino2:
+        cfg: ../../build/bmv2/CompleteHeadered.json
+        interfaces:
+            - link: dropper
+              port: 0
+            - link: mcd_s
+              port: 1
+            - link: iperf_s
+              port: 2
+            - link: fpga3
+              port: 3
+        cmds:
+            - table_add flightplan_forward set_egress 4 => 3
+            - table_add forward set_egress '11:11:11:11:11:12' => 1
+            - table_add forward set_egress '11:11:11:11:11:14' => 2
+            - table_add default_forward set_egress 0 => 0
+    fpga3:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino2
+        cmds:
+            - table_add forward set_egress 0 => 1
