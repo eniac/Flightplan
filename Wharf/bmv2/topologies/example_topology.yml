@@ -8,8 +8,8 @@ hosts:
     h2 :
         interfaces:
             - ip: 10.0.0.11/24
-              # _MUST_ put mac address in quotes.
-              # Otherwise yaml thinks it's a ratio?
+              # _MUST_ put mac address in quotes if it only consist of numerals
+              # otherwise yaml thinks it's a ratio.
               mac: '11:11:11:11:11:11'
               # You can set the name of the interface here
               # Relevant mostly for replaying or sending packets on that interface
@@ -42,6 +42,8 @@ switches:
         interfaces:
             - link: h1
               ip: 10.1.2.3
+              # This MAC address doesn't only consist of numerals, therefore
+              # no need to quote since YAML wouldn't treat it as a ratio.
               mac: FF:FF:FF:FF:EE:DD
             - link: h2
             - link: s2
