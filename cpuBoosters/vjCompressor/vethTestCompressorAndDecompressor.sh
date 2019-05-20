@@ -66,4 +66,4 @@ ip link delete networkVeth3
 python comparePcaps.py $INPUT_PCAP $OUTPUT_PCAP
 
 # Verify that header has been compressed
-python ../../Wharf/bmv2/pcap_tools/pcap_size.py $COMPRESS_PCAP
+python ../../Wharf/bmv2/pcap_tools/pcap_size.py $INPUT_PCAP $COMPRESS_PCAP $OUTPUT_PCAP 

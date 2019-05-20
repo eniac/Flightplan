@@ -73,16 +73,16 @@ int main(int argc, char *argv[]){
       if_name = optarg;
       break;
     case 'o':
-	  oif_name = optarg;
-	  break;
+      oif_name = optarg;
+      break;
     case 'f':
-	  opt_flow = optarg;
-	  flow = atoi(opt_flow);
+      opt_flow = optarg;
+      flow = atoi(opt_flow);
       if(flow == 0)
-	    printf("\nPacket Flow is to Compressor booster \n");
+        printf("\nPacket Flow is to Compressor booster \n");
       else if(flow == 1)
-	    printf("\nPacket Flow is to Decompressor booster \n");
-	  break;
+        printf("\nPacket Flow is to Decompressor booster \n");
+      break;
     default:
       printf("\nNot yet defined opt = %d\n", opt);
       abort();
