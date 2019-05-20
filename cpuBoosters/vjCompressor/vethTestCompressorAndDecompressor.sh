@@ -3,6 +3,7 @@ BOOSTER_NAME=compressorAndDecompressor
 SOURCE_PCAP=$1
 INPUT_PCAP=$1.$BOOSTER_NAME.in.pcap
 OUTPUT_PCAP=$1.$BOOSTER_NAME.out.pcap
+COMPRESS_PCAP=$1.$BOOSTER_NAME.compress.pcap
 echo "testing booster $BOOSTER_NAME with veth pairs."
 echo "source pcap: $SOURCE_PCAP"
 echo "output pcap: $OUTPUT_PCAP"
@@ -31,22 +32,21 @@ peer_link() {
 peer_link networkVeth1 deviceVeth1
 peer_link networkVeth2 deviceVeth2
 peer_link networkVeth3 deviceVeth3
-peer_link networkVeth4 deviceVeth4
 
 # start empty booster : reads and writes to deviceVeth.
 echo "starting compressor booster..."
 ./$BOOSTER_NAME -i deviceVeth1 -o networkVeth2 -f 0 > ${BOOSTER_NAME}_compress.log &
 echo "starting decompressor booster..."
 ./$BOOSTER_NAME -i deviceVeth2 -o networkVeth3 -f 1 > ${BOOSTER_NAME}_decompress.log &
-echo "starting forward nonbooster..."
-./$BOOSTER_NAME -i deviceVeth3 -o networkVeth4 -f 2 > ${BOOSTER_NAME}_fwd.log &
 
 # start tcpdump to collect the packets that come back into the network from the device.
-echo "starting tcpdump... INPUT_PCAP=$INPUT_PCAP, OUTPUT_PCAP=$OUTPUT_PCAP"
+echo "starting tcpdump... INPUT_PCAP=$INPUT_PCAP, OUTPUT_PCAP=$OUTPUT_PCAP, COMPRESS_PCAP=$COMPRESS_PCAP"
 rm $INPUT_PCAP
 rm $OUTPUT_PCAP
+rm $COMPRESS_PCAP
 tcpdump -Q out -i networkVeth1 -w $INPUT_PCAP &
-tcpdump -Q out -i networkVeth4 -w $OUTPUT_PCAP &
+tcpdump -Q out -i networkVeth2 -w $COMPRESS_PCAP &
+tcpdump -Q out -i networkVeth3 -w $OUTPUT_PCAP &
 sleep 1
 
 # start tcpreplay to send input from the network to the device (at 1k pps).
@@ -61,7 +61,9 @@ killall $BOOSTER_NAME
 ip link delete networkVeth1
 ip link delete networkVeth2
 ip link delete networkVeth3
-ip link delete networkVeth4
 
 # compare input and output pcaps.
 python comparePcaps.py $INPUT_PCAP $OUTPUT_PCAP
+
+# Verify that header has been compressed
+python ../../Wharf/bmv2/pcap_tools/pcap_size.py $COMPRESS_PCAP
