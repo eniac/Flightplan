@@ -4,7 +4,7 @@ LABEL=$2
 RATES=$3
 
 if [[ $LABEL == "" || $OUT == "" ]]; then
-    echo "usage $0 OUT LABEL ZIPF RATES"
+    echo "usage $0 OUT LABEL RATES"
     exit -1;
 fi
 
