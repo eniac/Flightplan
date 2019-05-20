@@ -9,7 +9,7 @@ if [[ $LABEL == "" || $OUT == "" ]]; then
 fi
 
 if [[ $RATES == "" ]]; then
-    RATES=".00 $(seq -f "%.02f" 2 2 30)";
+    RATES="1.00 $(seq -f "%.02f" 2 2 30)";
 fi
 
 mkdir -p $OUT/$LABEL
