@@ -54,6 +54,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 #if 0
         SET_EGRESS(meta, 0);
         return;
+#endif
 
         if (!hdr.fp.isValid()) {
             hdr.fp.setValid();
@@ -82,8 +83,8 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 
         Forwarder.apply(meta);
         return; // FIXME subsequent code is unreachable
-#endif
 
+#if 0
 #if defined (FEC_BOOSTER)
         // If we received an FEC update, then update the table.
         bit<1> is_ctrl;
@@ -181,6 +182,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 
 #if !defined(MID_FORWARDING_DECISION)
         Forwarder.apply(meta);
+#endif
 #endif
     }
 }
