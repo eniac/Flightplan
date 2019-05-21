@@ -31,6 +31,7 @@ control NoEgress(inout fp_headers_t hdr, inout booster_metadata_t m, inout metad
 
 error {
     from_segment_error,
+    fp_version_error,
     ethertype_error
 }
 
@@ -46,6 +47,7 @@ parser FlightplanParser(packet_in pkt, out fp_headers_t hdr,
 
   state parse_flightplan {
     pkt.extract(hdr.fp);
+    verify(hdr.fp.version == 1, error.fp_version_error);
     verify(hdr.fp.from_segment == 1 ||
            hdr.fp.from_segment == 2, error.from_segment_error);
     transition select(hdr.fp.from_segment) {
