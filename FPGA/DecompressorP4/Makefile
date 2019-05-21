@@ -21,6 +21,8 @@ Encoder: Encoder.sdnet ../RSEP4/Scripts/Patch_backpressure.pl \
 	@cp ../DecompressorVivadoHLS/Batch/MemcachedVivadoHLS/solution2/syn/verilog/*.v Encoder/XilinxSwitch/headerDecompress_0_t.HDL
 	patch -p0 < Patches/Encoder.patch
 	@FILE=$$(mktemp) && ../RSEP4/Scripts/Patch_backpressure.pl -i Encoder/XilinxSwitch/XilinxSwitch.v -d 3 -p headerDecompress -t headerDecompress_0_t -m headerDecompress_0 > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
+	cd Encoder/XilinxSwitch/XilinxSwitch.TB; \
+	./compile.bash	
 
 Encoder.sdnet: Sources/Encoder.p4
 	p4c-sdnet -I ../DecompressorP4 -I ../RSEVivadoHLS Sources/Encoder.p4 -o Encoder.sdnet
