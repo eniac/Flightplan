@@ -31,6 +31,9 @@ Memcached1PortSDx: Memcached1PortVivado
 Compressor1PortSDx: Compressor1PortVivado
 	cd TopLevelSDx && make Compressor1Port
 
+Decompressor1PortSDx: Decompressor1PortVivado
+	cd TopLevelSDx && make Decompressor1Port
+
 RSEEncoder2PortsSDx: RSEEncoder2PortsVivado
 	cd TopLevelSDx && make RSEEncoder2Ports
 
@@ -58,8 +61,10 @@ RSEDecoder4PortsSDx: RSEDecoder4PortsVivado
 Memcached4PortsSDx: Memcached4PortsVivado
 	cd TopLevelSDx && make Memcached4Ports
 
-Compressor4PortsSDx: Compressor4PortsVivado
-	cd TopLevelSDx && make Compressor4Ports
+Compressor4portssdx: Compressor4portsvivado
+	cd toplevelsdx && make Compressor4ports
+Decompressor4portssdx: Decompressor4portsvivado
+	cd toplevelsdx && make Decompressor4ports
 
 RSEEncoder1PortVivado: RSEEncoderP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
 	cd TopLevelVivado && make RSEEncoder1Port
@@ -72,6 +77,9 @@ Memcached1PortVivado: MemcachedP4 RSEInputBufferVivado RSEOutputBufferVivado Tup
 
 Compressor1PortVivado: CompressorP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
 	cd TopLevelVivado && make Compressor1Port
+
+Decompressor1PortVivado: DecompressorP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
+	cd TopLevelVivado && make Decompressor1Port
 
 RSEEncoder2PortsVivado: RSEEncoderP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
 	cd TopLevelVivado && make RSEEncoder2Ports
@@ -102,6 +110,8 @@ Memcached4PortsVivado: MemcachedP4 RSEInputBufferVivado RSEOutputBufferVivado Tu
 
 Compressor4PortsVivado: CompressorP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
 	cd TopLevelVivado && make Compressor4Ports
+Decompressor4PortsVivado: DecompressorP4 RSEInputBufferVivado RSEOutputBufferVivado TupleGeneratorVivado
+	cd TopLevelVivado && make Decompressor4Ports
 
 RSEEncoderP4: RSEEncoderVivadoHLS
 	cd RSEP4 && make
