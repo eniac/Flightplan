@@ -183,6 +183,7 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control FecDeparser(packet_out pkt, in headers_t hdr) {
     apply {
+        pkt.emit(hdr.fp);
         pkt.emit(hdr.eth);
         pkt.emit(hdr.fec);
         pkt.emit(hdr.ipv4);
