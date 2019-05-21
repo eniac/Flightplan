@@ -17,6 +17,21 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 
 control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
 
+  bit<SEGMENT_DESC_SIZE> next_dataplane = 0;
+
+  action set_egress(bit<9> port) {
+      SET_EGRESS(meta, port);
+  }
+
+  table flightplan_forward {
+    key = {
+      next_dataplane : exact;
+    }
+    actions = { set_egress; NoAction; }
+    // FIXME map next_dataplane to egress
+    default_action = NoAction/*FIXME report an error if we can't find where to forward to*/;
+  }
+
 #if defined(FEC_BOOSTER)
     bit<FEC_K_WIDTH> k = 0;
     bit<FEC_H_WIDTH> h = 0;
@@ -35,6 +50,37 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         if (!hdr.eth.isValid()) {
             drop();
         }
+
+        SET_EGRESS(meta, 0);
+        return;
+
+        if (!hdr.fp.isValid()) {
+            hdr.fp.setValid();
+            hdr.fp.src = hdr.eth.src;
+            hdr.fp.dst = hdr.eth.dst;
+            hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
+
+            hdr.fp.version = 1;
+            hdr.fp.from_segment = 1;
+            hdr.fp.to_segment = 2;
+
+            // FIXME packag context for the next dataplane.
+
+            next_dataplane = hdr.fp.to_segment;
+            flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
+        }  else if (3 == hdr.fp.to_segment) {
+            next_dataplane = hdr.fp.to_segment;
+            flightplan_forward.apply();
+        }  else if (4 == hdr.fp.to_segment) {
+            next_dataplane = hdr.fp.to_segment;
+            flightplan_forward.apply();
+        }  else if (5 == hdr.fp.to_segment) {
+            next_dataplane = hdr.fp.to_segment;
+            flightplan_forward.apply();
+        }
+
+        Forwarder.apply(meta);
+        return; // FIXME subsequent code is unreachable
 
 #if defined (FEC_BOOSTER)
         // If we received an FEC update, then update the table.
