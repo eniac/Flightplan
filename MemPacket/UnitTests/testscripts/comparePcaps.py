@@ -33,10 +33,14 @@ def comparePcaps(pcapF1, pcapF2):
 		pcap2Bufs.append(buf)
 	
 	success = True
-	for i in range(len(pcap1Bufs)):
-		if pcap1Bufs[i] != pcap2Bufs[i]:
-			print("\tpacket " + str(i) +" doesn't match")
-			success = False
+	if (len(pcap1Bufs) != len(pcap2Bufs)):
+		print("Two Pcap Files have different number of Packets")
+		success = False
+	else:	
+		for i in range(len(pcap1Bufs)):
+			if pcap1Bufs[i] != pcap2Bufs[i]:
+				print("\tpacket " + str(i) +" doesn't match")
+				success = False
 	if (success):
 		print ("PASS: all packets in %s and %s are identical"%(pcapF1, pcapF2))
 	else:

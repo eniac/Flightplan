@@ -13,7 +13,7 @@ def main(pcapF1):
 
 def cleanPcaps(pcapF1):
 	pcap1 = dpkt.pcap.Reader(open(pcapF1))
-	pcap2 = dpkt.pcap.Writer(open("clean.pcap", "w+"))
+	pcap2 = dpkt.pcap.Writer(open(pcapF1+ "clean.pcap", "w+"))
 	pcap1Bufs = []
 	for ts, buf in pcap1:
 		eth = dpkt.ethernet.Ethernet(buf)
@@ -25,6 +25,7 @@ def cleanPcaps(pcapF1):
 		ip.id = 0
 		udp.sum = 10
 		pcap2.writepkt(eth,ts=ts)
-	shutil.move("clean.pcap", pcapF1)
+	shutil.move(pcapF1 +"clean.pcap", pcapF1)
+	print("Finish cleaning")
 if __name__ == '__main__':
 	main(sys.argv[1])
