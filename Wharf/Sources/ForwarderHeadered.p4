@@ -61,7 +61,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             return;
         }
 
-        //Forwarder.apply(meta);
         return;
     }
 }
