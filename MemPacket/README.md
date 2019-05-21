@@ -1,14 +1,33 @@
-# Memcached Hardware Testing
+# Memcached FPGA Testing
 
 ## Generate packets
-Use scripts generate\_packets.sh to generate testing packets and standard response from actual memcached service. The length of KEY and DATA could be modified in config file .memaslap.cnf
+Use scripts `./generate_packets.sh` to generate testing packets and standard response from actual memcached service. The length of KEY and DATA could be modified in config file `memaslap.cnf`
 
-## Testing
-### C testing
-Use C\_test.sh for C simulation. Before the first test, he script ../FPGA/MemcachedP4/Encoder/XilinxSwitch/XilinxSwitch.TB/compile.bash must be executed. <br/>
-The script requries 2 arguments: Input pcap file and Standard pcap file for comparison.<br/>
-If no arguments assigned, the script will execute generate\_packets.sh first. The input would then be TX.pcap. The reference pcap file would be RX.pcap
-### Hardware testing
-Use Hardware\_test.sh for hardware testing. The scripts require 3 arguments: NIC interface name, Pcap file for TX and Pcap file for saving captured pcap.
-### Payload Extraction
-Payload.py could be used to extract Memcached payload and sorted by the Identification field of Memcached header. For example: python3 payload.py test.pcap. It will extract the payload of each packet in the test.pcap and save it into test.pcap.txt.
+## C-simulation
+Run `./runUnitTests.sh` to run all unit tests. Or run `UnitTest\Testx\test.sh` individually.
+## Hardware testing
+Run `./Hardware_test.sh $interface` where `$interface` should specify the interface used.
+## Test cases
+| ﻿      |  Pkts sent in order                         | Recv@Server(DstPort 11211) | Recv@Client (SrcPort 11211) | Behaviour Description                            |
+|-------|-----------------------------------|-------------------------|--------------------------|--------------------------------------------------|
+| Test1 | Set Pkts                          | Forward set pkts        |                          | Set pkts forwarded and Store the entries locally |
+|       | Get Pkts                          |                         | VALUE pkts               |                                                  |
+| Test2 | Single Get Pkt (Key A)            | Forward get pkt         |                          | Get Miss: Forward the request to Server          |
+|       | Single Value Pkt (Key A)          |                         | VALUE pkt                | Forward VALUE Pkts and Store the entry locally   |
+|       | Single Get Pkt (Key A)            |                         | VALUE pkt                | The entry should be saved and no more miss       |
+| Test3 | Store Pkt                         |                         | Forward Store Pkt        | Server acknoledeged the Set.                     |
+| Test4 | Set Pkt (Key A)                   | Forward set pkt         |                          |                                                  |
+|       | Set Pkt(Key B but with same hash) | Forward set pkt         |                          | Collision: kick the previous entry               |
+|       | Get Pkt (Key A)                   | Forward get pkt         |                          | Hash collision: Forward the request to Server    |
+|       | Get Pkt(Key B)                    |                         | VALUE pkt                | Not Miss                                         |
+
+## Add Test Cases
+The `Test` Folder should contain the `pcap/Send.pcap` and `pcap/ref@client.pcap` and `pcap/ref@server.pcap`
+
+## CheckSum
+The `UnitTest\testscripts\cleanPcap.py` is used to clean the UDP checksum to 0. All packets for comparision must be set the `udp.checksum` to 0. 
+
+## TODO
+Add `ip.checksum` into implementation.
+
+
