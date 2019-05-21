@@ -3,6 +3,7 @@
 
 #include "targets.h"
 #include "Configuration.h"
+#include "FlightplanHeader.p4"
 
 typedef bit<48> MacAddress;
 
@@ -84,6 +85,8 @@ header udp_h {
     bit<16>             chksum;
 }
 struct headers_t {
+    flightplan_h fp;
+
     eth_h  eth;
     fec_h  fec;
     ipv4_h ipv4;
@@ -103,17 +106,27 @@ struct headers_t {
 parser FecParser(packet_in pkt, out headers_t hdr) {
     state start {
         transition parse_eth;
+        //transition select(pkt.lookahead<bit<112>>() & 112w0xFFFF) {
+        //    ETHERTYPE_FLIGHTPLAN : parse_flightplan;
+        //    default : parse_eth;
+        //}
     }
 
     state parse_eth {
+    pkt.extract(hdr.fp);
         pkt.extract(hdr.eth);
         transition select(hdr.eth.type) {
             ETHERTYPE_WHARF : parse_fec;
             ETHERTYPE_IPV4 : parse_ipv4;
-            ETHERTYPE_LLDP: parse_lldp;
+//            ETHERTYPE_LLDP: parse_lldp;
             default : accept;
         }
     }
+
+//  state parse_flightplan {
+//    pkt.extract(hdr.fp);
+//    transition parse_eth;
+//  }
 
     state parse_fec {
         pkt.extract(hdr.fec);

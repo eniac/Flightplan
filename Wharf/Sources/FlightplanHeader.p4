@@ -4,8 +4,8 @@ Prototype for Flightplan customised API
 Nik Sultana, UPenn, January 2019
 */
 
-#define ACKing
-#define NAKing
+#undef ACKing
+#undef NAKing
 
 #define FLIGHTPLAN_VERSION_SIZE 4 /*FIXME fudge*/
 #define ETHERTYPE_FLIGHTPLAN 0x2222 /*FIXME fudge*/
@@ -16,8 +16,13 @@ Nik Sultana, UPenn, January 2019
 
 // Flightplan header scheme
 header flightplan_h {
+  // Includes Ethernet header to simplify parsing, and handling by black-box external functions that aren't aware of the Flightplan header.
+  bit<48> dst;
+  bit<48> src;
+  bit<16> type;
+
   bit<FLIGHTPLAN_VERSION_SIZE> version; // This could be spared.
-  bit<16> encapsulated_ethertype;
+//  bit<16> encapsulated_ethertype; -- This can be removed if we fully encapsulate the Ethernet frame including the original Ethernet header.
   bit<SEGMENT_DESC_SIZE> from_segment; // This is implicit in ingress port, so could be spared.
   bit<SEGMENT_DESC_SIZE> to_segment; // This is implicit in ingress port, so could be spared.
   bit<4> pad;
