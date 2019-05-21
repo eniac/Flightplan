@@ -19,7 +19,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 
   bit<SEGMENT_DESC_SIZE> next_dataplane = 0;
 
-  action set_egress(bit<9> port) {
+  action set_fp_egress(bit<9> port) {
       SET_EGRESS(meta, port);
   }
 
@@ -27,7 +27,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     key = {
       next_dataplane : exact;
     }
-    actions = { set_egress; NoAction; }
+    actions = { set_fp_egress; NoAction; }
     // FIXME map next_dataplane to egress
     default_action = NoAction/*FIXME report an error if we can't find where to forward to*/;
   }
@@ -51,11 +51,6 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             drop();
         }
 
-#if 0
-        SET_EGRESS(meta, 0);
-        return;
-#endif
-
         if (!hdr.fp.isValid()) {
             hdr.fp.setValid();
             hdr.fp.src = hdr.eth.src;
@@ -65,24 +60,16 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             hdr.fp.version = 1;
             hdr.fp.from_segment = 1;
             hdr.fp.to_segment = 2;
-
-            // FIXME packag context for the next dataplane.
-
-            next_dataplane = hdr.fp.to_segment;
-            flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
-        }  else if (3 == hdr.fp.to_segment) {
-            next_dataplane = hdr.fp.to_segment;
-            flightplan_forward.apply();
-        }  else if (4 == hdr.fp.to_segment) {
-            next_dataplane = hdr.fp.to_segment;
-            flightplan_forward.apply();
-        }  else if (5 == hdr.fp.to_segment) {
-            next_dataplane = hdr.fp.to_segment;
-            flightplan_forward.apply();
         }
 
-        Forwarder.apply(meta);
-        return; // FIXME subsequent code is unreachable
+        if (hdr.fp.isValid()) {
+            next_dataplane = hdr.fp.to_segment;
+            flightplan_forward.apply();
+            return;
+        }
+
+//        Forwarder.apply(meta);
+        return;
 
 #if 0
 #if defined (FEC_BOOSTER)
