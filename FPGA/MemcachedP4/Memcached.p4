@@ -1,4 +1,4 @@
-#include "Memcached_extern.p4"
+//#include "Memcached_extern.p4"
 
 @Xilinx_MaxLatency(1000)
 extern void memcached(out bit<1> forward);
