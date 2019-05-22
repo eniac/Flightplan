@@ -24,7 +24,7 @@ cp $SOURCE_PCAP $SOFTWARE_INPUT
 mv Packet_expect.pcap $SOFTWARE_RECV_PCAP
 
 echo "Starting tcpdump...."
-tcpdump -i $INTERFACE_OUT -w $SEND_PCAP &
+tcpdump -i -Q out $INTERFACE_OUT -w $SEND_PCAP &
 tcpdump -Q in -i $INTERFACE_IN -w $RECV_PCAP &
 sleep 1
 
