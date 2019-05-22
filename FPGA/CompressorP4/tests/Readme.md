@@ -1,10 +1,8 @@
 # Unit Tests
 This test is FPGA and software co-simulation. 
-## Prerequisite
-To run the test, the bitstream must be launched on the FPGA and the CompressorP4 must be built.
-The Interfaces for sending and recving packets must be specified in the `Hadrware_test.sh`.
 ## Run Test
-Simply run `sudo ./Hardware_test.sh $TEST_NAME`.
+Run `./C_Test.sh $TEST_NAME` for C simulation. 
+Add `-RTL` for RTL simulation
 The Csimulation trace is `CSimulation.pcap`. The send and receive packets are `send.pcap` and `recv.pcap`
 ## Other Utility
 The `cleanPcap.py input_pcap` is used to remove the packets that are neither compressed nor tcp packets. 

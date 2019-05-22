@@ -33,6 +33,9 @@ def comparePcaps(pcapF1, pcapF2):
 		pcap2Bufs.append(buf)
 	
 	success = True
+	if (len(pcap1Bufs) != len(pcap2Bufs)):
+		print("The two pcap traces have different number of packets")
+		success = False
 	for i in range(len(pcap1Bufs)):
 		if pcap1Bufs[i] != pcap2Bufs[i]:
 			print("\tpacket " + str(i) +" doesn't match")
