@@ -1,10 +1,36 @@
-#include "MemHLS.h"
-#include "memcached.h"
+#ifdef COMPRESSOR
+  #include "Compressor.h"
+#else
+  #include "Decompressor.h"
+#endif
+#include <stdlib.h>
+#include <signal.h>
+#include <pcap.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <net/ethernet.h>
+#include <stdio.h>
+#include "hdrCompress.h"
 #include <algorithm>
+#include <math.h>
+#include <stdlib.h>
+
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <sstream>
 
 #define ETH_SIZE ((16 + 48 + 48)/8)
 #define UDP_SIZE ((16 + 16 + 16 + 16)/8)
 #define IPV4_SIZE ((32 + 32 + 16 + 8 + 8+ 13 + 3 + 16 + 16 + 8 + 4 + 4)/8)
+#define MTU 1500
+using namespace std;
+
+static pcap_t *output_handle = NULL;
+static pcap_t *pcap = NULL;
+
+void compressHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
+void decompressHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 
 static int in_offset;
 template <int size_bits>
@@ -160,6 +186,8 @@ void transfer_out(T &input_tuple, char *packet) {
         std::cout << "MATCH " << std::endl; \
     }
 
+#ifdef COMPRESSOR
+
 bool call_compressor(const char *packet, size_t packet_size, mcd_forward_fn forward) {
 
     if (packet_size < ETH_SIZE + UDP_SIZE + IPV4_SIZE) {
@@ -256,12 +284,14 @@ bool call_compressor(const char *packet, size_t packet_size, mcd_forward_fn forw
 
         forward(output_packet, packet_i, 0);//output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport);
 
-        if (output_tuple.Checkcache.forward != 1) {
+        if (output_tuple.CheckTcp.forward != 1) {
             break;
         }
     }
     return true;
 }
+
+#else
 
 bool call_decompressor(const char *packet, size_t packet_size, mcd_forward_fn forward) {
 
@@ -300,12 +330,13 @@ bool call_decompressor(const char *packet, size_t packet_size, mcd_forward_fn fo
     std::cout << "TCP Check " << tcp.check.to_string(16) << std::endl;
     std::cout << "TCP Urgent " << tcp.urgent.to_string(16) << std::endl;
 
+   // input_tuple.headerDecompress_input.Stateful_valid = 1;
     input_tuple.headerDecompress_input.Stateful_valid = 1;
-	input_tuple.Ioports.Egress_port = 0;
-	input_tuple.Ioports.Ingress_port = 0;
-	input_tuple.Local_state.Id = 0;
-	input_tuple.Parser_extracts.Size = 0;
-	input_tuple.CheckTcp.forward = 0;
+    input_tuple.Ioports.Egress_port = 0;
+    input_tuple.Ioports.Ingress_port = 0;
+    input_tuple.Local_state.Id = 0;
+    input_tuple.Parser_extracts.Size = 0;
+    input_tuple.CheckTcp.forward = 0;
 
     hls::stream<input_tuples> input_tuple_stream;
     input_tuple_stream.write(input_tuple);
@@ -359,9 +390,110 @@ bool call_decompressor(const char *packet, size_t packet_size, mcd_forward_fn fo
 
         forward(output_packet, packet_i, 0);//output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport);
 
-        if (output_tuple.Checkcache.forward != 1) {
+        if (output_tuple.CheckTcp.forward != 1) {
             break;
         }
     }
     return true;
 }
+
+#endif
+
+/**
+ * @brief Forwards the provided frame to the configured output pcap handle.
+ *
+ * @param[in] packet Packet data to be send on the output interface
+ * @param[in] len Size of the provided packet
+ */
+void forward_frame(const void * packet, int len, int reverse) {
+	if (NULL != output_handle) {
+		pcap_inject(output_handle, packet, len);
+	} else {
+		pcap_inject(pcap, packet, len);
+	}
+}
+
+
+int main(int argc, char *argv[]){
+  // printHeaderSizes();
+  // return 1;
+  int opt = 0;
+  int flow = 0;
+  char *if_name = nullptr;
+  char *oif_name = nullptr;
+  char *opt_flow = nullptr;
+  while ((opt =  getopt(argc, argv, "i:o:f:")) != EOF)
+  {
+    switch (opt)
+    {
+    case 'i':
+      if_name = optarg;
+      break;
+    case 'o':
+      oif_name = optarg;
+      break;
+    case 'f':
+      opt_flow = optarg;
+      flow = atoi(opt_flow);
+      if(flow == 0)
+        printf("\nPacket Flow is to Compressor booster \n");
+      else if(flow == 1)
+        printf("\nPacket Flow is to Decompressor booster \n");
+      break;
+    default:
+      printf("\nNot yet defined opt = %d\n", opt);
+      abort();
+    }
+  }
+  cout << "booster running on interface: " << if_name << endl;
+
+  char pcap_errbuf[PCAP_ERRBUF_SIZE];
+  pcap_errbuf[0]='\0';
+  pcap=pcap_open_live(if_name,MTU,1,0,pcap_errbuf);
+  if (pcap_errbuf[0]!='\0') {
+      fprintf(stderr,"%s",pcap_errbuf);
+  }
+  if (!pcap) {
+      exit(1);
+  }
+
+  char output_errbuf[PCAP_ERRBUF_SIZE];
+  output_errbuf[0]='\0';
+  output_handle = pcap_open_live(oif_name, MTU, 0, 0, output_errbuf);
+  if(output_handle == NULL) {
+      fprintf(stderr,"%s:%s",oif_name, output_errbuf);	
+  }
+
+  switch(flow) {
+	case 0:
+		  // start packet processing loop for compress.
+  		  if (pcap_loop(pcap, 0, compressHandler, NULL) < 0) {
+				  cerr << "pcap_loop() failed: " << pcap_geterr(pcap);
+				  return 1;
+		  }
+		  break;
+	case 1:
+		  // start packet processing loop for decompress.
+		  if (pcap_loop(pcap, 0, decompressHandler, NULL) < 0) {
+				  cerr << "pcap_loop() failed: " << pcap_geterr(pcap);
+				  return 1;
+		  }
+		  break;
+  }
+  return 0;
+}
+
+void compressHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
+#ifdef COMPRESSOR
+    call_compressor((const char*)packet, pkthdr->len, forward_frame);
+#endif
+    return;
+}
+
+void decompressHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
+#ifndef COMPRESSOR
+    call_decompressor((const char*)packet, pkthdr->len, forward_frame);
+#endif
+    return;
+}
+
