@@ -34,8 +34,8 @@ switches:
             - table_add flightplan_forward set_fp_egress 2 => 3
             - table_add flightplan_forward set_fp_egress 3 => 4
             - table_add flightplan_forward set_fp_egress 4 => 0
-            #- table_add forward set_egress '11:11:11:11:11:11' => 1
-            #- table_add forward set_egress '11:11:11:11:11:13' => 2
+            - table_add mac_forward set_mac_egress 0x111111111111 => 1
+            - table_add mac_forward set_mac_egress 0x111111111113 => 2
             #- table_add default_forward set_egress 0 => 0
     fpga1:
         #cfg: ../../build/bmv2/CompressHeadered.json
@@ -79,13 +79,15 @@ switches:
               port: 3
         cmds:
 #            - table_add flightplan_forward set_egress 4 => 3
-#            - table_add forward set_egress '11:11:11:11:11:12' => 1
-#            - table_add forward set_egress '11:11:11:11:11:14' => 2
+            - table_add mac_forward set_mac_egress 0x111111111112 => 1
+            - table_add mac_forward set_mac_egress 0x111111111114 => 2
 #            - table_add default_forward set_egress 0 => 0
-            - table_add flightplan_forward set_fp_egress 4 => 2
+            - table_add flightplan_forward set_fp_egress 4 => 3
     fpga3:
-        cfg: ../../build/bmv2/Forwarder.json
+        #cfg: ../../build/bmv2/Forwarder.json
+        cfg: ../../build/bmv2/ForwarderHeadered.json
         interfaces:
             - link: tofino2
         cmds:
-            - table_add forward set_egress 0 => 1
+            #- table_add forward set_egress 0 => 1
+            - table_add flightplan_forward set_fp_egress 5 => 0

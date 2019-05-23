@@ -18,6 +18,7 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
 
   bit<SEGMENT_DESC_SIZE> next_dataplane = 0;
+  bit<48> dst_mac = 0;
 
   action set_fp_egress(bit<9> port) {
       SET_EGRESS(meta, port);
@@ -30,6 +31,18 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     actions = { set_fp_egress; NoAction; }
     // FIXME map next_dataplane to egress
     default_action = NoAction/*FIXME report an error if we can't find where to forward to*/;
+  }
+
+  action set_mac_egress(bit<9> port) {
+      SET_EGRESS(meta, port);
+  }
+
+  table mac_forward {
+    key = {
+      dst_mac : exact;
+    }
+    actions = { set_mac_egress; NoAction; }
+    default_action = NoAction;
   }
 
 #if defined(FEC_BOOSTER)
@@ -63,8 +76,15 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         }
 
         if (hdr.fp.isValid()) {
-            next_dataplane = hdr.fp.to_segment;
-            flightplan_forward.apply();
+            if (hdr.fp.to_segment == 5) {
+                hdr.fp.setInvalid();
+                dst_mac = hdr.eth.dst;
+                mac_forward.apply();
+                SET_EGRESS(meta, 2/*FIXME const*/);
+            } else {
+                next_dataplane = hdr.fp.to_segment;
+                flightplan_forward.apply();
+            }
             return;
         }
 
