@@ -88,12 +88,14 @@ sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 
 Where the `cfg_file` specifies the topology and initial state of mininet.
 
-The most complete topology at this time is defined in `bmv2/flightplan_mcd_topology.yml`,
+The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`,
 and is duplicated here:
 
 ``` yaml
+// needs to updated with the complete_toplogy.yml content, but not sure if the ip and mac address specified would remain the same general testing
+// TO DO (after verification from Issac)
 hosts:
-    h1 : {}
+    h1 : {} 
     h2 :
         program: memcached -vv -u $USER -U 11211 -B ascii
 
@@ -136,7 +138,7 @@ $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
 
 The first tests just the FEC functionality, ensuring that the packets received by
-h2 and identical to those sent by h1, even in the presence of drops.
+h2 are identical to those sent by h1, even in the presence of drops.
 
 A sample input file is `bmv2/pcaps/tcp_100.pcap`
 
@@ -165,12 +167,11 @@ TWO_HALVES=2 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 ```
 
 ### Mininet file
-
 The file that runs the mininet simulation is ultimately
 [start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py), which depends on
-[wharf_p4_mininet.py](./bmv2/wharf_p4_mininet.py).
+[flightplan_p4_mininet.py](./bmv2/flightplan_p4_mininet.py).
 
-The `wharf_p4_mininet` file borrows very heavily from the
+The `flightplan_p4_mininet.py` file borrows very heavily from the
 [p4_mininet.py](https://github.com/p4lang/behavioral-model/blob/master/mininet/p4_mininet.py)
 file located in the P4 behavioral model repository.
 
