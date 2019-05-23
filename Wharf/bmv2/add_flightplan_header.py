@@ -49,7 +49,7 @@ if __name__ == "__main__":
     input_pcap = rdpcap(args.input)
     for pkt in input_pcap:
         if pkt.haslayer(Ether):
-            fp = FPPacket(dst=pkt.getlayer(Ether).dst, src=pkt.getlayer(Ether).src, type=pkt.getlayer(Ether).type)
+            fp = FPPacket(dst=pkt.getlayer(Ether).dst, src=pkt.getlayer(Ether).src, type=0x2222)
             new_pkt = fp/pkt
             wrpcap(args.output, new_pkt, append=True)
         else:
