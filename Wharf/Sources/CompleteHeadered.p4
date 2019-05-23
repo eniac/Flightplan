@@ -70,7 +70,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             hdr.fp.dst = hdr.eth.dst;
             hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
 
-            hdr.fp.version = 1;
+            //hdr.fp.version = 1;
             hdr.fp.from_segment = 1;
             hdr.fp.to_segment = 2;
         }

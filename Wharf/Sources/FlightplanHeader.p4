@@ -21,11 +21,29 @@ header flightplan_h {
   bit<48> src;
   bit<16> type;
 
-  bit<FLIGHTPLAN_VERSION_SIZE> version; // This could be spared.
+//  bit<FLIGHTPLAN_VERSION_SIZE> version; // This could be spared.
 //  bit<16> encapsulated_ethertype; -- This can be removed if we fully encapsulate the Ethernet frame including the original Ethernet header.
   bit<SEGMENT_DESC_SIZE> from_segment; // This is implicit in ingress port, so could be spared.
   bit<SEGMENT_DESC_SIZE> to_segment; // This is implicit in ingress port, so could be spared.
-  bit<4> pad;
+//  bit<4> pad;
+
+  bit<BYTE> byte1;
+  bit<BYTE> byte2;
+  bit<BYTE> byte3;
+  bit<BYTE> byte4;
+  bit<BYTE> byte5;
+  bit<BYTE> byte6;
+  bit<BYTE> byte7;
+  bit<BYTE> byte8;
+  bit<BYTE> byte9;
+  bit<BYTE> byte10;
+  bit<BYTE> byte11;
+  bit<BYTE> byte12;
+  bit<BYTE> byte13;
+  bit<BYTE> byte14;
+  bit<BYTE> byte15;
+  bit<BYTE> byte16;
+  bit<BYTE> byte17;
 }
 header flightplanReceive1_h {
   // FIXME replace with fields for actual values that need to be sent.
