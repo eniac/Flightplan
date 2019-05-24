@@ -6,7 +6,7 @@ Use scripts `./generate_packets.sh` to generate testing packets and standard res
 ## C-simulation
 Run `./runUnitTests.sh` to run all unit tests. Or run `UnitTest\Testx\test.sh` individually.
 ## Hardware testing
-Run `./Hardware_test.sh $interface` where `$interface` should specify the interface used.
+Run `./fpgaUnitTests.sh $interface` where `$interface` should specify the interface used.
 ## Test cases
 | ﻿      |  Pkts sent in order                         | Recv@Server(DstPort 11211) | Recv@Client (SrcPort 11211) | Behaviour Description                            |
 |-------|-----------------------------------|-------------------------|--------------------------|--------------------------------------------------|
