@@ -88,33 +88,28 @@ sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 
 Where the `cfg_file` specifies the topology and initial state of mininet.
 
-The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`,
-and is duplicated here:
+The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`.
+
+Below is the snippet for an example of a simple one switch, two host toplogy.
 
 ``` yaml
-// needs to updated with the complete_toplogy.yml content, but not sure if the ip and mac address specified would remain the same general testing
-// TO DO (after verification from Issac)
 hosts:
-    h1 : {} 
-    h2 :
-        program: memcached -vv -u $USER -U 11211 -B ascii
+    h1 : {}
+    h2 : {}
 
-switches:
+switch:
     s1:
-        cfg: ../build/bmv2/Complete.json
-        links: [h1, s2]
-        cmds: complete_commands.txt
-    s2:
-        cfg: ../build/bmv2/Dropper.json
-        replay:
-            s1: lldp_enable_fec.pcap
-            s3: lldp_enable_fec.pcap
-        cmds: dropper_commands.txt
-    s3:
-        cfg: ../build/bmv2/Complete.json
-        links: [h2, s2]
-        cmds: complete_commands.txt
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+		-link: h1
+		-link: h2
+        cmds: 
+		-table_add forward set_egress 0 =>1
+		-table_add forward set_egress 1 =>0
+
 ```
+
+A detailed list of configurable features is given in the `example_topology.yml`[example_topology](./bmv2/topologies/example_topology.yml)  
 
 Running `start_flightplan_mininet.py` with this config file will start up a topology:
 ```
