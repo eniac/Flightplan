@@ -88,31 +88,28 @@ sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 
 Where the `cfg_file` specifies the topology and initial state of mininet.
 
-The most complete topology at this time is defined in `bmv2/flightplan_mcd_topology.yml`,
-and is duplicated here:
+The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`.
+
+Below is the snippet for an example of a simple one switch, two host toplogy.
 
 ``` yaml
 hosts:
     h1 : {}
-    h2 :
-        program: memcached -vv -u $USER -U 11211 -B ascii
+    h2 : {}
 
 switches:
     s1:
-        cfg: ../build/bmv2/Complete.json
-        links: [h1, s2]
-        cmds: complete_commands.txt
-    s2:
-        cfg: ../build/bmv2/Dropper.json
-        replay:
-            s1: lldp_enable_fec.pcap
-            s3: lldp_enable_fec.pcap
-        cmds: dropper_commands.txt
-    s3:
-        cfg: ../build/bmv2/Complete.json
-        links: [h2, s2]
-        cmds: complete_commands.txt
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+          -link: h1
+          -link: h2
+        cmds:
+          -table_add forward set_egress 0 => 1
+          -table_add forward set_egress 1 => 0
+
 ```
+
+A detailed list of configurable features is given in the [example_topology](./bmv2/topologies/example_topology.yml)
 
 Running `start_flightplan_mininet.py` with this config file will start up a topology:
 ```
@@ -136,7 +133,7 @@ $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
 
 The first tests just the FEC functionality, ensuring that the packets received by
-h2 and identical to those sent by h1, even in the presence of drops.
+h2 are identical to those sent by h1, even in the presence of drops.
 
 A sample input file is `bmv2/pcaps/tcp_100.pcap`
 
@@ -165,12 +162,11 @@ TWO_HALVES=2 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 ```
 
 ### Mininet file
-
 The file that runs the mininet simulation is ultimately
 [start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py), which depends on
-[wharf_p4_mininet.py](./bmv2/wharf_p4_mininet.py).
+[flightplan_p4_mininet.py](./bmv2/flightplan_p4_mininet.py).
 
-The `wharf_p4_mininet` file borrows very heavily from the
+The `flightplan_p4_mininet.py` file borrows very heavily from the
 [p4_mininet.py](https://github.com/p4lang/behavioral-model/blob/master/mininet/p4_mininet.py)
 file located in the P4 behavioral model repository.
 
