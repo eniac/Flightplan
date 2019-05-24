@@ -103,9 +103,9 @@ switches:
         interfaces:
           -link: h1
           -link: h2
-        cmds: 
-          -table_add forward set_egress 0 =>1
-          -table_add forward set_egress 1 =>0
+        cmds:
+          -table_add forward set_egress 0 => 1
+          -table_add forward set_egress 1 => 0
 
 ```
 
