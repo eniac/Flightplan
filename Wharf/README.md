@@ -101,15 +101,15 @@ switch:
     s1:
         cfg: ../../build/bmv2/Forwarder.json
         interfaces:
-		-link: h1
-		-link: h2
+	 -link: h1
+	 -link: h2
         cmds: 
-		-table_add forward set_egress 0 =>1
-		-table_add forward set_egress 1 =>0
+	 -table_add forward set_egress 0 =>1
+	 -table_add forward set_egress 1 =>0
 
 ```
 
-A detailed list of configurable features is given in the `example_topology.yml`[example_topology](./bmv2/topologies/example_topology.yml)  
+A detailed list of configurable features is given in the[example_topology](./bmv2/topologies/example_topology.yml)
 
 Running `start_flightplan_mininet.py` with this config file will start up a topology:
 ```
