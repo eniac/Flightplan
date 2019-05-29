@@ -113,11 +113,11 @@ A detailed list of configurable features is given in the [example_topology](./bm
 
 Running `start_flightplan_mininet.py` with this config file will start up a topology:
 ```
-h1 <--> Complete (s0) <--> Dropper (s1) <--> Complete (s2) <--> h2
+h1 <--> Complete (s1) <--> Dropper (s2) <--> Complete (s3) <--> h2
 ```
 
-The config file also enables FEC from `s0->s1` and `s2->s1`
-(by replaying the appropriate packets from s2 to s1 & s3), in addition
+The config file also enables FEC from `s1->s2` and `s3->s2`
+(by replaying the appropriate packets from s2 to s3 & s1), in addition
 to setting up the forwarding tables on the different switches
 (by sending the commands in the `cmds` files).
 
@@ -134,6 +134,10 @@ $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 
 The first tests just the FEC functionality, ensuring that the packets received by
 h2 are identical to those sent by h1, even in the presence of drops.
+
+This test replays special packets to alter the behavior of the system to turn on FEC functionality in the simulation environment.
+Commands to test complete topology are sent to the switches after this initial replay of special packets.
+The ordering of the functions is enforced in `start_flightplan_mininet.py` to set the boosters with FEC behavior.
 
 A sample input file is `bmv2/pcaps/tcp_100.pcap`
 
