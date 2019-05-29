@@ -44,5 +44,5 @@ compressorAndDecompressor: pcapCompressorAndDecompressor.cpp vjCompression.cpp
 	g++ $^ -o compressorAndDecompressor -lpcap -std=c++11
 
 clean: 
-	$(RM) compressorAndDecompressor hdrCompress $(COMPRESSOR_CORE_OBJ) $(DECOMPRESSOR_CORE_OBJ)
+	$(RM) compressorAndDecompressor hdrCompress $(COMPRESSOR_CORE_OBJ) $(DECOMPRESSOR_CORE_OBJ) hls_comp_pcap hls_decomp_pcap
 

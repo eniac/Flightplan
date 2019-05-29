@@ -1,6 +1,6 @@
 # 1. Generate pcap sources.
 python generateTestPcaps.py
-declare -a pcapsArr=("pcaps/oneFlow.pcap" "pcaps/twoFlows.pcap" "pcaps/collidingFlows.pcap")
+declare -a pcapsArr=("pcaps/twoFlows.pcap" "pcaps/collidingFlows.pcap" "pcaps/Send.pcap" "pcaps/oneFlow.pcap")
 
 # 2. build.
 make
@@ -9,6 +9,7 @@ make
 for i in "${pcapsArr[@]}"
 do
    echo "running test pcap: $i"
-   sudo ./vethTestCompressorAndDecompressor.sh $i
+   #2nd argument. 0 - HLSWrapper implementation. 1 - libpcap implementation
+   sudo ./vethTestCompressorAndDecompressor.sh $i 0
 done
 

@@ -28,6 +28,7 @@ using namespace std;
 
 static pcap_t *output_handle = NULL;
 static pcap_t *pcap = NULL;
+int flow = 0;
 
 void compressHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void decompressHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
@@ -58,19 +59,31 @@ static int out_offset;
 template <int size_bits>
 unsigned char *cp_out(ap_uint<size_bits> &src, unsigned char *dst){
     uint64_t src_bits = (uint64_t)src;
+    int i;
     char *start = (char*)&src_bits;
     char *end = start + (size_bits + 8 - 1) / 8;
-
     std::reverse(start, end);
     //src_bits >>= out_offset;
-    src_bits <<= (64 - (size_bits + out_offset)) % 8;
-
-    for (int i=0; i < (size_bits + out_offset + 7) / 8; i++) {
-        dst[i] |= start[i];
+    int left_shift = ((64 - (size_bits + out_offset)) % 8);
+    src_bits <<= left_shift;
+    /* If flow is 0 - Compress, then we copy the compressed bytes 
+       but use an | when the size_bits is less than a byte */
+    if (flow == 0) {
+      for (i=0; i < (size_bits + out_offset + 7) / 8; i++) {
+        if (out_offset > 0)
+          dst[i] |= start[i];
+        else
+          dst[i] = start[i];
+      }
+    } else {
+      for (i=0; i < (size_bits + out_offset + 7) / 8; i++) {
+          dst[i] |= start[i];
+      }
     }
 
     dst = dst + (size_bits + out_offset) / 8;
     out_offset = (size_bits + out_offset) % 8;
+    
     return dst;
 }
 
@@ -82,31 +95,49 @@ void transfer_in(input_tuples &input_tuple, const char *packet) {
     sv = cp_in(eth.Src, sv);
     sv = cp_in(eth.Type, sv);
 
-    tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
-    sv = cp_in(ipv4.version, sv);
-    sv = cp_in(ipv4.ihl, sv);
-    sv = cp_in(ipv4.diffserv, sv);
-    sv = cp_in(ipv4.totallen, sv);
-    sv = cp_in(ipv4.identification, sv);
-    sv = cp_in(ipv4.flags, sv);
-    sv = cp_in(ipv4.fragoffset, sv);
-    sv = cp_in(ipv4.ttl, sv);
-    sv = cp_in(ipv4.protocol, sv);
-    sv = cp_in(ipv4.hdrchecksum, sv);
-    sv = cp_in(ipv4.srcAddr, sv);
-    sv = cp_in(ipv4.dstAddr, sv);
+    if(eth.Type == 0x0800) {
+            tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
+            sv = cp_in(ipv4.version, sv);
+            sv = cp_in(ipv4.ihl, sv);
+            sv = cp_in(ipv4.diffserv, sv);
+            sv = cp_in(ipv4.totallen, sv);
+            sv = cp_in(ipv4.identification, sv);
+            sv = cp_in(ipv4.flags, sv);
+            sv = cp_in(ipv4.fragoffset, sv);
+            sv = cp_in(ipv4.ttl, sv);
+            sv = cp_in(ipv4.protocol, sv);
+            sv = cp_in(ipv4.hdrchecksum, sv);
+            sv = cp_in(ipv4.srcAddr, sv);
+            sv = cp_in(ipv4.dstAddr, sv);
 
-    tuple_tcp &tcp = input_tuple.Hdr.Tcp;
-    sv = cp_in(tcp.sport, sv);
-    sv = cp_in(tcp.dport, sv);
-    sv = cp_in(tcp.seq, sv);
-    sv = cp_in(tcp.ack, sv);
-    sv = cp_in(tcp.flags, sv);
-    sv = cp_in(tcp.window, sv);
-    sv = cp_in(tcp.check, sv);
-    sv = cp_in(tcp.urgent, sv);
-
-    std::cout << "Parsed " << (int)(sv - (char*)packet) << " bytes" << std::endl;
+            tuple_tcp &tcp = input_tuple.Hdr.Tcp;
+            sv = cp_in(tcp.sport, sv);
+            sv = cp_in(tcp.dport, sv);
+            sv = cp_in(tcp.seq, sv);
+            sv = cp_in(tcp.ack, sv);
+            sv = cp_in(tcp.flags, sv);
+            sv = cp_in(tcp.window, sv);
+            sv = cp_in(tcp.check, sv);
+            sv = cp_in(tcp.urgent, sv);
+            input_tuple.Hdr.Tcp.isValid = 1;
+    } else if(eth.Type == 0x1234) {
+    #ifndef COMPRESSOR
+      std::cout << "Copying tuple_cmp over to packet";
+      tuple_cmp &cmp = input_tuple.Hdr.Cmp;
+      sv = cp_in(cmp.slotID, sv);
+      sv = cp_in(cmp.seqChange, sv);
+      sv = cp_in(cmp.ackChange, sv);
+      sv = cp_in(cmp.__pad, sv);
+      sv = cp_in(cmp.totallen, sv);
+      sv = cp_in(cmp.identification, sv);
+      sv = cp_in(cmp.flags, sv);
+      sv = cp_in(cmp.window, sv);
+      sv = cp_in(cmp.check, sv);
+      sv = cp_in(cmp.urgent, sv);
+      input_tuple.Hdr.Cmp.isValid = 1;
+    #endif
+   }
+   std::cout << "Parsed " << (int)(sv - (char*)packet) << " bytes" << std::endl;
 }
 
 uint16_t ccsum(void *buf, size_t buflen) {
@@ -135,17 +166,15 @@ uint16_t ccsum(void *buf, size_t buflen) {
 }
 
 template <typename T>
-void transfer_out(T &input_tuple, char *packet) {
+void transfer_out(T &output_tuple, char *packet) {
     unsigned char *sv = (unsigned char*)packet;
 
-    tuple_eth &eth = input_tuple.Hdr.Eth;
+    tuple_eth &eth = output_tuple.Hdr.Eth;
     sv = cp_out(eth.Dst, sv);
     sv = cp_out(eth.Src, sv);
     sv = cp_out(eth.Type, sv);
 
-
-    tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
-    ipv4.hdrchecksum = 0;
+    tuple_ipv4 &ipv4 = output_tuple.Hdr.Ipv4;
     unsigned char *start_sv = sv;
     sv = cp_out(ipv4.version, sv);
     sv = cp_out(ipv4.ihl, sv);
@@ -157,18 +186,11 @@ void transfer_out(T &input_tuple, char *packet) {
     sv = cp_out(ipv4.ttl, sv);
     sv = cp_out(ipv4.protocol, sv);
     unsigned char *chk_sv = sv;
-    // This really shouldn't be necessary, but it appears to not
-    // copy over the hdrchecksum of 0 the second time...
-    memset(sv, 0, sizeof(uint16_t));
     sv = cp_out(ipv4.hdrchecksum, sv);
     sv = cp_out(ipv4.srcAddr, sv);
     sv = cp_out(ipv4.dstAddr, sv);
-
-    uint16_t csum = ccsum(start_sv, sv - start_sv);
-    ipv4.hdrchecksum = csum;
-    memcpy(chk_sv, &csum, sizeof(csum));
-
-    tuple_tcp &tcp = input_tuple.Hdr.Tcp;
+    
+    tuple_tcp &tcp = output_tuple.Hdr.Tcp;
     sv = cp_out(tcp.sport, sv);
     sv = cp_out(tcp.dport, sv);
     sv = cp_out(tcp.seq, sv);
@@ -198,6 +220,7 @@ bool call_compressor(const char *packet, size_t packet_size, mcd_forward_fn forw
     input_tuples input_tuple;
     transfer_in(input_tuple, packet);
 
+    std::cout << "COMPRESSOR I/P tuple "<< std::endl;
     tuple_eth &eth = input_tuple.Hdr.Eth;
     std::cout << "Eth type " << eth.Type.to_string(16) << std::endl;
     std::cout << "Eth Src " << eth.Src.to_string(16) << std::endl;
@@ -206,6 +229,8 @@ bool call_compressor(const char *packet, size_t packet_size, mcd_forward_fn forw
     tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
     std::cout << "IPv4 Version " << ipv4.version.to_string(16) << std::endl;
     std::cout << "IPv4 IHL " << ipv4.ihl.to_string(16) << std::endl;
+    std::cout << "IPv4 diffserv " << ipv4.diffserv.to_string(16) << std::endl;
+    std::cout << "IPv4 totallen " << ipv4.totallen.to_string(16) << std::endl;
     std::cout << "IPv4 ID " << ipv4.identification.to_string(16) << std::endl;
     std::cout << "IPv4 flags" << ipv4.flags.to_string(16) << std::endl;
     std::cout << "IPv4 frag" << ipv4.fragoffset.to_string(16) << std::endl;
@@ -218,19 +243,18 @@ bool call_compressor(const char *packet, size_t packet_size, mcd_forward_fn forw
     tuple_tcp &tcp = input_tuple.Hdr.Tcp;
     std::cout << "TCP Dst " << tcp.dport.to_string(16) << std::endl;
     std::cout << "TCP Src " << tcp.sport.to_string(16) << std::endl;
-    std::cout << "TCP Seq " << tcp.seq.to_string(32) << std::endl;
-    std::cout << "TCP Ack " << tcp.ack.to_string(32) << std::endl;
     std::cout << "TCP flags " << tcp.flags.to_string(16) << std::endl;
     std::cout << "TCP Window " << tcp.window.to_string(16) << std::endl;
     std::cout << "TCP Check " << tcp.check.to_string(16) << std::endl;
     std::cout << "TCP Urgent " << tcp.urgent.to_string(16) << std::endl;
 
+
     input_tuple.headerCompress_input.Stateful_valid = 1;
-	input_tuple.Ioports.Egress_port = 0;
-	input_tuple.Ioports.Ingress_port = 0;
-	input_tuple.Local_state.Id = 0;
-	input_tuple.Parser_extracts.Size = 0;
-	input_tuple.CheckTcp.forward = 0;
+    input_tuple.Ioports.Egress_port = 0;
+    input_tuple.Ioports.Ingress_port = 0;
+    input_tuple.Local_state.Id = 0;
+    input_tuple.Parser_extracts.Size = 0;
+    input_tuple.CheckTcp.forward = 0;
 
     hls::stream<input_tuples> input_tuple_stream;
     input_tuple_stream.write(input_tuple);
@@ -269,6 +293,7 @@ bool call_compressor(const char *packet, size_t packet_size, mcd_forward_fn forw
     while (1) {
         output_tuples output_tuple = output_tuple_stream.read();
         char output_packet[2048];
+        memset(output_packet, 0, 2048);
         int packet_i = 0;
         do {
             output = packet_output_stream.read();
@@ -276,8 +301,38 @@ bool call_compressor(const char *packet, size_t packet_size, mcd_forward_fn forw
             {
                 char Byte = (output.Data >> (8 * (BYTES_PER_WORD - i -1))) & 0xFF;
                 output_packet[packet_i++] = Byte;
+                
+                memset(&Byte, 0 , sizeof(char));
             }
         } while (!output.End_of_frame);
+  
+    tuple_eth &oeth = output_tuple.Hdr.Eth;
+    std::cout << "COMPRESSOR O/P tuple ";
+    std::cout << "Eth type " << oeth.Type.to_string(16) << std::endl;
+    std::cout << "Eth Src " << oeth.Src.to_string(16) << std::endl;
+    std::cout << "Eth Dst " << oeth.Dst.to_string(16) << std::endl;
+
+    tuple_ipv4 &oipv4 = output_tuple.Hdr.Ipv4;
+    std::cout << "IPv4 Version " << oipv4.version.to_string(16) << std::endl;
+    std::cout << "IPv4 IHL " << oipv4.ihl.to_string(16) << std::endl;
+    std::cout << "IPv4 diffserv " << oipv4.diffserv.to_string(16) << std::endl;
+    std::cout << "IPv4 totallen " << oipv4.totallen.to_string(16) << std::endl;
+    std::cout << "IPv4 ID " << oipv4.identification.to_string(16) << std::endl;
+    std::cout << "IPv4 flags" << oipv4.flags.to_string(16) << std::endl;
+    std::cout << "IPv4 frag" << oipv4.fragoffset.to_string(16) << std::endl;
+    std::cout << "IPv4 TTL " << oipv4.ttl.to_string(16) << std::endl;
+    std::cout << "IPv4 Protocol " << oipv4.protocol.to_string(16) << std::endl;
+    std::cout << "IPv4 Checksum " << oipv4.hdrchecksum.to_string(16) << std::endl;
+    std::cout << "IPv4 Src " << oipv4.srcAddr.to_string(16) << std::endl;
+    std::cout << "IPv4 Dst " << oipv4.dstAddr.to_string(16) << std::endl;
+
+    tuple_tcp &otcp = output_tuple.Hdr.Tcp;
+    std::cout << "TCP Dst " << otcp.dport.to_string(16) << std::endl;
+    std::cout << "TCP Src " << otcp.sport.to_string(16) << std::endl;
+    std::cout << "TCP flags " << otcp.flags.to_string(16) << std::endl;
+    std::cout << "TCP Window " << otcp.window.to_string(16) << std::endl;
+    std::cout << "TCP Check " << otcp.check.to_string(16) << std::endl;
+    std::cout << "TCP Urgent " << otcp.urgent.to_string(16) << std::endl;
 
         transfer_out(output_tuple, output_packet);
         pkt_num++;
@@ -304,6 +359,7 @@ bool call_decompressor(const char *packet, size_t packet_size, mcd_forward_fn fo
     transfer_in(input_tuple, packet);
 
     tuple_eth &eth = input_tuple.Hdr.Eth;
+    std::cout << "DECOMPRESSOR I/P tuple ";
     std::cout << "Eth type " << eth.Type.to_string(16) << std::endl;
     std::cout << "Eth Src " << eth.Src.to_string(16) << std::endl;
     std::cout << "Eth Dst " << eth.Dst.to_string(16) << std::endl;
@@ -323,14 +379,20 @@ bool call_decompressor(const char *packet, size_t packet_size, mcd_forward_fn fo
     tuple_tcp &tcp = input_tuple.Hdr.Tcp;
     std::cout << "TCP Dst " << tcp.dport.to_string(16) << std::endl;
     std::cout << "TCP Src " << tcp.sport.to_string(16) << std::endl;
-    std::cout << "TCP Seq " << tcp.seq.to_string(32) << std::endl;
-    std::cout << "TCP Ack " << tcp.ack.to_string(32) << std::endl;
     std::cout << "TCP flags " << tcp.flags.to_string(16) << std::endl;
     std::cout << "TCP Window " << tcp.window.to_string(16) << std::endl;
     std::cout << "TCP Check " << tcp.check.to_string(16) << std::endl;
     std::cout << "TCP Urgent " << tcp.urgent.to_string(16) << std::endl;
+    
+    tuple_cmp &cmp = input_tuple.Hdr.Cmp;
+    std::cout << "Cmp slotId " << cmp.slotID.to_string(10) << std::endl;
+    std::cout << "Cmp totallen " << cmp.totallen.to_string(16) << std::endl;
+    std::cout << "Cmp identification " << cmp.identification.to_string(16) << std::endl;
+    std::cout << "Cmp flags " << cmp.flags.to_string(16) << std::endl;
+    std::cout << "Cmp window " << cmp.window.to_string(16) << std::endl;
+    std::cout << "Cmp check " << cmp.check.to_string(16) << std::endl;
+    std::cout << "Cmp urgent " << cmp.urgent.to_string(16) << std::endl;
 
-   // input_tuple.headerDecompress_input.Stateful_valid = 1;
     input_tuple.headerDecompress_input.Stateful_valid = 1;
     input_tuple.Ioports.Egress_port = 0;
     input_tuple.Ioports.Ingress_port = 0;
@@ -385,8 +447,34 @@ bool call_decompressor(const char *packet, size_t packet_size, mcd_forward_fn fo
             }
         } while (!output.End_of_frame);
 
-        transfer_out(output_tuple, output_packet);
-        pkt_num++;
+    transfer_out(output_tuple, output_packet);
+    pkt_num++;
+    
+    tuple_eth &oeth = output_tuple.Hdr.Eth;
+    std::cout << "DECOMPRESSOR O/P tuple";
+    std::cout << "Eth type " << oeth.Type.to_string(16) << std::endl;
+    std::cout << "Eth Src " << oeth.Src.to_string(16) << std::endl;
+    std::cout << "Eth Dst " << oeth.Dst.to_string(16) << std::endl;
+
+    tuple_ipv4 &oipv4 = output_tuple.Hdr.Ipv4;
+    std::cout << "IPv4 Version " << oipv4.version.to_string(16) << std::endl;
+    std::cout << "IPv4 IHL " << oipv4.ihl.to_string(16) << std::endl;
+    std::cout << "IPv4 ID " << oipv4.identification.to_string(16) << std::endl;
+    std::cout << "IPv4 flags" << oipv4.flags.to_string(16) << std::endl;
+    std::cout << "IPv4 frag" << oipv4.fragoffset.to_string(16) << std::endl;
+    std::cout << "IPv4 TTL " << oipv4.ttl.to_string(16) << std::endl;
+    std::cout << "IPv4 Protocol " << oipv4.protocol.to_string(16) << std::endl;
+    std::cout << "IPv4 Checksum " << oipv4.hdrchecksum.to_string(16) << std::endl;
+    std::cout << "IPv4 Src " << oipv4.srcAddr.to_string(16) << std::endl;
+    std::cout << "IPv4 Dst " << oipv4.dstAddr.to_string(16) << std::endl;
+
+    tuple_tcp &otcp = output_tuple.Hdr.Tcp;
+    std::cout << "TCP Dst " << otcp.dport.to_string(16) << std::endl;
+    std::cout << "TCP Src " << otcp.sport.to_string(16) << std::endl;
+    std::cout << "TCP flags " << otcp.flags.to_string(16) << std::endl;
+    std::cout << "TCP Window " << otcp.window.to_string(16) << std::endl;
+    std::cout << "TCP Check " << otcp.check.to_string(16) << std::endl;
+    std::cout << "TCP Urgent " << otcp.urgent.to_string(16) << std::endl;
 
         forward(output_packet, packet_i, 0);//output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport);
 
@@ -415,10 +503,7 @@ void forward_frame(const void * packet, int len, int reverse) {
 
 
 int main(int argc, char *argv[]){
-  // printHeaderSizes();
-  // return 1;
   int opt = 0;
-  int flow = 0;
   char *if_name = nullptr;
   char *oif_name = nullptr;
   char *opt_flow = nullptr;
