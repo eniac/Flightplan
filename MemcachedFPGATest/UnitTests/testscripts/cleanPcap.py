@@ -23,7 +23,7 @@ def cleanPcaps(pcapF1):
 		udp = ip.data
 		ip.sum = 0
 		ip.id = 0
-		udp.sum = 10
+		udp.sum = 0 
 		pcap2.writepkt(eth,ts=ts)
 	shutil.move(pcapF1 +"clean.pcap", pcapF1)
 	print("Finish cleaning")
