@@ -88,8 +88,6 @@ sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 
 Where the `cfg_file` specifies the topology and initial state of mininet.
 
-The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`
-
 Below is the snippet for an example of a simple one switch, two host toplogy.
 
 ``` yaml
@@ -109,9 +107,11 @@ switches:
 
 ```
 
-A detailed list of configurable features is given in the [example_topology](./bmv2/topologies/example_topology.yml)
+A detailed list of configurable features is given in the [example_topology.yml](./bmv2/topologies/example_topology.yml)
 
-Running `start_flightplan_mininet.py` with this config file will start up a topology:
+The most complete topology at this time used for running the test experiments is defined in `bmv2/topologies/complete_topology.yml`
+
+Running `start_flightplan_mininet.py` with config file `complete_topology.yml` will start up a topology:
 ```
 h1 <--> Complete (s1) <--> Dropper (s2) <--> Complete (s3) <--> h2
 ```
@@ -125,11 +125,14 @@ The data packets (k paramater) and parity packets (h parameter) to determine the
 operation of FEC can be defined in the `fec_encoder_commands.txt` and
 `fec_decoder_commands.txt` files for error correction.
 
-In simplest terms, if H packets out a set of H+K packets are dropped, 
+In simplest terms, if up to H packets out of a set of H+K packets are dropped, 
 then FEC will be able to recover the data over the faulty links.
 More information on FEC booster can be found [FEC Booster](https://www.seas.upenn.edu/~nsultana/files/netcompute.pdf).
 
 ### End-to-end tests
+
+The steps to setup the mininet simulation are enforced in `start_flightplan_mininet.py`
+to initialize the topology and start the hosts & switches defined in the config file `complete_topology.yml`.
 
 Two end-to-end tests exist, one for the FEC functionality and one for memcached.
 They are:
@@ -138,8 +141,6 @@ They are:
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
-The steps to setup the mininet simulation are enforced in `start_flightplan_mininet.py`
-to initialize the topology and start the hosts & switches defined in the config file.
 
 The first tests just the FEC functionality, ensuring that the packets received by
 h2 are identical to those sent by h1, even in the presence of drops.
