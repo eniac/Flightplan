@@ -88,7 +88,7 @@ sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 
 Where the `cfg_file` specifies the topology and initial state of mininet.
 
-The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`.
+The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`
 
 Below is the snippet for an example of a simple one switch, two host toplogy.
 
@@ -121,6 +121,8 @@ The config file also enables FEC from `s1->s2` and `s3->s2`
 to setting up the forwarding tables on the different switches
 (by sending the commands in the `cmds` files).
 
+The data packets(k paramater) and parity packets(h parameter) to determine the operation of FEC can be defined in the `fec_encoder_commands.txt` and `fec_decoder_commands.txt` files.
+
 
 ### End-to-end tests
 
@@ -131,19 +133,21 @@ They are:
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
+The ordering of the functions is enforced in `start_flightplan_mininet.py` to set the boosters with FEC behavior.
 
 The first tests just the FEC functionality, ensuring that the packets received by
 h2 are identical to those sent by h1, even in the presence of drops.
 
-This test replays special packets to alter the behavior of the system to turn on FEC functionality in the simulation environment.
-Commands to test complete topology are sent to the switches after this initial replay of special packets.
-The ordering of the functions is enforced in `start_flightplan_mininet.py` to set the boosters with FEC behavior.
+This test replays special packets between the switches to alter the behavior of the system to turn on FEC functionality (faulty links from s2->s1 and s2->s3) in the simulation environment.
+Next, the control plane commands to test complete topology are run on the switches followed by the host programs*.
 
-A sample input file is `bmv2/pcaps/tcp_100.pcap`
+A sample input file for the first test is `bmv2/pcaps/tcp_100.pcap`
 
 The second tests FEC + memcached functionality, ensuring that the memcached
 responses received by h1 are as expected. Good input files are:
 - `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
+
+*Host program- iperf for FEC or memcached
 
 **NB:** Before running these files, you must set the environment variable:
 `BMV2_REPO` to point to a copy of the behavioral model repository which has
