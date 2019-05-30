@@ -1,4 +1,4 @@
-# Memcached FPGA Testing
+#Memcached FPGA Testing
 
 ## Generate packets
 Use scripts `./generate_packets.sh` to generate testing packets and standard response from actual memcached service. The length of KEY and DATA could be modified in config file `memaslap.cnf`
@@ -25,7 +25,7 @@ Run `./fpgaUnitTests.sh $interface` where `$interface` should specify the interf
 The `Test` Folder should contain the `pcap/Send.pcap` and `pcap/ref@client.pcap` and `pcap/ref@server.pcap`
 
 ## CheckSum
-The `UnitTest\testscripts\cleanPcap.py` is used to clean the UDP checksum to 0. All packets for comparision must be set the `udp.checksum` to 0.
+The `UnitTest\testscripts\cleanPcap.py` is used to clean the UDP checksum to 0. All packets for comparision must be set the `udp.sum` to 0.
 
 ## How the Test Cases generated
 The Test1 is generated using the `generate_packets.sh` script.
