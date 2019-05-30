@@ -56,6 +56,6 @@ if [[ $? != 0 ]]; then
     exit -1;
 fi
 
-cat $LOG_DUMPS/h1_prog.log
+cat $LOG_DUMPS/h1_prog_1.log
 
 echo "DONE."
