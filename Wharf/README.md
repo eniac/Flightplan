@@ -146,7 +146,7 @@ They are:
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
-Test 1- FEC functionality
+#### Test 1- FEC functionality
 ```
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 ```
@@ -164,18 +164,18 @@ testing the FEC functinality.
 
 A sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`
 
-Test 2- Memcached
+**NB** Host programs run for these experiments are iperf for Test 1 and memcached for Test 2.
+
+**NB1** Ensure that enviornment variable `BMV2_REPO` has been set up as mentioned
+in **NB** of [Selecting Boosters](README.md#selecting-boosters) of this document.
+
+#### Test 2- Memcached
 ```
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
 This second tests FEC + memcached functionality, ensuring that the memcached
 responses received by h1 are as expected. Good input files are:
-- `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
-
-**NB** Host programs run for these experiments are iperf for Test 1 and memcached for Test 2.
-
-**NB1** Ensure that enviornment variable `BMV2_REPO` has been set up as mentioned
-in **NB** of [Selecting Boosters](README.md#selecting-boosters) of this document.
+ - `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
 
 #### Running different programs on switches
 The default test runs the same program on switches. The "two halves" tests run
