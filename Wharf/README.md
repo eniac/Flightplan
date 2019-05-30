@@ -164,7 +164,7 @@ testing the FEC functinality.
 
 A sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`
 
-**NB** Host programs run for these experiments are iperf for Test 1 and memcached for Test 2.
+**NB** Host programs run for these experiments are iperf for Test 1.
 
 **NB1** Ensure that enviornment variable `BMV2_REPO` has been set up as mentioned
 in **NB** of [Selecting Boosters](README.md#selecting-boosters) of this document.
