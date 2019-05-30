@@ -121,8 +121,13 @@ The config file also enables FEC from `s1->s2` and `s3->s2`
 to setting up the forwarding tables on the different switches
 (by sending the commands in the `cmds` files).
 
-The data packets(k paramater) and parity packets(h parameter) to determine the operation of FEC can be defined in the `fec_encoder_commands.txt` and `fec_decoder_commands.txt` files.
+The data packets (k paramater) and parity packets (h parameter) to determine the 
+operation of FEC can be defined in the `fec_encoder_commands.txt` and
+`fec_decoder_commands.txt` files for error correction.
 
+In simplest terms, if H packets out a set of H+K packets are dropped, 
+then FEC will be able to recover the data over the faulty links.
+More information on FEC booster can be found [FEC Booster](https://www.seas.upenn.edu/~nsultana/files/netcompute.pdf).
 
 ### End-to-end tests
 
@@ -133,21 +138,28 @@ They are:
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
-The ordering of the functions is enforced in `start_flightplan_mininet.py` to set the boosters with FEC behavior.
+The steps to setup the mininet simulation are enforced in `start_flightplan_mininet.py`
+to initialize the topology and start the hosts & switches defined in the config file.
 
 The first tests just the FEC functionality, ensuring that the packets received by
 h2 are identical to those sent by h1, even in the presence of drops.
 
-This test replays special packets between the switches to alter the behavior of the system to turn on FEC functionality (faulty links from s2->s1 and s2->s3) in the simulation environment.
-Next, the control plane commands to test complete topology are run on the switches followed by the host programs*.
+This test replays special packets only between the switches to alter the behavior of the
+system to turn on FEC functionality (faulty links from s2->s1 and s2->s3) in the simulation environment.
+Next, the control plane commands for filling up the forwarding table or FEC paramters (h,k)
+to test complete topology are run on the switches.
+Programs running on the host are started and finally any packets which need to replay from the hosts
+are replayed to ensure the packets leaving the switch are identical to those entering the switch for
+testing the FEC functinality.
 
-A sample input file for the first test is `bmv2/pcaps/tcp_100.pcap`
+Host runs programs of iperf or memcached to test the FEC or memcached functionality respectively.
+
+A sample input file for the first test is `bmv2/pcaps/tcp_100.pcap` to test FEC functionality.
 
 The second tests FEC + memcached functionality, ensuring that the memcached
 responses received by h1 are as expected. Good input files are:
 - `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
 
-*Host program- iperf for FEC or memcached
 
 **NB:** Before running these files, you must set the environment variable:
 `BMV2_REPO` to point to a copy of the behavioral model repository which has
