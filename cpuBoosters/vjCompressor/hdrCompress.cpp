@@ -544,7 +544,8 @@ int main(int argc, char *argv[]){
 
   char output_errbuf[PCAP_ERRBUF_SIZE];
   output_errbuf[0]='\0';
-  output_handle = pcap_open_live(oif_name, MTU, 0, 0, output_errbuf);
+  if(oif_name != nullptr)
+      output_handle = pcap_open_live(oif_name, MTU, 0, 0, output_errbuf);
   if(output_handle == NULL) {
       fprintf(stderr,"%s:%s",oif_name, output_errbuf);	
   }
