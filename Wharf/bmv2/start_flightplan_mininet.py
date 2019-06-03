@@ -368,10 +368,10 @@ def main():
 
     with open(args.config) as f:
         cfg = yaml.load(f)
-
+    
     topo = FPTopo(cfg['hosts'], cfg['switches'],
                   bmv2_exe, args.log, args.verbose, args.config)
-
+    
     print("Starting mininet")
     net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
 
@@ -379,9 +379,7 @@ def main():
 
     try:
         topo.init(net)
-
-        net.staticArp()
-
+        
 
         if args.pcap_dump:
             topo.start_tcp_dumps(net, args.pcap_dump)

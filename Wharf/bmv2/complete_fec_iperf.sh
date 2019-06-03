@@ -41,12 +41,12 @@ mkdir -p $LOG_DUMPS
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
 sudo -E python $HERE/start_flightplan_mininet.py \
-        $HERE/topologies/complete_topology.yml \
+        $HERE/topologies/complete_no_hc_topology.yml \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
         --host-prog "h2:iperf3 -s -p 4242" \
-        --host-prog "h1:iperf3 -c 10.0.1.1 -p 4242 -b $RATE -t $TIME -M 1000" \
+        --host-prog "h1:iperf3 -c 10.0.0.12 -p 4242 -b $RATE -t $TIME -M 1000" \
         --time ${TIME%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
