@@ -167,6 +167,8 @@ class FPTopo(Topo):
 
                 if 'ip' not in iface_opts:
                     iface_opts['ip'] = self.next_ip_address()
+
+                if 'mac' not in iface_opts:
                     iface_opts['mac'] = self.next_mac_address()
 
                 if 'name' not in iface_opts:
@@ -368,7 +370,7 @@ def main():
 
     with open(args.config) as f:
         cfg = yaml.load(f)
-    
+
     topo = FPTopo(cfg['hosts'], cfg['switches'],
                   bmv2_exe, args.log, args.verbose, args.config)
     
@@ -379,7 +381,6 @@ def main():
 
     try:
         topo.init(net)
-        
 
         if args.pcap_dump:
             topo.start_tcp_dumps(net, args.pcap_dump)

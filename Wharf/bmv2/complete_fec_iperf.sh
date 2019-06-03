@@ -21,9 +21,12 @@ fi
 
 if [[ $# > 1 ]]; then
     TIME=$2
+    TIME1=`expr $2 + 5`
 else
     TIME=10s
+    TIME1=15s
 fi
+
 
 USER=`logname`
 BASENAME=fec_iperf_$RATE
@@ -47,7 +50,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --verbose \
         --host-prog "h2:iperf3 -s -p 4242" \
         --host-prog "h1:iperf3 -c 10.0.0.12 -p 4242 -b $RATE -t $TIME -M 1000" \
-        --time ${TIME%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
+	--time ${TIME1%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py
