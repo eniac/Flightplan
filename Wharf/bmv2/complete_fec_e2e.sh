@@ -110,11 +110,9 @@ NC='\033[0m' # No Color
 
 echo Bytes Transferred:
 if [[ $TWO_HALVES == "2" ]]; then
-  python2 $HERE/pcap_tools/pcap_size.py \
-      $PCAP_DUMPS/{h1_to_s1,s1_to_s1compress,s1compress_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+  python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS h1 s1compress h2
 else
-  python2 $HERE/pcap_tools/pcap_size.py \
-      $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
+  python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS h1 h2
 fi
 
 

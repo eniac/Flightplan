@@ -18,13 +18,15 @@ Encoder: Encoder.sdnet ../RSEP4/Scripts/Patch_backpressure.pl \
 	@ln -s ../../../MemcachedP4/Scripts/run_RTL.sh Encoder/XilinxSwitch/run_RTL.sh
 	@ln -s ../../../../MemcachedVivadoHLS/MemHLS.h Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS.h
 	@ln -s ../../../../MemcachedVivadoHLS/MemHLS.cpp Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS.cpp
-	@echo "Copy and link memcached engine here"
+	@ln -s ../../../../MemcachedVivadoHLS/MemHLS_hash.h Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS_hash.h
+	@ln -s ../../../../MemcachedVivadoHLS/MemHLS_hash.cpp Encoder/XilinxSwitch/XilinxSwitch.TB/MemHLS_hash.cpp
 	@cp ../MemcachedVivadoHLS/Batch/MemcachedVivadoHLS/solution2/syn/verilog/*.v Encoder/XilinxSwitch/memcached_0_t.HDL
 	@echo "Patches/Encoder.patch has been adapted for memcached -- needs editing to work with FEC too"
 	patch -p0 < Patches/Encoder.patch
 	cp Sources/XilinxSwitch.hpp Encoder/XilinxSwitch/XilinxSwitch.TB/. 
-	@echo "../RSEP4/Scripts/Patch_backpressure.pl given 'memcached' parameter -- needs editing to work with FEC too"
 	@FILE=$$(mktemp) && ../RSEP4/Scripts/Patch_backpressure.pl -i Encoder/XilinxSwitch/XilinxSwitch.v -d 3 -p memcached -t memcached_0_t -m memcached_0 > $${FILE} && mv $${FILE} Encoder/XilinxSwitch/XilinxSwitch.v
+	cd Encoder/XilinxSwitch/XilinxSwitch.TB; \
+	./compile.bash	
 Encoder.sdnet: Sources/Encoder.p4
 	p4c-sdnet -I ../RSEVivadoHLS -I ../MemcachedP4 Sources/Encoder.p4 -o Encoder.sdnet
 	patch Encoder.sdnet Patches/Encoder.sdnet.patch
