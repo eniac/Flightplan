@@ -226,7 +226,7 @@ The modifications to the makefile must be made in three locations:
 
 # Other experiments
 
-* `P4Boosters/Wharf$ ./bmv2/start_checked_topology.sh` runs an experiment involving the extended Flightplan header which apply program-integrity preservation. This uses the "headered" versions of [P4](Sources/CompleteHeadered.p4) and [topology](bmv2/topologies/tclust_topology_headered.yml) files.
+* `P4Boosters/Wharf$ ./bmv2/start_checked_topology.sh` runs an experiment involving the extended Flightplan header which apply program-integrity preservation. This uses the "checked" versions of [P4](Sources/CheckedFragment.p4) and [topology](bmv2/topologies/complete_topology_checked.yml) files.
 **NOTE** This requires recompiling the switch (`make configure_runtime BOOSTERS="..."`) to include the stateful extern objects (
 [ReceiverNakState.h](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.h),
 [SenderSeqState.h](../cpuBoosters/bmv2/booster_switch/SenderSeqState.h),
