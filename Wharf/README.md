@@ -233,3 +233,4 @@ The modifications to the makefile must be made in three locations:
 [ReceiverNakState.cpp](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.cpp),
 [SenderSeqState.cpp](../cpuBoosters/bmv2/booster_switch/SenderSeqState.cpp))
 
+* `P4Boosters/Wharf$ ./bmv2/start_tclust_topology.sh` runs an experiment on a network modelled on the [tclust topology](bmv2/topologies/tclust_topology.yml).
