@@ -226,10 +226,10 @@ The modifications to the makefile must be made in three locations:
 
 # Other experiments
 
-* `P4Boosters/Wharf$ ./bmv2/start_checked_topology.sh` runs an experiment involving the extended Flightplan header which apply program-integrity preservation. This uses the "headered" versions of P4 and topology files -- such as [](Sources/CompleteHeadered.p4) and [](bmv2/topologies/tclust_topology_headered.yml).
-**NOTE** This requires recompiling the switch (`make configure_runtime BOOSTERS="..."`) to include the stateful extern objects.
-[](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.h)
-[](../cpuBoosters/bmv2/booster_switch/SenderSeqState.h)
-[](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.cpp)
-[](../cpuBoosters/bmv2/booster_switch/SenderSeqState.cpp)
+* `P4Boosters/Wharf$ ./bmv2/start_checked_topology.sh` runs an experiment involving the extended Flightplan header which apply program-integrity preservation. This uses the "headered" versions of [P4](Sources/CompleteHeadered.p4) and [topology](bmv2/topologies/tclust_topology_headered.yml) files.
+**NOTE** This requires recompiling the switch (`make configure_runtime BOOSTERS="..."`) to include the stateful extern objects (
+[ReceiverNakState.h](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.h),
+[SenderSeqState.h](../cpuBoosters/bmv2/booster_switch/SenderSeqState.h),
+[ReceiverNakState.cpp](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.cpp),
+[SenderSeqState.cpp](../cpuBoosters/bmv2/booster_switch/SenderSeqState.cpp))
 
