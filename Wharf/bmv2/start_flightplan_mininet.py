@@ -95,12 +95,17 @@ class FPTopo(Topo):
             else:
                 console_log = None
 
+            if len(sw_name) > 10:
+                raise TopoSpecError("Switch name '{}' too long. Max length 10 characters"
+                        .format(sw_name))
+
             self.addSwitch(sw_name,
                            sw_path = sw_path,
                            json_path = self.cfgpath(sw_opts['cfg']),
                            thrift_port = base_thrift + i,
                            log_console = console_log,
-                           verbose = verbose)
+                           verbose = verbose,
+                           dpid = '{:16x}'.format(i))
 
             switch = dict(
                     name = sw_name,
@@ -133,6 +138,9 @@ class FPTopo(Topo):
                     iface_opts['name'] = self.default_iface_name(sw_name, port_num)
 
         for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
+
+            if len(host_name) > 10:
+                raise TopoSpecError('Switch name "{}" too long. Max len == 10'.format(host_name))
 
             if 'links' in host_ops:
                 raise TopoSpecError("top level 'links' specification no longer supported. " \
