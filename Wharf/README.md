@@ -197,3 +197,8 @@ The modifications to the makefile must be made in three locations:
 2) Add the output as a dependency of the `bmv2` target (`bmv2: ... $(BLD_BMV2)/XXX.json`)
 3) Add relevant externs to the list `EXTERNS` that are split by `split_extern_events.py`
 (`EXTERNS=... XXX`)
+
+# Other experiments
+
+* `P4Boosters/Wharf$ ./bmv2/start_checked_topology.sh` runs an experiment involving the extended Flightplan header which apply program-integrity preservation. **NOTE** This requires recompiling the switch to include the stateful extern objects.
+
