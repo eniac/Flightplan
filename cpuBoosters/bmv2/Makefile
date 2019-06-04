@@ -11,7 +11,7 @@ BOOSTER_TARGET=booster_switch
 TEMPLATE_TARGET=simple_switch
 
 BOOSTERS?=MEMCACHED FEC COMPRESSION
-ifneq ($(filter configure,$(MAKECMDGOALS)),)
+ifeq ($(findstring configure,$(MAKECMDGOALS)),)
 BOOSTERS:=$(shell ./enabled_boosters.sh ${BOOSTERS})
 endif
 
