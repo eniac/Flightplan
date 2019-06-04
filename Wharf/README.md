@@ -121,6 +121,9 @@ The config file also enables FEC from `s1->s2` and `s3->s2`
 to setting up the forwarding tables on the different switches
 (by sending the commands in the `cmds` files).
 
+**NB:** MAC addresses are assigned dynamically to the host nodes if their MAC addresses are not specified in the `<cfg_file>`.
+However the MAC address assigned to the client nodes in the topologies might differ from the actual if it has been
+statically configured in the topology file.
 
 ### End-to-end tests
 
