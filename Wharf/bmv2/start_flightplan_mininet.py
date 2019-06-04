@@ -68,6 +68,7 @@ class FPTopo(Topo):
 
     def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file):
         Topo.__init__(self)
+        print("Flightplan Mininet using config " + cfg_file)
 
         self.cfgbase = os.path.dirname(os.path.realpath(cfg_file))
         self.link_ports = defaultdict(dict)
