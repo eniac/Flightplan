@@ -1,3 +1,5 @@
+#!/bin/sh -e
+
 echo "***** RUNNING FEC E2E *****"
 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 
