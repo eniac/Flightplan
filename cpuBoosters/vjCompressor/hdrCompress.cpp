@@ -551,18 +551,18 @@ int main(int argc, char *argv[]){
   }
 
   switch(flow) {
-	case 0:
-		  // start packet processing loop for compress.
-  		  if (pcap_loop(pcap, 0, compressHandler, NULL) < 0) {
-				  cerr << "pcap_loop() failed: " << pcap_geterr(pcap);
-				  return 1;
-		  }
-		  break;
-	case 1:
-		  // start packet processing loop for decompress.
-		  if (pcap_loop(pcap, 0, decompressHandler, NULL) < 0) {
-				  cerr << "pcap_loop() failed: " << pcap_geterr(pcap);
-				  return 1;
+    case 0:
+      // start packet processing loop for compress.
+      if (pcap_loop(pcap, 0, compressHandler, NULL) < 0) {
+        cerr << "pcap_loop() failed: " << pcap_geterr(pcap);
+			  return 1;
+      }
+      break;
+    case 1:
+      // start packet processing loop for decompress.
+      if (pcap_loop(pcap, 0, decompressHandler, NULL) < 0) {
+        cerr << "pcap_loop() failed: " << pcap_geterr(pcap);
+				return 1;
 		  }
 		  break;
   }
