@@ -9,8 +9,8 @@ with the additional `booster_switch`, as explained
 
 ## Selecting Boosters
 
-If the booster switch was built with only certain boosters enabled, those same
-boosters (and only those boosters) will have to be enabled in the build process
+If the booster switch was built with only certain boosters enabled (referenced in **NB**),
+those same boosters (and only those boosters) will have to be enabled in the build process
 here.
 
 To build Complete.p4 with only FEC enabled, run:
@@ -25,7 +25,12 @@ make BOOSTERS="FEC COMPRESSION"
 
 To build with all boosters, simply run `make`.
 
-**NB:** Build may have to be cleaned with `make clean` before changing enabled boosters.
+**NB:** Before running these files, you must set the environment variable:
+`BMV2_REPO` to point to a copy of the behavioral model repository which has
+been built with the `booster_switch`, as detailed:
+[here](../cpuBoosters/bmv2/README.md).
+
+**NB1:** Build may have to be cleaned with `make clean` before changing enabled boosters.
 
 ## Building for SDNet
 
@@ -88,8 +93,6 @@ sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 
 Where the `cfg_file` specifies the topology and initial state of mininet.
 
-The most complete topology at this time is defined in `bmv2/topologies/complete_topology.yml`.
-
 Below is the snippet for an example of a simple one switch, two host toplogy.
 
 ``` yaml
@@ -103,15 +106,17 @@ switches:
         interfaces:
           -link: h1
           -link: h2
-        cmds: 
-          -table_add forward set_egress 0 =>1
-          -table_add forward set_egress 1 =>0
+        cmds:
+          -table_add forward set_egress 0 => 1
+          -table_add forward set_egress 1 => 0
 
 ```
 
-A detailed list of configurable features is given in the [example_topology](./bmv2/topologies/example_topology.yml)
+A detailed list of configurable features is given in the [example_topology.yml](./bmv2/topologies/example_topology.yml)
 
-Running `start_flightplan_mininet.py` with this config file will start up a topology:
+The most complete topology at this time used for running the test experiments is defined in `bmv2/topologies/complete_topology.yml`
+
+Running `start_flightplan_mininet.py` with config file `complete_topology.yml` will start up a topology:
 ```
 h1 <--> Complete (s1) <--> Dropper (s2) <--> Complete (s3) <--> h2
 ```
@@ -120,6 +125,14 @@ The config file also enables FEC from `s1->s2` and `s3->s2`
 (by replaying the appropriate packets from s2 to s3 & s1), in addition
 to setting up the forwarding tables on the different switches
 (by sending the commands in the `cmds` files).
+
+The data packets (k paramater) and parity packets (h parameter) to determine the 
+operation of FEC can be defined in the `fec_encoder_commands.txt` and
+`fec_decoder_commands.txt` files for error correction.
+
+In simplest terms, if up to H packets out of a set of H+K packets are dropped, 
+then FEC will be able to recover the data over the faulty links.
+More information on FEC booster can be found [FEC Booster](https://www.seas.upenn.edu/~nsultana/files/netcompute.pdf).
 
 **NB:** MAC addresses are assigned dynamically to the host nodes if their MAC addresses are not specified in the `<cfg_file>`.
 
@@ -132,6 +145,9 @@ sudo -E python bmv2/start_flightplan_mininet.py --cli` opens the mininet CLI whi
 
 ### End-to-end tests
 
+The steps to setup the mininet simulation are enforced in `start_flightplan_mininet.py`
+to initialize the topology and start the hosts & switches defined in the config file `complete_topology.yml`.
+
 Two end-to-end tests exist, one for the FEC functionality and one for memcached.
 They are:
 
@@ -139,24 +155,23 @@ They are:
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
-
-The first tests just the FEC functionality, ensuring that the packets received by
+#### Test 1- FEC functionality
+```
+$ ./bmv2/complete_fec_e2e.sh <input.pcap>
+```
+This FEC functinality test just ensures that the packets received by
 h2 are identical to those sent by h1, even in the presence of drops.
 
-This test replays special packets to alter the behavior of the system to turn on FEC functionality in the simulation environment.
-Commands to test complete topology are sent to the switches after this initial replay of special packets.
-The ordering of the functions is enforced in `start_flightplan_mininet.py` to set the boosters with FEC behavior.
+This FEC test is set to run as follow:
+Replay special packets only between the switches to alter the behavior of the
+system to turn on FEC functionality (faulty links from s2->s1 and s2->s3) in the simulation environment.
+Next, the control plane commands for filling up the forwarding table or FEC paramters (h,k)
+to test complete topology are run on the switches.
+Programs running on the host are started and finally any packets which need to replay from the hosts
+are replayed to ensure the packets leaving the switch are identical to those entering the switch for
+testing the FEC functinality.
 
-A sample input file is `bmv2/pcaps/tcp_100.pcap`
-
-The second tests FEC + memcached functionality, ensuring that the memcached
-responses received by h1 are as expected. Good input files are:
-- `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
-
-**NB:** Before running these files, you must set the environment variable:
-`BMV2_REPO` to point to a copy of the behavioral model repository which has
-been built with the `booster_switch`, as detailed:
-[here](../cpuBoosters/bmv2/README.md).
+A sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`
 
 #### Running different programs on switches
 The default test runs the same program on switches. The "two halves" tests run
@@ -172,6 +187,20 @@ The more complex test further offloads header compression to a separate switch. 
 ```shell
 TWO_HALVES=2 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 ```
+#### Test 2- Memcached
+```
+$ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
+```
+This second tests FEC + memcached functionality, ensuring that the memcached
+responses received by h1 are as expected. Good input files are:
+ - `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
+
+**NB** Host programs run for these experiments are iperf for Test 1 and memcached for Test 2.
+
+**NB1** Ensure that enviornment variable `BMV2_REPO` has been set up as mentioned
+in **NB** of [Selecting Boosters](README.md#selecting-boosters) of this document.
+
+**NB2** For testing Memcached functionality the source and destination MAC addresses in `bmv2/pcap_tools/pcap_sub.py` must match with the config file `complete_toplology.yml` 
 
 ### Mininet file
 The file that runs the mininet simulation is ultimately
@@ -205,3 +234,14 @@ The modifications to the makefile must be made in three locations:
 2) Add the output as a dependency of the `bmv2` target (`bmv2: ... $(BLD_BMV2)/XXX.json`)
 3) Add relevant externs to the list `EXTERNS` that are split by `split_extern_events.py`
 (`EXTERNS=... XXX`)
+
+# Other experiments
+
+* `P4Boosters/Wharf$ ./bmv2/start_checked_topology.sh` runs an experiment involving the extended Flightplan header which apply program-integrity preservation. This uses the "checked" versions of [P4](Sources/CheckedFragment.p4) and [topology](bmv2/topologies/complete_topology_checked.yml) files.
+**NOTE** This requires recompiling the switch (`make configure_runtime BOOSTERS="..."`) to include the stateful extern objects (
+[ReceiverNakState.h](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.h),
+[SenderSeqState.h](../cpuBoosters/bmv2/booster_switch/SenderSeqState.h),
+[ReceiverNakState.cpp](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.cpp),
+[SenderSeqState.cpp](../cpuBoosters/bmv2/booster_switch/SenderSeqState.cpp))
+
+* `P4Boosters/Wharf$ ./bmv2/start_tclust_topology.sh` runs an experiment on a network modelled on the [tclust topology](bmv2/topologies/tclust_topology.yml).

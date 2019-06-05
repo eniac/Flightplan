@@ -24,11 +24,6 @@ control DropProcess(inout headers_t hdr, inout bmv2_meta_t meta, inout metadata_
         }
         actions = { set_drop_rate; NoAction; }
         default_action = NoAction;
-
-        const entries = {
-            1 : set_drop_rate(3, 5);
-            2 : set_drop_rate(3, 5);
-        }
     }
 
     apply {

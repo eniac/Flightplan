@@ -26,7 +26,10 @@ switches:
         replay:
             s1: ../pcaps/lldp_enable_fec.pcap
             s3: ../pcaps/lldp_enable_fec.pcap
-        cmds: [../controller_files/forwarding_commands.txt]
+        cmds:
+            - ../controller_files/forwarding_commands.txt
+            - table_add dropper set_drop_rate 1 => 3 5
+            - table_add dropper set_drop_rate 0 => 3 5
     s3:
         cfg: ../../build/bmv2/Complete.json
         interfaces:

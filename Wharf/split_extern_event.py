@@ -124,7 +124,6 @@ def add_externs(j):
             if parameter['type'] == 'extern':
                 if primitive['op'].startswith('_'):
                     externs[parameter['value']] = primitive['op'].split('_')[1]
-    print(externs)
     for extern_instance in j['extern_instances']:
         if extern_instance['name'] in externs:
             del externs[extern_instance['name']]
