@@ -122,8 +122,13 @@ to setting up the forwarding tables on the different switches
 (by sending the commands in the `cmds` files).
 
 **NB:** MAC addresses are assigned dynamically to the host nodes if their MAC addresses are not specified in the `<cfg_file>`.
-However the MAC address assigned to the client nodes in the topologies might differ from the actual if it has been
-statically configured in the topology file.
+
+The MAC address assigned to host nodes may differ from the MAC address specified in the `cfg_file`. 
+The error message `SIOCSIFHWADDR: Cannot assign requested address`on the mininet CLI indicates the MAC address specifed in the config file is invalid. In such a scenario make sure to use a valid 48 bit MAC address which  can be used for the testing on mininet.
+
+The command `
+sudo -E python bmv2/start_flightplan_mininet.py --cli` opens the mininet CLI which can be used to confirm the configurations of various nodes in the `cfg_file`.
+
 
 ### End-to-end tests
 
@@ -178,7 +183,7 @@ The `flightplan_p4_mininet.py` file borrows very heavily from the
 file located in the P4 behavioral model repository.
 
 `start_flightplan_mininet.py` accepts a variety of command line arguments specifying
-which P4 configuration to load on which of s0, s1, and s2, among other
+which P4 configuration to load on which of s1, s2, and s3 switches among other
 configurations.
 
 The full list of arguments can be viewed with:

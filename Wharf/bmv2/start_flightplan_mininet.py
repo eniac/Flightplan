@@ -167,7 +167,6 @@ class FPTopo(Topo):
 
                 if 'ip' not in iface_opts:
                     iface_opts['ip'] = self.next_ip_address()
-
                 if 'mac' not in iface_opts:
                     iface_opts['mac'] = self.next_mac_address()
 
