@@ -1,5 +1,5 @@
 open_project DecoderVivadoHLS
-set_top Decode
+set_top Decoder
 add_files ../Configuration.h
 add_files ../Decoder_core.cpp
 add_files ../Decoder_core.h

@@ -56,6 +56,8 @@ void fec_decode_p4_packet(const u_char *pkt, size_t pkt_size,
                           const struct fec_header *fec, int ingress_port,
                           int k, int h,
                           decode_forward_fn forward, drop_fn_t drop) {
+    // Must put ingress on even numbers, egress on odd numbers, to solve overlap problem
+    ingress_port = ingress_port * 2;
 
     LOG_INFO("Fec_decode called for packet %d: %d.%d",
              (int)fec->class_id, (int)fec->block_id, (int)fec->index);

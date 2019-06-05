@@ -45,4 +45,3 @@ compressorAndDecompressor: pcapCompressorAndDecompressor.cpp vjCompression.cpp
 
 clean: 
 	$(RM) compressorAndDecompressor hdrCompress $(COMPRESSOR_CORE_OBJ) $(DECOMPRESSOR_CORE_OBJ) hls_comp_pcap hls_decomp_pcap
-

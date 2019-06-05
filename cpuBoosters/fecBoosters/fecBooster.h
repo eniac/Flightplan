@@ -10,13 +10,16 @@
 #include "rse.h"
 
 #ifndef NO_LOG_ERR
+#undef LOG_ERR
 #define LOG_ERR(s, ...) fprintf(stderr, "[%s:%s()::%d] ERROR: " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
 #else
+#undef LOG_ERR
 #define LOG_ERR(s, ...)
 #endif
 
 
 #ifndef NO_LOG_INFO
+#undef LOG_INFO
 #define LOG_INFO(s, ...) fprintf(stderr, "[%s:%s()::%d] " s "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__)
 #define LOG_HEX(buff, len) \
     for (int _i_=0; _i_ < len; _i_++) { \
@@ -27,6 +30,7 @@
     } \
     fprintf(stderr, "\n");
 #else
+#undef LOG_INFO
 #define LOG_INFO(s, ...)
 #define LOG_HEX(buff, len)
 #endif
@@ -58,17 +62,17 @@ enum pkt_buffer_status {
 
 /** Traffic class that determines parity/data ratio */
 typedef unsigned short int tclass_type;
-#define TCLASS_MAX 0x0F
+#define TCLASS_MAX 0x05
 #define TCLASS_NULL 0xFF
 #define DEFAULT_PORT  0
-#define MAX_PORT 2
+#define MAX_PORT 4
 
 /** Sets the parameters k and h for a given traffic class */
 void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h);
 void get_fec_params(tclass_type tclass, fec_sym *k, fec_sym *h);
 
 /** Inserts a packet, tagged with its size, into the buffer */
-void insert_into_pkt_buffer(tclass_type tclass, int port, int blockId, int pktIdx,
+int insert_into_pkt_buffer(tclass_type tclass, int port, int blockId, int pktIdx,
                             FRAME_SIZE_TYPE pkt_size, const u_char *packet);
 
 /** Gets a packet without its tagged size from the buffer */

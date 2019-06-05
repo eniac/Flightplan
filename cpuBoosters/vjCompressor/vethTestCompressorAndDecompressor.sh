@@ -65,12 +65,6 @@ echo "starting tcpreplay..."
 tcpreplay --preload-pcap --quiet -p 1000 -i networkVeth1 $SOURCE_PCAP
 sleep 1
 
-#if [ $LIBPCAP = 0]; then
-#  echo "starting tcpreplay..."
-#  tcpreplay --preload-pcap --quiet -p 1000 -i networkVeth2 $COMPRESS_PCAP
-#  sleep 1
-#fi
-
 # cleanup
 chown $real_user:$real_user $OUTPUT_PCAP
 killall tcpdump
@@ -85,4 +79,4 @@ ip link delete networkVeth3
 python comparePcaps.py $INPUT_PCAP $OUTPUT_PCAP
 
 # Verify that header has been compressed
-#python ../../Wharf/bmv2/pcap_tools/pcap_size.py $INPUT_PCAP $COMPRESS_PCAP $OUTPUT_PCAP 
+python ../../Wharf/bmv2/pcap_tools/pcap_size.py $INPUT_PCAP $COMPRESS_PCAP $OUTPUT_PCAP 
