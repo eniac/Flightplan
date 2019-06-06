@@ -19,8 +19,9 @@ if [[ $RATE == "" ]]; then
     RATE=0;
 fi
 
-# TIME- seconds to run the topology
-# TIME1- seconds to run the mininet running the topology set up
+# TIME- seconds to run the iperf
+# TIME1- seconds to run the mininet topology
+# TIME1 > TIME
 if [[ $# > 1 ]]; then
     TIME=$2
     TIME1=`expr $2 + 5`
