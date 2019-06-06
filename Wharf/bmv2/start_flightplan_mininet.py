@@ -423,7 +423,7 @@ def main():
 
         if args.pcap_dump:
             topo.stop_tcp_dumps(net)
-        print("Stoping mininet")
+        print("Stopping mininet")
         net.stop()
 
     except:
