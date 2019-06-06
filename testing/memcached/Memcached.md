@@ -20,7 +20,7 @@ The test topology consists of:
   * Tofino port 5/0
 * A server running pktgen
   * the "DPDK" server, tclust7
-  * Tofino port 3/0
+  * Tofino port 7/0
 * A server to coordinate experiments from
   * the "Coordination" server, tclust6
 * The server to program the bitsream to the fpga
