@@ -1,3 +1,5 @@
+echo "FIXME this is currently incomplete -- next step involves running iperf between iperf_c and iperf_s hosts, and mapping Compressor, FEC encoder, etc boosters to different FPGAs"
+
 if [[ $BMV2_REPO == "" ]]; then
     echo "Must set BMV2_REPO before running this test"
     exit 1

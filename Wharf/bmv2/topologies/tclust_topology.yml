@@ -64,15 +64,15 @@ switches:
             - link: fpga3
               port: 3
         cmds:
-            - ../controller_files/forwarding_commands.txt
-    fpga3:
-        cfg: ../../build/bmv2/Forwarder.json
-        interfaces:
-            - link: tofino2
-        cmds:
             # FIXME need to handle traccking from 1.
             - table_add forward set_egress 0 => 3
             - table_add forward set_egress 3 => 2
               # FIXME 3 might need to be forwarded to 1.
             - table_add forward set_egress 2 => 0
               # FIXME 2 might need to first be sent to FPGA before getting to 0.
+    fpga3:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino2
+        cmds:
+            - table_add forward set_egress 0 => 1
