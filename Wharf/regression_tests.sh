@@ -9,7 +9,7 @@ do_test() {
   FILENAME=$2
   CMD=$3
   echo "${TITLE}"
-  ${CMD} > ${LOG_DIR}/${FILENAME}.stdout 2> ${LOG_DIR}/${FILENAME}.stderr
+  eval ${CMD} > ${LOG_DIR}/${FILENAME}.stdout 2> ${LOG_DIR}/${FILENAME}.stderr
   if [ $? -eq 0 ]; then
       echo "SUCCESS";
   else
