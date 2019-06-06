@@ -1,13 +1,15 @@
 #!/bin/sh
 
-mkdir -p regression_test_output
+LOG_DIR=regression_test_output
+
+mkdir -p ${LOG_DIR}
 
 do_test() {
   TITLE=$1
   FILENAME=$2
   CMD=$3
   echo "${TITLE}"
-  ${CMD} > regression_test_output/${FILENAME}.stdout 2> regression_test_output/${FILENAME}.stderr
+  ${CMD} > ${LOG_DIR}/${FILENAME}.stdout 2> ${LOG_DIR}/${FILENAME}.stderr
   if [ $? -eq 0 ]; then
       echo "SUCCESS";
   else
