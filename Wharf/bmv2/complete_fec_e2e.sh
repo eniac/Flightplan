@@ -56,8 +56,10 @@ if [[ $NO_HC == 0  ]]; then
     echo "Using complete topology WITH header compression";
     if [[ $TWO_HALVES == "" ]]; then
         TOPO=$HERE/topologies/complete_topology.yml;
-    else
+    elif [[ $TWO_HALVES == "1" ]]; then
         TOPO=$HERE/topologies/complete_topology_split.yml;
+    elif [[ $TWO_HALVES == "2" ]]; then
+        TOPO=$HERE/topologies/complete_topology_split_further.yml;
     fi
 else
     echo "Using complete topology WITHOUT header compression";
@@ -83,7 +85,7 @@ IN_PCAP=$OUTDIR/${BASENAME}_in.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
 python2 $HERE/pcap_tools/pcap_clean.py  $PCAP_DUMPS/h1_to_s1.pcap $IN_PCAP --rm-chksum
-python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/h2_from_s3.pcap $OUT_PCAP --rm-chksum
+python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/s3_to_h2.pcap $OUT_PCAP --rm-chksum
 
 OUT_TXT=$OUTDIR/${BASENAME}_out.txt
 IN_TXT=$OUTDIR/${BASENAME}_in.txt
@@ -106,6 +108,14 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+echo Bytes Transferred:
+if [[ $TWO_HALVES == "2" ]]; then
+  python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS h1 s1compress h2
+else
+  python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS h1 h2
+fi
+
+
 if [[ $INLINES == $OUTLINES ]]; then
     echo "Input and output both contain $INLINES lines"
     echo "Running diff:"
@@ -123,11 +133,6 @@ if [[ $INLINES == $OUTLINES ]]; then
         exit 1
     else
         echo -e ${GREEN}TEST SUCCEEDED${NC}
-
-        echo Bytes Transferred:
-        python2 $HERE/pcap_tools/pcap_size.py \
-            $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_s3,s3_to_h2}.pcap
-
         exit 0
     fi
 else

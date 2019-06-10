@@ -13,8 +13,8 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 
 control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
 
-    HeaderCompression() ingress_compression;
-    HeaderCompression() egress_compression;
+    CompressedLink() ingress_compression;
+    CompressedLink() egress_compression;
 
     apply {
         if (!hdr.eth.isValid()) {

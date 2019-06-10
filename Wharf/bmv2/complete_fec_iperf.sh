@@ -19,11 +19,17 @@ if [[ $RATE == "" ]]; then
     RATE=0;
 fi
 
+# TIME- seconds to run the iperf
+# TIME1- seconds to run the mininet topology
+# TIME1 > TIME
 if [[ $# > 1 ]]; then
     TIME=$2
+    TIME1=`expr $2 + 5`
 else
     TIME=10s
+    TIME1=15s
 fi
+
 
 USER=`logname`
 BASENAME=fec_iperf_$RATE
@@ -41,13 +47,13 @@ mkdir -p $LOG_DUMPS
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
 sudo -E python $HERE/start_flightplan_mininet.py \
-        $HERE/topologies/complete_topology.yml \
+        $HERE/topologies/complete_no_hc_topology.yml \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
         --host-prog "h2:iperf3 -s -p 4242" \
-        --host-prog "h1:iperf3 -c 10.0.1.1 -p 4242 -b $RATE -t $TIME -M 1000" \
-        --time ${TIME%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
+        --host-prog "h1:iperf3 -c 10.0.0.12 -p 4242 -b $RATE -t $TIME -M 1000" \
+	--time ${TIME1%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py
@@ -56,6 +62,6 @@ if [[ $? != 0 ]]; then
     exit -1;
 fi
 
-cat $LOG_DUMPS/h1_prog.log
+cat $LOG_DUMPS/h1_prog_1.log
 
 echo "DONE."

@@ -15,26 +15,41 @@
 # limitations under the License.
 #
 
+import os
+import sys
+if 'BMV2_REPO' in os.environ:
+    newpath  = os.path.join(os.environ['BMV2_REPO'], 'tools')
+    print("Appending {} to pythonpath".format(newpath))
+    sys.path.append(newpath)
+    default_bmv2_loc = \
+            os.path.join(os.environ['BMV2_REPO'],
+                         'targets', 'booster_switch', 'simple_switch')
+else:
+    print("WARNING: BMV2_REPO variable not found")
+    print("Unless behavioral-model/tools has been added to the path explicitly, "
+          "this test will likely fail")
+    default_bmv2_loc = ''
+
 from mininet.net import Mininet
 from mininet.topo import Topo
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 
-from wharf_p4_mininet import P4Switch, P4Host, send_commands
+from flightplan_p4_mininet import P4Switch, P4Host, send_commands
 
 import argparse
 from time import sleep
 
 parser = argparse.ArgumentParser(description='Mininet demo')
-parser.add_argument('--behavioral-exe', help='Path to behavioral executable',
-                    type=str, action="store", required=True)
+parser.add_argument('json', help='Path to JSON config file',
+                    type=str)
+parser.add_argument('--bmv2-exe', help='Path to behavioral executable',
+                    type=str, action="store", default=default_bmv2_loc)
 parser.add_argument('--thrift-port', help='Thrift server port for table updates',
                     type=int, action="store", default=9090)
 parser.add_argument('--num-hosts', help='Number of hosts to connect to switch',
                     type=int, action="store", default=2)
 parser.add_argument('--mode', choices=['l2', 'l3'], type=str, default='l3')
-parser.add_argument('--json', help='Path to JSON config file',
-                    type=str, action="store", required=True)
 parser.add_argument('--pcap-dump', help='Dump packets on interfaces to pcap files',
                     type=str, action="store", required=False, default=False)
 parser.add_argument('--command-file', help='Initial commands.txt file to pass over thrift port',
@@ -54,7 +69,8 @@ class SingleSwitchTopo(Topo):
                                 json_path = json_path,
                                 thrift_port = thrift_port,
                                 pcap_dump = pcap_dump,
-                                log_console=True)
+                                log_console='./bmv2/1sw.log',
+                                verbose=True)
 
         for h in xrange(n):
             host = self.addHost('h%d' % (h + 1),
@@ -66,7 +82,7 @@ def main():
     num_hosts = args.num_hosts
     mode = args.mode
 
-    topo = SingleSwitchTopo(args.behavioral_exe,
+    topo = SingleSwitchTopo(args.bmv2_exe,
                             args.json,
                             args.thrift_port,
                             args.pcap_dump,
