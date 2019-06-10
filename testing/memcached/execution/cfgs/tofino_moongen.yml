@@ -89,7 +89,7 @@ programs:
 
     start_dataplane:
         host: tofino
-        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./run.sh -t -mi 3 -me 3 {0.args.dataplane_flags}
+        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./run.sh -t -mi 7 -me 7 {0.args.dataplane_flags}
         stop: cd ~/gits/TofinoP4Boosters/compressionE2e && ./stop.sh
         enforce_duration: false
 
@@ -145,14 +145,14 @@ programs:
 commands:
 
     stop_dataplane:
-        begin: -46
+        begin: -60
 
     program_fpga:
-        begin: -45
+        begin: -59
 
     start_dataplane:
-        begin: -20
-        duration: 65
+        begin: -30
+        duration: 75
 
     mcd:
         begin: -20
