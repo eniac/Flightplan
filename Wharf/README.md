@@ -134,6 +134,15 @@ In simplest terms, if up to H packets out of a set of H+K packets are dropped,
 then FEC will be able to recover the data over the faulty links.
 More information on FEC booster can be found [FEC Booster](https://www.seas.upenn.edu/~nsultana/files/netcompute.pdf).
 
+**NB:** MAC addresses are assigned dynamically to the host nodes if their MAC addresses are not specified in the `<cfg_file>`.
+
+The MAC address assigned to host nodes may differ from the MAC address specified in the `cfg_file`. 
+The error message `SIOCSIFHWADDR: Cannot assign requested address`on the mininet CLI indicates the MAC address specifed in the config file is invalid. In such a scenario make sure to use a valid 48 bit MAC address which  can be used for the testing on mininet.
+
+The command `
+sudo -E python bmv2/start_flightplan_mininet.py --cli` opens the mininet CLI which can be used to confirm the configurations of various nodes in the `cfg_file`.
+
+
 ### End-to-end tests
 
 The steps to setup the mininet simulation are enforced in `start_flightplan_mininet.py`
@@ -191,6 +200,8 @@ responses received by h1 are as expected. Good input files are:
 **NB1** Ensure that enviornment variable `BMV2_REPO` has been set up as mentioned
 in **NB** of [Selecting Boosters](README.md#selecting-boosters) of this document.
 
+**NB2** For testing Memcached functionality the source and destination MAC addresses in `bmv2/pcap_tools/pcap_sub.py` must match with the config file `complete_toplology.yml` 
+
 ### Mininet file
 The file that runs the mininet simulation is ultimately
 [start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py), which depends on
@@ -201,7 +212,7 @@ The `flightplan_p4_mininet.py` file borrows very heavily from the
 file located in the P4 behavioral model repository.
 
 `start_flightplan_mininet.py` accepts a variety of command line arguments specifying
-which P4 configuration to load on which of s0, s1, and s2, among other
+which P4 configuration to load on which of s1, s2, and s3 switches among other
 configurations.
 
 The full list of arguments can be viewed with:
