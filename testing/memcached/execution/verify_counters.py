@@ -30,7 +30,7 @@ for word, next_word in zip(split_line, split_line[1:]):
 print("Expected: {}\nGot: {}".format(n_expected_pkts, n_got))
 print("Difference: {}".format(n_expected_pkts - n_got))
 
-if n_expected_pkts != n_got:
+if n_expected_pkts != n_got and n_expected_pkts != n_got - 2 and n_expected_pkts != n_got - 1:
     exit(n_expected_pkts - n_got)
 if n_got == 0:
     exit(-1)
