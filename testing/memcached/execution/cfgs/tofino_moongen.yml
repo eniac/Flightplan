@@ -21,7 +21,7 @@ init_cmds:
         python format_lua_template.py {0.params.pktgen_template} {0.files.pktgen_script.src}
         --rate {0.params.rate} --log  {0.programs.log_dir}/pktgen.log --count {0.params.n_total_pkts}
     make_pcap: >-
-        python2 {0.dirs.P4Boosters}/MemPacket/generate_mixed_memcached.py
+        python2 {0.dirs.P4Boosters}/MemPacket/generate_memcached.py
         --smac {0.hosts.pktgen.mac} --sip {0.hosts.pktgen.ip}
         --dmac {0.hosts.mcd.mac} --dip {0.hosts.mcd.ip}
         --out {0.files.test_pcap.src} --warmup-out {0.files.warmup_pcap.src}
