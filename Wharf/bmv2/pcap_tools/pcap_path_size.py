@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 
 def load_paths(topo_file, endpoint_sets):
 
-    topo = yaml.load(open(topo_file))
+    topo = yaml.safe_load(open(topo_file))
 
     hosts = []
     connections = defaultdict(set)

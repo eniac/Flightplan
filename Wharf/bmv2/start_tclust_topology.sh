@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "FIXME this is currently incomplete -- next step involves running iperf between iperf_c and iperf_s hosts, and mapping Compressor, FEC encoder, etc boosters to different FPGAs"
 
 if [[ $BMV2_REPO == "" ]]; then
@@ -32,6 +34,6 @@ sudo -E python $HERE/start_flightplan_mininet.py \
     2> $LOG_DUMPS/flightplan_mininet_log.err
 
 echo "Bytes Transferred:"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c iperf_s
+python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_enc iperf_s
 echo ""
 python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_s iperf_c
