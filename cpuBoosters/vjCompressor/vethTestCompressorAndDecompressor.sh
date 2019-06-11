@@ -18,6 +18,10 @@ else
     real_user=$(whoami)
 fi
 
+if [ $# -ne 2 ]; then
+    echo "USAGE: ./vethTestCompressorAndDecompressor.sh <input pcap> <Implementation: hls_wrapper(0)/ libpcap(1)> " >&2
+    exit 1
+fi
 LIBPCAP=$2
 HLS_COMPRESSOR=hls_comp_pcap
 HLS_DECOMPRESSOR=hls_decomp_pcap
