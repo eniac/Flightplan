@@ -33,7 +33,7 @@ The input rules must be one of the following:
 
 ```shell
 ENABLE [1/0]             # Enables with 1, disables with 0. With no args prints current state
-CLASS <id> <h> <k> <t>   # Defines a new traffic class
+CLASS <id> <k> <h> <t>   # Defines a new traffic class
 DELCLASS <id>            # Deletes the traffic class with the provided ID
 DEFAULT <id>             # Sets the default class for unmatched traffic
 SET <port> <tcp> <class> # Sets the port and protocol (tcp = 1, udp = 0) to match the class ID.
