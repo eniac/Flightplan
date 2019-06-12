@@ -1,0 +1,71 @@
+--- Encoder.sdnet	2019-01-01 17:50:51.692860972 -0500
++++ Encoder.sdnet.original	2019-01-01 17:49:47.728465300 -0500
+@@ -251,6 +251,34 @@
+     method move_to_section = done(0);
+     method increment_offset = 0; } }
+ class headerDecompress_0_t::UserEngine(1000, 0) {
++  Packet_input packet_in;
++  Packet_output packet_out;
++  class CheckTcp_fl_t::Tuple(inout) {
++    struct {
++      forward_1 : 1 } }
++  class hdr_t_0::Tuple(inout) {
++    struct {
++      eth : eth_h,
++      fec : fec_h,
++      ipv4 : ipv4_t,
++      tcp : tcp_h,
++      cmp : compressedHeader_h } }
++  class ioports_t::Tuple(inout) {
++    struct {
++      ingress_port : 4,
++      egress_port : 4 } }
++  class local_state_t::Tuple(inout) {
++    struct {
++      id : 16 } }
++  class Parser_extracts_t::Tuple(inout) {
++    struct {
++      size : 32 } }
++  CheckTcp_fl_t CheckTcp_fl;
++  hdr_t_0 hdr;
++  ioports_t ioports;
++  local_state_t local_state;
++  Parser_extracts_t Parser_extracts;
++
+   class headerDecompress_input_t::Tuple(in) {
+     struct {
+       stateful_valid : 1 } }
+@@ -415,17 +443,26 @@
+     CheckTcp_lvl_0.hdr = CheckTcp_lvl.hdr,
+     CheckTcp_lvl_0.ioports = CheckTcp_lvl.ioports,
+     CheckTcp_lvl_0.local_state = CheckTcp_lvl.local_state,
+-    CheckTcp_lvl_1.CheckTcp_fl = CheckTcp_lvl_0.CheckTcp_fl,
+-    CheckTcp_lvl_1.hdr = CheckTcp_lvl_0.hdr,
+-    CheckTcp_lvl_1.ioports = CheckTcp_lvl_0.ioports,
+-    CheckTcp_lvl_1.local_state = CheckTcp_lvl_0.local_state,
++
++    CheckTcp_lvl_1.CheckTcp_fl = headerDecompress_0.CheckTcp_fl,
++    CheckTcp_lvl_1.hdr = headerDecompress_0.hdr,
++    CheckTcp_lvl_1.ioports = headerDecompress_0.ioports,
++    CheckTcp_lvl_1.local_state = headerDecompress_0.local_state,
++
+     headerDecompress_0.headerDecompress_input = CheckTcp_lvl_0.headerDecompress_input,
++    headerDecompress_0.CheckTcp_fl = CheckTcp_lvl_0.CheckTcp_fl,
++    headerDecompress_0.hdr = CheckTcp_lvl_0.hdr,
++    headerDecompress_0.ioports = CheckTcp_lvl_0.ioports,
++    headerDecompress_0.local_state = CheckTcp_lvl_0.local_state,
++
+     CheckTcp_lvl_1.headerDecompress_output = headerDecompress_0.headerDecompress_output,
+     CheckTcp_lvl.hdr = Parser.hdr,
+     Deparser.hdr = CheckTcp_lvl_1.hdr,
+     CheckTcp_lvl.ioports = ioports,
+     ioports = CheckTcp_lvl_1.ioports,
+     Parser.packet_in = packet_in,
+-    Deparser.packet_in = Parser.packet_out,
++    headerDecompress_0.packet_in = Parser.packet_out,
++    Deparser.packet_in = headerDecompress_0.packet_out,
+     packet_out = Deparser.packet_out,
+-    Deparser.Deparser_extracts = Parser.Parser_extracts } }
+\ No newline at end of file
++    headerDecompress_0.Parser_extracts = Parser.Parser_extracts, 
++    Deparser.Deparser_extracts = headerDecompress_0.Parser_extracts } }
