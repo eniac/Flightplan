@@ -1,4 +1,4 @@
-#include <ap_int.h>
+//#include <ap_int.h>
 #include "MemHLS.h"
 #include "MemHLS_hash.h"
 

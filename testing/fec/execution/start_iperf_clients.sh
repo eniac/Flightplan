@@ -13,7 +13,7 @@ if [[ $DIP == "" ]]; then
 fi
 
 for i in `seq 0 $(( $NUM - 1 ))`; do
-    iperf3 -c $DIP -J  -B $SIP -p $(( $BASE_PORT + $i )) -t $TIME > ${LOGBASE}_$i.json 2> ${LOGBASE}_$i.err &
+    iperf3 -c $DIP -J  -B $SIP -p $(( $BASE_PORT + $i )) -t $TIME -M 1400 > ${LOGBASE}_$i.json 2> ${LOGBASE}_$i.err &
 done
 
 wait

@@ -88,12 +88,12 @@ Memcached1Port: Memcached1Port_project
 	@cp Memcached1Port/Memcached1Port.runs/impl_1/design_1_wrapper.sysdef Memcached1Port/Memcached1Port.sdk/design_1_wrapper.hdf
 
 Compressor1Port: Compressor1Port_project
-	vivado -mode batch -source Build_project.tcl -tclargs Memcached1Port
+	vivado -mode batch -source Build_project.tcl -tclargs Compressor1Port
 	@mkdir -p Compressor1Port/Compressor1Port.sdk
 	@cp Compressor1Port/Compressor1Port.runs/impl_1/design_1_wrapper.sysdef Compressor1Port/Compressor1Port.sdk/design_1_wrapper.hdf
 
 Decompressor1Port: Decompressor1Port_project
-	vivado -mode batch -source Build_project.tcl -tclargs Memcached1Port
+	vivado -mode batch -source Build_project.tcl -tclargs Decompressor1Port
 	@mkdir -p Decompressor1Port/Decompressor1Port.sdk
 	@cp Decompressor1Port/Decompressor1Port.runs/impl_1/design_1_wrapper.sysdef Decompressor1Port/Decompressor1Port.sdk/design_1_wrapper.hdf
 
@@ -143,12 +143,12 @@ Memcached4Ports: Memcached4Ports_project
 	@cp Memcached4Ports/Memcached4Ports.runs/impl_1/design_1_wrapper.sysdef Memcached4Ports/Memcached4Ports.sdk/design_1_wrapper.hdf
 
 Compressor4Ports: Compressor4Ports_project
-	vivado -mode batch -source Build_project.tcl -tclargs Memcached4Ports
+	vivado -mode batch -source Build_project.tcl -tclargs Compressor4Ports
 	@mkdir -p Compressor4Ports/Compressor4Ports.sdk
 	@cp Compressor4Ports/Compressor4Ports.runs/impl_1/design_1_wrapper.sysdef Compressor4Ports/Compressor4Ports.sdk/design_1_wrapper.hdf
 
 Decompressor4Ports: Decompressor4Ports_project
-	vivado -mode batch -source Build_project.tcl -tclargs Memcached4Ports
+	vivado -mode batch -source Build_project.tcl -tclargs Decompressor4Ports
 	@mkdir -p Decompressor4Ports/Decompressor4Ports.sdk
 	@cp Decompressor4Ports/Decompressor4Ports.runs/impl_1/design_1_wrapper.sysdef Decompressor4Ports/Decompressor4Ports.sdk/design_1_wrapper.hdf
 clean:

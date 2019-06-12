@@ -46,6 +46,8 @@ BOOSTER_DEFINES+=-DCOMPRESSION_BOOSTER
 endif
 
 BOOSTER_sources+=sample_extern_object.cpp
+BOOSTER_sources+=SenderSeqState.cpp
+BOOSTER_sources+=ReceiverNakState.cpp
 
 noinst_LTLIBRARIES = libsimpleswitch.la
 
