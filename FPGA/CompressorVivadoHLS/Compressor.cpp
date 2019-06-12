@@ -31,7 +31,6 @@ void Compressor(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tup
 	output_tuples tuple_out;
 	bool doCompress = false;
 	packet_interface packet;
-
 	static compressorTuple_t compressorCache[CACHE_SZ] = {0};
 	//inititalize the tuples	
 	tuple_in = Input_tuples.read();
@@ -44,6 +43,12 @@ void Compressor(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tup
 	tuple_out.headerCompress_output = tuple_in.headerCompress_input;
 	doCompress = false;
 	//compressorCache[27].ipHeader.srcAddr = 1;	
+	for (int i = 0; i < 4; i++)
+	{
+	#pragma HLS pipeline II=1
+		packet = Packet_input.read();
+		Packet_output.write(packet);
+	}
 	if (tuple_in.headerCompress_input.Stateful_valid)
 	{
 		if (tuple_in.Hdr.Ipv4.totallen > 85)
