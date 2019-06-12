@@ -154,6 +154,8 @@ class FPTopo(Topo):
                     programs = host_ops.get('programs', [])
             )
 
+            self.all_nodes[host_name] = host
+            self.all_hosts[host_name] = host
             for iface_opts in host_ops.get('interfaces', []):
                 port_num = iface_opts.get('port', next_link_port[host_name])
 
@@ -188,12 +190,10 @@ class FPTopo(Topo):
 
             self.addHost(host_name,
                          ip = host['default_ip'],
-                         port = host['default_mac'],
+                         mac = host['default_mac'],
                          )
 
 
-            self.all_nodes[host_name] = host
-            self.all_hosts[host_name] = host
 
 
         created_links = defaultdict(set)
@@ -252,6 +252,10 @@ class FPTopo(Topo):
                 if interface.get('mac','') == mac:
                     used = True
                     break
+            for host in self.all_hosts.values():
+                if host['default_mac'] == mac:
+                    used = True
+                    break
             if not used:
                 return mac
             i += 1
@@ -263,6 +267,10 @@ class FPTopo(Topo):
             used = False
             for interface in self.iter_interfaces():
                 if interface.get('ip','').split('/')[0] == ip:
+                    used = True
+                    break
+            for host in self.all_hosts.values():
+                if host['default_ip'] == ip:
                     used = True
                     break
             if not used:
@@ -299,6 +307,8 @@ class FPTopo(Topo):
                 continue
             node = net.get(name)
             for iface_ops in opts['interfaces']:
+                if iface_ops['port'] == 0:
+                    continue
                 ifname = self.iface_name(name, iface_ops['port'])
                 if 'ip' in iface_ops:
                     node.setIP(iface_ops['ip'], intf=ifname)
@@ -386,6 +396,7 @@ def main():
     net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
 
     net.start()
+    net.staticArp()
 
     try:
         topo.init(net)
