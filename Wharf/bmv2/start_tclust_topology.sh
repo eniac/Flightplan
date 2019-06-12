@@ -34,6 +34,6 @@ sudo -E python $HERE/start_flightplan_mininet.py \
     2> $LOG_DUMPS/flightplan_mininet_log.err
 
 echo "Bytes Transferred:"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_enc iperf_s
+python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c iperf_s
 echo ""
 python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_s iperf_c

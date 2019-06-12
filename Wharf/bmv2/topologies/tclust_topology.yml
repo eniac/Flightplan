@@ -3,12 +3,10 @@ hosts:
     mcd_s : {}
     iperf_c :
             interfaces:
-                    - ip: 10.0.0.11/24
-                      mac: '22:11:11:11:11:22'
+                     - ip: 10.0.0.11/24
     iperf_s :
             interfaces:
-                    - ip: 10.0.0.12/24
-                      mac: '22:22:22:22:22:22'
+                     - ip: 10.0.0.12/24
 
 switches:
     tofino1:
@@ -28,12 +26,16 @@ switches:
              # set egress for iperf client
             - table_add forward set_egress 1 => 19
              # set egress for mcd client to the kv cache
-             # - table_add forward set_egress 2 => 3
-             #- table_add forward set_egress 3 => 4
-             # set egress for the enoceded packet
-             #- table_add forward set_egress 121 => 19
+            - table_add forward set_egress 2 => 19
+             # set egress ports for mcd and encoder fpgas
+             # (not used for simple tclust iperf client <-> iperf server)
+            - table_add forward set_egress 120 => 19
+            - table_add forward set_egress 121 => 19
              # set egress for the packet from the iperf server to iperf client
             - table_add forward set_egress 19 => 1
+             # set egress port for the packet from mcd server to mcd client
+            - table_add forward set_egress 19 => 2
+
     fpga_mcd:
         cfg: ../../build/bmv2/Compress.json
         interfaces:
@@ -49,9 +51,8 @@ switches:
               port: 0
         cmds:
             - table_add forward set_egress 0 => 0
-              #- ../controller_files/compressor_commands.txt
-              #- ../controller_files/forwarding_commands.txt
-              #- ../controller_files/fec_encoder_commands.txt
+            - ../controller_files/forwarding_commands.txt
+            - ../controller_files/fec_encoder_commands.txt
     dropper:
         cfg: ../../build/bmv2/Dropper.json
         interfaces:
@@ -78,10 +79,13 @@ switches:
             - link: fpga_dec
               port: 122
         cmds:
-             # set egress for incoming iperf packets to decode
+             # set egress from incoming iperf client to iperf server
             - table_add forward set_egress 20 => 3
-              # - table_add forward set_egress 122 => 3
-              # set egress for ipferf and mcd server
+             # set egress from incoming mcd client to mcd server
+            - table_add forward set_egress 20 => 4
+             # set egress for decoder fpga
+            - table_add forward set_egress 122 => 3
+             # set egress from ipferf and mcd server
             - table_add forward set_egress 3 => 20
             - table_add forward set_egress 4 => 20
     fpga_dec:
@@ -91,7 +95,6 @@ switches:
               port: 0
         cmds:
             - table_add forward set_egress 0 => 0
-              # - ../controller_files/decompressor_commands.txt
-              # - ../controller_files/forwarding_commands.txt
-              # - ../controller_files/fec_decoder_commands.txt
+            - ../controller_files/forwarding_commands.txt
+            - ../controller_files/fec_decoder_commands.txt
 
