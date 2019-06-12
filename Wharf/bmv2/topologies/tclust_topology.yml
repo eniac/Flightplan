@@ -1,0 +1,78 @@
+hosts:
+    mcd_c : {}
+    mcd_s : {}
+    iperf_c : {}
+    iperf_s : {}
+
+switches:
+    tofino1:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: dropper
+              port: 0
+            - link: mcd_c
+              port: 1
+            - link: iperf_c
+              port: 2
+            - link: fpga1
+              port: 3
+            - link: fpga2
+              port: 4
+        cmds:
+            - table_add forward set_egress 1 => 3
+            - table_add forward set_egress 2 => 3
+            - table_add forward set_egress 3 => 4
+            - table_add forward set_egress 4 => 0
+            - table_add forward set_egress 0 => 2
+              # FIXME 0 might need to be forwarded to 1.
+              # FIXME 0 might need to first be sent to FPGAs
+              #       before being sent to 1 or 2.
+    fpga1:
+        cfg: ../../build/bmv2/Compress.json
+        interfaces:
+            - link: tofino1
+              port: 0
+        cmds:
+            - table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
+            - table_add forward set_egress 0 => 0
+    fpga2:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino1
+              port: 0
+        cmds:
+            - table_add forward set_egress 0 => 0
+    dropper:
+        cfg: ../../build/bmv2/Dropper.json
+        interfaces:
+            - link: tofino1
+              port: 0
+            - link: tofino2
+              port: 1
+        cmds:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
+    tofino2:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: dropper
+              port: 0
+            - link: mcd_s
+              port: 1
+            - link: iperf_s
+              port: 2
+            - link: fpga3
+              port: 3
+        cmds:
+            - ../controller_files/forwarding_commands.txt
+    fpga3:
+        cfg: ../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino2
+        cmds:
+            # FIXME need to handle traccking from 1.
+            - table_add forward set_egress 0 => 3
+            - table_add forward set_egress 3 => 2
+              # FIXME 3 might need to be forwarded to 1.
+            - table_add forward set_egress 2 => 0
+              # FIXME 2 might need to first be sent to FPGA before getting to 0.

@@ -1,0 +1,10 @@
+hosts:
+    h1: {}
+
+
+switches:
+    s1:
+        cfg: ../../build/bmv2/ExternObj.json
+        interfaces:
+            - link: h1
+              port: 0

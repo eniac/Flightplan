@@ -6,7 +6,9 @@ endif
 
 if !BUILD_FEC_BOOSTER
 if !BUILD_MEMCACHED_BOOSTER
-$(error MUST specify at least one of FEC_BOOSTER=true or MEMCACHED_BOOSTER=true at configuration)
+if !BUILD_COMPRESSION_BOOSTER
+$(error MUST specify at least one of FEC_BOOSTER=true, MEMCACHED_BOOSTER=true COMPRESSION_BOOSTER=true at configuration)
+endif
 endif
 endif
 
@@ -35,6 +37,17 @@ BOOSTER_sources+=memcached_booster_primitives.cpp
 BOOSTER_ldadd+=memcachedBooster/memcachedP4lib.a
 BOOSTER_DEFINES+=-DMEMCACHED_BOOSTER
 endif
+
+if BUILD_COMPRESSION_BOOSTER
+BOOSTER_INCLUDES+=\
+	-I./compressionBoosters
+BOOSTER_sources+=compression_booster_primitives.cpp compressionBoosters/vjCompression.cpp
+BOOSTER_DEFINES+=-DCOMPRESSION_BOOSTER
+endif
+
+BOOSTER_sources+=sample_extern_object.cpp
+BOOSTER_sources+=SenderSeqState.cpp
+BOOSTER_sources+=ReceiverNakState.cpp
 
 noinst_LTLIBRARIES = libsimpleswitch.la
 

@@ -169,24 +169,19 @@ typedef struct
 #define MAGIC_NUM (31)
 
 enum Parser_State{
-//	IDLE,
-//	Parse_Hdr,
-//	Parse_CMD,
-//	Parse_SET_KEY,
-//	Parse_GET_KEY,
-//	Parse_KEY,
-//	Parse_EXPERT,
-//	Parse_FLAG,
-//	Parse_LEN,
-//	Parse_DATA,
-//	Parse_LastWord,
-//	Read_LastByte,
-//	Next,
-//	FINISH,
-//	ERROR
 	Consumption,
 	Alignment,
 	Not_Alignment
+};
+enum Pkt_Status{
+	set_pkt,
+	get_pkt,
+	delete_pkt,
+	value_pkt,
+	get_collision,
+	get_miss,
+	NotFound_pkt,
+	invalid
 };
 typedef struct
 {
@@ -198,7 +193,7 @@ typedef struct
 typedef struct
 {
 	uint16_t index;
-	ap_uint<3> cmd;
+	enum Pkt_Status pkt;
 	Data_Word MemHdr;
 	uint8_t keylen;
 	uint16_t Datalen;
@@ -244,14 +239,6 @@ typedef struct Instruction_Collection
 	uint16_t index;
 }Instruction;
 
-//const Part_Word Standard_Response[NUM_OF_RESPONSE]={ 0x53544F5245442000, 7,
-//													 0x56414C5545200000, 6,
-//											         0x454E440000000000, 3,
-//											         0x44454C4554454420, 8,
-//											         0x4E4F542000000000, 4,
-//											         0x464F554E44200000, 6,
-//											         0x2000000000000000, 1,
-//											         0x0D0A000000000000, 2};
 
 
 

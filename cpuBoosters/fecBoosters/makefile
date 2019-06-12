@@ -5,7 +5,7 @@ VENCORE_CODE=../../RSECode
 COMPILED_RSE=$(VENCORE_CODE)
 #COMPILED_RSE=../../FPGA/RSEVivadoHLS
 
-FLAGS=-g -Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -I. -O3 -DWHARF_DEBUGGING -DNO_LOG_INFO -fPIC
+FLAGS=-g -Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -I. -O3 -DWHARF_DEBUGGING -fPIC
 
 FEC_BOOSTER_SWITCH_DIR=../bmv2/booster_switch/
 FEC_BOOSTER_SWITCH_FEC_DIR=$(FEC_BOOSTER_SWITCH_DIR)fecBoosters/
@@ -36,8 +36,11 @@ pcap: fecDecodeBooster fecEncodeBooster forwardingNonbooster noDropForwarder
 copy_files: p4
 	rsync -av --exclude='test_output' ./* $(FEC_BOOSTER_SWITCH_FEC_DIR)
 
-bmv2: copy_files
+bmv2_configure: copy_files
 	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make configure all BOOSTERS=FEC
+
+bmv2: copy_files
+	cd $(FEC_BOOSTER_SWITCH_DIR)/.. && make
 
 fecBoosterApi.o: fecBoosterApi.c
 	$(CC) $(FLAGS) -c $<

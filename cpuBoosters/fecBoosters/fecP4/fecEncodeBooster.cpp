@@ -75,6 +75,10 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
                           const struct fec_header *fec, int egress_port,
                           int k, int h, int t,
                           encode_forward_fn forward) {
+    // Must put egress on odd numbers to not overlap with ingress
+    egress_port = egress_port * 2 + 1;
+
+    LOG_INFO("Hitting lock guard");
     // Lock while encoding in progress
     std::lock_guard<std::mutex> lock(encoder_mutex);
 
@@ -88,16 +92,19 @@ void fec_encode_p4_packet(const u_char *pkt, size_t pkt_size,
 
     LOG_INFO("Inserting pkt of tclass %d size %zu into buffer (block %d)",
             (int)tclass, pkt_size, (int)fec->block_id);
-    insert_into_pkt_buffer(tclass, egress_port, fec->block_id, fec->index, pkt_size, pkt);
+    int rtn = insert_into_pkt_buffer(tclass, egress_port, fec->block_id, fec->index, pkt_size, pkt);
+    if (rtn != 0) {
+        LOG_ERR("Error inserting into pkt buffer");
+        return;
+    }
 
-    // If advancing the packet index starts a new block
-    int new_idx = advance_packet_idx(tclass, egress_port);
-    if (new_idx == 0) {
+    // If advancing the packet index would start a new block
+    if (fec->index == (k - 1)) {
         LOG_INFO("Encoding and forwarding block");
         encode_and_forward(tclass, egress_port, forward, fec->block_id, k, h);
         timeouts[tclass][egress_port] = zero_time;
         mark_pkts_absent(tclass, egress_port, fec->block_id);
-    } else if (new_idx == 1) {
+    } else if (fec->index == 0) {
         LOG_INFO("Resetting tclass %d timer", tclass);
         timeouts[tclass][egress_port] = steady_clock::now() + std::chrono::milliseconds(t);
     }

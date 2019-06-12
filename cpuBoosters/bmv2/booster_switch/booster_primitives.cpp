@@ -1,14 +1,33 @@
 #include "booster_primitives.hpp"
+#include "sample_extern_object.h"
+#include "SenderSeqState.h"
+#include "ReceiverNakState.h"
 
-using namespace boosters;
-
-void boosters::init_boosters() {
 #ifdef FEC_BOOSTER
-    if (rse_init() != 0) {
-        printf("ERROR Initializing RSE\n");
-        exit(-1);
-    }
+#include "fec_booster_primitives.h"
 #endif
+
+#ifdef MEMCACHED_BOOSTER
+#include "memcached_booster_primitives.h"
+#endif
+
+#ifdef COMPRESSION_BOOSTER
+#include "compression_booster_primitives.h"
+#endif
+
+void boosters::import_booster_externs(SimpleSwitch *sswitch) {
+#ifdef FEC_BOOSTER
+    import_fec_booster_primitives(sswitch);
+#endif
+#ifdef MEMCACHED_BOOSTER
+    import_memcached_booster_primitives(sswitch);
+#endif
+#ifdef COMPRESSION_BOOSTER
+    import_compression_booster_primitives(sswitch);
+#endif
+    import_sample_extern_object(sswitch);
+    import_seq_extern_object(sswitch);
+    import_nak_extern_object(sswitch);
 }
 
 /** TODO IMP: static functions should go in .cpp rather than defining as static in headers */
@@ -31,82 +50,6 @@ void boosters::printHeader(const Header &hdr) {
             BMLOG_DEBUG("Arith flag off...");
         }
     }
-}
-
-// Necessary for variadic template expansion
-char *boosters::serialize_headers(char *buff) { return buff; }
-size_t boosters::hdr_size() { return 0; }
-void boosters::replace_header(PHV *, char *){}
-
-
-u_char *boosters::serialize_with_headers(const Packet &packet, size_t &size, std::vector<Header *>hdrs) {
-    size_t payload_size = packet.get_data_size();
-    size = payload_size;
-    for (auto hdr : hdrs) {
-        size += hdr->get_nbytes_packet();
-    }
-    u_char *buff = new u_char[size];
-    char *hdr_buff = (char*)buff;
-    for (auto hdr : hdrs) {
-        hdr->deparse(hdr_buff);
-        hdr_buff += hdr->get_nbytes_packet();
-    }
-    memcpy(hdr_buff, packet.data(), payload_size);
-    return buff;
-}
-
-void boosters::deserialize_with_headers(Packet &packet,  u_char *buff, std::vector<Header *>hdrs) {
-    size_t payload_size = packet.get_data_size();
-    PHV *phv = packet.get_phv();
-    char *hdr_buff = (char*)buff;
-    for (auto hdr : hdrs) {
-        hdr->extract(hdr_buff, *phv);
-        hdr_buff += hdr->get_nbytes_packet();
-    }
-
-    memcpy(packet.data(), hdr_buff, payload_size);
-    delete[] buff;
-}
-  
-
-void boosters::get_valid_headers(Packet &packet, std::vector<Header *>&hdrs) {
-    PHV *phv = packet.get_phv();
-    std::map<bm::header_type_id_t, Header *> ids;
-    for (auto it = phv->header_begin(); it != phv->header_end(); it++) {
-        Header &hdr = *it;
-        auto &type = hdr.get_header_type();
-        auto id = type.get_type_id();
-
-        auto id_it = ids.find(id);
-        if (id_it != ids.end()) {
-            if (!hdr.is_valid()) {
-                BMLOG_DEBUG("Removing {} from valid", hdr.get_name());
-                ids.erase(id_it);
-            } else {
-                BMLOG_DEBUG("Duplicate ok hdr: {}", hdr.get_name());
-                // Need to take the second copy of the header!
-                ids[id] = &hdr;
-            }
-        } else {
-            if (hdr.is_valid() && !hdr.is_metadata()) {
-                BMLOG_DEBUG("Hdr {} is valid", hdr.get_name());
-                ids[id] = &hdr;
-            }
-        }
-    }
-    for (auto id_it : ids) {
-        hdrs.push_back(id_it.second);
-    }
-}
-
-void boosters::replace_headers(Packet &packet, u_char *buff, std::vector<Header *>hdrs) {
-    PHV *phv = packet.get_phv();
-    char *hdr_buff = (char*)buff;
-    for (auto hdr : hdrs) {
-        hdr->extract(hdr_buff, *phv);
-        hdr_buff += hdr->get_nbytes_packet();
-    }
-    delete[] buff;
 }
 
 
