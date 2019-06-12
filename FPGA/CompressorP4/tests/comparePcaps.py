@@ -14,22 +14,10 @@ def comparePcaps(pcapF1, pcapF2):
 	pcap1 = dpkt.pcap.Reader(open(pcapF1))
 	pcap1Bufs = []
 	for ts, buf in pcap1:
-		eth = dpkt.ethernet.Ethernet(buf)
-		if eth.type != dpkt.ethernet.ETH_TYPE_IP:
-			continue
-		ip = eth.data
-		if ip.p != dpkt.ip.IP_PROTO_TCP:
-			continue
 		pcap1Bufs.append(buf)
 	pcap2 = dpkt.pcap.Reader(open(pcapF2))
 	pcap2Bufs = []
 	for ts, buf in pcap2:
-		eth = dpkt.ethernet.Ethernet(buf)
-		if eth.type != dpkt.ethernet.ETH_TYPE_IP:
-			continue
-		ip = eth.data
-		if ip.p != dpkt.ip.IP_PROTO_TCP:
-			continue
 		pcap2Bufs.append(buf)
 	
 	success = True
