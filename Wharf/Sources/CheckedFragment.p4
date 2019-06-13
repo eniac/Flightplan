@@ -4,6 +4,9 @@ Prototype for Flightplan customised API
 Nik Sultana, UPenn, January 2019
 */
 
+#define ACKing
+#define NAKing
+
 #include "Parsing.p4"
 #include <FlightplanHeader.p4>
 #include <FlightplanParser.p4>
