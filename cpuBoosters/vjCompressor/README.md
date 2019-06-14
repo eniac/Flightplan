@@ -1,16 +1,11 @@
-Execute ./runUnitTests.sh to run compress/decompress functionality.
+### Simple C implementation of van-jacobson compressor and decompressor ###
 
-runUnitTests.sh in turn calls vethTestCompressorAndDecompressor.sh.
-Args to this call are:
-  arg1: The input test pcap file.
-  arg2: Whether the implementation should be run using libpcap(1) or HLSWrapper implementation(0)
+Use it with ```./runUnitTests.sh```
 
-vethTestCompressorAndDecompressor.sh creates pcap files for test pcap i/p, compressed and o/p packets.
-
-It also generates the neccessary binary executables needed to run the test cases. 
-
-The compression and decompression logic are run on top of virtual n/w interfaces to separate logic. 
-
-The packet is introduced into the entry interface of the system using tcpreplay. 
-
-Finally, a comparison is made between the i/p and o/p pcap files for each test pcap file.
+Files:
+- runUnitTests.sh : run all unit test pcaps for the merged compressor/decompressor.
+- vethTestCompressorAndDecompressor.sh <pcap> : run merged compressor/decompressor on a pcap. Check to ensure output == input. 
+- generateTestPcaps.py : generare unit test pcaps for: one flow, two flows (non colliding) and two flows (colliding).
+- pcaps : where the unit test pcaps go.
+- compressorAndDecompressor.cpp : the merged compressor/decompressor. It applies the compression and decompression function on every packet.
+- compressor.h : structs, defs, etc., for compressor and decompressor.
