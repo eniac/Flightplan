@@ -1,16 +1,24 @@
 hosts:
-    mcd_c : {}
-    mcd_s : {}
+    mcd_c :
+            interfaces:
+                    - link: tofino1
+                      mac: '22:11:11:11:11:21'
+    mcd_s :
+            interfaces:
+                    - link: tofino2
+                      mac: '22:11:11:11:11:23'
     iperf_c :
             interfaces:
-                     - ip: 10.0.0.11/24
+                    - link: tofino1
+                      mac: '22:11:11:11:11:20'
     iperf_s :
             interfaces:
-                     - ip: 10.0.0.12/24
+                    - link: tofino2
+                      mac: '22:11:11:11:11:22'
 
 switches:
     tofino1:
-        cfg: ../../build/bmv2/Forwarder.json
+        cfg: ../../build/bmv2/MAC_Forwarder.json
         interfaces:
             - link: dropper
               port: 19
@@ -24,18 +32,21 @@ switches:
               port: 121
         cmds:
              # set egress for iperf client
-            - table_add forward set_egress 1 => 19
+             #- table_add MAC_forward set_MAC_egress 1 => 19
              # set egress for mcd client to the kv cache
-            - table_add forward set_egress 2 => 19
+             # - table_add MAC_forward set_MAC_egress 2 => 19
              # set egress ports for mcd and encoder fpgas
              # (not used for simple tclust iperf client <-> iperf server)
-            - table_add forward set_egress 120 => 19
-            - table_add forward set_egress 121 => 19
+             #- table_add forward set_egress 120 => 19
+             #- table_add forward set_egress 121 => 19
              # set egress for the packet from the iperf server to iperf client
-            - table_add forward set_egress 19 => 1
+             #- table_add forward set_egress 19 => 1
              # set egress port for the packet from mcd server to mcd client
-            - table_add forward set_egress 19 => 2
-
+             #- table_add forward set_egress 19 => 2
+            - table_add MAC_forward set_MAC_egress 0x221111111121 => 2
+            - table_add MAC_forward set_MAC_egress 0x221111111120 => 1
+            - table_add MAC_forward set_MAC_egress 0x221111111122 => 19
+            - table_add MAC_forward set_MAC_egress 0x221111111123 => 19
     fpga_mcd:
         cfg: ../../build/bmv2/Compress.json
         interfaces:
@@ -65,10 +76,10 @@ switches:
              tofino2: ../pcaps/lldp_enable_fec.pcap
         cmds:
             - ../controller_files/forwarding_commands.txt
-            - table_add dropper set_drop_rate 1 => 3 5
-            - table_add dropper set_drop_rate 0 => 3 5
+              #- table_add dropper set_drop_rate 1 => 3 5
+              #- table_add dropper set_drop_rate 0 => 3 5
     tofino2:
-        cfg: ../../build/bmv2/Forwarder.json
+        cfg: ../../build/bmv2/MAC_Forwarder.json
         interfaces:
             - link: dropper
               port: 20
@@ -80,14 +91,18 @@ switches:
               port: 122
         cmds:
              # set egress from incoming iperf client to iperf server
-            - table_add forward set_egress 20 => 3
+             #- table_add forward set_egress 20 => 3
              # set egress from incoming mcd client to mcd server
-            - table_add forward set_egress 20 => 4
+             #- table_add forward set_egress 20 => 4
              # set egress for decoder fpga
-            - table_add forward set_egress 122 => 3
+             #- table_add forward set_egress 122 => 3
              # set egress from ipferf and mcd server
-            - table_add forward set_egress 3 => 20
-            - table_add forward set_egress 4 => 20
+             #- table_add MAC_forward set_MAC_egress 3 => 20
+             #- table_add MAC_forward set_MAC_egress 4 => 20
+             - table_add MAC_forward set_MAC_egress 0x221111111122 => 3
+             - table_add MAC_forward set_MAC_egress 0x221111111123 => 4
+             - table_add MAC_forward set_MAC_egress 0x221111111121 => 20
+             - table_add MAC_forward set_MAC_egress 0x221111111120 => 20
     fpga_dec:
         cfg: ../../build/bmv2/Forwarder.json
         interfaces:
