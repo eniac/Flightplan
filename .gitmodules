@@ -1,9 +1,9 @@
 [submodule "testing/Shremote"]
 	path = testing/Shremote
 	url = https://github.com/isaac-ped/Shremote.git
-[submodule "testing/memcached/analysis/memoization"]
-	path = testing/memcached/analysis/memoization
-	url = https://gist.github.com/1789ce639c1ed6d4ce3d2d15f354bc2f.git
 [submodule "testing/overhead_benchmark/Memoizer"]
 	path = testing/overhead_benchmark/Memoizer
 	url = https://github.com/isaac-ped/Memoizer.git
+[submodule "testing/memcached/analysis/Memoizer"]
+	path = testing/memcached/analysis/Memoizer
+	url = https://github.com/isaac-ped/Memoizer

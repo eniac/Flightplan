@@ -164,11 +164,13 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
     transfer_in(input_tuple, packet);
 
     tuple_eth &eth = input_tuple.Hdr.Eth;
+    /*
     std::cout << "Eth type " << eth.Type.to_string(16) << std::endl;
     std::cout << "Eth Src " << eth.Src.to_string(16) << std::endl;
     std::cout << "Eth Dst " << eth.Dst.to_string(16) << std::endl;
-
+    */
     tuple_ipv4 &ipv4 = input_tuple.Hdr.Ipv4;
+    /*
     std::cout << "IPv4 Version " << ipv4.version.to_string(16) << std::endl;
     std::cout << "IPv4 IHL " << ipv4.ihl.to_string(16) << std::endl;
     std::cout << "IPv4 ID " << ipv4.identification.to_string(16) << std::endl;
@@ -179,13 +181,14 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
     std::cout << "IPv4 Checksum " << ipv4.hdrchecksum.to_string(16) << std::endl;
     std::cout << "IPv4 Src " << ipv4.srcAddr.to_string(16) << std::endl;
     std::cout << "IPv4 Dst " << ipv4.dstAddr.to_string(16) << std::endl;
-
+*/
     tuple_udp &udp = input_tuple.Hdr.Udp;
+    /*
     std::cout << "UDP checksum " << udp.chksum.to_string(16) << std::endl;
     std::cout << "UDP Dst " << udp.dport.to_string(16) << std::endl;
     std::cout << "UDP Src " << udp.sport.to_string(16) << std::endl;
     std::cout << "UDP Len " << udp.len.to_string(16) << std::endl;
-
+*/
     input_tuple.Memcached_input.Stateful_valid = 1;
 	input_tuple.Ioports.Egress_port = 0;
 	input_tuple.Ioports.Ingress_port = 0;
@@ -247,7 +250,7 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
         if (output_tuple.Hdr.Udp.sport == input_tuple.Hdr.Udp.dport) {
             forward(output_packet, packet_i, true);
         } else {
-            std::cout << "NOT dropping packet " << std::endl;
+            //std::cout << "NOT dropping packet " << std::endl;
             drop = false;
         }
 
@@ -256,7 +259,7 @@ bool call_memcached(const char *packet, size_t packet_size, mcd_forward_fn forwa
         }
     }
     if (drop) {
-        std::cout << "YES dropping packet " << std::endl;
+        //std::cout << "YES dropping packet " << std::endl;
     }
     return drop;
 }
