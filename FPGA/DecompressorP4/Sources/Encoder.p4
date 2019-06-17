@@ -31,12 +31,8 @@
 #include "Configuration.h"
 
 #include "hc_headers.p4"
-
+#include "FlightplanHeader.p4"
 // We need at least space for one packet or the encoder will deadlock.
-@Xilinx_MaxLatency(200)
-extern void fec(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
-    out bit<FEC_PACKET_INDEX_WIDTH> packet_index,
-    out bit<FEC_BLOCK_INDEX_WIDTH> block_index);
 
 typedef bit<48> MacAddress;
 
@@ -47,18 +43,9 @@ header eth_h
 	bit<16>		type;
 }
 
-header fec_h
-{
-	bit<FEC_TRAFFIC_CLASS_WIDTH>	traffic_class;
-	bit<FEC_BLOCK_INDEX_WIDTH>	block_index;
-	bit<FEC_PACKET_INDEX_WIDTH>	packet_index;
-	bit<16>				original_type;
-}
-
 struct headers_t {
+	flightplan_h fph;	
 	eth_h	eth;
-	fec_h	fec;
-	
 	ipv4_t	ipv4;
 	tcp_h   tcp;
 	compressedHeader_h cmp;
@@ -68,7 +55,12 @@ struct headers_t {
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser Parser(packet_in pkt, out headers_t hdr)
 {
-	state start
+        state start
+        {
+                pkt.extract(hdr.fph);
+                transition parse_eth;
+        }
+	state parse_eth 
 	{
 		pkt.extract(hdr.eth);
 		transition select(hdr.eth.type) {
@@ -97,47 +89,13 @@ parser Parser(packet_in pkt, out headers_t hdr)
 
 }
 
-control Update(inout headers_t hdr, inout switch_metadata_t ioports)
-{
-	bit<FEC_K_WIDTH>		k;
-	bit<FEC_H_WIDTH>		h;
-
-	apply
-	{
-		if ((hdr.eth.src & 3) == 0)
-		{
-			hdr.fec.traffic_class = 0;
-			k = 5;
-			h = 1;
-		}
-		else if ((hdr.eth.src & 3) == 1)
-		{
-			hdr.fec.traffic_class = 1;
-			k = 50;
-			h = 1;
-		}
-		else
-		{
-			hdr.fec.traffic_class = 2;
-			k = 50;
-			h = 5;
-		}
-
-		hdr.fec.original_type = hdr.eth.type;
-		hdr.fec.setValid();
-		hdr.eth.type = 0x81C;
-
-		fec(k, h, hdr.fec.packet_index, hdr.fec.block_index);
-	}
-}
 
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control Deparser(in headers_t hdr, packet_out pkt) {
 	apply
 	{
+		pkt.emit(hdr.fph);
 		pkt.emit(hdr.eth);
-		pkt.emit(hdr.fec);
-
 		pkt.emit(hdr.ipv4);
 		pkt.emit(hdr.tcp);
 	}

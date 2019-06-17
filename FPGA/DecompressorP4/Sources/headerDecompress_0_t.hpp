@@ -28,7 +28,91 @@ public:
 		}
 	};
 	struct hdr_t_0 {
-		static const size_t _SIZE = 581;
+		static const size_t _SIZE = 805;
+		struct _struct_fph {
+			static const size_t _SIZE = 257;
+			_LV<1> isValid;
+			_LV<48> dst;
+			_LV<48> src;
+			_LV<16> type;
+			_LV<4> from_segment;
+			_LV<4> to_segment;
+			_LV<8> byte1;
+			_LV<8> byte2;
+			_LV<8> byte3;
+			_LV<8> byte4;
+			_LV<8> byte5;
+			_LV<8> byte6;
+			_LV<8> byte7;
+			_LV<8> byte8;
+			_LV<8> byte9;
+			_LV<8> byte10;
+			_LV<8> byte11;
+			_LV<8> byte12;
+			_LV<8> byte13;
+			_LV<8> byte14;
+			_LV<8> byte15;
+			_LV<8> byte16;
+			_LV<8> byte17;
+			_struct_fph& operator=(_LV<257> _x) {
+				isValid = _x.slice(256,256);
+				dst = _x.slice(255,208);
+				src = _x.slice(207,160);
+				type = _x.slice(159,144);
+				from_segment = _x.slice(143,140);
+				to_segment = _x.slice(139,136);
+				byte1 = _x.slice(135,128);
+				byte2 = _x.slice(127,120);
+				byte3 = _x.slice(119,112);
+				byte4 = _x.slice(111,104);
+				byte5 = _x.slice(103,96);
+				byte6 = _x.slice(95,88);
+				byte7 = _x.slice(87,80);
+				byte8 = _x.slice(79,72);
+				byte9 = _x.slice(71,64);
+				byte10 = _x.slice(63,56);
+				byte11 = _x.slice(55,48);
+				byte12 = _x.slice(47,40);
+				byte13 = _x.slice(39,32);
+				byte14 = _x.slice(31,24);
+				byte15 = _x.slice(23,16);
+				byte16 = _x.slice(15,8);
+				byte17 = _x.slice(7,0);
+				return *this;
+			}
+			_LV<257> get_LV() { return (isValid,dst,src,type,from_segment,to_segment,byte1,byte2,byte3,byte4,byte5,byte6,byte7,byte8,byte9,byte10,byte11,byte12,byte13,byte14,byte15,byte16,byte17); }
+			operator _LV<257>() { return get_LV(); } 
+			std::string to_string() const {
+				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\tdst = " + dst.to_string() + "\n" + "\t\tsrc = " + src.to_string() + "\n" + "\t\ttype = " + type.to_string() + "\n" + "\t\tfrom_segment = " + from_segment.to_string() + "\n" + "\t\tto_segment = " + to_segment.to_string() + "\n" + "\t\tbyte1 = " + byte1.to_string() + "\n" + "\t\tbyte2 = " + byte2.to_string() + "\n" + "\t\tbyte3 = " + byte3.to_string() + "\n" + "\t\tbyte4 = " + byte4.to_string() + "\n" + "\t\tbyte5 = " + byte5.to_string() + "\n" + "\t\tbyte6 = " + byte6.to_string() + "\n" + "\t\tbyte7 = " + byte7.to_string() + "\n" + "\t\tbyte8 = " + byte8.to_string() + "\n" + "\t\tbyte9 = " + byte9.to_string() + "\n" + "\t\tbyte10 = " + byte10.to_string() + "\n" + "\t\tbyte11 = " + byte11.to_string() + "\n" + "\t\tbyte12 = " + byte12.to_string() + "\n" + "\t\tbyte13 = " + byte13.to_string() + "\n" + "\t\tbyte14 = " + byte14.to_string() + "\n" + "\t\tbyte15 = " + byte15.to_string() + "\n" + "\t\tbyte16 = " + byte16.to_string() + "\n" + "\t\tbyte17 = " + byte17.to_string() + "\n" + "\t)";
+			}
+			_struct_fph() {} 
+			_struct_fph( _LV<1> _isValid, _LV<48> _dst, _LV<48> _src, _LV<16> _type, _LV<4> _from_segment, _LV<4> _to_segment, _LV<8> _byte1, _LV<8> _byte2, _LV<8> _byte3, _LV<8> _byte4, _LV<8> _byte5, _LV<8> _byte6, _LV<8> _byte7, _LV<8> _byte8, _LV<8> _byte9, _LV<8> _byte10, _LV<8> _byte11, _LV<8> _byte12, _LV<8> _byte13, _LV<8> _byte14, _LV<8> _byte15, _LV<8> _byte16, _LV<8> _byte17) {
+				isValid = _isValid;
+				dst = _dst;
+				src = _src;
+				type = _type;
+				from_segment = _from_segment;
+				to_segment = _to_segment;
+				byte1 = _byte1;
+				byte2 = _byte2;
+				byte3 = _byte3;
+				byte4 = _byte4;
+				byte5 = _byte5;
+				byte6 = _byte6;
+				byte7 = _byte7;
+				byte8 = _byte8;
+				byte9 = _byte9;
+				byte10 = _byte10;
+				byte11 = _byte11;
+				byte12 = _byte12;
+				byte13 = _byte13;
+				byte14 = _byte14;
+				byte15 = _byte15;
+				byte16 = _byte16;
+				byte17 = _byte17;
+			}
+		};
+		_struct_fph fph;
 		struct _struct_eth {
 			static const size_t _SIZE = 113;
 			_LV<1> isValid;
@@ -56,36 +140,6 @@ public:
 			}
 		};
 		_struct_eth eth;
-		struct _struct_fec {
-			static const size_t _SIZE = 33;
-			_LV<1> isValid;
-			_LV<3> traffic_class;
-			_LV<5> block_index;
-			_LV<8> packet_index;
-			_LV<16> original_type;
-			_struct_fec& operator=(_LV<33> _x) {
-				isValid = _x.slice(32,32);
-				traffic_class = _x.slice(31,29);
-				block_index = _x.slice(28,24);
-				packet_index = _x.slice(23,16);
-				original_type = _x.slice(15,0);
-				return *this;
-			}
-			_LV<33> get_LV() { return (isValid,traffic_class,block_index,packet_index,original_type); }
-			operator _LV<33>() { return get_LV(); } 
-			std::string to_string() const {
-				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\ttraffic_class = " + traffic_class.to_string() + "\n" + "\t\tblock_index = " + block_index.to_string() + "\n" + "\t\tpacket_index = " + packet_index.to_string() + "\n" + "\t\toriginal_type = " + original_type.to_string() + "\n" + "\t)";
-			}
-			_struct_fec() {} 
-			_struct_fec( _LV<1> _isValid, _LV<3> _traffic_class, _LV<5> _block_index, _LV<8> _packet_index, _LV<16> _original_type) {
-				isValid = _isValid;
-				traffic_class = _traffic_class;
-				block_index = _block_index;
-				packet_index = _packet_index;
-				original_type = _original_type;
-			}
-		};
-		_struct_fec fec;
 		struct _struct_ipv4 {
 			static const size_t _SIZE = 161;
 			_LV<1> isValid;
@@ -230,23 +284,23 @@ public:
 			}
 		};
 		_struct_cmp cmp;
-		hdr_t_0& operator=(_LV<581> _x) {
-			eth = _x.slice(580,468);
-			fec = _x.slice(467,435);
+		hdr_t_0& operator=(_LV<805> _x) {
+			fph = _x.slice(804,548);
+			eth = _x.slice(547,435);
 			ipv4 = _x.slice(434,274);
 			tcp = _x.slice(273,113);
 			cmp = _x.slice(112,0);
 			return *this;
 		}
-		_LV<581> get_LV() { return (eth.isValid,eth.dst,eth.src,eth.type,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,ipv4.isValid,ipv4.version,ipv4.ihl,ipv4.diffserv,ipv4.totallen,ipv4.identification,ipv4.flags,ipv4.fragoffset,ipv4.ttl,ipv4.protocol,ipv4.hdrchecksum,ipv4.srcAddr,ipv4.dstAddr,tcp.isValid,tcp.sport,tcp.dport,tcp.seq,tcp.ack,tcp.flags,tcp.window,tcp.check,tcp.urgent,cmp.isValid,cmp.SlotID,cmp.seqChange,cmp.ackChange,cmp.pad,cmp.totallen,cmp.identification,cmp.flags,cmp.window,cmp.check,cmp.urgent); }
-		operator _LV<581>() { return get_LV(); } 
+		_LV<805> get_LV() { return (fph.isValid,fph.dst,fph.src,fph.type,fph.from_segment,fph.to_segment,fph.byte1,fph.byte2,fph.byte3,fph.byte4,fph.byte5,fph.byte6,fph.byte7,fph.byte8,fph.byte9,fph.byte10,fph.byte11,fph.byte12,fph.byte13,fph.byte14,fph.byte15,fph.byte16,fph.byte17,eth.isValid,eth.dst,eth.src,eth.type,ipv4.isValid,ipv4.version,ipv4.ihl,ipv4.diffserv,ipv4.totallen,ipv4.identification,ipv4.flags,ipv4.fragoffset,ipv4.ttl,ipv4.protocol,ipv4.hdrchecksum,ipv4.srcAddr,ipv4.dstAddr,tcp.isValid,tcp.sport,tcp.dport,tcp.seq,tcp.ack,tcp.flags,tcp.window,tcp.check,tcp.urgent,cmp.isValid,cmp.SlotID,cmp.seqChange,cmp.ackChange,cmp.pad,cmp.totallen,cmp.identification,cmp.flags,cmp.window,cmp.check,cmp.urgent); }
+		operator _LV<805>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\teth = " + eth.to_string() + "\n" + "\t\tfec = " + fec.to_string() + "\n" + "\t\tipv4 = " + ipv4.to_string() + "\n" + "\t\ttcp = " + tcp.to_string() + "\n" + "\t\tcmp = " + cmp.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tfph = " + fph.to_string() + "\n" + "\t\teth = " + eth.to_string() + "\n" + "\t\tipv4 = " + ipv4.to_string() + "\n" + "\t\ttcp = " + tcp.to_string() + "\n" + "\t\tcmp = " + cmp.to_string() + "\n" + "\t)";
 		}
 		hdr_t_0() {} 
-		hdr_t_0( _LV<113> _eth, _LV<33> _fec, _LV<161> _ipv4, _LV<161> _tcp, _LV<113> _cmp) {
+		hdr_t_0( _LV<257> _fph, _LV<113> _eth, _LV<161> _ipv4, _LV<161> _tcp, _LV<113> _cmp) {
+			fph = _fph;
 			eth = _eth;
-			fec = _fec;
 			ipv4 = _ipv4;
 			tcp = _tcp;
 			cmp = _cmp;
@@ -435,11 +489,6 @@ public:
 		Tuple.Hdr.Eth.Dst = hdr.eth.dst.to_ulong();
 		Tuple.Hdr.Eth.Src = hdr.eth.src.to_ulong();
 		Tuple.Hdr.Eth.Type = hdr.eth.type.to_ulong();
-		Tuple.Hdr.FEC.Is_valid = hdr.fec.isValid.to_ulong();
-		Tuple.Hdr.FEC.Traffic_class = hdr.fec.traffic_class.to_ulong();
-		Tuple.Hdr.FEC.Block_index = hdr.fec.block_index.to_ulong();
-		Tuple.Hdr.FEC.Packet_index = hdr.fec.packet_index.to_ulong();
-		Tuple.Hdr.FEC.Original_type = hdr.fec.original_type.to_ulong();
 		Tuple.Hdr.Ipv4.isValid = hdr.ipv4.isValid.to_ulong();
 		Tuple.Hdr.Ipv4.diffserv = hdr.ipv4.diffserv.to_ulong();
 		Tuple.Hdr.Ipv4.flags = hdr.ipv4.flags.to_ulong();
@@ -531,11 +580,6 @@ public:
 		hdr.eth.dst = Tuple_out.Hdr.Eth.Dst.to_uint64();
 		hdr.eth.src = Tuple_out.Hdr.Eth.Src.to_uint64();
 		hdr.eth.type = Tuple_out.Hdr.Eth.Type.to_uint();
-		hdr.fec.isValid = Tuple_out.Hdr.FEC.Is_valid.to_uint();
-		hdr.fec.traffic_class = Tuple_out.Hdr.FEC.Traffic_class.to_uint();
-		hdr.fec.block_index = Tuple_out.Hdr.FEC.Block_index.to_uint();
-		hdr.fec.packet_index = Tuple_out.Hdr.FEC.Packet_index.to_uint();
-		hdr.fec.original_type = Tuple_out.Hdr.FEC.Original_type.to_uint();
 		hdr.ipv4.isValid = Tuple_out.Hdr.Ipv4.isValid.to_uint();
 		hdr.ipv4.diffserv = Tuple_out.Hdr.Ipv4.diffserv.to_uint();
 		hdr.ipv4.flags= Tuple_out.Hdr.Ipv4.flags.to_uint();

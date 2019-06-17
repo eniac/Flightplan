@@ -4,7 +4,8 @@
 #include "sdnet_lib.hpp"
 #include "Compressor.h"
 namespace SDNET {
-//#####################################################
+
+//######################################################
 class headerCompress_0_t { // UserEngine
 public:
 
@@ -27,7 +28,91 @@ public:
 		}
 	};
 	struct hdr_t_0 {
-		static const size_t _SIZE = 468;
+		static const size_t _SIZE = 725;
+		struct _struct_fph {
+			static const size_t _SIZE = 257;
+			_LV<1> isValid;
+			_LV<48> dst;
+			_LV<48> src;
+			_LV<16> type;
+			_LV<4> from_segment;
+			_LV<4> to_segment;
+			_LV<8> byte1;
+			_LV<8> byte2;
+			_LV<8> byte3;
+			_LV<8> byte4;
+			_LV<8> byte5;
+			_LV<8> byte6;
+			_LV<8> byte7;
+			_LV<8> byte8;
+			_LV<8> byte9;
+			_LV<8> byte10;
+			_LV<8> byte11;
+			_LV<8> byte12;
+			_LV<8> byte13;
+			_LV<8> byte14;
+			_LV<8> byte15;
+			_LV<8> byte16;
+			_LV<8> byte17;
+			_struct_fph& operator=(_LV<257> _x) {
+				isValid = _x.slice(256,256);
+				dst = _x.slice(255,208);
+				src = _x.slice(207,160);
+				type = _x.slice(159,144);
+				from_segment = _x.slice(143,140);
+				to_segment = _x.slice(139,136);
+				byte1 = _x.slice(135,128);
+				byte2 = _x.slice(127,120);
+				byte3 = _x.slice(119,112);
+				byte4 = _x.slice(111,104);
+				byte5 = _x.slice(103,96);
+				byte6 = _x.slice(95,88);
+				byte7 = _x.slice(87,80);
+				byte8 = _x.slice(79,72);
+				byte9 = _x.slice(71,64);
+				byte10 = _x.slice(63,56);
+				byte11 = _x.slice(55,48);
+				byte12 = _x.slice(47,40);
+				byte13 = _x.slice(39,32);
+				byte14 = _x.slice(31,24);
+				byte15 = _x.slice(23,16);
+				byte16 = _x.slice(15,8);
+				byte17 = _x.slice(7,0);
+				return *this;
+			}
+			_LV<257> get_LV() { return (isValid,dst,src,type,from_segment,to_segment,byte1,byte2,byte3,byte4,byte5,byte6,byte7,byte8,byte9,byte10,byte11,byte12,byte13,byte14,byte15,byte16,byte17); }
+			operator _LV<257>() { return get_LV(); } 
+			std::string to_string() const {
+				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\tdst = " + dst.to_string() + "\n" + "\t\tsrc = " + src.to_string() + "\n" + "\t\ttype = " + type.to_string() + "\n" + "\t\tfrom_segment = " + from_segment.to_string() + "\n" + "\t\tto_segment = " + to_segment.to_string() + "\n" + "\t\tbyte1 = " + byte1.to_string() + "\n" + "\t\tbyte2 = " + byte2.to_string() + "\n" + "\t\tbyte3 = " + byte3.to_string() + "\n" + "\t\tbyte4 = " + byte4.to_string() + "\n" + "\t\tbyte5 = " + byte5.to_string() + "\n" + "\t\tbyte6 = " + byte6.to_string() + "\n" + "\t\tbyte7 = " + byte7.to_string() + "\n" + "\t\tbyte8 = " + byte8.to_string() + "\n" + "\t\tbyte9 = " + byte9.to_string() + "\n" + "\t\tbyte10 = " + byte10.to_string() + "\n" + "\t\tbyte11 = " + byte11.to_string() + "\n" + "\t\tbyte12 = " + byte12.to_string() + "\n" + "\t\tbyte13 = " + byte13.to_string() + "\n" + "\t\tbyte14 = " + byte14.to_string() + "\n" + "\t\tbyte15 = " + byte15.to_string() + "\n" + "\t\tbyte16 = " + byte16.to_string() + "\n" + "\t\tbyte17 = " + byte17.to_string() + "\n" + "\t)";
+			}
+			_struct_fph() {} 
+			_struct_fph( _LV<1> _isValid, _LV<48> _dst, _LV<48> _src, _LV<16> _type, _LV<4> _from_segment, _LV<4> _to_segment, _LV<8> _byte1, _LV<8> _byte2, _LV<8> _byte3, _LV<8> _byte4, _LV<8> _byte5, _LV<8> _byte6, _LV<8> _byte7, _LV<8> _byte8, _LV<8> _byte9, _LV<8> _byte10, _LV<8> _byte11, _LV<8> _byte12, _LV<8> _byte13, _LV<8> _byte14, _LV<8> _byte15, _LV<8> _byte16, _LV<8> _byte17) {
+				isValid = _isValid;
+				dst = _dst;
+				src = _src;
+				type = _type;
+				from_segment = _from_segment;
+				to_segment = _to_segment;
+				byte1 = _byte1;
+				byte2 = _byte2;
+				byte3 = _byte3;
+				byte4 = _byte4;
+				byte5 = _byte5;
+				byte6 = _byte6;
+				byte7 = _byte7;
+				byte8 = _byte8;
+				byte9 = _byte9;
+				byte10 = _byte10;
+				byte11 = _byte11;
+				byte12 = _byte12;
+				byte13 = _byte13;
+				byte14 = _byte14;
+				byte15 = _byte15;
+				byte16 = _byte16;
+				byte17 = _byte17;
+			}
+		};
+		_struct_fph fph;
 		struct _struct_eth {
 			static const size_t _SIZE = 113;
 			_LV<1> isValid;
@@ -165,11 +250,10 @@ public:
 			_LV<161> get_LV() { return (isValid,sport,dport,seq,ack,flags,window,check,urgent); }
 			operator _LV<161>() { return get_LV(); } 
 			std::string to_string() const {
-				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\tsport = " + sport.to_string() + "\n" + "\t\tdport = " + dport.to_string() + "\n" + "\t\tseq = " + seq.to_string() + "\n" + "\t\tack = " + ack.to_string() + "\n" + "\t\tflags = " + flags.to_string() + "\n" "\t\twindow = " + window.to_string() + "\n" + "\t\tcheck = " + check.to_string() + "\n" + "\t\turgent = " + urgent.to_string() + "\n" + "\t)";
+				return std::string("(\n")  + "\t\tisValid = " + isValid.to_string() + "\n" + "\t\tsport = " + sport.to_string() + "\n" + "\t\tdport = " + dport.to_string() + "\n" + "\t\tseq = " + seq.to_string() + "\n" + "\t\tack = " + ack.to_string() + "\n" + "\t\tflags = " + flags.to_string() + "\n" + "\t\twindow = " + window.to_string() + "\n" + "\t\tcheck = " + check.to_string() + "\n" + "\t\turgent = " + urgent.to_string() + "\n" + "\t)";
 			}
 			_struct_tcp() {} 
-			_struct_tcp( _LV<1> _isValid, _LV<16> _sport, _LV<16> _dport, _LV<32> _seq, _LV<32> _ack, _LV<16> _flags,
-				     _LV<16> _window, _LV<16> _check, _LV<16> _urgent) {
+			_struct_tcp( _LV<1> _isValid, _LV<16> _sport, _LV<16> _dport, _LV<32> _seq, _LV<32> _ack, _LV<16> _flags, _LV<16> _window, _LV<16> _check, _LV<16> _urgent) {
 				isValid = _isValid;
 				sport = _sport;
 				dport = _dport;
@@ -177,26 +261,27 @@ public:
 				ack = _ack;
 				flags = _flags;
 				window = _window;
-				check = _window;
+				check = _check;
 				urgent = _urgent;
 			}
 		};
 		_struct_tcp tcp;
-		hdr_t_0& operator=(_LV<468> _x) {
+		hdr_t_0& operator=(_LV<725> _x) {
+			fph = _x.slice(724,468);
 			eth = _x.slice(467,355);
 			fec = _x.slice(354,322);
 			ipv4 = _x.slice(321,161);
 			tcp = _x.slice(160,0);
-			
 			return *this;
 		}
-		_LV<468> get_LV() { return (eth.isValid,eth.dst,eth.src,eth.type,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,ipv4.isValid,ipv4.version,ipv4.ihl,ipv4.diffserv,ipv4.totallen,ipv4.identification,ipv4.flags,ipv4.fragoffset,ipv4.ttl,ipv4.protocol,ipv4.hdrchecksum,ipv4.srcAddr,ipv4.dstAddr,tcp.isValid,tcp.sport,tcp.dport,tcp.seq,tcp.ack,tcp.flags,tcp.window,tcp.check,tcp.urgent); }
-		operator _LV<468>() { return get_LV(); } 
+		_LV<725> get_LV() { return (fph.isValid,fph.dst,fph.src,fph.type,fph.from_segment,fph.to_segment,fph.byte1,fph.byte2,fph.byte3,fph.byte4,fph.byte5,fph.byte6,fph.byte7,fph.byte8,fph.byte9,fph.byte10,fph.byte11,fph.byte12,fph.byte13,fph.byte14,fph.byte15,fph.byte16,fph.byte17,eth.isValid,eth.dst,eth.src,eth.type,fec.isValid,fec.traffic_class,fec.block_index,fec.packet_index,fec.original_type,ipv4.isValid,ipv4.version,ipv4.ihl,ipv4.diffserv,ipv4.totallen,ipv4.identification,ipv4.flags,ipv4.fragoffset,ipv4.ttl,ipv4.protocol,ipv4.hdrchecksum,ipv4.srcAddr,ipv4.dstAddr,tcp.isValid,tcp.sport,tcp.dport,tcp.seq,tcp.ack,tcp.flags,tcp.window,tcp.check,tcp.urgent); }
+		operator _LV<725>() { return get_LV(); } 
 		std::string to_string() const {
-			return std::string("(\n")  + "\t\teth = " + eth.to_string() + "\n" + "\t\tfec = " + fec.to_string() + "\n" + "\t\tipv4 = " + ipv4.to_string() + "\n" + "\t\ttcp = " + tcp.to_string() + "\n" + "\t)";
+			return std::string("(\n")  + "\t\tfph = " + fph.to_string() + "\n" + "\t\teth = " + eth.to_string() + "\n" + "\t\tfec = " + fec.to_string() + "\n" + "\t\tipv4 = " + ipv4.to_string() + "\n" + "\t\ttcp = " + tcp.to_string() + "\n" + "\t)";
 		}
 		hdr_t_0() {} 
-		hdr_t_0( _LV<113> _eth, _LV<33> _fec, _LV<161> _ipv4, _LV<161> _tcp) {
+		hdr_t_0( _LV<257> _fph, _LV<113> _eth, _LV<33> _fec, _LV<161> _ipv4, _LV<161> _tcp) {
+			fph = _fph;
 			eth = _eth;
 			fec = _fec;
 			ipv4 = _ipv4;

@@ -1,6 +1,6 @@
---- Encoder.sdnet	2019-01-01 17:50:51.692860972 -0500
-+++ Encoder.sdnet.original	2019-01-01 17:49:47.728465300 -0500
-@@ -251,6 +251,34 @@
+--- Encoder.sdnet.original	2019-06-12 16:43:22.178923075 -0400
++++ Encoder.sdnet	2019-06-12 16:46:54.140719225 -0400
+@@ -324,6 +324,34 @@
      method move_to_section = done(0);
      method increment_offset = 0; } }
  class headerDecompress_0_t::UserEngine(1000, 0) {
@@ -11,8 +11,8 @@
 +      forward_1 : 1 } }
 +  class hdr_t_0::Tuple(inout) {
 +    struct {
++      fph : flightplan_h,
 +      eth : eth_h,
-+      fec : fec_h,
 +      ipv4 : ipv4_t,
 +      tcp : tcp_h,
 +      cmp : compressedHeader_h } }
@@ -35,7 +35,7 @@
    class headerDecompress_input_t::Tuple(in) {
      struct {
        stateful_valid : 1 } }
-@@ -415,17 +443,26 @@
+@@ -524,17 +552,26 @@
      CheckTcp_lvl_0.hdr = CheckTcp_lvl.hdr,
      CheckTcp_lvl_0.ioports = CheckTcp_lvl.ioports,
      CheckTcp_lvl_0.local_state = CheckTcp_lvl.local_state,

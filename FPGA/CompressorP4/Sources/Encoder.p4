@@ -31,8 +31,8 @@
 #include "Configuration.h"
 
 #include "hc_headers.p4"
+#include "FlightplanHeader.p4"
 
-// We need at least space for one packet or the encoder will deadlock.
 @Xilinx_MaxLatency(200)
 extern void fec(in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
     out bit<FEC_PACKET_INDEX_WIDTH> packet_index,
@@ -56,6 +56,7 @@ header fec_h
 }
 
 struct headers_t {
+	flightplan_h fph;	
 	eth_h	eth;
 	fec_h	fec;
 
@@ -66,7 +67,12 @@ struct headers_t {
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser Parser(packet_in pkt, out headers_t hdr)
 {
-	state start
+        state start
+        {
+                pkt.extract(hdr.fph);
+                transition parse_eth;
+        }
+	state parse_eth 
 	{
 		pkt.extract(hdr.eth);
 		transition select(hdr.eth.type) {
@@ -78,16 +84,11 @@ parser Parser(packet_in pkt, out headers_t hdr)
 	state parse_ipv4 {
 		pkt.extract(hdr.ipv4);
 		transition select(hdr.ipv4.protocol) {
-			//PROTOCOL_UDP : parse_udp;
 			PROTOCOL_TCP : parse_tcp;
 			default : accept;
 		}
 	}
 
-//	state parse_udp {
-//		pkt.extract(hdr.udp);
-//		transition accept;
-//	}
 	
 	state parse_tcp {
 		pkt.extract(hdr.tcp);
@@ -134,6 +135,7 @@ control Update(inout headers_t hdr, inout switch_metadata_t ioports)
 control Deparser(in headers_t hdr, packet_out pkt) {
 	apply
 	{
+		pkt.emit(hdr.fph);
 		pkt.emit(hdr.eth);
 		pkt.emit(hdr.fec);
 
@@ -143,7 +145,6 @@ control Deparser(in headers_t hdr, packet_out pkt) {
 	}
 }
 
-//#include "Memcached.p4"
 #include "hc.p4"
 
 XilinxSwitch(Parser(), CheckTcp(), Deparser()) main;
