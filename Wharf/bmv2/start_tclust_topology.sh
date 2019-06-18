@@ -19,7 +19,13 @@ mkdir -p $PCAP_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
+if [[ -z "$HEADERED" || "$HEADERED" == "0" ]]
+then
 TOPO=$HERE/topologies/tclust_topology.yml
+else
+TOPO=$HERE/topologies/tclust_topology_headered.yml
+fi
+echo "Using TOPO=${TOPO}"
 
 # FIXME hardcoded pcap file
 sudo -E python $HERE/start_flightplan_mininet.py \

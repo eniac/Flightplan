@@ -26,7 +26,11 @@ typedef struct
 	ap_uint<1> End_of_frame;
 	ap_uint<1> Start_of_frame;
 }packet_interface;
-
+typedef struct
+{
+    ap_uint<256> data;
+    ap_uint<1> Is_valid;
+} tuple_fph;
 
 typedef struct
 {
@@ -112,8 +116,8 @@ typedef struct
 	tuple_ipv4 Ipv4; //161
 	tuple_fec FEC; //33
 	tuple_eth Eth; //113
-
-} tuple_hdr; //468
+	tuple_fph Fph; //256
+} tuple_hdr; //468 + 256
 
 typedef struct
 {

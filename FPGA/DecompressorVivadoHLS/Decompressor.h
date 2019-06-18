@@ -26,6 +26,11 @@ typedef struct
 	ap_uint<1> End_of_frame;
 	ap_uint<1> Start_of_frame;
 }packet_interface;
+typedef struct
+{
+    ap_uint<256> data;
+    ap_uint<1> Is_valid;
+} tuple_fph;
 
 
 typedef struct
@@ -68,14 +73,6 @@ typedef struct
     ap_uint<1> Is_valid;
 } tuple_eth; //113
 
-typedef struct
-{
-    ap_uint<16> Original_type;
-    ap_uint<8> Packet_index;
-    ap_uint<5> Block_index;
-    ap_uint<3> Traffic_class;
-    ap_uint<1> Is_valid;
-} tuple_fec; //33
 typedef struct
 {
 	ap_uint<32> dstAddr;
@@ -144,9 +141,8 @@ typedef struct
 	tuple_cmp Cmp; //113
 	tuple_tcp Tcp; //161
 	tuple_ipv4 Ipv4; //161
-	tuple_fec FEC; //33
 	tuple_eth Eth; //113
-	
+	tuple_fph Fph; //256
 
 } tuple_hdr; //581
 

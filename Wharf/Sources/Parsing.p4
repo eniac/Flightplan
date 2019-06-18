@@ -3,6 +3,7 @@
 
 #include "targets.h"
 #include "Configuration.h"
+#include "FlightplanHeader.p4"
 
 typedef bit<48> MacAddress;
 
@@ -84,11 +85,13 @@ header udp_h {
     bit<16>             chksum;
 }
 struct headers_t {
+    flightplan_h fp;
+
     eth_h  eth;
     fec_h  fec;
     ipv4_h ipv4;
-	tcp_h tcp;
-	udp_h udp;
+    tcp_h tcp;
+    udp_h udp;
 
     tlv_t              lldp_tlv_chassis_id;
     tlv_t              lldp_tlv_port_id;
@@ -102,7 +105,11 @@ struct headers_t {
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser FecParser(packet_in pkt, out headers_t hdr) {
     state start {
-        transition parse_eth;
+        //transition parse_eth;
+        transition select(pkt.lookahead<bit<112>>() & 112w0xFFFF) {
+            ETHERTYPE_FLIGHTPLAN : parse_flightplan;
+            default : parse_eth;
+        }
     }
 
     state parse_eth {
@@ -113,6 +120,11 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
             ETHERTYPE_LLDP: parse_lldp;
             default : accept;
         }
+    }
+
+    state parse_flightplan {
+      pkt.extract(hdr.fp);
+      transition parse_eth;
     }
 
     state parse_fec {
@@ -171,6 +183,7 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 control FecDeparser(packet_out pkt, in headers_t hdr) {
     apply {
+        pkt.emit(hdr.fp);
         pkt.emit(hdr.eth);
         pkt.emit(hdr.fec);
         pkt.emit(hdr.ipv4);

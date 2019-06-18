@@ -32,8 +32,8 @@
 */
 
 `timescale 1 ps / 1 ps
-`define INPUT_TUPLES_WIDTH 548 
-`define OUTPUT_TUPLES_WIDTH 548 
+`define INPUT_TUPLES_WIDTH 805 
+`define OUTPUT_TUPLES_WIDTH 805 
 `define MEM_AXI_BUS_WIDTH 64
 module headerCompress_0_t (
 	clk_line,
@@ -108,9 +108,9 @@ input tuple_in_CheckTcp_fl_DATA /* unused */ ;
 output tuple_out_CheckTcp_fl_VALID /* undriven */ ;
 output tuple_out_CheckTcp_fl_DATA /* undriven */ ;
 input tuple_in_hdr_VALID /* unused */ ;
-input [467:0] tuple_in_hdr_DATA /* unused */ ;
+input [724:0] tuple_in_hdr_DATA /* unused */ ;
 output tuple_out_hdr_VALID /* undriven */ ;
-output [467:0] tuple_out_hdr_DATA /* undriven */ ;
+output [724:0] tuple_out_hdr_DATA /* undriven */ ;
 input tuple_in_ioports_VALID /* unused */ ;
 input [7:0] tuple_in_ioports_DATA /* unused */ ;
 output tuple_out_ioports_VALID /* undriven */ ;
@@ -141,7 +141,7 @@ wire [21:0] tuple_out_control_DATA /* undriven */ ;
 wire tuple_out_CheckTcp_fl_VALID /* undriven */ ;
 wire tuple_out_CheckTcp_fl_DATA /* undriven */ ;
 wire tuple_out_hdr_VALID /* undriven */ ;
-wire [467:0] tuple_out_hdr_DATA /* undriven */ ;
+wire [724:0] tuple_out_hdr_DATA /* undriven */ ;
 wire tuple_out_ioports_VALID /* undriven */ ;
 wire [7:0] tuple_out_ioports_DATA /* undriven */ ;
 wire tuple_out_local_state_VALID /* undriven */ ;
