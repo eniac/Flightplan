@@ -32,7 +32,7 @@ fi
 
 
 USER=`logname`
-BASENAME=tclust_fec_iperf_$RATE
+BASENAME=tclust_MAC_fec_iperf_$RATE
 
 TESTDIR=$HERE/test_output
 OUTDIR=$TESTDIR/$BASENAME
@@ -46,7 +46,7 @@ mkdir -p $LOG_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-TOPO=$HERE/topologies/tclust_topology.yml
+TOPO=$HERE/topologies/MAC_tclust_topology.yml
 
 sudo -E python $HERE/start_flightplan_mininet.py \
         $TOPO \
@@ -67,7 +67,7 @@ fi
 cat $LOG_DUMPS/iperf_c_prog_1.log
 
 echo "Bytes Transferred:"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c iperf_s
+python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_enc tofino1 fpga_dec iperf_s
 echo ""
 python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_s iperf_c
 
