@@ -58,7 +58,7 @@ switches:
             - link: tofino1
               port: 0
         cmds:
-            - table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
+                #- table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
             - table_add forward set_egress 0 => 0
     fpga_enc:
         cfg: ../../build/bmv2/MAC_Forwarder.json
@@ -76,9 +76,9 @@ switches:
               port: 0
             - link: tofino2
               port: 1
-        replay:
-             tofino1: ../pcaps/lldp_enable_fec.pcap
-             tofino2: ../pcaps/lldp_enable_fec.pcap
+              #replay:
+              #tofino1: ../pcaps/lldp_enable_fec.pcap
+              #tofino2: ../pcaps/lldp_enable_fec.pcap
         cmds:
             - ../controller_files/forwarding_commands.txt
               #- table_add dropper set_drop_rate 1 => 3 5

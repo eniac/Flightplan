@@ -2,7 +2,7 @@
 #define MAC_FORWARDING_P4_
 
 #include "targets.h"
-#include "Parsing.p4"
+#include "EmptyBMDefinitions.p4"
 #include "FEC.p4"
 #include "FEC_Classify.p4"
 
