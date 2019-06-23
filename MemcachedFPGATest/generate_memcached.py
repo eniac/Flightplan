@@ -6,6 +6,9 @@ import argparse
 import struct
 import random
 import time
+import dpkt
+import numpy.random
+import numpy as np
 
 class PacketGenerator:
 
@@ -14,231 +17,120 @@ class PacketGenerator:
 
     def __init__(self, src_mac, dst_mac, src_ip, dst_ip, sport = 12345, dport = 11211):
 
-        self.Pkt = Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport)
+        self.Pkt = bytes(Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport,chksum=0))
         random.seed(time.time())
         self.cur_id = random.randint(0, 100)
 
+    def udp_hdr(self, payload_len):
+        hdr = list(self.Pkt[:])
+        # Replace udp length
+        pktlen = struct.pack('!H', payload_len+8)
+        hdr[-4] = pktlen[0]
+        hdr[-3] = pktlen[1]
+
+        iplen = struct.pack('!H', payload_len+28)
+        hdr[16] = iplen[0]
+        hdr[17] = iplen[1]
+
+        return b''.join(hdr)
+
     def hdr(self):
-        h = b''.join([struct.pack(">h", x) for x in [self.cur_id, 0, 1, 0]])
+        h = b''.join([struct.pack(">H", x) for x in [self.cur_id, 0, 1, 0]])
         self.cur_id+= 1
-        self.cur_id %= 32000
+        self.cur_id %= 65535
         return h
 
-    def set(self, key, bytes=512):
-        key = "{:}".format(key)
+    def set(self, key, nbytes=512):
+        key = "{:08d}".format(key)
 
-        load = (key + '-') * (bytes)
-        load = load[:bytes]
+        load = (key + '-') * (nbytes)
+        load = load[:nbytes]
 
-        pkt = self.Pkt/(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=bytes, payload=load).encode('utf-8'))
+        load = bytes(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=nbytes, payload=load))
+
+        pkt = self.udp_hdr(len(load)) + load
 
         return pkt
 
     def get(self, key):
+        key = "{:08d}".format(key)
 
-        return self.Pkt/(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key).encode('utf-8'))
+        load = bytes(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key))
+        pkt = self.udp_hdr(len(load)) + load
 
-def send_and_show(pkt, iface):
-    print("Sending: {}".format(pkt.load[8:]))
-    a = srp1(pkt, iface=iface)
-    print("Received: {}".format(a.load[8:]))
+        return pkt
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--out', type=str, required=True, help="pcap file to write output to")
+    parser.add_argument('--n-get', type=int, required=True, help="Number of get packets")
+    parser.add_argument('--n-set', type=int, required=True, help="Number of set packets")
     parser.add_argument('--smac', type=str, default='00:00:00:00:00:00', help="Source MAC")
     parser.add_argument('--dmac', type=str, default='00:00:00:00:00:00', help="Dst MAC")
     parser.add_argument('--sip', type=str, default='127.0.0.1', help="Source IP")
     parser.add_argument('--dip', type=str, default='127.0.0.1', help="Dst IP")
-    parser.add_argument('--iface', type=str, default=None, help="Interface on which to play traffic")
-    parser.add_argument('--wait-resp', action='store_true', help="Wait for responses")
-    parser.add_argument('--out', type=str, default=None, help="pcap file to write output to")
-    parser.add_argument('--n-pkt', type=int, default=None, help="Total number of packets")
-    parser.add_argument('--n-get', type=int, default=None, help="Number of get packets (if n-pkt not set)")
-    parser.add_argument('--n-set', type=int, default=None, help="Number of set packets (if n-pkt not set)")
-    parser.add_argument('--get-pct', type=float, default=.95, help="Percentage of packets that are GETs")
-    parser.add_argument('--collision-prob', type=float, default=.05, help="Probability of collision")
-    parser.add_argument('--pre-set', action='store_true', help='Perform all SETs before any gets')
-    parser.add_argument('--set-out', type=str, default=None, help='if --pre-set, saves SETs to separate file')
-    parser.add_argument('--set-sip', type=str, default=None, help='if --pre-set, SET packets have source IP')
-    parser.add_argument('--hashlog', type=str, default=None, help="Log hash values for later processing")
-
+    parser.add_argument('--warmup-out', type=str, default=None, help="Pcap file to write cache warmup to")
+    parser.add_argument('--key-space', type=int, default=500000, help="Space of keys")
+    parser.add_argument('--zipf', type=float, default=.9, help="zipf coeeficient for gets")
     args = parser.parse_args()
- 
+
     if args.out is None and args.iface is None:
         raise Exception("Must provide either output file or interface")
 
     return args
 
-def generate_packets(args):
-    gen = PacketGenerator(args.smac, args.dmac, args.sip, args.dip)
-    if args.set_sip:
-        set_gen = PacketGenerator(args.smac, args.dmac, args.set_sip, args.dip)
-    else:
-        set_gen = gen
-    log = []
+def zipf_freq(k, beta):
+    return (1/k**beta)
 
-    if args.n_pkt is not None:
-        n_get = int(args.n_pkt * args.get_pct)
-        n_set = int(args.n_pkt * ( 1 - args.get_pct))
-    else:
-        n_get = args.n_get
-        n_set = args.n_set
+def generate_packets(n_get, n_set, smac, dmac, sip, dip, key_space, zipf_coef):
+    pkt_gen = PacketGenerator(smac, dmac, sip, dip)
 
-    if n_set == 0:
-        n_set = 1
-        print("Ratio too low! Setting N_SET to 1")
+    max_n_keys = n_get + n_set
 
-    if args.pre_set:
-        n_collisions = int(n_get * args.collision_prob)
-        n_non_collisions = n_get - n_collisions
+    all_keys = np.arange(1, key_space+1)
 
-        # Hash -> [key_idx, key2_idx, ...]
-        hashes = defaultdict(list)
-        sets = []
+    zipf_freqs = zipf_freq(all_keys, zipf_coef)
+    zipf_freqs /= sum(zipf_freqs)
 
-        if args.collision_prob > .95:
-            gtor = mcdh.gen_mostly_collisions(n_set)
-        else:
-            gtor = mcdh.gen_hashes(n_set)
+    get_keys = np.random.choice(all_keys, n_get, p=zipf_freqs)
 
-        for i, (k, h) in enumerate(gtor):
-            sets.append(k)
-            hashes[h].append(i)
+    warmup_keys = sorted(list(set(get_keys)))[::-1]
 
-        multi_hashes = {k:v for k, v in hashes.items() if len(v) > 1}
+    set_keys = np.random.choice(all_keys, n_set)
 
-        pkts = []
-        for key in sets:
-            pkts.append(set_gen.set(key))
-            log.append(dict(type='set', h=mcdh.str_hash(key), k=key))
+    pkts = []
+    for key in get_keys:
+        pkts.append(pkt_gen.get(key))
 
-        hit_hash_keys = hashes.keys()
-        miss_hash_keys = multi_hashes.keys()
+    for key in set_keys:
+        pkts.append(pkt_gen.set(key))
 
-        safe_hit_hash_keys = set(hashes.keys())
-        safe_miss_hash_keys = set(multi_hashes.keys())
-        used_hash_keys = []
+    random.shuffle(pkts)
 
-        for i in range(n_get):
-            if i % (n_get / 10) == 0:
-                print('%d,' % len(pkts), end='')
-                sys.stdout.flush()
-            do_collide = random.random() < args.collision_prob
-            if do_collide:
-                h = random.choice(list(safe_miss_hash_keys))
-                idx = hashes[h][0]
-                del hashes[h][0]
-                hashes[h].append(idx)
-                pkts.append(gen.get(sets[idx]))
-                log.append(dict(type='get', h = mcdh.str_hash(sets[idx]), k=sets[idx], collide=True, idx=i))
+    warmup_pkts = []
+    for key in warmup_keys:
+        warmup_pkts.append(pkt_gen.set(key))
 
-                safe_hit_hash_keys.remove(h)
-                safe_miss_hash_keys.remove(h)
-            else:
-                h = random.choice(list(safe_hit_hash_keys))
-                idx = hashes[h][-1]
-                pkts.append(gen.get(sets[idx]))
-                log.append(dict(type='get', h = mcdh.str_hash(sets[idx]), k=sets[idx], collide=False, idx=i))
+    return pkts, warmup_pkts
 
-                if h in safe_miss_hash_keys:
-                    safe_miss_hash_keys.remove(h)
-                safe_hit_hash_keys.remove(h)
-
-            used_hash_keys.append(h)
-            if i >= 500:
-                reuse_hash = used_hash_keys[i-250]
-                if reuse_hash in miss_hash_keys:
-                    safe_miss_hash_keys.add(reuse_hash)
-                safe_hit_hash_keys.add(reuse_hash)
-
-    else:
-
-        total_n = n_get + n_set
-        inter_set = n_get / n_set
-
-        # Hash -> [key1, key2, ...]
-        hashes = defaultdict(list)
-        non_collisions = set()
-        collisions = set()
-        pkts = []
-        gets_placed = 0
-
-        if args.collision_prob > .95:
-            gentor = mcdh.gen_mostly_collisions(n_set * 1000)
-        else:
-            gentor = mcdh.gen_hashes(n_set * 2)
-
-        for i, (k, h) in enumerate(gentor):
-            if i % (n_set / 10) == 0:
-                print('%d,' % len(pkts), end='')
-                sys.stdout.flush()
-            hashes[h].append(k)
-
-            old_ks = set(hashes[h][:-1])
-            non_collisions -= old_ks
-            collisions |= old_ks
-            non_collisions.add(k)
-
-            pkts.append(gen.set(k))
-            log.append(dict(type='set', h=mcdh.str_hash(k), k=k))
-
-            for _ in range(int(inter_set)):
-                collide = random.uniform(0, 1)
-                if collide < args.collision_prob:
-                    if len(collisions) > 0:
-                        key = random.sample(collisions, 1)[0]
-
-                        h2 = mcdh.str_hash(key)
-
-                        if h2 not in hashes:
-                            print("Bad things afoot!")
-
-                        # Move this key to the front of the list
-                        hashes[h2].remove(key)
-                        hashes[h2].append(key)
-
-                        old_ks = set(hashes[h2][:-1])
-                        non_collisions -= old_ks
-                        collisions |= old_ks
-                        non_collisions.add(key)
-
-                    else:
-                        continue
-                else:
-                    key = random.sample(non_collisions, 1)[0]
-                pkts.append(gen.get(key))
-                log.append(dict(type='get', h=mcdh.str_hash(key), k=key))
-                gets_placed += 1
-                if gets_placed >= n_get:
-                    break
-
-            if gets_placed >= n_get:
-                break
-
-    if args.iface:
+def write_pkts(pkts, output):
+    with open(output, 'w') as f:
+        writer = dpkt.pcap.Writer(f)
         for pkt in pkts:
-            if 'set' in pkt.load:
-                sendp(pkt, iface=args.iface)
-            else:
-                send_and_show(pkt, args.iface)
+            writer.writepkt(pkt)
+        writer.close()
 
-    if args.out:
-        print("Writing output")
-        if not args.set_out:
-            wrpcap(args.out, pkts)
-        else:
-            sets = [pkt for pkt in pkts if 'set' in pkt.load]
-            gets = [pkt for pkt in pkts if 'get' in pkt.load]
-            wrpcap(args.out, gets)
-            print("Writing sets")
-            wrpcap(args.set_out, sets)
 
-    if args.hashlog:
-        with open(args.hashlog, 'w') as f:
-            print("Writing hashlog")
-            json.dump(log, f, indent=2)
+def main(args):
+    pkts, warmup_pkts = generate_packets(args.n_get, args.n_set,
+                                      args.smac, args.dmac, args.sip, args.dip,
+                                      args.key_space, args.zipf)
+    if args.warmup_out:
+        write_pkts(warmup_pkts, args.warmup_out)
+
+    write_pkts(pkts, args.out)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    generate_packets(args)
+    main(args)

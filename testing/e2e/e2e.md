@@ -159,7 +159,6 @@ Those are as follows, on the following machines:
 * johnshack
   * `~/P4Boosters/FPGA/TopLevelSDx/program_all.sh`
     * Programs all three FPGAs with the appropriate bitstreams
-    * **TODO: ISAAC MUST ADD THIS FILE TO REPO**
 * tofino (158.130.4.218)
   * `~fpadmin/gits/TofinoP4Boosters`
     * Contains code to start and stop the dataplane

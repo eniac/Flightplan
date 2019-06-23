@@ -176,6 +176,7 @@ class FPTopo(Topo):
 
                 if 'ip' not in iface_opts:
                     iface_opts['ip'] = self.next_ip_address()
+                if 'mac' not in iface_opts:
                     iface_opts['mac'] = self.next_mac_address()
 
                 if 'name' not in iface_opts:
@@ -388,9 +389,6 @@ def main():
 
     try:
         topo.init(net)
-
-        net.staticArp()
-
 
         if args.pcap_dump:
             topo.start_tcp_dumps(net, args.pcap_dump)

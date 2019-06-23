@@ -1,0 +1,154 @@
+dirs:
+    home: /home/iped
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+
+init_cmds: {}
+
+time:
+    iperf: 60
+
+files:
+    start_iperf_servers:
+        src: 'start_iperf_servers.sh'
+        dst: '{0.programs.log_dir}/start_iperf_servers.sh'
+        host: server
+    start_iperf_clients:
+        src: 'start_iperf_clients.sh'
+        dst: '{0.programs.log_dir}/start_iperf_clients.sh'
+        host: client
+
+hosts:
+    johnshack:
+        addr: johnshack
+    client:
+        addr: tclust1
+        ip: 10.0.0.1
+    server:
+        addr: tclust2
+        ip: 10.0.0.2
+    encoder:
+        addr: dcomp1.seas.upenn.edu
+        port: 112
+    decoder:
+        addr: dcomp2.seas.upenn.edu
+        port: 111
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+    log_dir: '~/logs/{0.label}'
+
+    start_encoder:
+        host: encoder
+        start: cd ~/dcomp/P4Boosters/cpuBoosters/fecBoosters && ./fecEncodeBooster -i eno1 -r tag_cls_0.txt
+        stop: pkill -f fecEncodeBooster
+        check_rtn: False
+        log:
+            dir: fec
+            out: encoder.out
+            err: encoder.err
+
+    start_decoder:
+        host: decoder
+        start: cd ~/dcomp/P4Boosters/cpuBoosters/fecBoosters && ./fecDecodeBooster -i eno2 -r tag_cls_0.txt
+        stop: pkill -f fecDecodeBooster
+        check_rtn: False
+        log:
+            dir: fec
+            out: decoder.out
+            err: decoder.err
+
+    stop_dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/compressionE2e && ./stop.sh
+        check_rtn: False
+
+    dataplane:
+        host: tofino
+        start: >-
+            cd ~/gits/TofinoP4Boosters/compressionE2e &&
+            ./run.sh -d {drop_rate} -f -ep {0.hosts.encoder.port} -dp {0.hosts.decoder.port}
+        stop: cd ~/gits/TofinoP4Boosters/compressionE2e && ./stop.sh
+        enforce_duration: False
+
+    iperf3_server:
+        host: server
+        #start: iperf3 -s
+        start: 'bash {0.files.start_iperf_servers.dst} {n} {log} {0.hosts.server.ip}'
+        stop: pkill iperf3
+        check_rtn: False
+        log:
+            dir: iperf
+            log: server
+            out: start_servers.out
+            err: start_servers.err
+
+    iperf3_client:
+        host: client
+        #start: iperf3 -c 10.0.0.2
+        start: 'bash {0.files.start_iperf_clients.dst} {n} {time} {log} {0.hosts.client.ip} {0.hosts.server.ip}'
+        log:
+            dir: iperf
+            log: client
+            out: start_clients.out
+            err: start_clients.err
+
+    ping:
+        host: client
+        start: 'ping -i .2 {0.hosts.server.ip}'
+        stop: 'pkill ping'
+        check_rtn: False
+        log:
+            dir: ping
+            out: ping.out
+            err: ping.err
+
+    get_counters:
+        host: tofino
+        start: >-
+            tmux send ucli ENTER && sleep 1 &&
+            tmux send pm ENTER && sleep 1 &&
+            tmux send show ENTER && sleep 1 &&
+            tmux capture-pane -J -p
+        log:
+            out: counters_{i}.out
+            err: counters_{i}.err
+
+commands:
+    stop_dataplane:
+        begin: -30
+    dataplane:
+        begin: -28
+        drop_rate: "{0.args.drop_rate}"
+        duration: $( {0.time.iperf} + 20 )
+    start_encoder:
+        begin: -15
+        duration: $( {0.time.iperf} + 20 )
+    start_decoder:
+        begin: -15
+        duration: $( {0.time.iperf} + 20 )
+    ping:
+        begin: -5
+        duration: $( {0.time.iperf} + 10 )
+    iperf3_server:
+        begin: -5
+        n: 10
+        duration: $( {0.time.iperf} + 10 )
+        enforce_duration: '{0.time.iperf}'
+    iperf3_client:
+        n: 10
+        time: "{0.time.iperf}"
+        enforce_duration: '{0.time.iperf}'
+    get_counters:
+        - begin: 0
+        - begin: $( {0.time.iperf} + 5 )
