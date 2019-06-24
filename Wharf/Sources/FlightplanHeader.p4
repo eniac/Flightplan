@@ -3,6 +3,8 @@ Prototype for Flightplan customised API
 
 Nik Sultana, UPenn, January 2019
 */
+#ifndef FLIGHTPLAN_HEADER_P4_
+#define FLIGHTPLAN_HEADER_P4_
 
 #define FLIGHTPLAN_VERSION_SIZE 4 /*FIXME fudge*/
 #define ETHERTYPE_FLIGHTPLAN 0x2222 /*FIXME fudge*/
@@ -104,3 +106,5 @@ extern ReceiverNakState {
   void relink(out bit<1> result);
 }
 #endif
+
+#endif // FLIGHTPLAN_HEADER_P4_
