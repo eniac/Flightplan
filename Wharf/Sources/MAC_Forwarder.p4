@@ -61,8 +61,9 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
         }
 
         if(hdr.fp.isValid()){
-            hdr.fp.to_segment = 1 + hdr.fp.to_segment;
-            next_dataplane = hdr.fp.to_segment;
+              hdr.fp.to_segment = 1 + hdr.fp.to_segment;
+              next_dataplane = hdr.fp.to_segment;
+           // next_dataplane = hdr.fp.from_segment;
             flightplan_forward.apply();
             return;            
         }

@@ -2,22 +2,22 @@ hosts:
     mcd_c :
             interfaces:
                     - link: tofino1
-                      ip: 10.0.0.9/24
+                      ip: 10.0.0.10/24
                       mac: '22:11:11:11:11:21'
     mcd_s :
             interfaces:
                     - link: tofino2
-                      ip: 10.0.0.10/24
+                      ip: 10.0.0.12/24
                       mac: '22:11:11:11:11:23'
     iperf_c :
             interfaces:
                     - link: tofino1
-                      ip: 10.0.0.11/24
+                      ip: 10.0.0.9/24
                       mac: '22:11:11:11:11:20'
     iperf_s :
             interfaces:
                     - link: tofino2
-                      ip: 10.0.0.12/24
+                      ip: 10.0.0.11/24
                       mac: '22:11:11:11:11:22'
 
 switches:
@@ -49,9 +49,13 @@ switches:
              #- table_add forward set_egress 19 => 2
             - table_add MAC_forward set_MAC_egress 0x221111111121 => 2
             - table_add MAC_forward set_MAC_egress 0x221111111120 => 1
-            - table_add MAC_forward set_MAC_egress 0x221111111122 => 121
-            - table_add MAC_forward set_MAC_egress 0x221111111123 => 121
-            - table_add fec_forward set_egress 121 => 19
+             # - table_add MAC_forward set_MAC_egress 0x221111111121 => 121
+             # - table_add MAC_forward set_MAC_egress 0x221111111120 => 121
+             #- table_add MAC_forward set_MAC_egress 0x221111111122 => 19
+             #- table_add MAC_forward set_MAC_egress 0x221111111123 => 19
+            - table_add fec_forward set_egress 3 => 19
+            - table_add fec_forward set_egress 2 => 121
+            - table_add fec_forward set_egress 4 => 19
     fpga_mcd:
         cfg: ../../build/bmv2/Compress.json
         interfaces:
@@ -62,13 +66,15 @@ switches:
             - table_add forward set_egress 0 => 0
     fpga_enc:
         cfg: ../../build/bmv2/MAC_Forwarder.json
+        # cfg: ../../build/bmv2/Forwarder.json
         interfaces:
             - link: tofino1
               port: 0
         cmds:
-            - table_add flightplan_forward set_fp_egress 0 => 1
+            - table_add flightplan_forward set_fp_egress 0 => 0
+              # - table_add forward set_egress 0 => 0
               # - ../controller_files/forwarding_commands.txt
-              #- ../controller_files/fec_encoder_commands.txt
+              # - ../controller_files/fec_encoder_commands.txt
     dropper:
         cfg: ../../build/bmv2/Dropper.json
         interfaces:
@@ -107,15 +113,17 @@ switches:
              - table_add MAC_forward set_MAC_egress 0x221111111122 => 3
              - table_add MAC_forward set_MAC_egress 0x221111111123 => 4
              #- table_add MAC_forward set_MAC_egress 0x221111111121 => 20
-             #- table_add MAC_forward set_MAC_egress 0x221111111120 => 20
-             - table_add fec_forward set_egress 20 => 122
+             - table_add MAC_forward set_MAC_egress 0x221111111120 => 20
+             - table_add fec_forward set_egress 3 => 122
     fpga_dec:
         cfg: ../../build/bmv2/MAC_Forwarder.json
+        # cfg: ../../build/bmv2/Forwarder.json
         interfaces:
             - link: tofino2
               port: 0
         cmds:
-            - table_add flightplan_forward set_fp_egress 0 => 0
+              - table_add flightplan_forward set_fp_egress 0 => 0
+              # - table_add forward set_egress 0 => 0
               #- ../controller_files/forwarding_commands.txt
               #- ../controller_files/fec_decoder_commands.txt
 

@@ -23,7 +23,7 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
     action set_MAC_egress(bit<9> port) {
         SET_EGRESS(meta, port);
     }
-    
+  
     action set_egress(bit<9> port) {
         SET_EGRESS(meta, port);
     }
@@ -59,6 +59,7 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
     apply {
         if (!hdr.eth.isValid()) {
             drop();
+            return;
         }
 
         if (!hdr.fp.isValid()){
@@ -66,21 +67,26 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
             hdr.fp.src = hdr.eth.src;
             hdr.fp.dst = hdr.eth.dst;
             hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
-
             hdr.fp.from_segment = 1;
             hdr.fp.to_segment = 2;
+
         }
 
-        if(hdr.fp.isValid()){
-           if(hdr.fp.to_segment == 5)
+       if(hdr.fp.isValid()){
+         if(hdr.fp.to_segment == 4) {
               hdr.fp.setInvalid();
               dst_mac = hdr.eth.dst;
               MAC_forward.apply(); 
+             // next_dataplane = hdr.fp.to_segment;
+             // fec_forward.apply();
+         } else {
+               next_dataplane = hdr.fp.to_segment;
+               fec_forward.apply();
+             //   dst_mac = hdr.eth.dst;
+             //   MAC_forward.apply(); 
         }
-        else {
-                next_dataplane = hdr.fp.to_segment;
-                fec_forward.apply();
-        }
+        return;
+       }
       
       return;
 
