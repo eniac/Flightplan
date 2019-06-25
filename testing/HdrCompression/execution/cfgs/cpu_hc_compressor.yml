@@ -14,8 +14,6 @@ params:
     n_get_pkts: 45000
     n_total_pkts: 50000
 
-init_cmds: {}
-
 time:
     iperf: 60
 
@@ -33,22 +31,26 @@ files:
         src: '{0.out}/pktgen.lua'
         dst: '{0.programs.log_dir}/pktgen.lua'
         host: pktgen
+    pcap:
+        src: 'pcaps/{0.args.pcap_file}'
+        dst: '{0.programs.log_dir}/input.pcap'
+        host: pktgen
     moongen_script:
         src: './capture.lua'
         dst: '{0.programs.log_dir}/capture.lua'
         host: moongen
     pktgen_runner:
         src: './run_lua.sh'
-        dst: '~/dcomp/dpdk/run_lua.sh'
+        dst: '~/source/dpdk/run_lua.sh'
         host: pktgen
 
 hosts:
     client:
-        addr: tclust1
-        ip: 10.0.0.1
+            #addr: tclust1
+        addr: 158.130.4.231
     server:
-        addr: tclust2
-        ip: 10.0.0.2
+            #addr: tclust2
+        addr: 158.130.4.232
     compressor:
         addr: dcomp1.seas.upenn.edu
         port: 112
@@ -56,10 +58,10 @@ hosts:
         addr: dcomp2.seas.upenn.edu
         port: 111
     pktgen:
-        addr: tclust1
-        ip: 10.0.0.1
+            #addr: tclust1
+        addr: 158.130.4.231
     moongen:
-        addr: tclust7
+        addr: 158.130.4.237
     tofino:
         addr: 158.130.4.218
         ssh:
@@ -70,11 +72,21 @@ hosts:
 programs:
     log_dir: '~/logs/{0.label}'
 
+    moongen:
+        host: moongen
+        start: 'cd ~/source/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 0 {log} -s100'
+        stop: pkill MoonGen
+        log:
+            dir: moongen
+            log: moongen.pcap
+            out: moongen.out
+            err: moongen.err
+
     start_compressor:
         host: compressor
-        start: cd ~/source/P4Boosters/cpuBoosters/vjCompressor && ./hls_comp_pcap -i eno1 -f 0 
+        start: cd ~/source/P4Boosters/cpuBoosters/vjCompressor && ./hls_comp_pcap -i eno1 -f 0
         stop: pkill -f hls_comp_pcap
-        check_rtn: False
+        check_rtn: 1
         log:
             dir: hc_log
             out: compressor.out
@@ -84,40 +96,28 @@ programs:
         host: decompressor
         start: cd ~/source/P4Boosters/cpuBoosters/vjCompressor && ./hls_decomp_pcap -i eno2 -f 1
         stop: pkill -f hls_decomp_pcap
-        check_rtn: False
+        check_rtn: 1
         log:
             dir: hc_log
             out: decompressor.out
             err: decompressor.err
 
-    program_fpgas:
-        host: tclust2
-        start: 'cd ~/P4Boosters/FPGA/TopLevelSDx && bash program_all.sh {log}'
-        fg: true
-        check_rtn: 0
-        log:
-            dir: program_fpgas
-            log: program
-            out: program_fpgas.out
-            err: program_fgpas.err
-
     stop_dataplane:
         host: tofino
         start: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
-        check_rtn: False
+        check_rtn: 1
 
     dataplane:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            #./run.sh -d {drop_rate} -f -ep {0.hosts.encoder.port} -dp {0.hosts.decoder.port}
-            ./run.sh -f 1-112 112-111 111-2 2-1 -cp 7 -mi 112 -me 111
+            ./run.sh 1-112 112-2 2-1 -cp 7 -mi 112 -me 2 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
 
     pktgen:
         host: pktgen
-        start: tmux new -d '~/source/dpdk/run_lua.sh {lua} {pcap}'
+        start: tmux new -d '~/source/dpdk/run_lua.sh {0.files.pktgen_script.dst} {0.files.pcap.dst}'
         enforce_duration : false
         log:
             out: pktgen.out
@@ -147,18 +147,20 @@ programs:
 commands:
     stop_dataplane:
         begin: -30
-    program_fpgas:
-        begin: -29
     dataplane:
         begin: -28
-        duration: $( {0.time.iperf} + 20 )
-    ping:
-        begin: -5
-        duration: $( {0.time.iperf} + 10 )
-    pktgen_client:
-        n: 10
-        time: "{0.time.iperf}"
-        enforce_duration: '{0.time.iperf}'
+        duration: 90
+    start_compressor:
+        begin: -15
+        duration: 76
+        #    start_decompressor:
+        #begin: -15
+        #duration: $( {0.time.iperf} + 20 )
+    moongen:
+        begin: -10
+        duration: 70        
+    pktgen:
+        begin: 1
     get_counters:
         - begin: 0
-        - begin: $( {0.time.iperf} + 5 )
+        - begin: 58

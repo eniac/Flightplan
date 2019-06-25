@@ -32,7 +32,7 @@ files:
         dst: '{0.programs.log_dir}/pktgen.lua'
         host: pktgen
     pcap:
-        src: '{0.programs.pcap_dir}/{0.args.pcap_file}'
+        src: 'pcaps/{0.args.pcap_file}'
         dst: '{0.programs.log_dir}/input.pcap'
         host: pktgen
     moongen_script:
@@ -71,8 +71,6 @@ hosts:
 
 programs:
     log_dir: '~/logs/{0.label}'
-
-    pcap_dir: '{0.programs.log_dir}/pcaps'
 
     moongen:
         host: moongen
@@ -113,7 +111,7 @@ programs:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            ./run.sh 1-112 112-2 2-1 -cp 7 -mi 112 -me 2 
+            ./run.sh 1-111 111-2 2-1 -cp 7 -mi 111 -me 2 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
 
@@ -152,7 +150,7 @@ commands:
     dataplane:
         begin: -28
         duration: 90
-    start_compressor:
+    start_decompressor:
         begin: -15
         duration: 76
         #    start_decompressor:

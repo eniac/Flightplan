@@ -1,7 +1,7 @@
 #!/bin/bash
 OUT=$1
 LABEL=$2
-REPS=$3
+PCAP=$3
 
 if [[ $LABEL == "" ]]; then
     echo "usage $0 OUT LABEL RATES "
@@ -13,18 +13,18 @@ if [[ $RATES == "" ]]; then
 fi
 
 SHR=../../Shremote/shremote.py
-CFG=cfgs/cpu_hc.yml
+CFG=cfgs/fpga_hc_decompressor.yml
 
 mkdir -p $OUT/$LABEL
 
 run_booster () {
-    python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;dataplane_flags:-f;pcap_file:oneFlow.pcap" ;
+    python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;dataplane_flags:-f;pcap_file:$PCAP" ;
     RTN=$?
     RETRIES=1
     while [[ $RTN != 0 ]]; do
         echo "Trying again... $RETRIES"
         sleep 5
-        python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;dataplane_flags:-f;pcap_file:oneFlow.pcap" ;
+        python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;dataplane_flags:-f;pcap_file:$PCAP" ;
         RTN=$?
         RETRIES=$(( $RETRIES + 1 ))
     done
