@@ -55,7 +55,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --log $LOG_DUMPS \
         --verbose \
         --host-prog "iperf_s:iperf3 -s -p 4242" \
-        --host-prog "iperf_c:iperf3 -c 10.0.0.12 -p 4242 -b $RATE -t $TIME -M 1000" \
+        --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -t $TIME -M 1000" \
         --time ${TIME1%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
