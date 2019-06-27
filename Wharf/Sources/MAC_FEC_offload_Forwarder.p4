@@ -19,6 +19,7 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
     bit<4> next_dataplane = 0;
     bit<48> dst_mac = 0;
+
     action set_MAC_egress(bit<9> port) {
         SET_EGRESS(meta, port);
     }
@@ -48,6 +49,37 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
         default_action = NoAction;
     }
 
+    action strip_fp_hdr(bit<9> port) {
+         hdr.fp.setInvalid();
+         SET_EGRESS (meta, port);
+    }
+
+    table MAC_forward1 {
+        key = {
+            dst_mac : exact;
+        }
+        actions = { strip_fp_hdr ; NoAction; }
+        default_action = NoAction;
+    }
+
+    action set_fwd_seg(bit<9> port){
+        hdr.fp.to_segment = 2;
+        SET_EGRESS (meta, port);
+    }
+
+
+    action set_rev_seg(bit<9> port){
+        hdr.fp.to_segment = 1;
+        SET_EGRESS (meta, port);
+    }
+
+    table forward_segment {
+        key = {
+            hdr.eth.dst : exact;
+        }
+        actions = {set_fwd_seg; set_rev_seg; }
+     //   default_action = set_rev_seg;
+    }
 #    bit<FEC_K_WIDTH> k = 0;
 #    bit<FEC_H_WIDTH> h = 0;
 #    bit<24> proto_and_port = 0;
@@ -66,26 +98,35 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
             hdr.fp.src = hdr.eth.src;
             hdr.fp.dst = hdr.eth.dst;
             hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
-            hdr.fp.from_segment = 1;
-            hdr.fp.to_segment = 2;
 
+
+            hdr.fp.from_segment = 1;
+          //  hdr.fp.to_segment = 2;
+            forward_segment.apply();
         }
 
        if(hdr.fp.isValid()){
-           if(hdr.fp.to_segment == 4) {
-              hdr.fp.setInvalid();
-              dst_mac = hdr.eth.dst;
-              MAC_forward.apply(); 
-             // next_dataplane = hdr.fp.to_segment;
-             // fec_forward.apply();
-           } else {
-               next_dataplane = hdr.fp.to_segment;
-               fec_forward.apply();
-             //   dst_mac = hdr.eth.dst;
-             //   MAC_forward.apply(); 
-           }
-        return;
-      }
+          if(hdr.fp.to_segment != 1 ){
+              if(hdr.fp.to_segment == 4) {
+                 hdr.fp.setInvalid();
+                 dst_mac = hdr.eth.dst;
+                 MAC_forward.apply(); 
+              } else {
+                 next_dataplane = hdr.fp.to_segment;
+                 fec_forward.apply();
+              }
+
+          return;
+
+        } else {
+               
+                 dst_mac = hdr.eth.dst;
+                 MAC_forward1.apply();
+        }
+
+       return;
+
+     }
       return;
 
     } 
