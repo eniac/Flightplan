@@ -12,7 +12,7 @@ params:
     pktgen_template: ./pktgen_template.lua
     n_set_pkts: 5000
     n_get_pkts: 45000
-    n_total_pkts: 50000
+    n_total_pkts: 100000
 
 time:
     iperf: 60
@@ -102,9 +102,17 @@ programs:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            ./run.sh 1-120 120-2 2-1 -cp 7 -mi 120 -me 2 
+            ./run.sh 1-122 122-2 -cp 7 -mi 122 -me 122 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
+
+    tcpreplay:
+        host: pktgen
+        start: '~/source/dpdk/tcpreplay --loop 500 --preload-pcap --quiet -p 1000 -i ens1f1 {0.files.pcap.dst}'
+        enforce_duration : false
+        log:
+            out: pktgen.out
+            err: pktgen.err
 
     pktgen:
         host: pktgen
@@ -137,9 +145,9 @@ programs:
 
 commands:
     stop_dataplane:
-        begin: -30
+        begin: -50
     program_fpgas:
-        begin: -29
+        begin: -49
     dataplane:
         begin: -28
         duration: 90

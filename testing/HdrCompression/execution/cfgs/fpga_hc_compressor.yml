@@ -12,7 +12,7 @@ params:
     pktgen_template: ./pktgen_template.lua
     n_set_pkts: 5000
     n_get_pkts: 45000
-    n_total_pkts: 50000
+    n_total_pkts: 100000
 
 time:
     iperf: 60
@@ -102,7 +102,7 @@ programs:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            ./run.sh 1-121 121-2 2-1 -cp 7 -mi 121 -me 2 
+            ./run.sh 1-121 121-2 -cp 7 -mi 121 -me 121 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
 
@@ -154,7 +154,7 @@ commands:
     moongen:
         begin: -10
         duration: 70        
-    tcpreplay:
+    pktgen:
         begin: 1
     get_counters:
         - begin: 0
