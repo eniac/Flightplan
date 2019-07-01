@@ -20,16 +20,17 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
     bit<4> next_dataplane = 0;
     bit<48> dst_mac = 0;
 
-    action set_MAC_egress(bit<9> port) {
-        SET_EGRESS(meta, port);
-    }
-  
     action set_egress(bit<9> port) {
         SET_EGRESS(meta, port);
     }
-    
+
     action do_drop() {
         drop();
+    }
+
+    action strip_fp_hdr(bit<9> port) {
+         hdr.fp.setInvalid();
+         SET_EGRESS (meta, port);
     }
 
     table fec_forward {
@@ -39,21 +40,16 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
        actions = {set_egress; do_drop; }
        default_action = do_drop;
     }
-    
-    table MAC_forward {
+
+    table MAC_fwd_dst {
         key = {
             dst_mac : exact;
         }
-        actions = { set_MAC_egress; NoAction; }
+        actions = { strip_fp_hdr ; NoAction; }
         default_action = NoAction;
     }
 
-    action strip_fp_hdr(bit<9> port) {
-         hdr.fp.setInvalid();
-         SET_EGRESS (meta, port);
-    }
-
-    table MAC_forward1 {
+    table MAC_fwd_host {
         key = {
             dst_mac : exact;
         }
@@ -66,7 +62,7 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
         SET_EGRESS (meta, port);
     }
 
-    action set_rev_seg(bit<9> port){
+    action set_seg(bit<9> port){
         hdr.fp.to_segment = 1;
         SET_EGRESS (meta, port);
     }
@@ -75,7 +71,7 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
         key = {
             hdr.eth.dst : exact;
         }
-        actions = {set_fwd_seg; set_rev_seg; }
+        actions = {set_fwd_seg; set_seg; }
     }
 
     apply {
@@ -92,15 +88,15 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
 
             forward_segment.apply();
         }
-      
+
 
        if(hdr.fp.isValid()){
-  
+
           if(hdr.fp.to_segment != 1 ) {
               if(hdr.fp.to_segment == 4 ){
-                 hdr.fp.setInvalid();
+             //  hdr.fp.setInvalid();
                  dst_mac = hdr.eth.dst;
-                 MAC_forward.apply(); 
+                 MAC_fwd_dst.apply();
               } else {
                  next_dataplane = hdr.fp.to_segment;
                  fec_forward.apply();
@@ -109,9 +105,9 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
           return;
 
         } else {
-               
+
                  dst_mac = hdr.eth.dst;
-                 MAC_forward1.apply();
+                 MAC_fwd_host.apply();
         }
 
        return;
@@ -119,7 +115,7 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
      }
       return;
 
-    } 
+  }
 
 }
 
