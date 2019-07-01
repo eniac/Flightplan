@@ -50,12 +50,18 @@ switches:
              #- table_add forward set_egress 19 => 2
             - table_add MAC_forward1 strip_fp_hdr 0x221111111121 => 2
             - table_add MAC_forward1 strip_fp_hdr 0x221111111120 => 1
-             # - table_add MAC_forward set_MAC_egress 0x221111111121 => 121
-             # - table_add MAC_forward set_MAC_egress 0x221111111120 => 121
-             # - table_add MAC_forward set_MAC_egress 0x221111111122 => 19
-             # - table_add MAC_forward set_MAC_egress 0x221111111123 => 19
+             #- table_add MAC_forward set_MAC_egress 0x221111111121 => 121
+             #- table_add MAC_forward set_MAC_egress 0x221111111120 => 121
+             #- table_add MAC_forward set_MAC_egress 0x221111111120 => 1
+             # - table_add MAC_forward set_MAC_egress 0x221111111121 => 2
+             # - table_add MAC_forward strip_fp_hdr 0x221111111121 => 2
+             #- table_add MAC_forward strip_fp_hdr 0x221111111120 => 1
+             #- table_add MAC_forward2 strip_fp_hdr 0x221111111121 => 2
+             #- table_add MAC_forward2 strip_fp_hdr 0x221111111120 => 1
             - table_add forward_segment set_fwd_seg 0x221111111122 => 19
             - table_add forward_segment set_fwd_seg 0x221111111123 => 19
+            - table_add forward_segment set_rev_seg 0x221111111121 => 1
+            - table_add forward_segment set_rev_seg 0x221111111120 => 2
             - table_add fec_forward set_egress 3 => 19
             - table_add fec_forward set_egress 2 => 121
             - table_add fec_forward set_egress 4 => 19
@@ -116,10 +122,18 @@ switches:
              #- table_add MAC_forward set_MAC_egress 4 => 20
              - table_add MAC_forward set_MAC_egress 0x221111111122 => 3
              - table_add MAC_forward set_MAC_egress 0x221111111123 => 4
-             - table_add MAC_forward1 set_MAC_egress 0x221111111121 => 20
-             - table_add MAC_forward1 set_MAC_egress 0x221111111120 => 20
+             #- table_add MAC_forward strip_fp_hdr 0x221111111122 => 3
+             # - table_add MAC_forward strip_fp_hdr 0x221111111123 => 4
+             #- table_add MAC_forward1 set_MAC_egress 0x221111111121 => 20
+             #- table_add MAC_forward1 set_MAC_egress 0x221111111120 => 20
+             # - table_add MAC_forward2 strip_fp_hdr 0x221111111122 => 3
+             # - table_add MAC_forward2 strip_fp_hdr 0x221111111123 => 4
              - table_add forward_segment set_rev_seg 0x221111111121 => 20
              - table_add forward_segment set_rev_seg 0x221111111120 => 20
+             - table_add forward_segment set_rev_seg 0x221111111122 => 3
+             - table_add forward_segment set_rev_seg 0x221111111123 => 4
+             - table_add MAC_forward1 strip_fp_hdr 0x221111111122 => 3
+             - table_add MAC_forward1 strip_fp_hdr 0x221111111123 => 4
              - table_add fec_forward set_egress 3 => 122
     fpga_dec:
         cfg: ../../build/bmv2/MAC_Forwarder.json

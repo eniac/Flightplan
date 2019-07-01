@@ -35,7 +35,6 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
     table fec_forward {
         key = {
            next_dataplane : exact;
-           # meta.ingress_port: exact;
        }
        actions = {set_egress; do_drop; }
        default_action = do_drop;
@@ -67,7 +66,6 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
         SET_EGRESS (meta, port);
     }
 
-
     action set_rev_seg(bit<9> port){
         hdr.fp.to_segment = 1;
         SET_EGRESS (meta, port);
@@ -78,14 +76,7 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
             hdr.eth.dst : exact;
         }
         actions = {set_fwd_seg; set_rev_seg; }
-     //   default_action = set_rev_seg;
     }
-#    bit<FEC_K_WIDTH> k = 0;
-#    bit<FEC_H_WIDTH> h = 0;
-#    bit<24> proto_and_port = 0;
-#    FEC_Classify() classification;
-#    FecClassParams() decoder_params;
-#    FecClassParams() encoder_params;
 
     apply {
         if (!hdr.eth.isValid()) {
@@ -99,15 +90,14 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
             hdr.fp.dst = hdr.eth.dst;
             hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
 
-
-            hdr.fp.from_segment = 1;
-          //  hdr.fp.to_segment = 2;
             forward_segment.apply();
         }
+      
 
        if(hdr.fp.isValid()){
-          if(hdr.fp.to_segment != 1 ){
-              if(hdr.fp.to_segment == 4) {
+  
+          if(hdr.fp.to_segment != 1 ) {
+              if(hdr.fp.to_segment == 4 ){
                  hdr.fp.setInvalid();
                  dst_mac = hdr.eth.dst;
                  MAC_forward.apply(); 
@@ -133,11 +123,6 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
 
 }
 
-#control NoVerify(inout headers_t hdr, inout bmv2_meta_t m) { apply {} }
-
-#control NoCheck(inout headers_t hdr, inout bmv2_meta_t m) { apply {} }
-
-#control NoEgress(inout headers_t hdr, inout bmv2_meta_t m, inout metadata_t meta) { apply {} }
 
 V1Switch(BMParser(), NoVerify(), MAC_FEC_Forwarder(), NoEgress(), NoCheck(), FecDeparser()) main;
 
