@@ -102,7 +102,7 @@ programs:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            ./run.sh 1-122 122-2 -cp 7 -mi 122 -me 122 
+            ./run.sh 1-120 120-2 -cp 7 -mi 120 -me 120 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
 
