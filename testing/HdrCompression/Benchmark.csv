@@ -1,0 +1,62 @@
+TARGET,FUNCTION,LINE RATE(% OF 10G),INPUT RATE(BITS/SEC),PROCESS RATE(packets/sec),THROUGHPUT(Output rate bits/sec),Latency(secs),Boosting,
+,,,,,,,,
+CPU,HC Compressor,0.01,0.808M,1010,0.598M,6.8 * 10e-3,,Packet size 100 bytes
+,,0.1,8.04M,10060,5.52M,7.8 * 10e-3,,Packet size 100 bytes
+,,0.25,20.15M,25188,14.9M,10.52 * 10e-3,,Packet size 100 bytes
+,,0.5,,,,,,Packet ingress != Packet egress
+,,,,,,,,
+,,,,,,,,
+,,,,,,,,
+,,,,,,,,
+CPU,HC Decompressor,0.01,0.741M,1252,0.998M,6.5 * 10e-3,,Packet size 100 bytes
+,,0.05,3.69M,6242,4.99M,7.6 * 10e-3,,Packet size 100 bytes
+,,0.1,7.38M,12471,9.98M,8.8 * 10e-3,,Packet size 100 bytes
+,,0.25,18.45M,31181,24.96M,11.05 * 10e-3 ,,Packet size 100 bytes
+,,0.5,,,,,,Packet ingress != Packet egress
+,,,,,,,,
+,,,,,,,,
+,,,,,,,,
+FPGA,HC Compressor,0.1,8.06M,10081,5.96M,4.9 * 10e-6,,Packet size 100 bytes
+,,1,80.5M,100401,59.44M,2.98 * 10e-6,,Packet size 100 bytes
+,,5,37.7M,472125,27.95M,3.09 * 10e-6,,Packet size 100 bytes
+,,50,4.84G,606060,4.73G,5.18 * 10e-6,,Packet size 1000 bytes
+,,90,10G,,,,,Packet size 1000 bytes
+,,,,,,,,
+,,,,,,,,
+FPGA,HC Decompressor,0.1,7.38M,12470,9.98M,2.86 * 10e-6,,Packet size 100 bytes
+,,1,75.7M,124688,99.62M,3.3 * 10e-6,,Packet size 100 bytes
+,,10,0.97G,124688,0.998G,6.23 * 10e-6,,Packet size 1000 bytes
+,,50,4.88G,619962,4.96G,6.23 * 10e-6,,Packet size 1000 bytes
+,,,,,,,,
+,,,,,,,,
+CPU,FEC Encoder,,0.907M,,,,,
+,,,100M,,,,,
+,,,1G,,,,,
+,,,10G,,,,,
+,,,100G,,,,,
+,,,,,,,,
+,,,,,,,,
+CPU,FEC Decoder,0.01,0.971M,115,0.907M,,,Packet size 1000 bytes
+,,0.05,4.90M,584,4.60M,,,Packet size 1000 bytes
+,,0.1,9.83M,1171,9.21M,,,Packet size 1000 bytes
+,,0.25,24.59M,2927,22.12M,,,Packet size 1000 bytes
+,,,,,,,,
+,,,,,,,,
+FPGA,FEC Encoder,,10M,,,,,
+,,,100M,,,,,
+,,,1G,,,,,
+,,,10G,,,,,
+,,,100G,,,,,
+,,,,,,,,
+,,,,,,,,
+FPGA,FEC Decoder,,10M,,,,,
+,,,100M,,,,,
+,,,1G,,,,,
+,,,10G,,,,,
+,,,100G,,,,,
+,,,,,,,,
+,,,,,,,,
+CPU,Memcached Server,,,,,,,
+,,,,,,,,
+,,,,,,,,
+FPGA,Memcached Server,,,,,,,
