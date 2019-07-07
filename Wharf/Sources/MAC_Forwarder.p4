@@ -18,19 +18,19 @@ parser BMParser(packet_in pkt, out headers_t hdr,
 
 control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
     bit<4> next_dataplane = 0;
-    bit<48> dst_mac = 0;
+//    bit<48> dst_mac = 0;
 
-    action set_MAC_egress(bit<9> port) {
-        SET_EGRESS(meta, port);
-    }
+//    action set_MAC_egress(bit<9> port) {
+//        SET_EGRESS(meta, port);
+//    }
     
     action set_fp_egress(bit<9> port) {
         SET_EGRESS(meta, port);
     }
     
-    action do_drop() {
-        drop();
-    }
+//    action do_drop() {
+//        drop();
+//    }
 
     table flightplan_forward {
         key = {
@@ -40,20 +40,22 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
        default_action = NoAction;
     }
     
-    table MAC_forward {
-        key = {
-            dst_mac : exact;
-        }
-        actions = { set_MAC_egress; NoAction; }
-        default_action = NoAction;
-    }
+//    table MAC_forward {
+//        key = {
+//            dst_mac : exact;
+//        }
+//        actions = { set_MAC_egress; NoAction; }
+//        default_action = NoAction;
+//    }
 
-#    bit<FEC_K_WIDTH> k = 0;
-#    bit<FEC_H_WIDTH> h = 0;
-#    bit<24> proto_and_port = 0;
-#    FEC_Classify() classification;
-#    FecClassParams() decoder_params;
-#    FecClassParams() encoder_params;
+#if defined(FEC_BOOSTER)
+    bit<FEC_K_WIDTH> k = 0;
+    bit<FEC_H_WIDTH> h = 0;
+    bit<24> proto_and_port = 0;
+    FEC_Classify() classification;
+    FecClassParams() decoder_params;
+    FecClassParams() encoder_params;
+#endif
 
     apply {
         if (!hdr.eth.isValid()) {
