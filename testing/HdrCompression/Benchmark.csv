@@ -29,25 +29,18 @@ FPGA,HC Decompressor,0.1,7.38M,12470,9.98M,2.86 * 10e-6,,Packet size 100 bytes
 ,,50,4.88G,619962,4.96G,6.23 * 10e-6,,Packet size 1000 bytes
 ,,,,,,,,
 ,,,,,,,,
-CPU,FEC Encoder,,0.907M,,,,,
-,,,100M,,,,,
-,,,1G,,,,,
-,,,10G,,,,,
-,,,100G,,,,,
+CPU,FEC Encoder,0.01,0.983M,141,1.165M,,,Packet size 1050 bytes
+,,0.05,4.88M,655,5.42M,,,Packet size 1050 bytes
+,,0.1,8.43M,1350,11.14M,,,Packet size 1050 bytes
+,,0.25,24.42M,3540,29.28M,,,Packet size 1050 bytes
+,,0.3,30M,,,,,Packet loss occuring
 ,,,,,,,,
 ,,,,,,,,
-CPU,FEC Decoder,0.01,0.971M,115,0.907M,,,Packet size 1000 bytes
-,,0.05,4.90M,584,4.60M,,,Packet size 1000 bytes
-,,0.1,9.83M,1171,9.21M,,,Packet size 1000 bytes
-,,0.25,24.59M,2927,22.12M,,,Packet size 1000 bytes
-,,,,,,,,
-,,,,,,,,
-FPGA,FEC Encoder,,10M,,,,,
-,,,100M,,,,,
-,,,1G,,,,,
-,,,10G,,,,,
-,,,100G,,,,,
-,,,,,,,,
+CPU,FEC Decoder,0.01,0.971M,115,0.907M,,,Packet size 1050 bytes
+,,0.05,4.90M,584,4.60M,,,Packet size 1050 bytes
+,,0.1,9.83M,1171,9.21M,,,Packet size 1050 bytes
+,,0.25,24.59M,2927,22.12M,,,Packet size 1050 bytes
+,,0.3,30M,,,,,Packet loss occuring
 ,,,,,,,,
 FPGA,FEC Decoder,,10M,,,,,
 ,,,100M,,,,,
@@ -55,6 +48,12 @@ FPGA,FEC Decoder,,10M,,,,,
 ,,,10G,,,,,
 ,,,100G,,,,,
 ,,,,,,,,
+,,,,,,,,
+FPGA,FEC Encoder,1,97.54M,14150,117.05M,,,Packet size 1050 bytes
+,,10,0.97G,141181,1.167G,,,Packet size 1050 bytes
+,,50,4.86G,705882,5.84G,,,Packet size 1050 bytes
+,,75,7.5G,,,,,Packet size 1050 bytes(Moongen drops packets)
+,,85,8.5G,,,,,Packet loss occuring
 ,,,,,,,,
 CPU,Memcached Server,,,,,,,
 ,,,,,,,,
