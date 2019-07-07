@@ -71,6 +71,7 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
                  return;
              }
              hdr.fec.setInvalid();
+             return;
          }
  #endif
 
