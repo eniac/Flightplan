@@ -6,8 +6,6 @@
 #include "FEC.p4"
 #include "FEC_Classify.p4"
 
-#struct bmv2_meta_t {}
-
 parser BMParser(packet_in pkt, out headers_t hdr,
                 inout booster_metadata_t m, inout metadata_t meta) {
     state start {
@@ -98,6 +96,9 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
                  hdr.fec.orig_ethertype = hdr.eth.type;
                  FEC_ENCODE(hdr.fec, k, h);
                  hdr.eth.type = ETHERTYPE_WHARF;
+                 hdr.fp.setValid();
+                 hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
+                 hdr.fp.to_segment = 3;
              }
         // }
  #endif
