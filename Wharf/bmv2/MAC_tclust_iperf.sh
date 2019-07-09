@@ -36,7 +36,6 @@ BASENAME=tclust_MAC_fec_iperf_$RATE
 
 TESTDIR=$HERE/test_output
 OUTDIR=$TESTDIR/$BASENAME
-#OUTDIR=$TESTDIR/checked/
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files/
 rm -rf $LOG_DUMPS

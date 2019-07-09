@@ -48,22 +48,22 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
               hdr.fp.to_segment = 1 + hdr.fp.to_segment;
               next_dataplane = hdr.fp.to_segment;
               flightplan_forward.apply();
-      //      return;            
         }
         else {
            drop();
-    //       return;
         }
-//      return;
 
-   // } 
 
 #if defined(FEC_BOOSTER)
          // If lossy link, then FEC decode.
          if (hdr.fec.isValid()) {
              decoder_params.apply(hdr.fec.traffic_class, k, h);
              hdr.eth.type = hdr.fec.orig_ethertype;
+             hdr.fp.setInvalid();
              FEC_DECODE(hdr.fec, k, h);
+             hdr.fp.setValid();
+             hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
+             hdr.fp.to_segment = 4;
              if (hdr.fec.packet_index >= k) {
                  drop();
                  return;
@@ -94,6 +94,7 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
                  update_fec_state(hdr.fec.traffic_class, k, h,
                                   hdr.fec.block_index, hdr.fec.packet_index    );
                  hdr.fec.orig_ethertype = hdr.eth.type;
+                 hdr.fp.setInvalid();
                  FEC_ENCODE(hdr.fec, k, h);
                  hdr.eth.type = ETHERTYPE_WHARF;
                  hdr.fp.setValid();
