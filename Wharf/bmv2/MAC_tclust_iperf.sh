@@ -37,7 +37,7 @@ BASENAME=tclust_MAC_fec_iperf_$RATE
 TESTDIR=$HERE/test_output
 OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
-LOG_DUMPS=$OUTDIR/log_files/
+LOG_DUMPS=$OUTDIR/log_files
 rm -rf $LOG_DUMPS
 rm -f $OUTDIR/*.pcap
 rm -f $OUTDIR/pcap_dump/*.pcap
@@ -46,7 +46,7 @@ mkdir -p $LOG_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-TOPO=$HERE/topologies/MAC_FEC_tclust_topology.yml
+TOPO=$HERE/topologies/MAC_HC_FEC_tclust_topology.yml
 
 sudo -E python $HERE/start_flightplan_mininet.py \
         $TOPO \
@@ -55,9 +55,13 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --verbose \
         --host-prog "iperf_s:iperf3 -s -p 4242" \
         --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -t $TIME -M 1000" \
-        --host-prog "mcd_s:iperf3 -s -p 4242" \
-        --host-prog "mcd_c:iperf3 -c 10.0.0.12 -p 4242 -b $RATE -t $TIME -M 1000" \
         --time ${TIME1%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
+
+#       --replay iperf_c-tofino1:bmv2/pcaps/oneFlow_iperfH.pcap \
+#       --host-prog "iperf_s:iperf3 -s -p 4242" \
+#       --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -t $TIME -M 1000" \
+#        --host-prog "mcd_s:iperf3 -s -p 4242" \
+#        --host-prog "mcd_c:iperf3 -c 10.0.0.12 -p 4242 -b $RATE -t $TIME -M 1000" \
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py
@@ -67,15 +71,16 @@ if [[ $? != 0 ]]; then
 fi
 
 cat $LOG_DUMPS/iperf_c_prog_1.log
+#cat $LOG_DUMPS/mcd_c_prog_3.log
 
 echo "Bytes Transferred: IPERF HOSTS"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_enc tofino1 fpga_dec iperf_s
+python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_hcomp tofino1 fpga_dcomp iperf_s
 echo "IPERF HOSTS"
 python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_s iperf_c
 
-echo "Bytes Transferred: MCD HOSTS"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_c fpga_enc tofino1 fpga_dec mcd_s
-echo "MCD HOSTS"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_s mcd_c
+#echo "Bytes Transferred: MCD HOSTS"
+#python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_c fpga_hcomp tofino1 fpga_dcomp mcd_s
+#echo "MCD HOSTS"
+#python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_s mcd_c
 
 echo "DONE."

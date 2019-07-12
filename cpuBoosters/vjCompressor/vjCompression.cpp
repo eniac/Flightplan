@@ -45,6 +45,31 @@ static void print_hex_memory(void *mem, int len) {
   printf("\n");
 }
 
+uint16_t ccsum(void *buf, size_t buflen) {
+    uint32_t r = 0;
+    size_t len = buflen;
+
+    const uint16_t* d = reinterpret_cast<const uint16_t*>(buf);
+
+    while (len > 1)
+    {
+        r += *d++;
+        len -= sizeof(uint16_t);
+    }
+
+    if (len)
+    {
+        r += *reinterpret_cast<const uint8_t*>(d);
+    }
+
+    while (r >> 16)
+    {
+        r = (r & 0xffff) + (r >> 16);
+    }
+
+    return static_cast<uint16_t>(~r);
+}
+
 /*=========================================
 =            Compressor.                  =
 =========================================*/
@@ -332,8 +357,11 @@ uint32_t buildDecompressedHeaders(compressorTuple_t *curPktTup, const struct com
   // Carried fields -- load from header.
   curPktTup->ipHeader.tot_len = cHeader->tot_len;
   curPktTup->ipHeader.id = cHeader->id;
-  // Computed fields -- TODO. (checksum)
+  curPktTup->ipHeader.check = 0;
 
+  // Computed fields -- TODO. (checksum)
+  curPktTup->ipHeader.check = ccsum(&(curPktTup->ipHeader), sizeof(curPktTup->ipHeader));
+ // print_hex_memory(&(curPktTup->ipHeader.check),2);
   // fill TCP header.
   // Fixed fields
   curPktTup->tcpHeader.source = lastPktTup.tcpHeader.source;
