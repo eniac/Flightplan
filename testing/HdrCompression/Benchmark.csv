@@ -3,7 +3,7 @@ TARGET,FUNCTION,LINE RATE(% OF 10G),INPUT RATE(BITS/SEC),PROCESS RATE(packets/se
 CPU,HC Compressor,0.01,0.808M,1010,0.598M,6.8 * 10e-3,,Packet size 100 bytes
 ,,0.1,8.04M,10060,5.52M,7.8 * 10e-3,,Packet size 100 bytes
 ,,0.25,20.15M,25188,14.9M,10.52 * 10e-3,,Packet size 100 bytes
-,,0.5,,,,,,Packet ingress != Packet egress
+,,0.5,50M,NA,NAN,NA,,Packet ingress != Packet egress(26.76% loss)
 ,,,,,,,,
 ,,,,,,,,
 ,,,,,,,,
@@ -12,7 +12,7 @@ CPU,HC Decompressor,0.01,0.741M,1252,0.998M,6.5 * 10e-3,,Packet size 100 bytes
 ,,0.05,3.69M,6242,4.99M,7.6 * 10e-3,,Packet size 100 bytes
 ,,0.1,7.38M,12471,9.98M,8.8 * 10e-3,,Packet size 100 bytes
 ,,0.25,18.45M,31181,24.96M,11.05 * 10e-3 ,,Packet size 100 bytes
-,,0.5,,,,,,Packet ingress != Packet egress
+,,0.3,30M,NA,NA,NA,,Packet ingress != Packet egress(8.15% loss)
 ,,,,,,,,
 ,,,,,,,,
 ,,,,,,,,
@@ -20,40 +20,42 @@ FPGA,HC Compressor,0.1,8.06M,10081,5.96M,4.9 * 10e-6,,Packet size 100 bytes
 ,,1,80.5M,100401,59.44M,2.98 * 10e-6,,Packet size 100 bytes
 ,,5,37.7M,472125,27.95M,3.09 * 10e-6,,Packet size 100 bytes
 ,,50,4.84G,606060,4.73G,5.18 * 10e-6,,Packet size 1000 bytes
-,,90,10G,,,,,Packet size 1000 bytes
+,,95,9.3G,775193,9.15G,6.44 * 10e-6,,Packet size 1500 bytes
+,,100,10G,NA,NA,NA,,Packet size 1500 bytes(Loss 0.7%)
 ,,,,,,,,
 ,,,,,,,,
 FPGA,HC Decompressor,0.1,7.38M,12470,9.98M,2.86 * 10e-6,,Packet size 100 bytes
 ,,1,75.7M,124688,99.62M,3.3 * 10e-6,,Packet size 100 bytes
 ,,10,0.97G,124688,0.998G,6.23 * 10e-6,,Packet size 1000 bytes
 ,,50,4.88G,619962,4.96G,6.23 * 10e-6,,Packet size 1000 bytes
+,,90,8.81G,746268,8.95G,5.19 * 10e-6,,Packet size 1500 bytes
+,,100,10G,NA,NA,NA,,Packet size 1500 bytes(Loss 2.2%)
 ,,,,,,,,
 ,,,,,,,,
 CPU,FEC Encoder,0.01,0.983M,141,1.165M,,,Packet size 1050 bytes
-,,0.05,4.88M,655,5.42M,,,Packet size 1050 bytes
+,,0.05,4.88M,655,5.42M,0.16 * 10e-3,,Packet size 1050 bytes
 ,,0.1,8.43M,1350,11.14M,,,Packet size 1050 bytes
-,,0.25,24.42M,3540,29.28M,,,Packet size 1050 bytes
-,,0.3,30M,,,,,Packet loss occuring
+,,0.25,24.42M,3540,29.28M,0.39 * 10e-3,,Packet size 1050 bytes
+,,0.3,30M,NA,NA,NA,,Packet loss occuring(packet Loss38.7%)
 ,,,,,,,,
 ,,,,,,,,
 CPU,FEC Decoder,0.01,0.971M,115,0.907M,,,Packet size 1050 bytes
 ,,0.05,4.90M,584,4.60M,,,Packet size 1050 bytes
 ,,0.1,9.83M,1171,9.21M,,,Packet size 1050 bytes
 ,,0.25,24.59M,2927,22.12M,,,Packet size 1050 bytes
-,,0.3,30M,,,,,Packet loss occuring
+,,0.3,30M,NA,NA,NA,,Packet loss occuring(1.7%)
 ,,,,,,,,
-FPGA,FEC Decoder,,10M,,,,,
-,,,100M,,,,,
-,,,1G,,,,,
-,,,10G,,,,,
-,,,100G,,,,,
+FPGA,FEC Decoder,10,1.012G,120481,0.86G,,,Packet size 1050 bytes
+,,50,4.95G,598802,4.39G,,,Packet size 1050 bytes
+,,90,8.99G,1086950,7.56G,,,Packet size 1050 bytes
+,,100,,,,,,
 ,,,,,,,,
 ,,,,,,,,
-FPGA,FEC Encoder,1,97.54M,14150,117.05M,,,Packet size 1050 bytes
-,,10,0.97G,141181,1.167G,,,Packet size 1050 bytes
-,,50,4.86G,705882,5.84G,,,Packet size 1050 bytes
+FPGA,FEC Encoder,1,97.54M,14150,117.05M,4.58 * 10e-6,,Packet size 1050 bytes
+,,10,0.97G,141181,1.167G,4.58 * 10e-6,,Packet size 1050 bytes
+,,50,4.86G,705882,5.84G,4.6 * 10e-6,,Packet size 1050 bytes
 ,,75,7.5G,,,,,Packet size 1050 bytes(Moongen drops packets)
-,,85,8.5G,,,,,Packet loss occuring
+,,85,8.5G,NA,NA,NA,,Packet loss occuring(6.5%)
 ,,,,,,,,
 CPU,Memcached Server,,,,,,,
 ,,,,,,,,
