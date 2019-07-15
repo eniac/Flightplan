@@ -11,7 +11,7 @@ copy_files: p4
 	rsync -av --exclude='*.log' ./* $(BOOSTER_SWITCH_COMPRESSION_DIR)
 
 compressorAndDecompressor: pcapCompressorAndDecompressor.cpp vjCompression.cpp
-	g++ $^ -o compressorAndDecompressor -lpcap -std=c++11
+	g++ -Wall $^ -o compressorAndDecompressor -lpcap -std=c++11
 
 clean: 
 	$(RM) compressorAndDecompressor

@@ -166,6 +166,7 @@ void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
       // optional fields
       if (compressedHeader.seqChange == 1){
         memcpy(compressedPktBuf + compressedPktLen, &(curPktTup.tcpHeader.seq), sizeof(curPktTup.tcpHeader.seq));
+      //  printf("Setting seq to %u\n", htonl(curPktTup.tcpHeader.seq));
         compressedPktLen += sizeof(curPktTup.tcpHeader.seq);
       }
       if (compressedHeader.ackChange == 1){
@@ -195,6 +196,8 @@ void compress(const u_char*packet, uint32_t pktLen, forward_fn forward){
  */
 bool checkCache(compressorTuple_t curPktTup){  
   compressorTuple_t lastPkt = compressorCache[curPktTup.idx];
+   //   printf("Last: %u, curr %u\n", ntohs(lastPkt.tcpHeader.source),
+      // ntohs(curPktTup.tcpHeader.source));
   // If all keys are equal, return true.
   if(lastPkt.ipHeader.saddr == curPktTup.ipHeader.saddr){
   if(lastPkt.ipHeader.daddr == curPktTup.ipHeader.daddr){
@@ -232,7 +235,10 @@ void buildCompressedHeader(compressedHeader_t *cHeader, compressorTuple_t *curPk
 
   // Set change flags.
   if (lastPkt.tcpHeader.seq != curPktTup->tcpHeader.seq) {
+  //  printf("Setting seqChange\n");
     cHeader->seqChange = 1;
+  } else {
+  //  printf("Not Setting seqChange\n");
   }
   if (lastPkt.tcpHeader.ack_seq != curPktTup->tcpHeader.ack_seq) {
     cHeader->ackChange = 1;
@@ -271,6 +277,11 @@ void decompress(const u_char *packet, uint32_t pktLen, forward_fn forward){
   ethernetHeader = (struct ether_header*)packet;
   // Standard TCP packet -- update local cache and emit.
   if (ntohs(ethernetHeader->ether_type) == ETHERTYPE_IP) {
+      if (pktLen < 100) {
+        forward(packet, pktLen);
+        // pcap_inject(pcap,packet,pkthdr -> len);
+        return;
+      }
       ipHeader = (struct ipHeader_t*)(packet + sizeof(struct ether_header));
     if (ipHeader->proto == 6){
       tcpHeader = (tcpHeader_t*)((u_char*)ipHeader + sizeof(*ipHeader));
@@ -315,7 +326,7 @@ void decompress(const u_char *packet, uint32_t pktLen, forward_fn forward){
     decompressedPktLen += sizeof(curPktTup.ipHeader);
 
     // TCP
-    memcpy(decompressedPktBuf+decompressedPktLen, (u_char *)&(curPktTup.tcpHeader), sizeof(curPktTup.tcpHeader));
+    memcpy(decompressedPktBuf+decompressedPktLen, &(curPktTup.tcpHeader), sizeof(curPktTup.tcpHeader));
     decompressedPktLen += sizeof(curPktTup.tcpHeader);
 
     // Payload
@@ -379,6 +390,7 @@ uint32_t buildDecompressedHeaders(compressorTuple_t *curPktTup, const struct com
     curPktTup->tcpHeader.seq = *(const uint32_t *)condHdrPos;
     condHdrPos += sizeof(uint32_t);
     decompressorCache[curPktTup->idx].tcpHeader.seq = curPktTup->tcpHeader.seq;
+    printf("decompressing seq from %u\n", htonl(curPktTup->tcpHeader.seq));
   }
   // If no change, load from cache.
   else {
