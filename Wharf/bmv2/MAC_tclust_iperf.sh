@@ -54,7 +54,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --log $LOG_DUMPS \
         --verbose \
         --host-prog "iperf_s:iperf3 -s -p 4242" \
-        --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -t $TIME -M 200" \
+        --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -t $TIME -M 1000" \
         --time ${TIME1%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 #       --replay iperf_c-tofino1:bmv2/pcaps/oneFlow_iperfH.pcap \
@@ -74,7 +74,7 @@ cat $LOG_DUMPS/iperf_c_prog_1.log
 #cat $LOG_DUMPS/mcd_c_prog_3.log
 
 echo "Bytes Transferred: IPERF HOSTS"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_hcomp tofino1 fpga_dcomp iperf_s
+python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_hcomp fpga_enc tofino1 fpga_dec fpga_dcomp iperf_s
 echo "IPERF HOSTS"
 python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_s iperf_c
 

@@ -102,7 +102,7 @@ control MAC_FEC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout
        if(hdr.fp.isValid()){
 
           if(hdr.fp.to_segment != 1 ) {
-              if(hdr.fp.to_segment == 4 ){
+              if(hdr.fp.to_segment == 5 ){
              //  hdr.fp.setInvalid();
                  dst_mac = hdr.eth.dst;
                  MAC_fwd_dst.apply();
