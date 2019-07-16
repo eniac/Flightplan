@@ -47,8 +47,7 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 
 %: $(BLD_BMV2) $(BLD_BMV2)/%.json;
 
-# FIXME the next line appears to be redundant
-#$(BLD_BMV2)/CheckedFragment.json: $(BLD_BMV2) Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4 Sources/FlightplanDeparser.p4
+$(BLD_BMV2)/CheckedFragment.json: $(BLD_BMV2) Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4 Sources/FlightplanDeparser.p4
 
 complete: $(BLD_BMV2)/Complete.json
 
