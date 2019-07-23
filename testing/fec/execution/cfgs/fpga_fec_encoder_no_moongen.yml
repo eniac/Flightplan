@@ -41,10 +41,12 @@ files:
     capture_sh:
         src: './dpdk_capture.sh'
         dst: '{0.programs.log_dir}/dpdk_capture.sh'
+        host: capture
     capture_pkt:
         pre_format: ./dpdk_capture_template.pkt
         src: '{0.out}/dpdk_capture.pkt'
         dst: '{0.programs.log_dir}/dpdk_capture.pkt'
+        host: capture
     pktgen_runner:
         src: './run_lua.sh'
         dst: '~/source/dpdk/run_lua.sh'
