@@ -64,6 +64,7 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
              hdr.fp.setValid();
              hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
              hdr.fp.to_segment = 3;
+            // hdr.fp.to_segment = 4;
              if (hdr.fec.packet_index >= k) {
                  drop();
                  return;
@@ -100,6 +101,7 @@ control MAC_Forwarder(inout headers_t hdr, inout booster_metadata_t m, inout met
                  hdr.fp.setValid();
                  hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
                  hdr.fp.to_segment = 4;
+                // hdr.fp.to_segment = 3;
              }
         // }
  #endif

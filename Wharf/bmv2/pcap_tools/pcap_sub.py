@@ -10,8 +10,8 @@ scapy_cap  = rdpcap(sys.argv[1])
 out = []
 print("Swapping out IP addresses for mininet from {} to {} ".format(sys.argv[1], sys.argv[2]))
 
-src_mac = '22:11:11:11:11:22'
-dst_mac = '22:22:22:22:22:22'
+src_mac = '22:11:11:11:11:21'
+dst_mac = '22:11:11:11:11:23'
 src_ip = '10.0.0.11'
 dst_ip = '10.0.0.12'
 
