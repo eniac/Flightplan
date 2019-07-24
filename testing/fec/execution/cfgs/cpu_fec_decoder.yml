@@ -12,7 +12,7 @@ params:
     pktgen_template: ./pktgen_template.lua
     n_set_pkts: 5000
     n_get_pkts: 45000
-    n_total_pkts: 100000
+    n_total_pkts: 1200
 
 time:
     iperf: 60
@@ -154,21 +154,21 @@ programs:
 
 commands:
     stop_dataplane:
-        begin: -30
+        begin: -10
     dataplane:
-        begin: -28
-        duration: 70
+        begin: 0
+        duration: 68
     start_decoder:
-        begin: -15
-        duration: 56
+        begin: -5
+        duration: 75
         #    start_decompressor:
         #begin: -15
         #duration: $( {0.time.iperf} + 20 )
     moongen:
-        begin: -10
-        duration: 50        
+        begin: 5
+        duration: 56        
     pktgen:
-        begin: 1
+        begin: 30
     get_counters:
-        - begin: 0
-        - begin: 38
+        - begin: 29
+        - begin: 65
