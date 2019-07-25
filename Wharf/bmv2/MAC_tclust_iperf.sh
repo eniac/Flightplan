@@ -53,7 +53,8 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
-        --replay iperf_c-tofino1:bmv2/pcaps/twoFlows_.pcap \
+        --host-prog "iperf_s:iperf3 -s -p 4242" \
+        --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -t $TIME -M 1000" \
         --time ${TIME1%s} 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 #       --replay iperf_c-tofino1:bmv2/pcaps/oneFlow_iperfH.pcap \
@@ -64,6 +65,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
 #        --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -k 5 -M 1000" \
 #        --host-prog "iperf_s:iperf3 -s -p 4242" \
 #        --host-prog "iperf_c:iperf3 -c 10.0.0.11 -p 4242 -b $RATE -k 5 -M 1000" \
+#        --replay iperf_c-tofino1:bmv2/pcaps/twoFlows_200.pcap \
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py
