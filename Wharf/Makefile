@@ -45,7 +45,9 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json \
 	$(BLD_BMV2)/MAC_Forwarder.json $(BLD_BMV2)/MAC_FEC_Forwarder.json $(BLD_BMV2)/MAC_FEC_offload_Forwarder.json $(BLD_BMV2)/MAC_FEC_enc_offload_Fwd.json $(BLD_BMV2)/MAC_enc_Fwd.json $(BLD_BMV2)/MAC_HC_FEC_offload_Fwd.json $(BLD_BMV2)/MAC_HC_Fwd.json $(BLD_BMV2)/MAC_MCD_Forwarder.json $(BLD_BMV2)/MAC_mcd_offloader.json
 
-%: $(BLD_BMV2) $(BLD_BMV2)/%.json;
+tclust: Tclust_tofino Tclust_encoder Tclust_compressor Tclust_decompressor
+
+%: $(BLD_BMV2)/%.json;
 
 #$(BLD_BMV2)/CheckedFragment.json: $(BLD_BMV2) Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4 Sources/FlightplanDeparser.p4
 
@@ -63,3 +65,5 @@ $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BMV2_REPO_M)/targets/booster_switch/M
 
 clean:
 	rm -fr $(BLD)
+
+.PRECIOUS: $(BLD_BMV2)/%.json
