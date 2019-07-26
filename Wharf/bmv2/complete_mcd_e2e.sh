@@ -17,6 +17,11 @@ USER=`logname`
 PRE_INPUT_PCAP=`realpath $1`
 EXPECTED=$2
 
+SIP="10.0.0.11"
+DIP="10.0.0.12"
+SMAC="22:11:11:11:11:21"
+DMAC="22:11:11:11:11:23"
+
 TESTDIR=$HERE/test_output
 BASENAME=$(basename $PRE_INPUT_PCAP .pcap)
 OUTDIR=$TESTDIR/$BASENAME
@@ -30,7 +35,8 @@ mkdir -p $LOG_DUMPS
 
 INPUT_PCAP=$OUTDIR/${BASENAME}_in.pcap
 echo "Putting pcap in $INPUT_PCAP"
-python $HERE/pcap_tools/pcap_sub.py $PRE_INPUT_PCAP $INPUT_PCAP 0
+python $HERE/pcap_tools/pcap_sub.py $PRE_INPUT_PCAP $INPUT_PCAP\
+    --sip="$SIP" --dip="$DIP" --smac="$SMAC" --dmac="$DMAC"
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
@@ -56,7 +62,8 @@ EXP_PCAP=$OUTDIR/${BASENAME}_expected.pcap
 OUT_PCAP=$OUTDIR/${BASENAME}_out.pcap
 
 python2 $HERE/pcap_tools/pcap_clean.py $INPUT_PCAP $REQ_PCAP --rm-chksum &
-python2 $HERE/pcap_tools/pcap_sub.py $EXPECTED $EXP_PCAP 1 &
+python2 $HERE/pcap_tools/pcap_sub.py $EXPECTED $EXP_PCAP 1 \
+    --sip="$SIP" --dip="$DIP" --smac="$SMAC" --dmac="$DMAC"
 python2 $HERE/pcap_tools/pcap_clean.py $PCAP_DUMPS/s1_to_h1.pcap $OUT_PCAP --rm-chksum &
 wait
 python2 $HERE/pcap_tools/pcap_clean.py $EXP_PCAP $EXP_PCAP --rm-chksum
