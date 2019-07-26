@@ -10,8 +10,8 @@ import subprocess
 default_pktTmpFile = 'emptyPackets.pcap'
 
 def main():
-	generateOneFlow()
-	generateCollidingFlows()
+	#generateOneFlow()
+	#generateCollidingFlows()
 	generateTwoFlows()
 
 
@@ -49,11 +49,11 @@ def generateOneFlow(interArrival = .1, count = 10, dumpFile = "pcaps/oneFlow.pca
 		current_time += interArrival
 	f.close()
 
-def generateTwoFlows(interArrival = .1, count = 10, dumpFile = "pcaps/twoFlows.pcap"):
+def generateTwoFlows(interArrival = .1, count = 200, dumpFile = "pcaps/twoFlows_200.pcap"):
 
 	pktId = 5
-	eth_src = '\x22\x22\x22\x22\x22\x11'
-	eth_dst = '\x22\x22\x22\x22\x22\x22'
+	eth_src = '\x22\x11\x11\x11\x11\x20'
+	eth_dst = '\x22\x11\x11\x11\x11\x22'
 	ip_src = struct.pack("!I", pktId)
 	ip_dst = struct.pack("!I", pktId)
 	tcp_sport = socket.htons(pktId)
