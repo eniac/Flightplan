@@ -45,7 +45,7 @@ static void print_hex_memory(void *mem, int len) {
   printf("\n");
 }
 
-uint16_t ccsum(void *buf, size_t buflen) {
+static uint16_t ccsum(void *buf, size_t buflen) {
     uint32_t r = 0;
     size_t len = buflen;
 
