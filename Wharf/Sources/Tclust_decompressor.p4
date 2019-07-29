@@ -6,7 +6,9 @@ control Decompress(inout headers_t hdr,
                  inout metadata_t md) {
     apply {
         bit<1> forward;
+        hdr.fp.setInvalid();
         header_decompress(forward);
+        hdr.fp.setValid();
         if (forward == 0) {
             drop();
             return;
