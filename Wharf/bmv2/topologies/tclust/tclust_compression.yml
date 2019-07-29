@@ -1,0 +1,115 @@
+hosts:
+    mcd_c :
+            interfaces:
+                    - link: tofino1
+                      ip: 10.0.0.9/24
+                      mac: '22:11:11:11:11:21'
+    mcd_s :
+            interfaces:
+                    - link: tofino2
+                      ip: 10.0.0.10/24
+                      mac: '22:11:11:11:11:23'
+    iperf_c :
+            interfaces:
+                    - link: tofino1
+                      ip: 10.0.0.11/24
+                      mac: '22:11:11:11:11:20'
+    iperf_s :
+            interfaces:
+                    - link: tofino2
+                      ip: 10.0.0.12/24
+                      mac: '22:11:11:11:11:22'
+
+#define SEG_DECODE 2
+#define SEG_DECOMPRESS 4
+#define SEG_KV_STORE 6
+#define SEG_COMPRESS 8
+#define SEG_ENCODE 10
+#define SEG_FORWARD 12
+
+switches:
+    tofino1:
+        cfg: ../../../build/bmv2/Tclust_tofino.json_orig
+        interfaces:
+            - link: dropper
+              port: 19
+            - link: mcd_c
+              port: 2
+            - link: iperf_c
+              port: 1
+            - link: fpga_mcd
+              port: 120
+            - link: fpga_encd
+              port: 121
+            - link: fpga_comp
+              port: 130
+        cmds:
+            # Enable compression and encoding out of port 19
+            - table_add egress_compression.boost egress_compression.set_enabled 19 => 1
+            - table_add egress_encoding.boost egress_encoding.set_enabled 19 => 1
+
+            # Set basic egress ports for mac addresses
+            - table_add mac_forwarding set_egress 0x221111111120 => 1
+            - table_add mac_forwarding set_egress 0x221111111121 => 2
+            - table_add mac_forwarding set_egress 0x221111111122 => 19
+            - table_add mac_forwarding set_egress 0x221111111123 => 19
+
+            # Set offloads for available boosters
+            - table_add offload set_egress 8 => 130  # COMPRESSOR
+            - table_add offload set_egress 6 => 120  # KV_STORE
+            - table_add offload set_egress 10 => 121 # ENCODER
+            - table_add offload strip_fp_hdr 12 =>   # FORWARD
+
+    fpga_mcd:
+        cfg: ../../../build/bmv2/Tclust_noop.json
+
+    fpga_encd:
+        cfg: ../../../build/bmv2/Tclust_noop.json
+
+    fpga_decd:
+        cfg: ../../../build/bmv2/Tclust_noop.json
+
+    fpga_comp:
+        cfg: ../../../build/bmv2/Tclust_compressor.json
+
+    fpga_dcomp:
+        cfg: ../../../build/bmv2/Tclust_decompressor.json
+
+    dropper:
+        cfg: ../../../build/bmv2/Forwarder.json
+        interfaces:
+            - link: tofino1
+              port: 0
+            - link: tofino2
+              port: 1
+        cmds:
+            - table_add forward set_egress 0 => 1
+            - table_add forward set_egress 1 => 0
+
+    tofino2:
+        cfg: ../../../build/bmv2/Tclust_tofino.json
+        interfaces:
+            - link: dropper
+              port: 20
+            - link: fpga_decd
+              port: 122
+            - link: iperf_s
+              port: 3
+            - link: mcd_s
+              port: 4
+            - link: fpga_dcomp
+              port: 131
+        cmds:
+            # Enable compression from port 20
+            - table_add ingress_compression.boost ingress_compression.set_enabled 20 => 1
+            # (decoding should be enabled because of FEC header)
+
+            # Set egress ports for MAC addresses
+            - table_add mac_forwarding set_egress 0x221111111120 => 20
+            - table_add mac_forwarding set_egress 0x221111111121 => 20
+            - table_add mac_forwarding set_egress 0x221111111122 => 3
+            - table_add mac_forwarding set_egress 0x221111111123 => 4
+
+            - table_add offload set_egress 2 => 122 # DECODER
+            - table_add offload set_egress 4 => 131 # DECOMPRESSOR
+            - table_add offload strip_fp_hdr 12 =>   # FORWARD
