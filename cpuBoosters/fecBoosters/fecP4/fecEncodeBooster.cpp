@@ -5,8 +5,9 @@
 
 static void encode_and_forward(tclass_type tclass, int egress_port, encode_forward_fn forward,
                                int block_id, int k, int h) {
-    size_t template_size = sizeof(struct ether_header);
-    u_char template_packet[template_size];
+    FRAME_SIZE_TYPE template_size;
+    u_char *template_packet = retrieve_from_pkt_buffer(tclass, egress_port, block_id,
+                                                       0, &template_size);
     struct ether_header *template_header = (struct ether_header *)template_packet;
     template_header->ether_type = 0;
 
@@ -23,6 +24,8 @@ static void encode_and_forward(tclass_type tclass, int egress_port, encode_forwa
         }
     }
 
+
+
     populate_fec_blk_data(tclass, egress_port, block_id);
     encode_block();
 
@@ -37,6 +40,9 @@ static void encode_and_forward(tclass_type tclass, int egress_port, encode_forwa
                          tagged_pkt, &tagged_size);
 
         LOG_INFO("Forwarding parity packet with size %zd", tagged_size);
+        struct ether_header *parity_hdr = (struct ether_header*)tagged_pkt;
+        memcpy(parity_hdr->ether_dhost, template_header->ether_dhost, ETH_ALEN);
+        memcpy(parity_hdr->ether_shost, template_header->ether_shost, ETH_ALEN);
         forward(tagged_pkt, tagged_size, egress_port);
     }
 }
