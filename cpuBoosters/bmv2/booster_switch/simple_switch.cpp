@@ -70,7 +70,7 @@ REGISTER_HASH(bmv2_hash);
 extern int import_primitives(SimpleSwitch *simple_switch);
 
 packet_id_t SimpleSwitch::packet_id = 0;
-copy_id_t SimpleSwitch::booster_id = 0;
+copy_id_t SimpleSwitch::booster_id = 1;
 
 class SimpleSwitch::MirroringSessions {
  public:
@@ -767,19 +767,24 @@ SimpleSwitch::create_booster_packet(Packet *src, int ingress_port,
     auto booster_pkt = new_packet_ptr(
         ingress_port, pkt_id, len, bm::PacketBuffer(len + 512, (char *)payload, len)
     );
-    PHV *phv = booster_pkt->get_phv();
+    PHV *new_phv = booster_pkt->get_phv();
     if (src) {
-        phv->copy_headers(*src->get_phv());
-        for (auto it = phv->header_begin(); it != phv->header_end(); it++) {
-            if (!it->is_metadata()) {
-                it->reset();
+        PHV *orig_phv = src->get_phv();
+        new_phv->copy_headers(*orig_phv);
+        // Invalid headers must be copied over separately
+        for (auto it = new_phv->header_name_begin();
+                  it != new_phv->header_name_end();
+                  it++) {
+            bm::Header &h = it->second;
+            if (!h.is_valid()) {
+                h.copy_fields(orig_phv->get_header(it->first));
             }
         }
     }
 
-    phv->get_field("standard_metadata.packet_length").set(len);
+    new_phv->get_field("standard_metadata.packet_length").set(len);
     booster_pkt->set_ingress_port(ingress_port);
-    phv->get_field("standard_metadata.ingress_port").set(ingress_port);
+    new_phv->get_field("standard_metadata.ingress_port").set(ingress_port);
     booster_pkt->set_register(PACKET_LENGTH_REG_IDX, len);
     booster_pkt->set_copy_id(booster_id++);
     return std::move(booster_pkt);
