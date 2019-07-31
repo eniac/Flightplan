@@ -6,9 +6,7 @@ control Compress(inout headers_t hdr,
                  inout metadata_t md) {
     apply {
         bit<1> forward;
-        hdr.fp.setInvalid();
-        header_compress(forward);
-        hdr.fp.setValid();
+        header_compress_fp(forward, hdr.fp);
         if (forward == 0) {
             drop();
             return;
