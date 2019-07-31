@@ -6,14 +6,13 @@
  
  namespace bm {
  
-@@ -100,6 +101,11 @@ class Packet final {
+@@ -100,6 +101,10 @@ class Packet final {
    friend class Switch;
  
   public:
 +
 +  const bm::ControlFlowNode *current_node = nullptr;
 +  const bm::ControlFlowNode *entry_node = nullptr;
-+  std::unique_ptr<Packet> boosted_packet;
 +
    using clock = std::chrono::system_clock;
  
