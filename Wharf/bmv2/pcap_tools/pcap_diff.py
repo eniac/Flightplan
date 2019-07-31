@@ -15,7 +15,7 @@ def strrep(pkt):
     try:
         return str(pkt)[0:14 + pkt[IP].len]
     except:
-        return None
+        return str(pkt)
 
 in_cap = rdpcap(args.input)
 out_cap = rdpcap(args.output)
