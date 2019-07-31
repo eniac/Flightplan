@@ -4,13 +4,10 @@ extern void update_fec_state(in tclass_t tclass,
                              in bit<FEC_K_WIDTH> k, in bit<FEC_H_WIDTH> h,
                              out bindex_t block_index, out pindex_t packet_index);
 
-extern void fec_encode(in fec_h fec,
-                       in bit<FEC_K_WIDTH> k,
-                       in bit<FEC_H_WIDTH> h);
-
-extern void fec_decode(in fec_h fec,
-                       in bit<FEC_K_WIDTH> k,
-                       in bit<FEC_H_WIDTH> h);
+extern void fec_encode_fp(in fec_h fec,
+                          in bit<FEC_K_WIDTH> k,
+                          in bit<FEC_H_WIDTH> h,
+                          in flightplan_h fp);
 
 control Encode(inout headers_t hdr,
                inout booster_metadata_t bmd,
@@ -47,6 +44,10 @@ control Encode(inout headers_t hdr,
     }
 
     apply {
+        if (!hdr.eth.isValid()) {
+            drop();
+            return;
+        }
         if (hdr.tcp.isValid()) {
             proto_and_port = hdr.ipv4.proto ++ hdr.tcp.dport;
         } else if (hdr.udp.isValid()) {
@@ -62,9 +63,7 @@ control Encode(inout headers_t hdr,
                 update_fec_state(hdr.fec.traffic_class, k, h,
                                  hdr.fec.block_index, hdr.fec.packet_index);
                 hdr.fec.orig_ethertype = hdr.eth.type;
-                hdr.fp.setInvalid();
-                fec_encode(hdr.fec, k, h);
-                hdr.fp.setValid();
+                fec_encode_fp(hdr.fec, k, h, hdr.fp);
                 hdr.eth.type = ETHERTYPE_WHARF;
             } else {
                 hdr.fec.setInvalid();
