@@ -19,6 +19,7 @@ def split_op(j, op):
 
     id_map = {}
     split_actions = defaultdict(list)
+    action_names = {}
 
     for action in j['actions']:
         p1 = []
@@ -26,6 +27,7 @@ def split_op(j, op):
         p3 = []
         id_map[action['id']] = action['id'] + id_offset
         action['id'] += id_offset
+        action_names[action['name']] = action['name']
         for primitive in action['primitives']:
             if primitive['op'] != op:
                 if p2 is None:
@@ -52,6 +54,7 @@ def split_op(j, op):
             a2['primitives'] = [p2]
             id_offset += 1
             split_actions[action['name']].append(a2)
+            action_names[action['name']] = a2['name']
 
         actions.append(a2)
 
@@ -92,12 +95,12 @@ def split_op(j, op):
             t_init = copy.deepcopy(table)
             for i, action in enumerate(split_actions[name]):
                 t_next = copy.deepcopy(t_init)
-                t_next['name'] += '_' + str(i + 2)
+                t_next['name'] += '_' + str(i+2)
                 t_next['id'] += i + 1
                 id_offset += 1
 
                 t_next['action_ids'] = [x+1 + i for x in t_next['action_ids']]
-                t_next['actions'] = [x + "_" + str(i + 2) for x in t_next['actions']]
+                t_next['actions'] = [action_names[x] for x in t_next['actions']]
                 t_next['default_entry']['action_id'] = t_next['action_ids'][0]
 
                 t_prev['base_default_next'] = t_next['name']
