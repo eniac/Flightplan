@@ -29,7 +29,8 @@ TARGET=TARGET_BMV2
 
 USER=$(shell logname)
 
-EXTERNS=fec_encode fec_decode memcached header_compress header_decompress
+EXTERNS=fec_encode fec_decode memcached header_compress header_decompress \
+		fec_encode_fp fec_decode_fp memcached_fp header_compress_fp header_decompress_fp
 
 All: bmv2 Sample
 
@@ -45,7 +46,8 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json \
 	$(BLD_BMV2)/MAC_Forwarder.json $(BLD_BMV2)/MAC_FEC_Forwarder.json $(BLD_BMV2)/MAC_FEC_offload_Forwarder.json $(BLD_BMV2)/MAC_FEC_enc_offload_Fwd.json $(BLD_BMV2)/MAC_enc_Fwd.json $(BLD_BMV2)/MAC_HC_FEC_offload_Fwd.json $(BLD_BMV2)/MAC_HC_Fwd.json $(BLD_BMV2)/MAC_MCD_Forwarder.json $(BLD_BMV2)/MAC_mcd_offloader.json
 
-tclust: Tclust_tofino Tclust_encoder Tclust_compressor Tclust_decompressor Tclust_noop
+tclust: Tclust_tofino Tclust_tofino_core_1 Tclust_tofino_core_2 \
+	Tclust_encoder Tclust_decoder Tclust_compressor Tclust_decompressor Tclust_mcd Tclust_noop
 
 %: $(BLD_BMV2)/%.json;
 
