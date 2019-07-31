@@ -46,6 +46,7 @@ switches:
         cmds:
             # Enable compression and encoding out of port 19
             - table_add egress_compression.boost egress_compression.set_enabled 19 => 1
+            - table_add egress_encoding.boost egress_encoding.set_enabled 19 => 1
 
             # Set basic egress ports for mac addresses
             - table_add mac_forwarding set_egress 0x221111111120 => 1
@@ -57,16 +58,20 @@ switches:
             - table_add offload set_egress 8 => 130  # COMPRESSOR
             - table_add offload set_egress 6 => 120  # KV_STORE
             - table_add offload set_egress 10 => 121 # ENCODER
-            - table_add offload strip_fp_hdr 0xc =>   # FORWARD
+            - table_add offload strip_fp_hdr 12 =>   # FORWARD
 
     fpga_mcd:
         cfg: ../../../build/bmv2/Tclust_noop.json
 
     fpga_encd:
-        cfg: ../../../build/bmv2/Tclust_noop.json
+        cfg: ../../../build/bmv2/Tclust_encoder.json
+        cmds:
+            - table_add fec_params set_k_h 0 => 5 1
 
     fpga_decd:
-        cfg: ../../../build/bmv2/Tclust_noop.json
+        cfg: ../../../build/bmv2/Tclust_decoder.json
+        cmds:
+            - table_add fec_params set_k_h 0 => 5 1
 
     fpga_comp:
         cfg: ../../../build/bmv2/Tclust_compressor.json
@@ -75,7 +80,7 @@ switches:
         cfg: ../../../build/bmv2/Tclust_decompressor.json
 
     dropper:
-        cfg: ../../../build/bmv2/Forwarder.json
+        cfg: ../../../build/bmv2/Dropper.json
         interfaces:
             - link: tofino1
               port: 0
@@ -84,6 +89,7 @@ switches:
         cmds:
             - table_add forward set_egress 0 => 1
             - table_add forward set_egress 1 => 0
+            - table_add dropper set_drop_rate 1 => 3 5
 
     tofino2:
         cfg: ../../../build/bmv2/Tclust_tofino.json
@@ -99,7 +105,6 @@ switches:
             - link: fpga_dcomp
               port: 131
         cmds:
-            # Enable compression from port 20
             - table_add ingress_compression.boost ingress_compression.set_enabled 20 => 1
 
             # Set egress ports for MAC addresses
