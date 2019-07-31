@@ -5,26 +5,28 @@
 
 static void encode_and_forward(tclass_type tclass, int egress_port, encode_forward_fn forward,
                                int block_id, int k, int h) {
-    FRAME_SIZE_TYPE template_size;
-    u_char *template_packet = retrieve_from_pkt_buffer(tclass, egress_port, block_id,
-                                                       0, &template_size);
-    struct ether_header *template_header = (struct ether_header *)template_packet;
-    template_header->ether_type = 0;
+    FRAME_SIZE_TYPE hdr_size = sizeof(struct ether_header);
+    u_char hdr_packet[hdr_size];
+    struct ether_header *hdr_ether = (struct ether_header *)hdr_packet;
+    hdr_ether->ether_type = 0;
 
     size_t empty_size = WHARF_TAG_SIZE;
     u_char empty_packet[empty_size];
     for (int i=0; i < k; i++) {
         if (!pkt_already_inserted(tclass, egress_port, block_id, i)) {
             wharf_tag_data(tclass, block_id, i,
-                           template_packet, template_size, empty_packet, &empty_size);
+                           hdr_packet, hdr_size, empty_packet, &empty_size);
             LOG_INFO("Forwarding empty packet size %zu", empty_size);
             forward(empty_packet, empty_size, egress_port);
             insert_into_pkt_buffer(tclass, egress_port, block_id, i,
-                                   template_size, template_packet);
+                                   hdr_size, hdr_packet);
         }
     }
 
-
+    FRAME_SIZE_TYPE template_size;
+    u_char *template_packet = retrieve_from_pkt_buffer(tclass, egress_port, block_id,
+                                                       0, &template_size);
+    struct ether_header *template_header = (struct ether_header *)template_packet;
 
     populate_fec_blk_data(tclass, egress_port, block_id);
     encode_block();
