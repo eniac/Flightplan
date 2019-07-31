@@ -96,7 +96,7 @@ control OffloadForwarder(inout headers_t hdr,
             next_segment = SEG_COMPRESS;
             segment_set = 1;
         }
-        hdr.fp.to_segment = SEG_ENCODE;
+        hdr.fp.to_segment = SEG_ENCODE - 1;
     }
 
     action kv_store() {
@@ -104,7 +104,7 @@ control OffloadForwarder(inout headers_t hdr,
             next_segment = SEG_KV_STORE;
             segment_set = 1;
         }
-        hdr.fp.to_segment = SEG_COMPRESS;
+        hdr.fp.to_segment = SEG_COMPRESS - 1;
     }
 
     action hc_decompress() {
