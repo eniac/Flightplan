@@ -29,7 +29,7 @@ hosts:
 
 switches:
     tofino1:
-        cfg: ../../../build/bmv2/Tclust_tofino_core_1.json
+        cfg: ../../../build/bmv2/Tclust_tofino.json
         interfaces:
             - link: dropper
               port: 19
@@ -47,6 +47,11 @@ switches:
             # Enable encoding out of port 19
             - table_add egress_encoding.boost egress_encoding.set_enabled 19 => 1
             - table_add egress_compression.boost egress_compression.set_enabled 19 => 1
+
+            # Enable k-v store for                                  UDP       source=11211
+            - table_add kv_booster.boost kv_booster.set_enabled 0x11&&&0xFF 0x2BCB&&&0xFFFF 0x0000&&&0x0000 => 1 1
+            # Enable k-v store for                                  UDP                        dest=11211
+            - table_add kv_booster.boost kv_booster.set_enabled 0x11&&&0xFF 0x0000&&&0x0000 0x2BCB&&&0xFFFF => 1 2
 
             # Set basic egress ports for mac addresses
             - table_add mac_forwarding set_egress 0x221111111120 => 1
@@ -91,7 +96,7 @@ switches:
             - table_add forward set_egress 1 => 0
 
     tofino2:
-        cfg: ../../../build/bmv2/Tclust_tofino_core_2.json
+        cfg: ../../../build/bmv2/Tclust_tofino.json
         interfaces:
             - link: dropper
               port: 20

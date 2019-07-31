@@ -25,6 +25,27 @@ control BoostedLink(in bit<9> port, out bit<1> enabled) {
     }
 }
 
+control BoostedProtocol(in bit<8> proto, in bit<16> sport, in bit<16> dport, out bit<1> enabled) {
+
+    action set_enabled(bit<1> on) {
+        enabled = on;
+    }
+
+    table boost {
+        key = {
+            proto : ternary;
+            sport : ternary;
+            dport : ternary;
+        }
+        actions = { set_enabled; }
+        default_action = set_enabled(0);
+    }
+
+    apply {
+        boost.apply();
+    }
+}
+
 control OffloadForwarder(inout headers_t hdr,
                          inout booster_metadata_t bmd,
                          inout metadata_t md) {
@@ -32,10 +53,12 @@ control OffloadForwarder(inout headers_t hdr,
     BoostedLink() ingress_compression;
     BoostedLink() egress_compression;
     BoostedLink() egress_encoding;
+    BoostedProtocol() kv_booster;
 
     bit<1> faulty_egress;
     bit<1> compressed_egress;
     bit<1> compressed_ingress;
+    bit<1> kv_booster_enabled;
     bit<SEGMENT_DESC_SIZE> next_segment = 0;
 
     action set_egress(bit<9> port) {
@@ -100,7 +123,7 @@ control OffloadForwarder(inout headers_t hdr,
     }
 
     action kv_store() {
-        if (hdr.udp.dport == 11211 || hdr.udp.sport == 11211) {
+        if (kv_booster_enabled == 1) {
             next_segment = SEG_KV_STORE;
             segment_set = 1;
         }
@@ -209,6 +232,16 @@ control OffloadForwarder(inout headers_t hdr,
         ingress_compression.apply(md.ingress_port, compressed_ingress);
         egress_compression.apply(md.egress_spec, compressed_egress);
         egress_encoding.apply(md.egress_spec, faulty_egress);
+        bit<16> sport = 0;
+        bit<16> dport = 0;
+        if (hdr.tcp.isValid()) {
+            sport = hdr.tcp.sport;
+            dport = hdr.tcp.dport;
+        } else if (hdr.udp.isValid()) {
+            sport = hdr.udp.sport;
+            dport = hdr.udp.dport;
+        }
+        kv_booster.apply(hdr.ipv4.proto, sport, dport, kv_booster_enabled);
         segment_match.apply();
         offload.apply();
     }
