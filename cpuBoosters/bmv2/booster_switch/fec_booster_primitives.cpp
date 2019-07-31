@@ -58,7 +58,6 @@ using bm::RegisterArray;
 using bm::NamedCalculation;
 using bm::HeaderStack;
 
-
 class update_fec_state : public BoosterExtern<const Data &, const Data &, const Data &,
                                               Data &, Data &> {
     using BoosterExtern::BoosterExtern;
@@ -113,14 +112,17 @@ class get_port_status: public BoosterExtern<const Data &, Data &> {
     }
 };
 
-/**
- * Version of fec_encode extern which automatically finds headers
- */
-class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
-    using BoosterExtern::BoosterExtern;
+template <typename... Args>
+class fec_encode_core : public BoosterExtern<Header &, const Data &, const Data &, Args...> {
+    // Inherit constructor
+    using BoosterExtern<Header &, const Data &, const Data &, Args...>::BoosterExtern;
 
-    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
-        if (is_generated()) {
+protected:
+    void core(Header &fec_h, const Data &k_d, const Data &h_d, Header *fp_h) {
+        if (this->is_generated()) {
+            if (fp_h != nullptr) {
+                fp_h->mark_valid();
+            }
             return;
         }
         Packet &packet = this->get_packet();
@@ -128,6 +130,9 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
         int egress_port = phv->get_field("standard_metadata.egress_spec").get_int();
         BMLOG_DEBUG("Attempting fec encode of pkt with egress {}", egress_port);
         int ingress_port = packet.get_ingress_port();
+
+        if (fp_h != nullptr)
+            fp_h->mark_invalid();
 
         // Must save packet state so it can be restored after deparsing
         const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
@@ -138,10 +143,10 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
         bool is_fec_valid = fec_h.is_valid();
         fec_h.mark_invalid();
 
-        auto deparser = get_p4objects()->get_deparser("deparser");
-
-        // Deparsing the packet makes the headers readable in packet.data()
+        auto deparser = this->get_p4objects()->get_deparser("deparser");
+        // Deparse the packet and get the packet state so it can be restored later
         deparser->deparse(&packet);
+        //const Packet::buffer_state_t packet_in_state = this->deparse_packet();
 
         char *buff = packet.data();
         size_t buff_size = packet.get_data_size();
@@ -154,15 +159,19 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
         // (egress_port is ignored here -- can be obtained from the template packet)
         auto forwarder = [&](const u_char *payload, size_t len, int egress_port) {
             (void)egress_port;
-            generate_packet((const char*)payload, len, ingress_port);
+            this->generate_packet((const char*)payload, len, ingress_port);
         };
         // Does the actual external work
         fec_encode_p4_packet((u_char *)buff, buff_size, fec, egress_port, k, h, 2000, forwarder);
 
         BMLOG_DEBUG("Fec index {:d}", fec->index);
+        this->reparse_packet(packet_in_state);
         packet.restore_buffer_state(packet_in_state);
         if (is_fec_valid)
             fec_h.mark_valid();
+
+        if (fp_h != nullptr)
+            fp_h->mark_valid();
 
         // Must set buffer size in fec header explicitly
         uint16_t buff_size_16 = buff_size;
@@ -172,26 +181,53 @@ class fec_encode : public BoosterExtern<Header &, const Data &, const Data &> {
 
     void timeout_handler () {
         auto forwarder = [&](const u_char *payload, size_t len, int egress_port) {
-            output_packet((const char *)payload, len, egress_port);
+            this->output_packet((const char *)payload, len, egress_port);
         };
         fec_encode_timeout_handler(forwarder);
     }
-
     // TODO: FIX BY BRINGING IN NEW PERIODIC SEMANTICS
     // Placing this call inside the class only registers it only
     // when the class is instantiated (i.e. only if the extern is used)
     // REGISTER_PERIODIC_CALL(timeout_handler);
 };
 
-class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
-    using BoosterExtern::BoosterExtern;
+/** FEC encode without flightplan header */
+class fec_encode : public fec_encode_core<> {
+    using fec_encode_core::fec_encode_core;
 
     void operator ()(Header &fec_h, const Data &k_d, const Data &h_d) {
-        if (is_generated()) {
+        core(fec_h, k_d, h_d, nullptr);
+    }
+};
+
+/** FEC encode with flightplan header */
+class fec_encode_fp : public fec_encode_core<Header &> {
+    using fec_encode_core::fec_encode_core;
+
+    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d, Header &fp_h) {
+        core(fec_h, k_d, h_d, &fp_h);
+    }
+};
+
+template <typename ...Args>
+class fec_decode_core : public BoosterExtern<Header &, const Data &, const Data &, Args...> {
+    // Inherit constructor
+    using BoosterExtern<Header &, const Data &, const Data &, Args...>::BoosterExtern;
+
+protected:
+    void core(Header &fec_h, const Data &k_d, const Data &h_d, Header *fp_h) {
+        if (this->is_generated()) {
+            boosters::printHeader(fec_h);
+            if (fp_h != nullptr) {
+                fp_h->mark_valid();
+            }
             return;
         }
-        Packet &packet = get_packet();
+        Packet &packet = this->get_packet();
         int ingress_port = packet.get_ingress_port();
+
+        if (fp_h != nullptr)
+            fp_h->mark_invalid();
 
         // Must save packet state so it can be restored after deparsing
         const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
@@ -200,7 +236,7 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
         fec_h.mark_invalid();
 
         // Deparse packet so valid headers are available in packet.data()
-        auto deparser = get_p4objects()->get_deparser("deparser");
+        auto deparser = this->get_p4objects()->get_deparser("deparser");
         deparser->deparse(&packet);
 
         char *buff = packet.data();
@@ -215,14 +251,14 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
 
         // Set up function that will forward the packets 
         auto forwarder = [&](const u_char *payload, size_t len) {
-            generate_packet((const char*)payload, len, ingress_port);
+            this->generate_packet((const char*)payload, len, ingress_port);
         };
 
         auto dropper = [&]() {
             // Mark to drop
-            get_field("standard_metadata.egress_spec").set(511);
-            if (get_phv().has_field("intrinsic_metadata.mcast_grp")) {
-                get_field("intrinsic_metadata.mcast_grp").set(0);
+            this->get_field("standard_metadata.egress_spec").set(511);
+            if (this->get_phv().has_field("intrinsic_metadata.mcast_grp")) {
+                this->get_field("intrinsic_metadata.mcast_grp").set(0);
             }
             BMLOG_DEBUG("Marked to drop decoded packet");
         };
@@ -237,11 +273,34 @@ class fec_decode : public BoosterExtern<Header &, const Data &, const Data &> {
         uint16_t pkt_len = ntohs(packet_len_f.get<uint16_t>());
 
         fec_decode_p4_packet((const u_char*)buff, (size_t)pkt_len, fec, ingress_port, k, h, forwarder, dropper);
-        packet.restore_buffer_state(packet_in_state);
+        this->reparse_packet(packet_in_state);
         if (is_fec_valid)
             fec_h.mark_valid();
+        if (fp_h != nullptr)
+            fp_h->mark_valid();
     }
 };
+
+/** FEC decode without flightplan header */
+class fec_decode : public fec_decode_core<> {
+    // Inherit the constructor
+    using fec_decode_core::fec_decode_core;
+
+    void operator()(Header &fec_h, const Data &k_d, const Data &h_d) {
+        core(fec_h, k_d, h_d, nullptr);
+    }
+};
+
+/** FEC decode with flightplan header */
+class fec_decode_fp : public fec_decode_core<Header &> {
+    // Inherit the constructor
+    using fec_decode_core::fec_decode_core;
+
+    void operator ()(Header &fec_h, const Data &k_d, const Data &h_d, Header &fp_h) {
+        core(fec_h, k_d, h_d, &fp_h);
+    }
+};
+
 class random_drop : public BoosterExtern<const Data &, const Data &, const Data &> {
     using BoosterExtern::BoosterExtern;
 
@@ -301,7 +360,9 @@ int import_fec_booster_primitives(SimpleSwitch *sswitch) {
   REGISTER_BOOSTER_EXTERN(set_port_status, sswitch);
   REGISTER_BOOSTER_EXTERN(get_port_status, sswitch);
   REGISTER_BOOSTER_EXTERN(fec_encode, sswitch);
+  REGISTER_BOOSTER_EXTERN(fec_encode_fp, sswitch);
   REGISTER_BOOSTER_EXTERN(fec_decode, sswitch);
+  REGISTER_BOOSTER_EXTERN(fec_decode_fp, sswitch);
   REGISTER_BOOSTER_EXTERN(random_drop, sswitch);
   REGISTER_BOOSTER_EXTERN(print_headers, sswitch);
   return 0;
