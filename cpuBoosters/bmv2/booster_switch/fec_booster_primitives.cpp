@@ -42,7 +42,6 @@
 
 #include <iostream>
 #include <fstream>
-#define PACKET_LENGTH_REG_IDX 0
 
 template <typename... Args>
 using BoosterExtern = boosters::BoosterExtern<Args...>;
