@@ -78,13 +78,23 @@ class SimpleSwitch::MirroringSessions {
   bool add_session(mirror_id_t mirror_id,
                    const MirroringSessionConfig &config) {
     Lock lock(mutex);
-    sessions_map[mirror_id] = config;
-    return true;
+    if (0 <= mirror_id && mirror_id <= RegisterAccess::MAX_MIRROR_SESSION_ID) {
+      sessions_map[mirror_id] = config;
+      return true;
+     } else {
+      bm::Logger::get()->error("mirror_id out of range. No session added.");
+      return false;
+    }
   }
 
   bool delete_session(mirror_id_t mirror_id) {
     Lock lock(mutex);
-    return sessions_map.erase(mirror_id) == 1;
+    if (0 <= mirror_id && mirror_id <= RegisterAccess::MAX_MIRROR_SESSION_ID) {
+      return sessions_map.erase(mirror_id) == 1;
+    } else {
+      bm::Logger::get()->error("mirror_id out of range. No session deleted.");
+      return false;
+    }
   }
 
   bool get_session(mirror_id_t mirror_id,
@@ -247,6 +257,7 @@ SimpleSwitch::receive_(port_t port_num, const char *buffer, int len) {
   // many current P4 programs assume this
   // it is also part of the original P4 spec
   phv->reset_metadata();
+  RegisterAccess::clear_all(packet.get());
 
   // setting standard metadata
 
@@ -790,6 +801,7 @@ SimpleSwitch::create_booster_packet(Packet *src, int ingress_port,
         }
     }
 
+    RegisterAccess::clear_all(booster_pkt.get());
     new_phv->get_field("standard_metadata.packet_length").set(len);
     booster_pkt->set_ingress_port(ingress_port);
     new_phv->get_field("standard_metadata.ingress_port").set(ingress_port);
