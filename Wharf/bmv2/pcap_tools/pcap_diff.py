@@ -7,11 +7,20 @@ import difflib
 parser = argparse.ArgumentParser()
 parser.add_argument('input', type=str)
 parser.add_argument('output', type=str)
+parser.add_argument('--no-ip', action='store_true', help='Compare TCP/UDP headers and payload only')
+parser.add_argument('--clear-chksum', action='store_true', help='Clear UDP checksum before comparison')
 parser.add_argument('--show', type=int, required=False, default=0)
 parser.add_argument('--diff', type=int, required=False, default=0)
 args = parser.parse_args()
 
 def strrep(pkt):
+    if UDP in pkt and args.clear_chksum:
+        pkt[UDP].chksum = 0
+    if args.no_ip:
+        if UDP in pkt:
+            return str(pkt[UDP])
+        if TCP in pkt:
+            return str(pkt[TCP])
     try:
         return str(pkt)[0:14 + pkt[IP].len]
     except:
