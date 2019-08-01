@@ -46,8 +46,8 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json \
 	$(BLD_BMV2)/MAC_Forwarder.json $(BLD_BMV2)/MAC_FEC_Forwarder.json $(BLD_BMV2)/MAC_FEC_offload_Forwarder.json $(BLD_BMV2)/MAC_FEC_enc_offload_Fwd.json $(BLD_BMV2)/MAC_enc_Fwd.json $(BLD_BMV2)/MAC_HC_FEC_offload_Fwd.json $(BLD_BMV2)/MAC_HC_Fwd.json $(BLD_BMV2)/MAC_MCD_Forwarder.json $(BLD_BMV2)/MAC_mcd_offloader.json
 
-tclust: Tclust_tofino Tclust_tofino_core_1 Tclust_tofino_core_2 \
-	Tclust_encoder Tclust_decoder Tclust_compressor Tclust_decompressor Tclust_mcd Tclust_noop
+tclust: Tclust_tofino Tclust_noop \
+	Tclust_encoder Tclust_decoder Tclust_compressor Tclust_decompressor Tclust_mcd
 
 %: $(BLD_BMV2)/%.json;
 
@@ -61,7 +61,7 @@ $(BLD_BMV2):
 configure_runtime: bmv2
 	cd ../cpuBoosters/bmv2 && make configure BOOSTERS="${BOOSTERS}" && make BOOSTERS="${BOOSTERS}"
 
-$(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BMV2_REPO_M)/targets/booster_switch/Makefile
+$(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BMV2_REPO_M)/targets/booster_switch/Makefile $(BLD_BMV2)
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/ -I Sources $< -o $@_orig --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
 	python2 split_extern_event.py $@_orig $@ ${EXTERNS}
 

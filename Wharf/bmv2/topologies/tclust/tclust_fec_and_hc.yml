@@ -29,7 +29,7 @@ hosts:
 
 switches:
     tofino1:
-        cfg: ../../../build/bmv2/Tclust_tofino.json_orig
+        cfg: ../../../build/bmv2/Tclust_tofino.json
         interfaces:
             - link: dropper
               port: 19

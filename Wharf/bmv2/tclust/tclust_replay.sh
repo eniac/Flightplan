@@ -46,9 +46,9 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --time 1 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
-    echo Error running flightplan_mininet.py
-    echo Check logs in $LOG_DUMPS for more details:
-    ls -1 $LOG_DUMPS/*
+    echo Error running flightplan_mininet.py >&2
+    echo Check logs in $LOG_DUMPS for more details: >&2
+    ls -1 $LOG_DUMPS/* >&2
     echo -e $FAILURE >&2
     exit -1;
 fi
