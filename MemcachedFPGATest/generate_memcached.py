@@ -15,50 +15,67 @@ class PacketGenerator:
     SET_SYNTAX = '{cmd} {key} 0 0 {bytes} \r\n{payload}\r\n'
     GET_SYNTAX = '{cmd} {key}\r\n'
 
-    def __init__(self, src_mac, dst_mac, src_ip, dst_ip, sport = 12345, dport = 11211):
-
-        self.Pkt = bytes(Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport,chksum=0))
+    def __init__(self, src_mac, dst_mac, src_ip, dst_ip, sport = 12345, dport = 11211, val_len=512):
+        self.get_hdr = Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport,chksum=0)
+        self.set_hdr = Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport,chksum=0)
+        self.get_hdr_bytes = None
+        self.set_hdr_bytes = None
         random.seed(time.time())
-        self.cur_id = random.randint(0, 100)
+        self.val_len = val_len
+        self.possible_ids = set(range(65536))
+        self.used_set_ids = defaultdict(set)
+        self.used_get_ids = defaultdict(set)
 
-    def udp_hdr(self, payload_len):
-        hdr = list(self.Pkt[:])
-        # Replace udp length
-        pktlen = struct.pack('!H', payload_len+8)
-        hdr[-4] = pktlen[0]
-        hdr[-3] = pktlen[1]
 
-        iplen = struct.pack('!H', payload_len+28)
-        hdr[16] = iplen[0]
-        hdr[17] = iplen[1]
+    def hdr(self, key, used_ids):
+        # Try 10 random keys before having to compute set difference
+        for _ in range(10):
+            id = random.randint(0, 65535)
+            # Try the fast-path (randomness) first
+            if id not in used_ids[key]:
+                used_ids[key].add(id)
+                break
+        else:
+            unused_ids = self.possible_ids.difference(used_ids[key])
+            if len(unused_ids) > 0:
+                id = random.sample(unused_ids, 1)[0]
+                used_ids[key].add(id)
+            else:
+                print("Reusing for key {}".format(key))
+                id = random.randint(1, 65535)
 
-        return b''.join(hdr)
 
-    def hdr(self):
-        h = b''.join([struct.pack(">H", x) for x in [self.cur_id, 0, 1, 0]])
-        self.cur_id+= 1
-        self.cur_id %= 65535
+        h = b''.join([struct.pack(">H", x) for x in [id, 0, 1, 0]])
         return h
 
-    def set(self, key, nbytes=512):
+    def set(self, key):
         key = "{:08d}".format(key)
 
-        load = (key + '-') * (nbytes)
-        load = load[:nbytes]
+        load = (key + '-') * (self.val_len)
+        load = load[:self.val_len]
 
-        load = bytes(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=nbytes, payload=load))
+        load = bytes(self.hdr(key, self.used_set_ids) +
+                      self.SET_SYNTAX.format(cmd='set', key=key, bytes=self.val_len, payload=load))
 
-        pkt = self.udp_hdr(len(load)) + load
+        if self.set_hdr_bytes is None:
+            self.set_hdr[IP].len = len(load) + 28
+            self.set_hdr[UDP].len = len(load) + 8
+            self.set_hdr_bytes = bytes(self.set_hdr)
 
-        return pkt
+        return self.set_hdr_bytes + load
 
     def get(self, key):
         key = "{:08d}".format(key)
 
-        load = bytes(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key))
-        pkt = self.udp_hdr(len(load)) + load
+        load = bytes(self.hdr(key, self.used_get_ids) +
+                     self.GET_SYNTAX.format(cmd='get', key=key))
 
-        return pkt
+        if self.get_hdr_bytes is None:
+            self.get_hdr[IP].len = len(load) + 28
+            self.get_hdr[UDP].len = len(load) + 8
+            self.get_hdr_bytes = bytes(self.get_hdr)
+
+        return self.get_hdr_bytes + load
 
 def parse_args():
     parser = argparse.ArgumentParser()
