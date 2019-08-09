@@ -1,5 +1,6 @@
 from __future__ import print_function
 from scapy.all import *
+import dpkt
 import yaml
 import sys
 from collections import defaultdict
@@ -75,7 +76,9 @@ def show_size(n1, n2, sizes, out_dir):
     size = 0
     n = 0
 
-    for pkt in rdpcap(open(filename, 'rb')):
+    f = open(filename, 'rb')
+    pcap=dpkt.pcap.Reader(f)
+    for _, pkt in pcap:
         size += len(pkt)
         n += 1
 
