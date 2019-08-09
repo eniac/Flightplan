@@ -5,7 +5,7 @@ if [[ $# != 3 ]]; then
     exit 1
 fi
 
-HERE=$(realpath "`dirname $0`/../")
+HERE=$(realpath "`dirname $0`/../" --relative-to $(pwd) )
 
 TOPO="$1"
 INPUT=`realpath $2`

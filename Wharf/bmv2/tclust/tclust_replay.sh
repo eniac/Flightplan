@@ -5,10 +5,10 @@ if [[ $# != 2 ]]; then
     exit 1
 fi
 
-HERE="`dirname $0`/../"
+HERE="$(realpath `dirname $0`/../ --relative-to $(pwd))"
 
 TOPO="$1"
-INPUT=`realpath $2`
+INPUT=`realpath $2 --relative-to $(pwd)`
 BASENAME=$(basename $INPUT .pcap)
 
 SIP="10.0.0.11"
