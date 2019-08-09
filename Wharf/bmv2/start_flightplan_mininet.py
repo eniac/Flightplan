@@ -30,6 +30,7 @@ from mininet.net import Mininet
 from mininet.topo import Topo
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
+from mininet.link import TCLink
 
 from flightplan_p4_mininet import P4Switch, P4Host, send_commands
 
@@ -51,11 +52,17 @@ parser.add_argument('--cli', help='Run CLI',
                     action='store_true')
 parser.add_argument('--bmv2-exe', help='Path to bmv2 executable',
                     type=str, required=False, default=None)
-parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2',
+parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2. '
+                                     'Syntax = "from-to:file.pcap"',
                     type=str, action='store', required=False, default=False)
 parser.add_argument('--host-prog', help='Run a program on a host. Syntax = "hostname:program to run"',
                     type=str, action='append', required=False, default=[])
+parser.add_argument('--pre-replay', help='Provide a pcap file to be played before a host program '
+                    'in the background. Syntax = "from-to:file.pcap:bg (0 or 1)[:speed]"',
+                    type=str, action='append', required=False, default=[])
 parser.add_argument('--time', help='Time to run mininet for',
+                    type=int, required=False, default=1)
+parser.add_argument('--bw', help='Bandwidth for all links in Mbps',
                     type=int, required=False, default=1)
 
 class TopoSpecError(Exception):
@@ -66,7 +73,7 @@ class FPTopo(Topo):
     def cfgpath(self, path):
         return os.path.join(self.cfgbase, path)
 
-    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file):
+    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file, bw):
         Topo.__init__(self)
         print("Flightplan Mininet using config " + cfg_file)
 
@@ -224,7 +231,8 @@ class FPTopo(Topo):
                              port1 = port1,
                              port2 = port2,
                              intfName1 = self.iface_name(name1, port1),
-                             intfName2 = self.iface_name(name2, port2)
+                             intfName2 = self.iface_name(name2, port2),
+                             bw=bw
                              )
                 created_links[name1].add(name2)
                 created_links[name2].add(name1)
@@ -378,6 +386,16 @@ class FPTopo(Topo):
                 'tcpreplay -p 100 -i {} {}'.format(self.iface_name(host, port_num), file)
         )
 
+    def do_pre_replay(self, net, host, towards, file, bg, speed):
+        if speed is None:
+            speed = 100
+        port_num = self.link_ports[host][towards]
+        print("Replaying {} on {}.{}".format(file, host, self.iface_name(host, port_num)))
+        net.get(host).cmd(
+                'tcpreplay -p {} -i {} {}{}'.format(speed, self.iface_name(host, port_num), file,
+                                                    '&' if bg else '')
+        )
+
 def main():
     args = parser.parse_args()
 
@@ -390,10 +408,10 @@ def main():
         cfg = yaml.load(f)
 
     topo = FPTopo(cfg['hosts'], cfg['switches'],
-                  bmv2_exe, args.log, args.verbose, args.config)
+                  bmv2_exe, args.log, args.verbose, args.config, args.bw)
 
     print("Starting mininet")
-    net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
+    net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None, link=TCLink)
 
     net.start()
     net.staticArp()
@@ -413,7 +431,21 @@ def main():
 
         topo.do_commands(net)
 
-        sleep(.1)
+        sleep(1)
+
+        for arg in args.pre_replay:
+            replay_args = arg.split(":")
+            replay_arg1 = replay_args[0].split('-')
+            if len(replay_args) not in (3,4) or len (replay_arg1) != 2:
+                raise Exception("args.pre_replay must have form Host-Switch:File:bg[:Speed]")
+            if len(replay_args) == 4:
+                speed = int(replay_args[3])
+            else:
+                speed = None
+
+            bg = int(replay_args[2])
+
+            topo.do_pre_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1], bg, speed)
 
         topo.run_host_programs(net, args.host_prog)
 
