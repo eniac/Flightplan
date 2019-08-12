@@ -63,7 +63,11 @@ parser.add_argument('--pre-replay', help='Provide a pcap file to be played befor
 parser.add_argument('--time', help='Time to run mininet for',
                     type=int, required=False, default=1)
 parser.add_argument('--bw', help='Bandwidth for all links in Mbps',
-                    type=int, required=False, default=1)
+                    type=float, required=False, default=1)
+parser.add_argument('--pcap-to', help='Capture traffic to this device (default: all)',
+                    type=str, action='append', required=False, default=[])
+parser.add_argument('--pcap-from', help='Capture traffic from this device (default: all)',
+                    type=str, action='append', required=False, default=[])
 
 class TopoSpecError(Exception):
     pass
@@ -329,15 +333,19 @@ class FPTopo(Topo):
         fname = os.path.join(directory, '{}_to_{}.pcap'.format(name1, name2))
         net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface, fname))
 
-    def start_tcp_dumps(self, net, directory):
+    def start_tcp_dumps(self, net, directory, pcap_to, pcap_from):
         for name1, links in self.link_ports.items():
             for name2, if1 in links.items():
+                if len(pcap_from) > 0 or len(pcap_to) > 0:
+                    if name1 not in pcap_from and name2 not in pcap_to:
+                        continue
                 self.start_tcp_dump(net, directory, name1, name2, if1)
 
     def stop_tcp_dumps(self, net):
         print("Stopping tcpdump")
         for node in self.all_nodes:
-            net.get(node).cmd('pkill tcpdump')
+            os.system('pkill tcpdump')
+            #net.get(node).cmd('pkill tcpdump')
 
     def do_switch_replay(self, net):
         for sw1_name, sw_opts in self.all_switches.items():
@@ -420,7 +428,7 @@ def main():
         topo.init(net)
 
         if args.pcap_dump:
-            topo.start_tcp_dumps(net, args.pcap_dump)
+            topo.start_tcp_dumps(net, args.pcap_dump, args.pcap_to, args.pcap_from)
 
 
         sleep(.1)
