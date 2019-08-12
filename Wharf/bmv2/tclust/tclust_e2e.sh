@@ -1,13 +1,20 @@
 #!/bin/bash
 
-if [[ $# != 1 ]]; then
-    echo "Usage $0 topo.yml"
+if [[ $# != 1 && $# != 2 ]]; then
+    echo "Usage $0 topo.yml [bw]"
     exit 1
 fi
 
 HERE=$(realpath "`dirname $0`/../" --relative-to $(pwd) )
 
 TOPO="$1"
+BW="$2"
+
+if [[ $BW != "" ]]; then
+    BW_ARG="--bw $BW"
+else
+    BW="none";
+fi
 BASENAME=$(basename $TOPO .yml)
 
 SIP="10.0.0.9"
@@ -16,7 +23,7 @@ SMAC="22:11:11:11:11:21"
 DMAC="22:11:11:11:11:23"
 
 TESTDIR=$HERE/test_output
-OUTDIR=$TESTDIR/tclust_e2e_$BASENAME
+OUTDIR=$TESTDIR/tclust_e2e_bw_${BW}_$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files
 rm -rf $PCAP_DUMPS $LOG_DUMPS $OUTDIR
@@ -52,11 +59,13 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --host-prog "mcd_s:memcached -u $USER -U 11211 -B ascii" \
-        --host-prog "mcd_c:sleep 2 && tcpreplay -i mcd_c-eth0 -p 100 $WARMUP_PCAP" \
-        --host-prog "mcd_c:sleep 8 && tcpreplay -i mcd_c-eth0 -p 100 $TEST_PCAP" \
-        --host-prog "iperf_s:sleep 10 && iperf3 -s -p 4242" \
-        --host-prog "iperf_c:sleep 10 && iperf3 -t 40 -c 10.0.0.12 -p 4242 -M 1000 -J -i .1" \
-        --time 60  2> $LOG_DUMPS/flightplan_mininet_log.err
+        --host-prog "mcd_c:sleep 3 && tcpreplay -i mcd_c-eth0 -p 100 $WARMUP_PCAP" \
+        --host-prog "mcd_c:sleep 3 && tcpreplay -i mcd_c-eth0 -p 100 $WARMUP_PCAP" \
+        --host-prog "mcd_c:sleep 25 && tcpreplay -i mcd_c-eth0 -p 100 $TEST_PCAP" \
+        --host-prog "iperf_s:sleep 25 && iperf3 -s -p 4242" \
+        --host-prog "iperf_c:sleep 30 && iperf3 -t 40 -c 10.0.0.12 -p 4242 -M 1000 -J -i .5" \
+        --pcap-to mcd_c --pcap-from mcd_c $BW_ARG \
+        --time 80  2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py >&2
@@ -66,8 +75,8 @@ if [[ $? != 0 ]]; then
     exit -1;
 fi
 
-echo "Bytes Transferred: iperf"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_comp fpga_encd fpga_decd fpga_dcomp iperf_s iperf_c
-
-echo "Bytes Transferred: mcd"
-python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_c fpga_mcd mcd_s fpga_mcd mcd_c
+#echo "Bytes Transferred: iperf"
+#python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS iperf_c fpga_comp fpga_encd fpga_decd fpga_dcomp iperf_s iperf_c
+#
+#echo "Bytes Transferred: mcd"
+#python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_c fpga_mcd mcd_s fpga_mcd mcd_c
