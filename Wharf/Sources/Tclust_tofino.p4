@@ -7,7 +7,7 @@
 #define SEG_ENCODE 0xa
 #define SEG_FORWARD 0xc
 
-control BoostedLink(in bit<9> port, out bit<1> enabled) {
+control BoostedLink(in bit<9> port, in bit<8> proto, out bit<1> enabled) {
     action set_enabled(bit<1> on) {
         enabled = on;
     }
@@ -15,6 +15,7 @@ control BoostedLink(in bit<9> port, out bit<1> enabled) {
     table boost {
         key = {
             port : exact;
+            proto : ternary;
         }
         actions = { set_enabled; }
         default_action = set_enabled(0);
@@ -106,7 +107,8 @@ control OffloadForwarder(inout headers_t hdr,
     }
 
     action fec_encode() {
-        if (faulty_egress == 1) {
+        if (hdr.fp.to_segment == SEG_ENCODE ||
+                faulty_egress ==  1) {
             next_segment = SEG_ENCODE;
             segment_set = 1;
         }
@@ -119,7 +121,12 @@ control OffloadForwarder(inout headers_t hdr,
             next_segment = SEG_COMPRESS;
             segment_set = 1;
         }
-        hdr.fp.to_segment = SEG_ENCODE - 1;
+        if (faulty_egress == 1) {
+            // Jump straight to encoding
+            hdr.fp.to_segment = SEG_ENCODE;
+        } else {
+            hdr.fp.to_segment = SEG_ENCODE - 1;
+        }
     }
 
     action kv_store() {
@@ -229,9 +236,9 @@ control OffloadForwarder(inout headers_t hdr,
         hdr.fp.from_segment = hdr.fp.to_segment;
 
         mac_forwarding.apply();
-        ingress_compression.apply(md.ingress_port, compressed_ingress);
-        egress_compression.apply(md.egress_spec, compressed_egress);
-        egress_encoding.apply(md.egress_spec, faulty_egress);
+        ingress_compression.apply(md.ingress_port, hdr.ipv4.proto, compressed_ingress);
+        egress_compression.apply(md.egress_spec, hdr.ipv4.proto, compressed_egress);
+        egress_encoding.apply(md.egress_spec, hdr.ipv4.proto, faulty_egress);
         bit<16> sport = 0;
         bit<16> dport = 0;
         if (hdr.tcp.isValid()) {

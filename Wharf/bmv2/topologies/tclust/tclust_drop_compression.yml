@@ -45,7 +45,7 @@ switches:
               port: 130
         cmds:
             # Enable compression and encoding out of port 19
-            - table_add egress_compression.boost egress_compression.set_enabled 19 => 1
+            - table_add egress_compression.boost egress_compression.set_enabled 19 0x06&&0xFF=> 1 1
 
             # Set basic egress ports for mac addresses
             - table_add mac_forwarding set_egress 0x221111111120 => 1
@@ -84,7 +84,7 @@ switches:
         cmds:
             - table_add forward set_egress 0 => 1
             - table_add forward set_egress 1 => 0
-            - table_add dropper set_drop_rate 1 => 5 5
+            - table_add dropper set_drop_rate 1 => 5 15
 
     tofino2:
         cfg: ../../../build/bmv2/Tclust_tofino.json
@@ -101,7 +101,7 @@ switches:
               port: 131
         cmds:
             # Enable compression from port 20
-            - table_add ingress_compression.boost ingress_compression.set_enabled 20 => 1
+            - table_add ingress_compression.boost ingress_compression.set_enabled 20 0x00&&&0x00 => 1 1
 
             # Set egress ports for MAC addresses
             - table_add mac_forwarding set_egress 0x221111111120 => 20
