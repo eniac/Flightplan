@@ -63,7 +63,7 @@ parser.add_argument('--pre-replay', help='Provide a pcap file to be played befor
 parser.add_argument('--time', help='Time to run mininet for',
                     type=int, required=False, default=1)
 parser.add_argument('--bw', help='Bandwidth for all links in Mbps',
-                    type=float, required=False, default=1)
+                    type=float, required=False, default=None)
 parser.add_argument('--pcap-to', help='Capture traffic to this device (default: all)',
                     type=str, action='append', required=False, default=[])
 parser.add_argument('--pcap-from', help='Capture traffic from this device (default: all)',
