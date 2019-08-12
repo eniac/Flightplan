@@ -7,7 +7,7 @@ fi
 
 
 HERE=$(realpath "`dirname $0`/../")
-TOPO="$HERE/topologies/tclust/tclust_complete.yml"
+TOPO="$HERE/topologies/tclust/tclust_mcd_complete.yml"
 
 $HERE/tclust/tclust_mcd.sh $TOPO $1 $2
 exit $?
