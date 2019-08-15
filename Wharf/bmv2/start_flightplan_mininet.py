@@ -395,9 +395,11 @@ class FPTopo(Topo):
 
         for extra_prog in extras:
             try:
-                name, program = extra_prog.split(':')
-            except:
-                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program'")
+                splitprog = extra_prog.split(":")
+                name = splitprog[0]
+                program = ":".join(splitprog[1:])
+            except Exception as e:
+                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program': %s" % e)
             i = self.host_prog_num[name]
             self.host_prog_num[name] += 1
             print("Running {} on {}".format(program, name))
@@ -406,9 +408,11 @@ class FPTopo(Topo):
 
         for extra_prog in fg_extras:
             try:
-                name, program = extra_prog.split(':')
-            except:
-                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program'")
+                splitprog = extra_prog.split(':')
+                name = splitprog[0]
+                program = ":".join(splitprog[1:])
+            except Exception as e:
+                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program': %s" % e)
             i = self.host_prog_num[name]
             self.host_prog_num[name] += 1
             print("Running {} on {}".format(program, name))
