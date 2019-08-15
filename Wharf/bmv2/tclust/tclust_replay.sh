@@ -13,8 +13,8 @@ BASENAME=$(basename $INPUT .pcap)
 
 SIP="10.0.0.11"
 DIP="10.0.0.12"
-SMAC="22:11:11:11:11:20"
-DMAC="22:11:11:11:11:22"
+SMAC="24:8a:07:8f:eb:00"
+DMAC="24:8a:07:5b:15:35"
 
 TESTDIR=$HERE/test_output
 OUTDIR=$TESTDIR/tclust_$BASENAME

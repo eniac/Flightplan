@@ -3,22 +3,22 @@ hosts:
             interfaces:
                     - link: tofino1
                       ip: 10.0.0.9/24
-                      mac: '22:11:11:11:11:21'
+                      mac: '00:02:c9:3a:84:00'
     mcd_s :
             interfaces:
                     - link: tofino2
                       ip: 10.0.0.10/24
-                      mac: '22:11:11:11:11:23'
+                      mac: '7c:fe:90:1c:36:81'
     iperf_c :
             interfaces:
                     - link: tofino1
                       ip: 10.0.0.11/24
-                      mac: '22:11:11:11:11:20'
+                      mac: '24:8a:07:8f:eb:00'
     iperf_s :
             interfaces:
                     - link: tofino2
                       ip: 10.0.0.12/24
-                      mac: '22:11:11:11:11:22'
+                      mac: '24:8a:07:5b:15:35'
 
 #define SEG_DECODE 2
 #define SEG_DECOMPRESS 4
@@ -48,10 +48,10 @@ switches:
             - table_add egress_compression.boost egress_compression.set_enabled 19 0x06&&0xFF=> 1 1
 
             # Set basic egress ports for mac addresses
-            - table_add mac_forwarding set_egress 0x221111111120 => 1
-            - table_add mac_forwarding set_egress 0x221111111121 => 2
-            - table_add mac_forwarding set_egress 0x221111111122 => 19
-            - table_add mac_forwarding set_egress 0x221111111123 => 19
+            - table_add mac_forwarding set_egress 0x248a078feb00 => 1
+            - table_add mac_forwarding set_egress 0x0002c93a8400 => 2
+            - table_add mac_forwarding set_egress 0x248a075b1535 => 19
+            - table_add mac_forwarding set_egress 0x7cfe901c3681 => 19
 
             # Set offloads for available boosters
             - table_add offload set_egress 8 => 130  # COMPRESSOR
@@ -104,10 +104,10 @@ switches:
             - table_add ingress_compression.boost ingress_compression.set_enabled 20 0x00&&&0x00 => 1 1
 
             # Set egress ports for MAC addresses
-            - table_add mac_forwarding set_egress 0x221111111120 => 20
-            - table_add mac_forwarding set_egress 0x221111111121 => 20
-            - table_add mac_forwarding set_egress 0x221111111122 => 3
-            - table_add mac_forwarding set_egress 0x221111111123 => 4
+            - table_add mac_forwarding set_egress 0x248a078feb00 => 20
+            - table_add mac_forwarding set_egress 0x0002c93a8400 => 20
+            - table_add mac_forwarding set_egress 0x248a075b1535 => 3
+            - table_add mac_forwarding set_egress 0x7cfe901c3681 => 4
 
             - table_add offload set_egress 2 => 122 # DECODER
             - table_add offload set_egress 4 => 131 # DECOMPRESSOR

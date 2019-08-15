@@ -1,10 +1,13 @@
 #!/bin/bash
 
 HERE=`dirname $0`
-BW=$1
+DUR=$1
+BW=$2
+QLEN=$3
 
 run_exp() {
-    $HERE/tclust_e2e.sh $HERE/../topologies/tclust/$1 $BW;
+    $HERE/tclust_e2e.sh $HERE/../topologies/tclust/$1 $DUR $BW $QLEN;
+    sleep 2
 }
 
 run_exp tclust_noop.yml
