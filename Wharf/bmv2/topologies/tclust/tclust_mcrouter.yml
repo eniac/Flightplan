@@ -2,33 +2,29 @@ hosts:
     mcd_c :
             interfaces:
                     - link: tofino1
-                      ip: 10.0.0.9/24
+                      ip: 10.0.0.4/24
                       mac: '00:02:c9:3a:84:00'
     mcd_s :
             interfaces:
                     - link: tofino2
-                      ip: 10.0.0.4/24
+                      ip: 10.0.0.7/24
                       mac: '7c:fe:90:1c:36:81'
             programs:
                 - cmd: memcached -u ${USER} -p 11211
     iperf_c :
             interfaces:
                     - link: tofino1
-                      ip: 10.0.0.11/24
+                      ip: 10.0.0.1/24
                       mac: '24:8a:07:8f:eb:00'
     iperf_s :
             interfaces:
                     - link: tofino2
-                      ip: 10.0.0.12/24
+                      ip: 10.0.0.2/24
                       mac: '24:8a:07:5b:15:35'
     mcrouter :
         programs:
-            - cmd: ufw disable
-              fg: true
-            - cmd: mcrouter -f ${MCROUTER_CFG} -p 11211 --listen-addresses=10.0.0.101
-            - cmd: memcached -u ${USER} -p 12345 -m 2m
-            - cmd: netstat -lp
-              fg: true
+            - cmd: mcrouter -f ${MCROUTER_CFG} -p 11211
+            - cmd: memcached -u ${USER} -p 12345
         interfaces:
             - ip: 10.0.0.101/24
               mac: e4:43:4b:1e:40:44
