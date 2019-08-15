@@ -48,11 +48,15 @@ The following applications are necessary on these machines:
   * pktgen
     * Clone https://github.com/jsonch/dpdkScripts
       * (To avoid having to change paths in the shremote config, clone this into ~/dcomp/dpdk/dpdkScripts)
-    * Run dpdkScripts/installDpdk.sh (NO SUDO)
-    * Run dpdkScripts/installPktgen.sh (NO SUDO)
+    * cd dpdkScripts
+    * Run ./installDpdk.sh (NO SUDO)
+    * Run ./installPktgen.sh (NO SUDO)
+    * Run ./allocHugePages.sh (NO SUDO)
+    * Make note of interface device major:minor version, this will be used to specify the dpdk bind parame	ter in the run_lua.sh script
 * Coordination server:
   * [Shremote](https://github.com/isaac-ped/Shremote), checked out [here](..) as a git submodule
     * If the submodule is not checked out, initialize with: `git submodule init && git submodule update`
+    * Add your private ssh key to ~/.ssh and specify the identity file within the yml config file used by 	shremote. This is in order to log into other systems in the network remotely.
 
 
 ### File Dependencies

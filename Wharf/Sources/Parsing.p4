@@ -104,7 +104,7 @@ struct headers_t {
 @Xilinx_MaxPacketRegion(FEC_MAX_PACKET_SIZE * 8)
 parser FecParser(packet_in pkt, out headers_t hdr) {
     state start {
-       // transition parse_eth;
+        //transition parse_eth;
         transition select(pkt.lookahead<bit<112>>() & 112w0xFFFF) {
             ETHERTYPE_FLIGHTPLAN : parse_flightplan;
             default : parse_eth;

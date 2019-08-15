@@ -17,14 +17,14 @@ def main():
 
 def generateOneFlow(interArrival = .1, count = 10, dumpFile = "pcaps/oneFlow.pcap"):
 	pktId = 1
-	eth_src = '\x22\x22\x22\x22\x22\x11'
-	eth_dst = '\x22\x22\x22\x22\x22\x22'
+	eth_src = '\x24\x2a\x07\x8f\xeb\x00'
+	eth_dst = '\x24\x8a\x07\x5b\x15\x34'
 	ip_src = struct.pack("!I", pktId)
 	ip_dst = struct.pack("!I", pktId)
 	tcp_sport = socket.htons(pktId)
 	tcp_dport = socket.htons(pktId)
 
-	payload = "\x00"*50
+	payload = "\x00"*46
 	f = startPcapFile(dumpFile)
 	current_time = 0
 	for i in range(count):	

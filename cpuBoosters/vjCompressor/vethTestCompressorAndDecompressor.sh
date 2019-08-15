@@ -18,6 +18,14 @@ else
     real_user=$(whoami)
 fi
 
+if [ $# -ne 2 ]; then
+    echo "USAGE: ./vethTestCompressorAndDecompressor.sh <input pcap> <Implementation: hls_wrapper(0)/ libpcap(1)> " >&2
+    exit 1
+fi
+LIBPCAP=$2
+HLS_COMPRESSOR=hls_comp_pcap
+HLS_DECOMPRESSOR=hls_decomp_pcap
+
 # bring up veth pairs. 
 # networkVeth = network side of cable. 
 # deviceVeth = booster side of cable.
@@ -33,11 +41,18 @@ peer_link networkVeth1 deviceVeth1
 peer_link networkVeth2 deviceVeth2
 peer_link networkVeth3 deviceVeth3
 
+if [ $LIBPCAP = 1 ]; then
 # start empty booster : reads and writes to deviceVeth.
-echo "starting compressor booster..."
-./$BOOSTER_NAME -i deviceVeth1 -o networkVeth2 -f 0 > ${BOOSTER_NAME}_compress.log &
-echo "starting decompressor booster..."
-./$BOOSTER_NAME -i deviceVeth2 -o networkVeth3 -f 1 > ${BOOSTER_NAME}_decompress.log &
+  echo "starting compressor booster..."
+  ./$BOOSTER_NAME -i deviceVeth1 -o networkVeth2 -f 0 > ${BOOSTER_NAME}_compress.log &
+  echo "starting decompressor booster..."
+  ./$BOOSTER_NAME -i deviceVeth2 -o networkVeth3 -f 1 > ${BOOSTER_NAME}_decompress.log &
+else
+  echo "starting compressor booster..."
+  ./$HLS_COMPRESSOR -i deviceVeth1 -o networkVeth2 -f 0 > ${BOOSTER_NAME}_compress.log &
+  echo "starting decompressor booster..."
+  ./$HLS_DECOMPRESSOR -i deviceVeth2 -o networkVeth3 -f 1 > ${BOOSTER_NAME}_decompress.log &
+fi
 
 # start tcpdump to collect the packets that come back into the network from the device.
 echo "starting tcpdump... INPUT_PCAP=$INPUT_PCAP, OUTPUT_PCAP=$OUTPUT_PCAP, COMPRESS_PCAP=$COMPRESS_PCAP"
@@ -58,6 +73,8 @@ sleep 1
 chown $real_user:$real_user $OUTPUT_PCAP
 killall tcpdump
 killall $BOOSTER_NAME
+killall $HLS_COMPRESSOR
+killall $HLS_DECOMPRESSOR
 ip link delete networkVeth1
 ip link delete networkVeth2
 ip link delete networkVeth3
