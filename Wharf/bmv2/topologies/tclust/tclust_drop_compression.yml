@@ -44,7 +44,7 @@ switches:
             - link: fpga_comp
               port: 130
         cmds:
-            # Enable compression and encoding out of port 19
+            # Enable compression for TCP out of port 19
             - table_add egress_compression.boost egress_compression.set_enabled 19 0x06&&0xFF=> 1 1
 
             # Set basic egress ports for mac addresses
