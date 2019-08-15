@@ -11,7 +11,7 @@ if [[ $LABEL == "" || $OUT == "" ]]; then
 fi
 
 if [[ $RATES == "" ]]; then
-    RATES="31.00 32.00";
+    RATES="1.00 10.00 25.00 30.00 32.00 35.00";
 fi
 
 mkdir -p $OUT/$LABEL

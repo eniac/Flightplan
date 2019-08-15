@@ -10,22 +10,22 @@ if [[ $LABEL == "" ]]; then
 fi
 
 if [[ $RATES == "" ]]; then
-    RATES="0.01 0.05 0.10 0.25 0.30";
+    RATES="1 3 8 9";
 fi
 
 SHR=../../Shremote/shremote.py
-CFG=cfgs/cpu_fec_decoder.yml
+CFG=cfgs/snort_cfg.yml
 
 mkdir -p $OUT/$LABEL
 
 run_booster () {
-    python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;dataplane_flags:-f;pcap_file:$PCAP" ;
+    python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;tcpreplay_rate:$2;loop:$3;dataplane_flags:-f;pcap_file:$PCAP" ;
     RTN=$?
     RETRIES=1
     while [[ $RTN != 0 ]]; do
         echo "Trying again... $RETRIES"
         sleep 5
-        python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;dataplane_flags:-f;pcap_file:$PCAP" ;
+        python3 $SHR $CFG ${LABEL}_$1 --out $OUT/$LABEL --args="rate:$1;tcpreplay_rate:$2;loop:$3;dataplane_flags:-f;pcap_file:$PCAP" ;
         RTN=$?
         RETRIES=$(( $RETRIES + 1 ))
     done
@@ -34,5 +34,7 @@ run_booster () {
 }
 
 for rate in $RATES; do
-    run_booster $rate;
+	VAR_R=$(bc<<<"scale=0;$rate * 12500")
+	VAR_LOOP=$(bc<<<"scale=0;$rate * 125")
+	run_booster $rate $VAR_R $VAR_LOOP;
 done

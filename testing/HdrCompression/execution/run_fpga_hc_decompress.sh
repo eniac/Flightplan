@@ -10,7 +10,7 @@ if [[ $LABEL == "" ]]; then
 fi
 
 if [[ $RATES == "" ]]; then
-    RATES="10.00 50.00 90.00";
+    RATES="1.00 10.00 30.00 50.00 90.00 100.00";
 fi
 
 SHR=../../Shremote/shremote.py

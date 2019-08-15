@@ -2,12 +2,12 @@ Architecture
 
 tclust1(10.0.0.1)----------------->dcomp1(10.0.0.101)----->FORWARDS
 
-1) tclust1 sends a udp packet to 10.0.0.105:11230 via the 10.0.0.101 machine
+1) tclust1 sends a udp packet to 10.0.0.105:11230 via the 10.0.0.101 machine. i.e, set the routing table on tclust1 to have its gateway as 10.0.0.101 for any IP address in the 10.0.0.0/24 network. 
 
 2) Add arp entry for 10.0.0.101 on tclust1
    Add arp entry for 10.0.0.1 on dcomp1
 
-3) On tofino, 
+3) On tofino, from the pointToPoint topology run 
 	./stop.sh
 	./run.sh 1-112
 
@@ -15,9 +15,9 @@ Setting ufw rules on dcomp1, prior to all the above steps:
 
 Inorder for the forwarding rule to work, in /etc/ufw/sysctl.conf, uncomment ipv4.forwarding=1
 
-Let the default forward policy be DROP.
-
-Add a rule to /etc/ufw/before.rules which basically ACCEPTS packets on --dport=11230 for forwarding.
+Let the default forward policy be DROP. Set this in /etc/default/ufw by setting DEFAULT_FORWARD_POLICY="DROP"
+ 
+Add a rule to /etc/ufw/before.rules which basically ACCEPTS packets on --dport=11230 for forwarding. See before_fwd_rules in testing/ufw/execution for reference.
 
 To measure latency let this be the last rule that matches the input packets.
 
