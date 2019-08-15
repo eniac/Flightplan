@@ -67,9 +67,7 @@ switches:
             - table_add mac_forwarding set_egress 0x0002c93a8400 => 2
             - table_add mac_forwarding set_egress 0x248a075b1535 => 19
             - table_add mac_forwarding set_egress 0x7cfe901c3681 => 19
-
-             # Set ufw enabled for packets ingress on port 1, any protocol
-            - table_add ufw_forwarding set_ufw_egress 1 0x00&&&0x00 => 112 1 1
+            - table_add mac_forwarding set_egress 0xe4434b1e4044 => 112
 
             - table_add offload strip_fp_hdr 0xc =>   # FORWARD
     fpga_mcd:
@@ -117,4 +115,7 @@ switches:
             - table_add mac_forwarding set_egress 0x0002c93a8400 => 20
             - table_add mac_forwarding set_egress 0x248a075b1535 => 3
             - table_add mac_forwarding set_egress 0x7cfe901c3681 => 4
+            # In case something is forwarded back to ufw (which it shouldn't be)
+            - table_add mac_forwarding set_egress 0xe4434b1e4044 => 20
+
             - table_add offload strip_fp_hdr 12 =>   # FORWARD
