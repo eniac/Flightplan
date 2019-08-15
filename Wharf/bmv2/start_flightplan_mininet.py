@@ -64,6 +64,8 @@ parser.add_argument('--time', help='Time to run mininet for',
                     type=int, required=False, default=1)
 parser.add_argument('--bw', help='Bandwidth for all links in Mbps',
                     type=float, required=False, default=None)
+parser.add_argument('--qlen', help='Queue length for all links',
+                    type=float, required=False, default=None)
 parser.add_argument('--pcap-to', help='Capture traffic to this device (default: all)',
                     type=str, action='append', required=False, default=[])
 parser.add_argument('--pcap-from', help='Capture traffic from this device (default: all)',
@@ -77,7 +79,7 @@ class FPTopo(Topo):
     def cfgpath(self, path):
         return os.path.join(self.cfgbase, path)
 
-    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file, bw):
+    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file, bw, qlen):
         Topo.__init__(self)
         print("Flightplan Mininet using config " + cfg_file)
 
@@ -236,7 +238,8 @@ class FPTopo(Topo):
                              port2 = port2,
                              intfName1 = self.iface_name(name1, port1),
                              intfName2 = self.iface_name(name2, port2),
-                             bw=bw
+                             bw=bw,
+                             max_queue_size=qlen
                              )
                 created_links[name1].add(name2)
                 created_links[name2].add(name1)
@@ -416,7 +419,7 @@ def main():
         cfg = yaml.load(f)
 
     topo = FPTopo(cfg['hosts'], cfg['switches'],
-                  bmv2_exe, args.log, args.verbose, args.config, args.bw)
+                  bmv2_exe, args.log, args.verbose, args.config, args.bw, args.qlen)
 
     print("Starting mininet")
     net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None, link=TCLink)
