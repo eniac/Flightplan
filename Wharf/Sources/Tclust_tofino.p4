@@ -56,11 +56,15 @@ control OffloadForwarder(inout headers_t hdr,
     BoostedLink() egress_encoding;
     BoostedProtocol() kv_booster;
 
+
     bit<1> faulty_egress;
     bit<1> compressed_egress;
     bit<1> compressed_ingress;
     bit<1> kv_booster_enabled;
     bit<SEGMENT_DESC_SIZE> next_segment = 0;
+
+    /// FOR LEGACY BOOSTERS
+    bit<1> ufw_ingress;
 
     action set_egress(bit<9> port) {
         md.egress_spec = port;
@@ -75,6 +79,20 @@ control OffloadForwarder(inout headers_t hdr,
             set_egress;
             NoAction;
         }
+    }
+
+    action set_ufw_egress(bit<9> port, bit<1> enabled) {
+        md.egress_spec = port;
+        ufw_ingress = enabled;
+    }
+
+    table ufw_forwarding {
+        key = {
+            md.ingress_port : exact;
+            hdr.ipv4.proto : ternary;
+        }
+        actions = { set_ufw_egress; }
+        default_action = set_ufw_egress(0, 0);
     }
 
     action strip_fp_hdr() {
@@ -226,6 +244,13 @@ control OffloadForwarder(inout headers_t hdr,
             return;
         }
 
+        ufw_forwarding.apply();
+        if (ufw_ingress == 1) {
+            return;
+        }
+
+        mac_forwarding.apply();
+
         if (!hdr.fp.isValid()) {
             hdr.fp.setValid();
             hdr.fp.src = hdr.eth.src;
@@ -235,7 +260,6 @@ control OffloadForwarder(inout headers_t hdr,
         }
         hdr.fp.from_segment = hdr.fp.to_segment;
 
-        mac_forwarding.apply();
         ingress_compression.apply(md.ingress_port, hdr.ipv4.proto, compressed_ingress);
         egress_compression.apply(md.egress_spec, hdr.ipv4.proto, compressed_egress);
         egress_encoding.apply(md.egress_spec, hdr.ipv4.proto, faulty_egress);
