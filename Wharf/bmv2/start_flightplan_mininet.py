@@ -54,7 +54,7 @@ parser.add_argument('--bmv2-exe', help='Path to bmv2 executable',
                     type=str, required=False, default=None)
 parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2. '
                                      'Syntax = "from-to:file.pcap"',
-                    type=str, action='store', required=False, default=False)
+                    type=str, action='append', required=False, default=[])
 parser.add_argument('--host-prog', help='Run a program on a host. Syntax = "hostname:program to run"',
                     type=str, action='append', required=False, default=[])
 parser.add_argument('--pre-replay', help='Provide a pcap file to be played before a host program '
@@ -377,9 +377,16 @@ class FPTopo(Topo):
     def run_host_programs(self, net, extras):
         for name, opts in self.all_hosts.items():
             for i, program in enumerate(opts['programs']):
-                print("Running {} on {}".format(program, name))
-                net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 &'
-                                  .format(program, self.log_dir, name, i))
+                if isinstance(program, str):
+                    cmd = program
+                    fg = False
+                else:
+                    cmd = program['cmd']
+                    fg = program.get('fg', False)
+                full_cmd = '{} > {}/{}_prog_{}.log 2>&1 {}' \
+                                .format(cmd, self.log_dir, name, i, '&' if not fg else '')
+                print("Running {} on {}".format(full_cmd, name))
+                net.get(name).cmd(full_cmd)
 
         for i, extra_prog in enumerate(extras):
             try:
@@ -459,9 +466,10 @@ def main():
             topo.do_pre_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1], bg, speed)
 
         topo.run_host_programs(net, args.host_prog)
+        sleep(1)
 
-        if args.replay:
-            replay_args = args.replay.split(":")
+        for to_replay in args.replay:
+            replay_args = to_replay.split(":")
             replay_arg1 = replay_args[0].split('-')
             if len(replay_args) != 2 or len(replay_arg1) != 2:
                 raise Exception("args.replay must have form Host-Switch:File")
