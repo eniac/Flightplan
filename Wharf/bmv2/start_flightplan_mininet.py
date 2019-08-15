@@ -57,6 +57,8 @@ parser.add_argument('--replay', help='Provide a pcap file to be sent through fro
                     type=str, action='append', required=False, default=[])
 parser.add_argument('--host-prog', help='Run a program on a host. Syntax = "hostname:program to run"',
                     type=str, action='append', required=False, default=[])
+parser.add_argument('--fg-host-prog', help='Run a program on a host in foreground. Syntax = "hostname:program to run"',
+                    type=str, action='append', required=False, default=[])
 parser.add_argument('--pre-replay', help='Provide a pcap file to be played before a host program '
                     'in the background. Syntax = "from-to:file.pcap:bg (0 or 1)[:speed]"',
                     type=str, action='append', required=False, default=[])
@@ -92,6 +94,7 @@ class FPTopo(Topo):
         self.all_nodes = {}
         self.all_switches = {}
         self.all_hosts = {}
+        self.host_prog_num = defaultdict(int)
 
         base_thrift = 9090
 
@@ -374,9 +377,11 @@ class FPTopo(Topo):
                 send_commands(self.all_nodes[sw_name]['thrift_port'],
                               self.cfgpath(sw_opts['cfg']), commands)
 
-    def run_host_programs(self, net, extras):
+    def run_host_programs(self, net, extras, fg_extras):
         for name, opts in self.all_hosts.items():
-            for i, program in enumerate(opts['programs']):
+            for program in opts['programs']:
+                i = self.host_prog_num[name]
+                self.host_prog_num[name] += 1
                 if isinstance(program, str):
                     cmd = program
                     fg = False
@@ -388,13 +393,26 @@ class FPTopo(Topo):
                 print("Running {} on {}".format(full_cmd, name))
                 net.get(name).cmd(full_cmd)
 
-        for i, extra_prog in enumerate(extras):
+        for extra_prog in extras:
             try:
                 name, program = extra_prog.split(':')
             except:
                 raise TopoSpecError("Programs provided from CLI must be of form 'h1:program'")
+            i = self.host_prog_num[name]
+            self.host_prog_num[name] += 1
             print("Running {} on {}".format(program, name))
             net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 &'
+                              .format(program, self.log_dir, name, i))
+
+        for extra_prog in fg_extras:
+            try:
+                name, program = extra_prog.split(':')
+            except:
+                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program'")
+            i = self.host_prog_num[name]
+            self.host_prog_num[name] += 1
+            print("Running {} on {}".format(program, name))
+            net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1'
                               .format(program, self.log_dir, name, i))
 
     def do_host_replay(self, net, host, towards, file):
@@ -465,7 +483,7 @@ def main():
 
             topo.do_pre_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1], bg, speed)
 
-        topo.run_host_programs(net, args.host_prog)
+        topo.run_host_programs(net, args.host_prog, args.fg_host_prog)
         sleep(1)
 
         for to_replay in args.replay:
