@@ -1,0 +1,28 @@
+{
+    "pools": {
+        "local": {
+           "servers": [ "127.0.0.1:12345" ]
+        },
+        "remote": {
+            "servers": ["10.0.0.4:11211"]
+        }
+    },
+   "route": {
+       "type": "OperationSelectorRoute",
+       "operation_policies": {
+           "get": {
+                 "type": "WarmUpRoute",
+                 "cold": "PoolRoute|local",
+                 "warm": "PoolRoute|remote"
+           },
+           "set": {
+               "type": "PoolRoute",
+               "pool": "remote",
+               "shadows": [{
+                   "target": "PoolRoute|local"
+               }]
+           }
+       },
+       "default_policy": ["PoolRoute|remote"]
+   }
+}
