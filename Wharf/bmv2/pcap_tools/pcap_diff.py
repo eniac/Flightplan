@@ -7,6 +7,7 @@ import difflib
 parser = argparse.ArgumentParser()
 parser.add_argument('input', type=str)
 parser.add_argument('output', type=str)
+parser.add_argument('--extras-ok', action='store_true', help='Do not fail if extra packets are present in output')
 parser.add_argument('--no-ip', action='store_true', help='Compare TCP/UDP headers and payload only')
 parser.add_argument('--clear-chksum', action='store_true', help='Clear UDP checksum before comparison')
 parser.add_argument('--show', type=int, required=False, default=0)
@@ -46,6 +47,10 @@ missing_out = [i for i, x in enumerate(out_strs) if x is not None]
 
 if len(missing_pkts) == 0 and len(missing_out) == 0:
     print("No missing or extra packets!")
+    exit(0)
+
+if len(missing_pkts) == 0 and args.extras_ok:
+    print("%d output packets not present in input (ok)" % len(missing_out))
     exit(0)
 
 if len(missing_pkts) != 0:
