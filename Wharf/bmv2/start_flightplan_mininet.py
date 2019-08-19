@@ -18,6 +18,9 @@
 import os
 import sys
 if 'BMV2_REPO' in os.environ:
+    newpath  = os.path.join(os.environ['BMV2_REPO'], 'targets', 'booster_switch')
+    print("Appending {} to pythonpath".format(newpath))
+    sys.path.append(newpath)
     newpath  = os.path.join(os.environ['BMV2_REPO'], 'tools')
     print("Appending {} to pythonpath".format(newpath))
     sys.path.append(newpath)
