@@ -12,12 +12,17 @@ control BoostedLink(in bit<9> port, in bit<8> proto, out bit<1> enabled) {
         enabled = on;
     }
 
+    action set_clone(bit<32> session) {
+        enabled = 0;
+        clone(CloneType.I2E, session);
+    }
+
     table boost {
         key = {
             port : exact;
             proto : ternary;
         }
-        actions = { set_enabled; }
+        actions = { set_enabled; set_clone; }
         default_action = set_enabled(0);
     }
 
@@ -38,7 +43,7 @@ control BoostedProtocol(in bit<8> proto, in bit<16> sport, in bit<16> dport, out
             sport : ternary;
             dport : ternary;
         }
-        actions = { set_enabled; }
+        actions = { set_enabled;}
         default_action = set_enabled(0);
     }
 
@@ -55,6 +60,7 @@ control OffloadForwarder(inout headers_t hdr,
     BoostedLink() egress_compression;
     BoostedLink() egress_encoding;
     BoostedProtocol() kv_booster;
+    BoostedLink() snort_cloning;
 
     bit<1> faulty_egress;
     bit<1> compressed_egress;
@@ -236,6 +242,8 @@ control OffloadForwarder(inout headers_t hdr,
         hdr.fp.from_segment = hdr.fp.to_segment;
 
         mac_forwarding.apply();
+        bit<1> ign;
+        snort_cloning.apply(md.ingress_port, hdr.ipv4.proto, ign);
         ingress_compression.apply(md.ingress_port, hdr.ipv4.proto, compressed_ingress);
         egress_compression.apply(md.egress_spec, hdr.ipv4.proto, compressed_egress);
         egress_encoding.apply(md.egress_spec, hdr.ipv4.proto, faulty_egress);
@@ -255,4 +263,23 @@ control OffloadForwarder(inout headers_t hdr,
 
 }
 
-Bmv2Switch(OffloadForwarder) main;
+control OffloadEgress(inout headers_t hdr, inout booster_metadata_t bmd, inout metadata_t md) {
+
+    action set_mac_strip_fp(bit<48> mac) {
+        hdr.eth.dst = mac;
+        hdr.fp.setInvalid();
+    }
+
+    table mac_override {
+        key = {
+            md.egress_port : exact;
+        }
+        actions = {set_mac_strip_fp; NoAction;}
+    }
+
+    apply {
+        mac_override.apply();
+    }
+}
+
+Bmv2Switch2(OffloadForwarder, OffloadEgress) main;
