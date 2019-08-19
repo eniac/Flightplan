@@ -12,16 +12,18 @@ fi
 
 
 HERE="$(realpath `dirname $0`/../ --relative-to $(pwd))"
+BASENAME="tcp_ufw_both"
 
 if [[ $1 == "--complete" ]]; then
     TOPO=$HERE/topologies/tclust/tclust_ufw_complete.yml
+    BASENAME+='_complete'
 else
     TOPO=$HERE/topologies/tclust/tclust_ufw_only.yml
 fi
+
 INPUT_THRU=$HERE/pcaps/tcp_100.pcap
 INPUT_BLOCK=$HERE/pcaps/tcp_666.pcap
 
-BASENAME="tcp_ufw_both"
 
 SIP="10.0.0.11"
 DIP="10.0.0.12"
