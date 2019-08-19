@@ -23,9 +23,14 @@ control Bmv2Verify(inout headers_t hdr, inout booster_metadata_t m) { apply {} }
 control Bmv2Check(inout headers_t hdr, inout booster_metadata_t m) { apply {} }
 control Bmv2Egress(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) { apply {} }
 
-#define Bmv2Switch(ProcessControl) \
+#define Bmv2Switch(Ingress) \
     V1Switch(Bmv2Parser(), Bmv2Verify(), \
-             ProcessControl(), \
+             Ingress(), \
              Bmv2Egress(), Bmv2Check(), Bmv2Deparser())
+
+#define Bmv2Switch2(Ingress, Egress) \
+     V1Switch(Bmv2Parser(), Bmv2Verify(), \
+             Ingress(), Egress(), \
+             Bmv2Check(), Bmv2Deparser())
 
 #endif
