@@ -29,4 +29,6 @@ legacy_test() {
 legacy_test mcrouter_alone tclust_mcrouter.sh
 legacy_test mcrouter_complete tclust_mcrouter.sh --complete
 legacy_test ufw_alone tclust_ufw.sh
-legacy_test ufw_compelte tclust_ufw.sh --complete
+legacy_test ufw_complete tclust_ufw.sh --complete
+legacy_test snort tclust_snort.sh
+legacy_test snort_complete tclust_snort.sh --complete
