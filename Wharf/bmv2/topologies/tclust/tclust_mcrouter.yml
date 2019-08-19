@@ -2,12 +2,12 @@ hosts:
     mcd_c :
             interfaces:
                     - link: tofino1
-                      ip: 10.0.0.4/24
+                      ip: 10.0.0.7/24
                       mac: '00:02:c9:3a:84:00'
     mcd_s :
             interfaces:
                     - link: tofino2
-                      ip: 10.0.0.7/24
+                      ip: 10.0.0.4/24
                       mac: '7c:fe:90:1c:36:81'
             programs:
                 - cmd: memcached -u ${USER} -p 11211
@@ -23,8 +23,8 @@ hosts:
                       mac: '24:8a:07:5b:15:35'
     mcrouter :
         programs:
+            - cmd: memcached -u ${USER} -p 12345 -l 10.0.0.101
             - cmd: mcrouter -f ${MCROUTER_CFG} -p 11211
-            - cmd: memcached -u ${USER} -p 12345
         interfaces:
             - ip: 10.0.0.101/24
               mac: e4:43:4b:1e:40:44
