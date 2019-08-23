@@ -14,5 +14,9 @@ do
        echo "running test pcap: $i"
        #2nd argument. 0 - HLSWrapper implementation. 1 - libpcap implementation
        sudo ./vethTestCompressorAndDecompressor.sh $i $implementation
+       if [[ $? != 0 ]]; then
+           echo "FAILED"
+           exit 1;
+       fi
     done
 done

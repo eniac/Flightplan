@@ -86,3 +86,8 @@ python comparePcaps.py $INPUT_PCAP $OUTPUT_PCAP
 
 # Verify that header has been compressed
 python ../../Wharf/bmv2/pcap_tools/pcap_size.py $INPUT_PCAP $COMPRESS_PCAP $OUTPUT_PCAP 
+if [[ $? == 0 ]]; then
+    echo "NO COMPRESSION OCCURRED!"
+    exit 1;
+fi
+exit 0
