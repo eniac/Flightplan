@@ -35,13 +35,13 @@ copy_files: p4
 	rsync -av --exclude='*.log' ./* $(BOOSTER_SWITCH_COMPRESSION_DIR)
 
 $(COMPRESSOR_CORE_OBJ): $(COMPRESSOR_CORE_SOURCE)
-	$(CC) $(FLAGS) -c $< -o $@
+	$(CC) -DNO_FLIGHTPLAN_HEADER $(FLAGS) -c $< -o $@
 
 $(DECOMPRESSOR_CORE_OBJ): $(DECOMPRESSOR_CORE_SOURCE)
-	$(CC) $(FLAGS) -c $< -o $@
+	$(CC) -DNO_FLIGHTPLAN_HEADER $(FLAGS) -c $< -o $@
 
 compressorAndDecompressor: pcapCompressorAndDecompressor.cpp vjCompression.cpp
-	g++ $^ -o compressorAndDecompressor -lpcap -std=c++11
+	g++ -Wall $^ -o compressorAndDecompressor -lpcap -std=c++11 -O3
 
-clean: 
+clean:
 	$(RM) compressorAndDecompressor hdrCompress $(COMPRESSOR_CORE_OBJ) $(DECOMPRESSOR_CORE_OBJ) hls_comp_pcap hls_decomp_pcap
