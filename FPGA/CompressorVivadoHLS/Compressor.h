@@ -26,11 +26,14 @@ typedef struct
 	ap_uint<1> End_of_frame;
 	ap_uint<1> Start_of_frame;
 }packet_interface;
+
+#ifndef NO_FLIGHTPLAN_HEADER
 typedef struct
 {
     ap_uint<256> data;
     ap_uint<1> Is_valid;
 } tuple_fph;
+#endif
 
 typedef struct
 {
@@ -116,7 +119,9 @@ typedef struct
 	tuple_ipv4 Ipv4; //161
 	tuple_fec FEC; //33
 	tuple_eth Eth; //113
+#ifndef NO_FLIGHTPLAN_HEADER
 	tuple_fph Fph; //256
+#endif
 } tuple_hdr; //468 + 256
 
 typedef struct
