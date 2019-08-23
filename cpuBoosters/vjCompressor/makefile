@@ -24,11 +24,11 @@ pcap: compressorAndDecompressor
 p4: copy_files
 
 hls_comp_pcap: $(COMPRESSOR_CORE_OBJ)
-	$(CC) $(FLAGS) -DCOMPRESSOR -c hdrCompress.cpp -o hdrCompress.o 
+	$(CC) $(FLAGS) -DNO_FLIGHTPLAN_HEADER -DCOMPRESSOR -c hdrCompress.cpp -o hdrCompress.o
 	$(CC) $(FLAGS) $^ hdrCompress.o -o $@ -lpcap
 
 hls_decomp_pcap: $(DECOMPRESSOR_CORE_OBJ)
-	$(CC) $(FLAGS) -c hdrCompress.cpp -o hdrCompress.o 
+	$(CC) $(FLAGS) -DNO_FLIGHTPLAN_HEADER -c hdrCompress.cpp -o hdrCompress.o
 	$(CC) $(FLAGS) $^ hdrCompress.o -o $@ -lpcap
 
 copy_files: p4
