@@ -43,7 +43,7 @@ void Compressor(hls::stream<input_tuples> & Input_tuples, hls::stream<output_tup
 	tuple_out.headerCompress_output = tuple_in.headerCompress_input;
 	doCompress = false;
 	//compressorCache[27].ipHeader.srcAddr = 1;	
-#ifdef NO_FLIGHTPLAN_HEADER
+#ifndef NO_FLIGHTPLAN_HEADER
 	for (int i = 0; i < 4; i++)
 	{
 	#pragma HLS pipeline II=1
