@@ -12,7 +12,7 @@ params:
     pktgen_template: ./pktgen_template.lua
     n_set_pkts: 5000
     n_get_pkts: 45000
-    n_total_pkts: 100000
+    n_total_pkts: 10000
 
 time:
     iperf: 60
@@ -61,7 +61,7 @@ hosts:
             #addr: tclust1
         addr: 158.130.4.231
     moongen:
-        addr: 158.130.4.237
+        addr: 158.130.4.235
     tofino:
         addr: 158.130.4.218
         ssh:
@@ -74,7 +74,7 @@ programs:
 
     moongen:
         host: moongen
-        start: 'cd ~/source/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 0 {log} -s100'
+        start: 'cd ~/source/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 5 {log} -s100'
         stop: pkill MoonGen
         log:
             dir: moongen
@@ -91,7 +91,7 @@ programs:
             dir: program_fpgas
             log: program
             out: program_fpgas.out
-            err: program_fgpas.err
+            err: program_fpgas.err
 
     stop_dataplane:
         host: tofino
@@ -102,7 +102,7 @@ programs:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            ./run.sh 1-120 120-2 -cp 7 -mi 120 -me 120 
+            ./run.sh 1-122 122-2 -cp 5 -mi 122 -me 122 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
 
@@ -145,15 +145,15 @@ programs:
 
 commands:
     stop_dataplane:
-        begin: -50
+        begin: -90
     program_fpgas:
-        begin: -49
+        begin: -89
     dataplane:
-        begin: -28
-        duration: 90
+        begin: -88
+        duration: 150
     moongen:
-        begin: -10
-        duration: 70        
+        begin: -15
+        duration: 72        
     pktgen:
         begin: 1
     get_counters:

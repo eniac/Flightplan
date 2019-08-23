@@ -14,9 +14,9 @@ params:
 
 dirs:
     home: /home/{0.ssh.user}
-    P4Boosters: '{0.dirs.home}/source/P4Boosters'
-    memcached: '{0.dirs.P4Boosters}/testing/memcached/execution/'
-    moongen: '{0.dirs.P4Boosters}/testing/memcached/execution/{0.args.out}/{0.args.label}/{0.args.sub_label}/moongen'
+    P4Boosters: '{0.dirs.home}/P4Boosters'
+    memcached: '{0.dirs.P4Boosters}/testing/memcached'
+    moongen: '{0.dirs.memcached}/execution/{0.out}/moongen'
 
 init_cmds:
     make_lua: >-
@@ -135,7 +135,7 @@ programs:
 
     raw2ip:
         host: mcd
-        start: 'cd {0.dirs.memcached} && python raw2ip.py {0.dirs.moongen}'
+        start: 'cd {0.dirs.memcached}/execution && python raw2ip.py {0.dirs.moongen}'
         enforce_duration: false
 
 commands:
@@ -161,7 +161,7 @@ commands:
 
     moongen:
         begin:  15
-        duration: 50
+        duration: 45
 
     pktgen:
         begin: 25
@@ -174,5 +174,5 @@ commands:
         - begin: 55
 
     raw2ip:
-        begin: 70      
+        begin: 80      
         duration: 15

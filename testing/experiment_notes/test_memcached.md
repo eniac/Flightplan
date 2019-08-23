@@ -17,3 +17,5 @@ Make sure to program fpga device on every test run.
 The inline cache booster began dropping packets at 35% line rate.
 
 To run the analysis, copy the raw2ip.py script into the moongen folder, which houses the moongen.pcap file. The script outputs a new pcap called new_moongen.pcap. This file is used in the analysis. It converts the eth.type from 1234 to 0800 for easier analysis. 
+
+#TODO: Add script file to be run and command format for running experiments.

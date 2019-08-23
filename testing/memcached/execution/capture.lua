@@ -40,7 +40,7 @@ function capture(rxQueue, args)
     local bufs = memory.bufArray()
 
     while lm.running() do
-        local count = rxQueue:tryRecv(bufs, 1000)
+        local count = rxQueue:tryRecv(bufs, 100)
 	local batchTime = lm.getTime()
         for i = 1, count do
             local buf = bufs[i]
