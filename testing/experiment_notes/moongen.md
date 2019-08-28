@@ -36,5 +36,6 @@ In the above example, 5 refers to the port id where the mellanox card is running
 Machines tclust1-5 use newer NICs(connectx-4 as compared to connectx-3) and are capable of better capture functionality. 
 
 There are additional parameters in the capture.lua file which can be used to improve performance. 
-rxdescs should be increased.
-
+rxdescs should be increased to 16384
+dropEnable should be set to false
+tryRecv(bufs, 100) as parameters

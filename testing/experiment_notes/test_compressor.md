@@ -26,4 +26,15 @@ In the config.yml files, it may happen that:
 Basically as noted from the above points, the inference is that the timings of each sequence of operations should be checked for
 possible errors.  
 
-#TODO: Add script file to be run and command format for running experiments.
+The script should be run as:
+e.g.
+./run_cpu_compressor.sh test_output cpu_compressor <name of pcap in pcaps directory> <rate at which experiment is to be run>
+
+100.00 rate is equivalent to 10Gbps input rate. 
+
+For multiple runs of the same experiment use the run_multiple script as follows:
+e.g.
+
+./run_multiple.sh run_cpu_compressor.sh cpu_compressor <name of pcap file residing in pcap directory> 
+
+
