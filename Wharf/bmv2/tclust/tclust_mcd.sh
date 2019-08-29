@@ -10,15 +10,15 @@ HERE=$(realpath "`dirname $0`/../" --relative-to $(pwd) )
 TOPO="$1"
 INPUT=`realpath $2`
 EXPECTED=`realpath $3`
-BASENAME=$(basename $INPUT .pcap)
+BASENAME=$(basename $TOPO .yml)_$(basename $INPUT .pcap)
 
-SIP="10.0.0.9"
-DIP="10.0.0.10"
+SIP="10.0.0.7"
+DIP="10.0.0.4"
 SMAC="00:02:c9:3a:84:00"
 DMAC="7c:fe:90:1c:36:81"
 
-TESTDIR=$HERE/test_output
-OUTDIR=$TESTDIR/tclust_$BASENAME
+TESTDIR=$HERE/test_output/tclust_mcd/
+OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files
 rm -rf $OUTDIR
@@ -47,7 +47,7 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --log $LOG_DUMPS \
         --verbose \
         --replay "mcd_c-tofino1:$REWRITTEN" \
-        --host-prog "mcd_s:memcached -u $USER -U 11211 -B ascii -vvv" 2> $LOG_DUMPS/flightplan_mininet_log.err
+        --host-prog "mcd_s:memcached -u $USER -U 11211 -B ascii" 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py >&2
@@ -62,7 +62,7 @@ python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_c fpga_mcd fpga
 echo "MCD HOSTS"
 python2 $HERE/pcap_tools/pcap_path_size.py $TOPO $PCAP_DUMPS mcd_s fpga_mcd mcd_c
 
-python2 $HERE/pcap_tools/pcap_diff.py $PCAP_DUMPS/tofino1_to_mcd_c.pcap $REWRITTEN_EXPECTED --no-ip --clear-chksum
+python2 $HERE/pcap_tools/pcap_diff.py $REWRITTEN_EXPECTED $PCAP_DUMPS/tofino1_to_mcd_c.pcap --no-ip --clear-chksum
 
 if [[ $? == 0  ]]; then
     echo -e $SUCCESS >&2
