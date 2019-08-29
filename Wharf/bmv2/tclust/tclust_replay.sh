@@ -9,15 +9,15 @@ HERE="$(realpath `dirname $0`/../ --relative-to $(pwd))"
 
 TOPO="$1"
 INPUT=`realpath $2 --relative-to $(pwd)`
-BASENAME=$(basename $INPUT .pcap)
+BASENAME=$(basename $TOPO .yml)_$(basename $INPUT .pcap)
 
-SIP="10.0.0.11"
-DIP="10.0.0.12"
+SIP="10.0.0.1"
+DIP="10.0.0.2"
 SMAC="24:8a:07:8f:eb:00"
 DMAC="24:8a:07:5b:15:35"
 
-TESTDIR=$HERE/test_output
-OUTDIR=$TESTDIR/tclust_$BASENAME
+TESTDIR=$HERE/test_output/tclust_replay/
+OUTDIR=$TESTDIR/$BASENAME
 PCAP_DUMPS=$OUTDIR/pcap_dump/
 LOG_DUMPS=$OUTDIR/log_files
 rm -rf $OUTDIR
