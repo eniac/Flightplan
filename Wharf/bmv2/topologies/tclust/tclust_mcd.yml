@@ -2,22 +2,22 @@ hosts:
     mcd_c :
             interfaces:
                     - link: tofino1
-                      ip: 10.0.0.9/24
+                      ip: 10.0.0.7/24
                       mac: '00:02:c9:3a:84:00'
     mcd_s :
             interfaces:
                     - link: tofino2
-                      ip: 10.0.0.10/24
+                      ip: 10.0.0.4/24
                       mac: '7c:fe:90:1c:36:81'
     iperf_c :
             interfaces:
                     - link: tofino1
-                      ip: 10.0.0.11/24
+                      ip: 10.0.0.1/24
                       mac: '24:8a:07:8f:eb:00'
     iperf_s :
             interfaces:
                     - link: tofino2
-                      ip: 10.0.0.12/24
+                      ip: 10.0.0.2/24
                       mac: '24:8a:07:5b:15:35'
 
 #define SEG_DECODE 2
