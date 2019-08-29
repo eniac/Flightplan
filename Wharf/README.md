@@ -39,6 +39,8 @@ SDNet build is not yet added to the makefile.
 Building for SDNet requires adding `-DTARGET_SDNET` to to `p4c` command to enable the
 appropriate target-specific code.
 
+**NB:** Does not yet have an effect
+
 ## Building for bmv2
 
 Sample and fec booster bmv2 inputs can both be built with `make bmv2`
@@ -80,7 +82,13 @@ created it.
 The booster can then use the function `is_generated()` to see if it was the one that
 generated that packet, and then it can deal with it accordingly.
 
-## Testing in bmv2 and mininet
+# Testing in bmv2 and mininet
+
+## Tclust tests
+For information on the tests that mimic the tclust topology,
+view [tclust_README.md](tclust_README.md).
+
+## Complete.p4
 
 The `Complete.p4` program starts up the encoder, decoder, and memcached on the same switch
 (except if such features are disabled via `#define`'s).
