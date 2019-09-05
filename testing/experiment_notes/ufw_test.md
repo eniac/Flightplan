@@ -26,5 +26,9 @@ Run 'sudo ufw disable && sudo ufw enable'. NOTE: Make sure that /etc/ufw/user.ru
 The UFW Output throughput will appear to be higher than UFW Input throughput, but this is purely a function of the way that throughput is being measured in these experiments. Throughput = Total Bytes / (Last packet timestamp - First packet timestamp) . 
 Now as there is some higher packet latency for the initial set of packets, the First output packet timestamp is pushed ahead as compared to the last output packets. As a result the denominator of the above equation contracts causing an inflation in the value. For all purposes, the input and output throughput of this experiment remains the same.   
 
+Input file:
+	P4Boosters/testing/ufw/execution/pcaps/ufw_dcomp.pcap
 
+ANALYSIS FILE:
+	P4Boosters/testing/ufw/analysis/ufw_analysis.ipynb
  

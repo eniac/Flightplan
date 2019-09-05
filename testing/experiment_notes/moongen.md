@@ -39,3 +39,5 @@ There are additional parameters in the capture.lua file which can be used to imp
 rxdescs should be increased to 16384
 dropEnable should be set to false
 tryRecv(bufs, 100) as parameters
+
+Moongen was run on tclust5 for the Benchmark experiments.

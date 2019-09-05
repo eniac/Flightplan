@@ -10,7 +10,9 @@ System dataplane:
       5    5
 
 
-Input pcap: oneFlow.pcap 
+Input pcap for compressor: P4Boosters/testing/HdrCompression/execution/pcaps/oneFlow1000.pcap 
+
+Input pcap for decompressor: P4Boosters/testing/HdrCompression/execution/pcaps/oneFlow1000.pcap.compress.pcap
 
 Make sure the fpga is reprogrammed on every single experiment.
 
@@ -37,4 +39,8 @@ e.g.
 
 ./run_multiple.sh run_cpu_compressor.sh cpu_compressor <name of pcap file residing in pcap directory> 
 
+
+ANALYSIS FILE:
+	
+  P4Boosters/testing/HdrCompression/analysis/tofinoHdrCompression.ipynb 
 

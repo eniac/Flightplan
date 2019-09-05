@@ -22,4 +22,8 @@ Where -l refers to log file directory
 -c is the config file to use.
 -i is the interface over which snort monitors data.
 
-3) When using the run_snort.sh script for automating test use case, make certain to enter the rate values as integer, not float. i.e, instead of '5.00' , input '5'. This is a current limitation for the script if it needs to work.  
+3) When using the run_snort.sh script for automating test use case, make certain to enter the rate values as integer, not float. i.e, instead of '5.00' , input '5'. This is a current limitation for the script if it needs to work. 
+
+
+Datapath:
+tclust1----->tofino---->dcomp1 

@@ -4,13 +4,13 @@ System dataplane:
 
 1 ----> 121 ----> 2
       |    |
-      |    |
+      |    |telemetry
       |    |
       v    v
       5    5
 
 
-Input pcap: fec_new_test_in.pcap 
+Input pcap: P4Boosters/testing/fec/execution/pcaps/fec_new_test_in.pcap 
 
 Make sure the fpga is reprogrammed on every single experiment.
 
@@ -22,13 +22,13 @@ System dataplane:
 
 1 ----> 122 ----> 2
       |    |
-      |    |
+      |    |telemetry
       |    |
       v    v
       5    5
 
 
-Input pcap: fpga_fec_test_enc_60.pcap 
+Input pcap: P4Boosters/testing/fec/execution/pcaps/fpga_fec_test_enc_60.pcap 
 
 Make sure the fpga is reprogrammed on every single experiment.
 
@@ -40,13 +40,13 @@ System dataplane:
 
 1 ----> 112 
       |    |
-      |    |
+      |    |telemetry
       |    |
       v    v
       5    5
 
 
-Input pcap: fec_new_test_in.pcap (Class 1 for CPU use case, as defined in tag_all.txt)
+Input pcap: P4Boosters/testing/fec/execution/pcaps/fec_new_test_in.pcap (Class 1 for CPU use case, as defined in tag_all.txt)
 
 Expected behaviour: There should be a 5:6 ratio for input:output packet counts.
 
@@ -56,13 +56,13 @@ System dataplane:
 
 1 ----> 112 
       |    |
-      |    |
+      |    |telemetry
       |    |
       v    v
       5    5
 
 
-Input pcap: cpu_fec_test_enc.pcap (Class 1 for CPU use case, as defined in tag_all.txt)
+Input pcap: P4Boosters/testing/fec/execution/pcaps/cpu_fec_test_enc.pcap (Class 1 for CPU use case, as defined in tag_all.txt)
 
 Expected behaviour: There should be a 6:5 ratio for input:output packet counts.
 
@@ -87,5 +87,8 @@ For multiple runs of the same experiment use the run_multiple script as follows:
 e.g.
 
 ./run_multiple.sh run_fpga_fec_encoder.sh fpga_fec_encoder <name of pcap file residing in pcap directory> 
+ANALYSIS FILE:
 
+  P4Boosters/testing/fec/analysis/FecThrput.ipynb for Throughput measurements.
+  P4Boosters/testing/fec/analysis/FecLatency.ipynb for Latency measurements.
 

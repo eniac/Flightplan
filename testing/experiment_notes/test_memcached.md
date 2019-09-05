@@ -1,6 +1,9 @@
 For FPGA:
 
-Test pcaps are located in testing/memcached/execution/pcaps. 
+Test pcaps are located in P4Boosters/testing/memcached/execution/pcaps.
+The 2 files used are:
+	mcd_warmup.pcap as warmup packets
+	mcd_test_new.pcap as test packets 
 
 Make sure that test pcap has around 10000 packets, as there were issues with huge page availability on the pktgen generator for larger packet numbers.
 
@@ -29,4 +32,6 @@ e.g.
 
 ./run_multiple.sh run_fpga_inline_cache.sh fpga_inline <name of pcap file residing in pcap directory> 
 
+ANALYSIS FILE:
 
+	P4Boosters/testing/memcached/analysis/inlinecache.ipynb
