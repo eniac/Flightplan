@@ -81,7 +81,8 @@ def get_counters(conn=None):
     print(stdo.read())
     print(stde.read())
 
-def main(ports, from_file, do_delete, do_update, do_counters, allow_ipv6):
+def main(ports, host_cfg, from_file, do_delete, do_update, do_counters, allow_ipv6,
+         ingress_mirror, egress_mirror):
     conn = connect_to_arista()
     if do_counters:
         get_counters(conn)
@@ -89,7 +90,7 @@ def main(ports, from_file, do_delete, do_update, do_counters, allow_ipv6):
     if do_delete:
         clear_current_flows(conn)
     if do_update:
-        flows = arista_syntax.generate_rules(ports, allow_ipv6)
+        flows = arista_syntax.generate_rules(ports, allow_ipv6, host_cfg, ingress_mirror, egress_mirror)
         add_flows(flows, conn)
     if from_file is not None:
         flows = [x.strip('\n') for x in open(from_file).readlines()]
@@ -103,9 +104,11 @@ if __name__ == '__main__':
     args = mk_parser().parse_args()
     ports = arista_syntax.ports_from_args(args)
 
-    main(ports, args.from_file,
+    main(ports, args.host_cfg, args.from_file,
          do_delete = args.delete_only or args.delete_first,
          do_update = not (args.delete_only or (args.from_file is not None)),
          do_counters = args.counters_only,
-         allow_ipv6 = args.allow_ipv6)
+         allow_ipv6 = args.allow_ipv6,
+         ingress_mirror = args.ingress_mirror,
+         egress_mirror = args.egress_mirror)
 
