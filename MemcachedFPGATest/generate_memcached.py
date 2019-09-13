@@ -19,7 +19,10 @@ class PacketGenerator:
 
         self.Pkt = bytes(Ether(src=src_mac, dst=dst_mac)/IP(src=src_ip, dst=dst_ip)/UDP(sport=sport, dport=dport,chksum=0))
         random.seed(time.time())
-        self.cur_id = random.randint(0, 100)
+
+        self.possible_ids = set(range(65536))
+        self.used_set_ids = defaultdict(set)
+        self.used_get_ids = defaultdict(set)
 
     def udp_hdr(self, payload_len):
         hdr = list(self.Pkt[:])
@@ -34,10 +37,25 @@ class PacketGenerator:
 
         return b''.join(hdr)
 
-    def hdr(self):
-        h = b''.join([struct.pack(">H", x) for x in [self.cur_id, 0, 1, 0]])
-        self.cur_id+= 1
-        self.cur_id %= 65535
+    def hdr(self, key, used_ids):
+        # Try 10 random keys before having to compute set difference
+        for _ in range(10):
+            id = random.randint(0, 65535)
+            # Try the fast-path (randomness) first
+            if id not in used_ids[key]:
+                used_ids[key].add(id)
+                break
+        else:
+            unused_ids = self.possible_ids.difference(used_ids[key])
+            if len(unused_ids) > 0:
+                id = random.sample(unused_ids, 1)[0]
+                used_ids[key].add(id)
+            else:
+                print("Reusing for key {}".format(key))
+                id = random.randint(1, 65535)
+
+
+        h = b''.join([struct.pack(">H", x) for x in [id, 0, 1, 0]])
         return h
 
     def set(self, key, nbytes=512):
@@ -46,7 +64,8 @@ class PacketGenerator:
         load = (key + '-') * (nbytes)
         load = load[:nbytes]
 
-        load = bytes(self.hdr() + self.SET_SYNTAX.format(cmd='set', key=key, bytes=nbytes, payload=load))
+        load = bytes(self.hdr(key, self.used_set_ids) +
+                     self.SET_SYNTAX.format(cmd='set', key=key, bytes=nbytes, payload=load))
 
         pkt = self.udp_hdr(len(load)) + load
 
@@ -55,7 +74,8 @@ class PacketGenerator:
     def get(self, key):
         key = "{:08d}".format(key)
 
-        load = bytes(self.hdr() + self.GET_SYNTAX.format(cmd='get', key=key))
+        load = bytes(self.hdr(key, self.used_get_ids) +
+                     self.GET_SYNTAX.format(cmd='get', key=key))
         pkt = self.udp_hdr(len(load)) + load
 
         return pkt
@@ -99,16 +119,22 @@ def generate_packets(n_get, n_set, smac, dmac, sip, dip, key_space, zipf_coef):
     set_keys = np.random.choice(all_keys, n_set)
 
     pkts = []
-    for key in get_keys:
+    for i, key in enumerate(get_keys):
+        if i % 10000 == 0:
+            print(i)
         pkts.append(pkt_gen.get(key))
 
-    for key in set_keys:
+    for i, key in enumerate(set_keys):
+        if i % 10000 == 0:
+            print(i)
         pkts.append(pkt_gen.set(key))
 
     random.shuffle(pkts)
 
     warmup_pkts = []
-    for key in warmup_keys:
+    for i, key in enumerate(warmup_keys):
+        if i % 10000 == 0:
+            print(i)
         warmup_pkts.append(pkt_gen.set(key))
 
     return pkts, warmup_pkts
