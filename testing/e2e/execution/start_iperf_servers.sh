@@ -11,7 +11,7 @@ if [[ $IP == "" ]]; then
 fi
 
 for i in `seq 0 $(( $NUM - 1 ))`; do
-    iperf3 -s -B $IP -J -p $(( $BASE_PORT + $i )) > ${LOGBASE}_$i.json 2> ${LOGBASE}_$i.err&
+    stdbuf -o 0 iperf3 -s -B $IP -p $(( $BASE_PORT + $i )) | ts %.s > ${LOGBASE}_$i.out 2> ${LOGBASE}_$i.err&
 done
 
 wait
