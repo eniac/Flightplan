@@ -7,7 +7,7 @@ if [[ $SUFFIX == "" ]]; then
 fi
 
 #OUTPUT=../e2e_output_200k
-OUTPUT=../e2e_output_500k_cpu_hc_11
+OUTPUT=../e2e_output_500k_cpu_hc_14
 
 run_shremote() {
     DROP_RATE=$1;
@@ -31,6 +31,6 @@ run_shremote() {
 
 run_shremote 0 "" baseline $SUFFIX
 run_shremote 0 "-fc -hcc 2 -hcd 4" hc $SUFFIX
-#run_shremote 0.05 "-fc" drop $SUFFIX
-#run_shremote 0.05 "-f -fc" fec $SUFFIX
-#run_shremote 0.05 "-f -fc -k" kv $SUFFIX
+run_shremote 0.05 "-fc -hcc 2 -hcd 4" drop $SUFFIX
+run_shremote 0.05 "-f -fc -hcc 2 -hcd 4" fec $SUFFIX
+run_shremote 0.05 "-f -fc -k -hcc 2 -hcd 4" kv $SUFFIX
