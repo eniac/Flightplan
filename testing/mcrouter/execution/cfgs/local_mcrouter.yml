@@ -1,0 +1,154 @@
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+params:
+    n_keys: 3000
+    set_ratio: '1:9'
+    n_clients: 10
+    n_threads: 8
+    n_reqs: 100000
+    value_size: 1000
+
+dirs:
+    home: /home/{0.ssh.user}
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+
+init_cmds: {}
+
+files:
+    moongen_script:
+        src: './capture.lua'
+        dst: '{0.programs.log_dir}/capture.lua'
+        host: moongen
+    mcrouter_cfg:
+        src: './mcrouter_local_config.json'
+        dst: '{0.programs.log_dir}/mcrouter_config.json'
+        host: mcrouter
+
+hosts:
+    memtier:
+        addr: tclust7
+        ip: 10.0.0.7
+    mcd:
+        addr: tclust4
+        mac: 7c:fe:90:1c:36:81
+        ip: 10.0.0.4
+    moongen:
+        addr: tclust5
+        tofino_port: 5
+    mcrouter:
+        addr: dcomp1
+        ip: 10.0.0.101
+        tofino_port: 112
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+
+    log_dir: ~/logs/{0.label}
+
+    start_dataplane:
+        host: tofino
+        start: >-
+            cd ~/gits/TofinoP4Boosters/macBasedE2e && ./run_fg.sh
+        stop: cd ~/gits/TofinoP4Boosters/macBasedE2e && ./stop.sh
+        log:
+            dir: dataplane
+            out: dataplane.out
+            err: dataplane.err
+        enforce_duration: true
+        check_rtn: false
+
+    stop_dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/macBasedE2e && ./stop.sh
+        check_rtn: false
+
+    mcrouter:
+        host: mcrouter
+        start: mcrouter -f {0.files.mcrouter_cfg.dst} -p 11222 --num-proxies 20
+        stop: pkill mcrouter
+        check_rtn: false
+        log:
+            dir: mcrouter
+            out: mcrouter.out
+            err: mcrouter.err
+
+    local_mcd:
+        host: mcrouter
+        start: 'memcached -p 12345 -t 20'
+        stop: 'pkill memcached'
+        check_rtn: false
+        log:
+            dir: mcd
+            out: memcached_local.out
+            err: memcached_local.err
+
+    cache_warmup:
+        host: memtier
+        start: >-
+            memtier_benchmark -s {0.hosts.mcrouter.ip} -p 11222 -P memcache_text
+            --key-maximum {0.params.n_keys} --ratio 1:0
+            -c 1 -t 1 -n {0.params.n_keys} --key-pattern P:P -d {0.params.value_size}
+        log:
+            dir: memtier
+            out: warmup.out
+            err: warmup.err
+
+    memtier:
+        host: memtier
+        start: >-
+            memtier_benchmark -s {0.hosts.mcrouter.ip} -p 11222 -P memcache_text
+            --key-maximum {0.params.n_keys} --ratio {0.params.set_ratio}
+            -c {0.params.n_clients} -t {0.params.n_threads} -n {0.params.n_reqs}
+            --key-pattern G:G -d {0.params.value_size} --pipeline 20
+        check_rtn: 0
+        log:
+            dir: memtier
+            out: test.out
+            err: test.err
+
+    get_counters:
+        host: tofino
+        start: >-
+            tmux send ucli ENTER && sleep 1 &&
+            tmux send pm ENTER && sleep 1 &&
+            tmux send show ENTER && sleep 1 &&
+            tmux capture-pane -J -p
+        log:
+            out: counters_{i}.out
+            err: counters_{i}.err
+
+commands:
+
+    stop_dataplane:
+        begin: 0
+
+    start_dataplane:
+        begin: 2
+        duration: 75
+
+    local_mcd:
+        begin: 0
+        duration: 70
+
+    mcrouter:
+        begin: 0
+        duration: 70
+
+    cache_warmup:
+        begin: 27
+
+    memtier:
+        begin: 40
+
+    get_counters:
+        - begin: 31
+        - begin: 70
+
