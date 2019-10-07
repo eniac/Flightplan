@@ -1,0 +1,14 @@
+description: >-
+    NSID 2020 final version of failover data and plotting scripts.
+    Bitstreams are the same as the corresponding e2e experiments
+
+experiment: failover
+
+repositories:
+    P4Boosters: 5ac827ee
+
+files:
+    documentation.md: failover_readme.md
+    raw_data: failover_output_6/
+    power_data.pickle: analysis/fec_failover_powers.pickle
+    analysis.ipynb: analysis/failover_analysis.ipynb

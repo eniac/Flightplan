@@ -1,0 +1,178 @@
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+params:
+    rate: '{0.args.rate}'
+    pktgen_template: ./pktgen_template.lua
+    n_set_pkts: 5000
+    n_get_pkts: 45000
+    n_total_pkts: 50000
+    key_space: 10000
+    zipf_coef: 1.00
+
+dirs:
+    home: /home/{0.ssh.user}
+    P4Boosters: '{0.dirs.home}/dcomp/P4Boosters'
+
+init_cmds:
+    make_lua: >-
+        python format_lua_template.py {0.params.pktgen_template} {0.files.pktgen_script.src}
+        --rate {0.params.rate} --log  {0.programs.log_dir}/pktgen.log --count {0.params.n_total_pkts}
+    make_pcap: >-
+        python2 {0.dirs.P4Boosters}/MemPacket/generate_memcached.py
+        --smac {0.hosts.pktgen.mac} --sip {0.hosts.pktgen.ip}
+        --dmac {0.hosts.mcd.mac} --dip {0.hosts.mcd.ip}
+        --out {0.files.test_pcap.src} --warmup-out {0.files.warmup_pcap.src}
+        --n-get {0.params.n_get_pkts} --n-set {0.params.n_set_pkts}
+        --key-space {0.params.key_space} --zipf {0.params.zipf_coef}
+
+post_cmds:
+    verify_counters: >-
+        python verify_counters.py {0.out}/moongen/moongen.out {0.out}/counters_0.out {0.out}/counters_1.out
+
+files:
+    pktgen_script:
+        src: '{0.out}/pktgen.lua'
+        dst: '{0.programs.log_dir}/pktgen.lua'
+        host: pktgen
+    moongen_script:
+        src: './capture.lua'
+        dst: '{0.programs.log_dir}/capture.lua'
+        host: moongen
+    test_pcap:
+        src: '{0.out}/test_pkts.pcap'
+        dst: '{0.programs.log_dir}/test_pkts.pcap'
+        host: pktgen
+    warmup_pcap:
+        src: '{0.out}/warmup_pkts.pcap'
+        dst: '{0.programs.log_dir}/warmup_pkts.pcap'
+        host: pktgen
+    pktgen_runner:
+        src: './run_lua.sh'
+        dst: '~/dcomp/dpdk/run_lua.sh'
+        host: pktgen
+
+hosts:
+    fpga_prog:
+        addr: tclust2
+    pktgen:
+        addr: tclust7
+        mac: 00:02:c9:3a:84:00
+        ip: 10.0.0.7
+    mcd:
+        addr: tclust4
+        mac: 7c:fe:90:1c:36:81
+        ip: 10.0.0.4
+    moongen:
+        addr: tclust5
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+
+    log_dir: ~/logs/{0.label}
+
+    program_fpga:
+        host: fpga_prog
+        start: cd ~/dcomp/P4Boosters/FPGA/TopLevelSDx && bash program_memcached.sh
+        check_rtn: 0
+        log:
+            dir: fpga
+            out: program_memcached.out
+            err: program_memcached.err
+
+    start_dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/flightplanE2e && ./run.sh -t -mi 7 -me 7 {0.args.dataplane_flags}
+        stop: cd ~/gits/TofinoP4Boosters/flightplanE2e && ./stop.sh
+        enforce_duration: false
+
+    stop_dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/flightplanE2e && ./stop.sh
+        check_rtn: false
+
+    moongen:
+        host: moongen
+        start: 'cd ~/dcomp/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 1 {log} -s100'
+        stop: pkill MoonGen
+        log:
+            dir: moongen
+            log: moongen.pcap
+            out: moongen.out
+            err: moongen.err
+    mcd:
+        host: mcd
+        start: 'memcached -U 11211 -l {0.hosts.mcd.ip} --protocol=ascii'
+        stop: 'pkill memcached'
+        log:
+            out: memcached.out
+            err: memcached.err
+
+    tcpreplay:
+        host: pktgen
+        start: '~/bin/tcpreplay -p {rate} -i ens3 {pcap}'
+        log:
+            dir: tcpreplay
+            out: tcpreplay.out
+            err: tcpreplay.err
+
+    pktgen:
+        host: pktgen
+        start: tmux new -d '~/dcomp/dpdk/run_lua.sh {lua} {pcap}'
+        enforce_duration: false
+        log:
+            out: pktgen.out
+            err: pktgen.err
+
+    get_counters:
+        host: tofino
+        start: >-
+            tmux send ucli ENTER && sleep 1 &&
+            tmux send pm ENTER && sleep 1 &&
+            tmux send show ENTER && sleep 1 &&
+            tmux capture-pane -J -p
+        log:
+            out: counters_{i}.out
+            err: counters_{i}.err
+
+commands:
+
+    stop_dataplane:
+        begin: -60
+
+    program_fpga:
+        begin: -59
+
+    start_dataplane:
+        begin: -30
+        duration: 75
+
+    mcd:
+        begin: -20
+        duration: 65
+
+    tcpreplay:
+        begin: 0
+        pcap: '{0.files.warmup_pcap.dst}'
+        rate: 10000
+
+    moongen:
+        begin: 5
+        duration: 35
+
+    pktgen:
+        begin: 15
+        lua: '{0.files.pktgen_script.dst}'
+        pcap: '{0.files.test_pcap.dst}'
+        duration: 30
+
+    get_counters:
+        - begin: 10
+        - begin: 40
