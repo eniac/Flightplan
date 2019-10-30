@@ -1,0 +1,30 @@
+enable
+
+config
+
+directflow
+
+flow tc10-comp
+    match input interface Ethernet1/1
+    action output interface Ethernet13/1
+exit
+
+flow comp-lossy
+    match input interface Ethernet13/1
+    action output interface Ethernet15/1
+exit
+
+flow lossy-decomp
+    match input interface Ethernet15/2
+    action output interface Ethernet13/2
+exit
+
+flow decomp-tc11
+    match input interface Ethernet13/2
+    action output interface Ethernet2/1
+exit
+
+flow tc11-10
+    match input interface Ethernet2/1
+    action output interface Ethernet1/1
+exit

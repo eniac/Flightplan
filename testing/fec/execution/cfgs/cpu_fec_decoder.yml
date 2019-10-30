@@ -12,7 +12,7 @@ params:
     pktgen_template: ./pktgen_template.lua
     n_set_pkts: 5000
     n_get_pkts: 45000
-    n_total_pkts: 1200
+    n_total_pkts: 12000
 
 time:
     iperf: 60
@@ -61,7 +61,7 @@ hosts:
             #addr: tclust1
         addr: 158.130.4.231
     moongen:
-        addr: 158.130.4.237
+        addr: 158.130.4.235
     tofino:
         addr: 158.130.4.218
         ssh:
@@ -74,7 +74,7 @@ programs:
 
     moongen:
         host: moongen
-        start: 'cd ~/source/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 0 {log} -s100'
+        start: 'cd ~/source/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 5 {log} -s100'
         stop: pkill MoonGen
         log:
             dir: moongen
@@ -93,8 +93,8 @@ programs:
             err: encoder.err
 
     start_decoder:
-        host: decoder
-        start: cd ~/source/P4Boosters/cpuBoosters/fecBoosters/ && ./fecDecodeBooster -i eno2 -r tag_all.txt
+        host: encoder
+        start: cd ~/source/P4Boosters/cpuBoosters/fecBoosters/ && ./fecDecodeBooster -i eno1 -r tag_all.txt
         stop: pkill -f fecDecodeBooster
         check_rtn: null
         log:
@@ -111,7 +111,7 @@ programs:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            ./run.sh 1-111 -cp 7 -mi 111 -me 111 
+            ./run.sh 1-112 -cp 5 -mi 112 -me 112 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
 
@@ -157,10 +157,10 @@ commands:
         begin: -10
     dataplane:
         begin: 0
-        duration: 68
+        duration: 88
     start_decoder:
         begin: -5
-        duration: 75
+        duration: 70
         #    start_decompressor:
         #begin: -15
         #duration: $( {0.time.iperf} + 20 )

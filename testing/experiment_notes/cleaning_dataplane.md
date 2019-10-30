@@ -13,9 +13,8 @@ The main kind of broadcast packets seen were:
 2)BOOTP/DHCP packets:
 
  The way  to prevent this is by:
-  On DCOMP1 ---> configure /etc/netplan/50-cloud-init.yml file to have dhcp4:false on that specific interface.
-
- Sometimes multiple dhclient processes may be running, in which case killing them is also required. 
+  On TCLUST machines, killing multiple instances of dhclient processes.
+  On DCOMP1 ---> configure /etc/netplan/50-cloud-init.yml file to have dhcp4:false on that specific interface. Sometimes multiple dhclient processes may be running on DCOMP1 as well, in which case killing them is also required. 
 
 
 

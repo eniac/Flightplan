@@ -1,0 +1,15 @@
+client_1:
+    mac: 00:02:c9:39:d0:00
+    port: 2/1
+
+server_1:
+    mac: 00:02:c9:39:bd:80
+    port: 1/1
+
+client_2:
+    mac: 00:02:c9:3a:84:00
+    port: 14/3
+
+server_2:
+    mac: 7c:fe:90:1c:36:81
+    port: 14/4

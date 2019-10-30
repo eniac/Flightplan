@@ -1,0 +1,31 @@
+enable
+
+config
+
+directflow
+
+flow noipv6
+    match ethertype 0x86dd
+    action drop
+    priority 10
+exit
+
+flow tc10-comp
+    match input interface Ethernet14/1
+    action output interface Ethernet13/1
+exit
+
+flow comp-decomp
+    match input interface Ethernet13/1
+    action output interface Ethernet13/2
+exit
+
+flow decomp-tc11
+    match input interface Ethernet13/2
+    action output interface Ethernet14/2
+exit
+
+flow tc11-10
+    match input interface Ethernet14/2
+    action output interface Ethernet14/1
+exit

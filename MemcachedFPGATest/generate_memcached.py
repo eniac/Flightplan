@@ -22,10 +22,10 @@ class PacketGenerator:
         self.set_hdr_bytes = None
         random.seed(time.time())
         self.val_len = val_len
+
         self.possible_ids = set(range(65536))
         self.used_set_ids = defaultdict(set)
         self.used_get_ids = defaultdict(set)
-
 
     def hdr(self, key, used_ids):
         # Try 10 random keys before having to compute set difference
@@ -55,7 +55,7 @@ class PacketGenerator:
         load = load[:self.val_len]
 
         load = bytes(self.hdr(key, self.used_set_ids) +
-                      self.SET_SYNTAX.format(cmd='set', key=key, bytes=self.val_len, payload=load))
+                     self.SET_SYNTAX.format(cmd='set', key=key, bytes=self.val_len, payload=load))
 
         if self.set_hdr_bytes is None:
             self.set_hdr[IP].len = len(load) + 28
@@ -116,16 +116,22 @@ def generate_packets(n_get, n_set, smac, dmac, sip, dip, key_space, zipf_coef):
     set_keys = np.random.choice(all_keys, n_set)
 
     pkts = []
-    for key in get_keys:
+    for i, key in enumerate(get_keys):
+        if i % 10000 == 0:
+            print(i)
         pkts.append(pkt_gen.get(key))
 
-    for key in set_keys:
+    for i, key in enumerate(set_keys):
+        if i % 10000 == 0:
+            print(i)
         pkts.append(pkt_gen.set(key))
 
     random.shuffle(pkts)
 
     warmup_pkts = []
-    for key in warmup_keys:
+    for i, key in enumerate(warmup_keys):
+        if i % 10000 == 0:
+            print(i)
         warmup_pkts.append(pkt_gen.set(key))
 
     return pkts, warmup_pkts

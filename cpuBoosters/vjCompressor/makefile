@@ -24,24 +24,24 @@ pcap: compressorAndDecompressor
 p4: copy_files
 
 hls_comp_pcap: $(COMPRESSOR_CORE_OBJ)
-	$(CC) $(FLAGS) -DCOMPRESSOR -c hdrCompress.cpp -o hdrCompress.o 
+	$(CC) $(FLAGS) -DNO_FLIGHTPLAN_HEADER -DCOMPRESSOR -c hdrCompress.cpp -o hdrCompress.o
 	$(CC) $(FLAGS) $^ hdrCompress.o -o $@ -lpcap
 
 hls_decomp_pcap: $(DECOMPRESSOR_CORE_OBJ)
-	$(CC) $(FLAGS) -c hdrCompress.cpp -o hdrCompress.o 
+	$(CC) $(FLAGS) -DNO_FLIGHTPLAN_HEADER -c hdrCompress.cpp -o hdrCompress.o
 	$(CC) $(FLAGS) $^ hdrCompress.o -o $@ -lpcap
 
 copy_files: p4
 	rsync -av --exclude='*.log' ./* $(BOOSTER_SWITCH_COMPRESSION_DIR)
 
 $(COMPRESSOR_CORE_OBJ): $(COMPRESSOR_CORE_SOURCE)
-	$(CC) $(FLAGS) -c $< -o $@
+	$(CC) -DNO_FLIGHTPLAN_HEADER $(FLAGS) -c $< -o $@
 
 $(DECOMPRESSOR_CORE_OBJ): $(DECOMPRESSOR_CORE_SOURCE)
-	$(CC) $(FLAGS) -c $< -o $@
+	$(CC) -DNO_FLIGHTPLAN_HEADER $(FLAGS) -c $< -o $@
 
 compressorAndDecompressor: pcapCompressorAndDecompressor.cpp vjCompression.cpp
-	g++ -Wall $^ -o compressorAndDecompressor -lpcap -std=c++11
+	g++ -Wall $^ -o compressorAndDecompressor -lpcap -std=c++11 -O3
 
-clean: 
+clean:
 	$(RM) compressorAndDecompressor hdrCompress $(COMPRESSOR_CORE_OBJ) $(DECOMPRESSOR_CORE_OBJ) hls_comp_pcap hls_decomp_pcap

@@ -6,11 +6,17 @@ declare -a pcapsArr=("pcaps/oneFlow.pcap" "pcaps/twoFlows.pcap" "pcaps/colliding
 # 2. build.
 make
 
-# 3. Run booster for each pcap source.
-for i in "${pcapsArr[@]}"
+for implementation in 0 1
 do
-   echo "running test pcap: $i"
-   #2nd argument. 0 - HLSWrapper implementation. 1 - libpcap implementation
-   sudo ./vethTestCompressorAndDecompressor.sh $i 1
+    # 3. Run booster for each pcap source.
+    for i in "${pcapsArr[@]}"
+    do
+       echo "running test pcap: $i"
+       #2nd argument. 0 - HLSWrapper implementation. 1 - libpcap implementation
+       sudo ./vethTestCompressorAndDecompressor.sh $i $implementation
+       if [[ $? != 0 ]]; then
+           echo "FAILED"
+           exit 1;
+       fi
+    done
 done
-

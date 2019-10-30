@@ -61,7 +61,7 @@ hosts:
             #addr: tclust1
         addr: 158.130.4.231
     moongen:
-        addr: 158.130.4.237
+        addr: 158.130.4.235
     tofino:
         addr: 158.130.4.218
         ssh:
@@ -74,7 +74,7 @@ programs:
 
     moongen:
         host: moongen
-        start: 'cd ~/source/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 0 {log} -s100'
+        start: 'cd ~/source/MoonGen/ && ./build/MoonGen {0.files.moongen_script.dst} 5 {log} -s100'
         stop: pkill MoonGen
         log:
             dir: moongen
@@ -111,7 +111,7 @@ programs:
         host: tofino
         start: >-
             cd ~/gits/TofinoP4Boosters/pointToPoint &&
-            ./run.sh 1-112 112-2 -cp 7 -mi 112 -me 112 
+            ./run.sh 1-112 -cp 5 -mi 112 -me 112 
         stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
         enforce_duration: False
 
@@ -149,16 +149,16 @@ commands:
         begin: -30
     dataplane:
         begin: -28
-        duration: 90
+        duration: 100
     start_compressor:
-        begin: -15
-        duration: 76
+        begin: -10
+        duration: 70
         #    start_decompressor:
         #begin: -15
         #duration: $( {0.time.iperf} + 20 )
     moongen:
-        begin: -10
-        duration: 70        
+        begin: -15
+        duration: 76        
     pktgen:
         begin: 1
     get_counters:
