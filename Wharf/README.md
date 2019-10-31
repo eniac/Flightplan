@@ -35,19 +35,10 @@ make BOOSTERS="FEC COMPRESSION"
 
 To build with all boosters, simply run `make`.
 
+You can also specify compilation targets `bmv2` or `Sample`.
+`bmv2` will compile all the sources mentioned below except for [Sources/Sample.p4](Sources/Sample.p4):
 
-## Building for SDNet
-
-SDNet-targetted compilation is not yet supported.
-Adding `-DTARGET_SDNET` to the `p4c` command to enables the appropriate
-target-specific code, but this doesn't do much at the moment.
-
-
-## Building for BMv2
-
-Sample and fec booster bmv2 inputs can both be built with `make bmv2`
-
-- Sources/Complete.p4 : Program to be run on all switches
+- [](Sources/Complete.p4) : Program to be run on all switches
   - Performs Memcached'ing, fec, and/or header compression depending on traffic type
 - Sources/targets.h : Target-specific definitions used by fec encoder and decoder
 - Sources/FEC.p4 : Calls to encode, decode, or retrieve parameters based on fec encoding
@@ -83,6 +74,13 @@ created it.
 
 The booster can then use the function `is_generated()` to see if it was the one that
 generated that packet, and then it can deal with it accordingly.
+
+
+## Building for SDNet
+
+SDNet-targetted compilation is not yet supported.
+Adding `-DTARGET_SDNET` to the `p4c` command to enables the appropriate
+target-specific code, but this doesn't do much at the moment.
 
 
 # Testing in bmv2 and mininet
