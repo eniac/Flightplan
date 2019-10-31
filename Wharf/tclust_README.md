@@ -9,12 +9,15 @@ These files are contained in the following locations:
 to perform the various functionality
 * `bmv2/tclust`: Programs to run and test topologies
 
+
 ## Building
+
 Build the switches' JSON from the P4 files by running:
 ```
 make tclust
 ```
 from the `Wharf` folder
+
 
 ## P4 Files
 
@@ -43,7 +46,9 @@ The other P4 files are small snippets which run various boosters on external FPG
 They consist of the encoder/decoder, compressor/decompressor, mcd, and a special
 file `Tclust_noop.p4` which simply forwards packets through, and is to be used for testing.
 
+
 ## Extern Topologies
+
 The directory `bmv2/topologies/tclust` contains (at this time) 7 topology files that enable
 different funcitonality on the basic tclust topolopgy (as well as 6 topology files which
 include legacy boosters, described briefly below).
@@ -59,13 +64,17 @@ true to the actual tclust topology.
 
 Other topology files enable a subset of these features.
 
+
 ## Legacy Topologies
+
 Several legacy boosters have also been enabled in the tclust mininet topology setup:
 mcrouter, snort, and ufw.
 Once the relevant programs have been installed, topologies that utilize these programs
 can be started up using the corresponding topology files in `bmv2/topologies/tclust`
 
+
 ## Test Programs
+
 The directory `bmv2/tclust` contains programs for testing various combinations of
 boosters on the mininet tclust topologies.
 
@@ -82,7 +91,9 @@ but data is then present for offline analysis of latency, etc.
 In addition, `tclust_snort.sh`, `tclust_ufw.sh`, and `tclust_mcrouter.sh` test the legacy boosters.
 All other test programs utilize one of these basic programs with specific topologies or inputs.
 
+
 ## End-to-end testing
+
 As described above, `tclust_e2e.sh` runs iperf and mcd traffic simultaneously.
 
 To run a full  set of end-to-end experiments, use `bmv2/tclust/all_tclust_e2e.sh`, which will
@@ -90,7 +101,8 @@ run with each booster enabled in turn.
 
 Results can be analyzed with the notebook contained in `analysis/e2e_analysis.ipynb`
 
-# REGRESSION TESTS
+
+# Regression tests
 
 Three files exist which should be run each time a significant change is made to ensure
 that current features are not broken
