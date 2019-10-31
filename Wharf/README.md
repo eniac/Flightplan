@@ -2,16 +2,26 @@
 
 ## Dependencies
 
-Building the p4 files for bmv2 requires global installation of p4c (https://github.com/p4lang/p4c),
-testing requires installation of the behavioral model (https://github.com/p4lang/behavioral-model/),
-with the additional `booster_switch`, as explained
-[here](../cpuBoosters/bmv2/README.md).
+Compiling P4 programs into JSON files for BMv2 requires p4c (https://github.com/p4lang/p4c).
+Running the resulting compiled programs requires installation of BMv2 (https://github.com/p4lang/behavioral-model/),
+with the additional `booster_switch` as explained [here](../cpuBoosters/bmv2/README.md).
 
-## Selecting Boosters
 
-If the booster switch was built with only certain boosters enabled (referenced in **NB**),
-those same boosters (and only those boosters) will have to be enabled in the build process
-here.
+## Building booster_switch
+
+Build the `booster_switch` by following [these instructions](../cpuBoosters/bmv2/README.md).
+
+Then set the environment variable `BMV2_REPO` to point the directory
+containing the behavioral model repository.
+
+
+## Building P4 programs to run on booster_switch
+
+If the `booster_switch` was built with only certain boosters enabled
+then those same boosters (and only those boosters) will have to be
+enabled in the build process for P4 programs, described here.
+Build may have to be cleaned with `make clean` before changing enabled
+boosters.
 
 To build Complete.p4 with only FEC enabled, run:
 ```
@@ -25,23 +35,15 @@ make BOOSTERS="FEC COMPRESSION"
 
 To build with all boosters, simply run `make`.
 
-**NB:** Before running these files, you must set the environment variable:
-`BMV2_REPO` to point to a copy of the behavioral model repository which has
-been built with the `booster_switch`, as detailed:
-[here](../cpuBoosters/bmv2/README.md).
-
-**NB1:** Build may have to be cleaned with `make clean` before changing enabled boosters.
 
 ## Building for SDNet
 
-SDNet build is not yet added to the makefile.
+SDNet-targetted compilation is not yet supported.
+Adding `-DTARGET_SDNET` to the `p4c` command to enables the appropriate
+target-specific code, but this doesn't do much at the moment.
 
-Building for SDNet requires adding `-DTARGET_SDNET` to to `p4c` command to enable the
-appropriate target-specific code.
 
-**NB:** Does not yet have an effect
-
-## Building for bmv2
+## Building for BMv2
 
 Sample and fec booster bmv2 inputs can both be built with `make bmv2`
 
@@ -81,6 +83,7 @@ created it.
 
 The booster can then use the function `is_generated()` to see if it was the one that
 generated that packet, and then it can deal with it accordingly.
+
 
 # Testing in bmv2 and mininet
 
@@ -206,7 +209,7 @@ responses received by h1 are as expected. Good input files are:
 **NB** Host programs run for these experiments are iperf for Test 1 and memcached for Test 2.
 
 **NB1** Ensure that enviornment variable `BMV2_REPO` has been set up as mentioned
-in **NB** of [Selecting Boosters](README.md#selecting-boosters) of this document.
+in the [Building booster_switch](README.md#building-booster_switch) section.
 
 **NB2** For testing Memcached functionality the source and destination MAC addresses in `bmv2/pcap_tools/pcap_sub.py` must match with the config file `complete_toplology.yml` 
 
