@@ -38,7 +38,7 @@ To build with all boosters, simply run `make`.
 You can also specify compilation targets `bmv2` or `Sample`.
 `bmv2` will compile all the sources mentioned below except for [Sources/Sample.p4](Sources/Sample.p4):
 
-- [](Sources/Complete.p4) : Program to be run on all switches
+- [Sources/Complete.p4]() : Program to be run on all switches
   - Performs Memcached'ing, fec, and/or header compression depending on traffic type
 - Sources/targets.h : Target-specific definitions used by fec encoder and decoder
 - Sources/FEC.p4 : Calls to encode, decode, or retrieve parameters based on fec encoding
