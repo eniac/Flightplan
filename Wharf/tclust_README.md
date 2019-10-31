@@ -85,7 +85,7 @@ received match those that were sent
 `mcd_c` receives the proper packets in response
 * `tclust_iperf.sh` : Runs iperf between `iperf_c` and `iperf_s`. In this test, no checks are
 performed, and the output must be manually inspected.
-* `tclust_e2e.sh`: Runs iperf and memcached streams simultaneously. Does not perform checks,
+* [./bmv2/tclust/tclust_e2e.sh](./bmv2/tclust/tclust_e2e.sh): Runs iperf and memcached streams simultaneously. Does not perform checks,
 but data is then present for offline analysis of latency, etc.
 
 In addition, `tclust_snort.sh`, `tclust_ufw.sh`, and `tclust_mcrouter.sh` test the legacy boosters.
@@ -94,19 +94,19 @@ All other test programs utilize one of these basic programs with specific topolo
 
 ## End-to-end testing
 
-As described above, `tclust_e2e.sh` runs iperf and mcd traffic simultaneously.
+As described above, [./bmv2/tclust/tclust_e2e.sh](./bmv2/tclust/tclust_e2e.sh) runs iperf and mcd traffic simultaneously.
 
-To run a full  set of end-to-end experiments, use `bmv2/tclust/all_tclust_e2e.sh`, which will
+To run a full  set of end-to-end experiments, use [./bmv2/tclust/all_tclust_e2e.sh](./bmv2/tclust/all_tclust_e2e.sh), which will
 run with each booster enabled in turn.
 
-Results can be analyzed with the notebook contained in `analysis/e2e_analysis.ipynb`
+Results can be analyzed with the notebook contained in [analysis/e2e_analysis.ipynb](analysis/e2e_analysis.ipynb).
 
 
 # Regression tests
 
-Three files exist which should be run each time a significant change is made to ensure
-that current features are not broken
+Whenever a significant change is made to the code then these scriprts should be
+run to ensure that current features are not broken
 
-* `run_e2e_tests.sh`: Runs tests on the complete.p4 topology (not the tclust topology)
-* `run_tclust_tests.sh`: Runs tests with different combinations of boosters on the tclust topology
-* `run_legacy_tests.sh`: Runs tests with the legacy boosters on the tclust topology
+* [run_e2e_tests.sh](run_e2e_tests.sh): Runs tests on the complete.p4 topology (not the tclust topology)
+* [run_tclust_tests.sh](run_tclust_tests.sh): Runs tests with different combinations of boosters on the tclust topology
+* [run_legacy_tests.sh](run_legacy_tests.sh): Runs tests with the legacy boosters on the tclust topology
