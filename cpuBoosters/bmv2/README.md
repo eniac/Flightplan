@@ -7,6 +7,7 @@ added core `behavioral_model` codebase.
 Patches do not have to be applied manually -- they are checked for correctness
 and applied upon running `make`.
 
+
 ## Build Requirements
 
 Before building, the environment variable `BMV2_REPO` must be set to reference
@@ -21,9 +22,10 @@ The patches into the behavioral model have been tested with:
 
 though it will likely be applicable to newer revisions as well.
 
-If building memcached, `Vivado_HLS` is also required.
+If building the Memcached booster, `Vivado_HLS` is also required.
 Set the environment variable `XILINX_DIR` to be the parent directory
-of the `VIVADO_HLS` directory to properly build the memcached booster.
+of the `VIVADO_HLS` directory to properly build the Memcached booster.
+
 
 ## Build Process
 
@@ -32,13 +34,13 @@ as a target (as below). Subsequent times, building will be faster with `configur
 
 By default, running `make configure` from this directory will build all available boosters.
 
-To build only fec boosters, run:
+To build only FEC boosters, run:
 `make configure BOOSTERS=FEC`
-To build only memcached boosters, run
+To build only the Memcached booster, run
 `make configure BOOSTERS=MEMCACHED`
-To build only header compression boosters, run:
+To build only the Header Compression booster, run:
 `make configure BOOSTERS=COMPRESSION`
-To build multiple boosters (i.e. fec and compression), run:
+To build multiple boosters (i.e. FEC and compression), run:
 `make configure BOOSTERS="FEC COMPRESSION"`
 
 After running `make configure`, run `make` to finish building the `booster_switch`.
