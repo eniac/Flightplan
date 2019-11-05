@@ -84,7 +84,7 @@ boosters on the mininet tclust topologies.
 There are four basic files for running these tests:
 * [./bmv2/tclust/tclust_replay.sh](./bmv2/tclust/tclust_replay.sh): Replays a file from the host `iperf_c` to the host `iperf_s`, ensuring that the packets received match those that were sent.
 * [./bmv2/tclust/tclust_mcd.sh](./bmv2/tclust/tclust_mcd.sh): Replays memcached packets from the host `mcd_c` to the host `mcd_s`, and ensures that `mcd_c` receives the proper packets in response.
-* `tclust_iperf.sh` : Runs iperf between `iperf_c` and `iperf_s`. In this test, no checks are
+* [./bmv2/tclust/tclust_iperf.sh](./bmv2/tclust/tclust_iperf.sh): Runs iperf between `iperf_c` and `iperf_s`. In this test, no checks are
 performed, and the output must be manually inspected.
 * [./bmv2/tclust/tclust_e2e.sh](./bmv2/tclust/tclust_e2e.sh): Runs iperf and memcached streams simultaneously. Does not perform checks,
 but data is then present for offline analysis of latency, etc.
