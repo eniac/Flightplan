@@ -67,14 +67,24 @@ of a stage.
 
 To have BMv2's handling of created packets be consistent with our model, the JSON produced by p4c is rewritten before it
 is loaded into the behavioral model, such that the extern functions which may
-create packets are moved into a unique action.
+create packets are moved into a unique action that is created with the script [split_extern_event.py](split_extern_event.py).
+The script takes as arguments a dataplane .json and an output file,
+and then a list of externs.
+The script manually rewrites that JSON such that if the "op" of the
+primitive in an action matches the extern name, it splits that action
+into two or three actions (depending on whether or not the primitive
+occurred in the middle of the action).
+It then rewrites the pipelines to point to the new actions.
 
 This allows the `booster_switch` to pass over all action prior to the one in which
 the packet was created, and pass the new packet directly to the booster that
 created it.
 
 The booster can then use the function `is_generated()` to see if it was the one that
-generated that packet, and then it can deal with it accordingly.
+generated that packet, so it can be handled specially. Currently
+this function only sets the Flightplan header to valid, because the
+generated packet doesn't have the Flightplan header by default. In the
+future other behaviours might be added to `is_generated()`.
 
 
 ## Building for SDNet
