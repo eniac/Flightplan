@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
-# Copyright 2013-present Barefoot Networks, Inc.
+# Copyright 2013-2019 Barefoot Networks, Inc.
+# Copyright 2018,2019 University of Pennsylvania
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
