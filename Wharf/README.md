@@ -96,16 +96,19 @@ target-specific code, but this doesn't do much at the moment.
 
 # Testing in Mininet
 
+
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
 view [tclust_README.md](tclust_README.md).
 
-## Complete.p4
 
-The `Complete.p4` program starts up the encoder, decoder, and memcached on the same switch
+## Complete.p4
+The [./Sources/Complete.p4](./Sources/Complete.p4) program encompasses the encoder, decoder, and memcached, executing them on the same switch
 (except if such features are disabled via `#define`'s).
 
-To run a topology for flightplan in bmv2 and mininet, use the command:
+
+## Execution
+To execute one or more P4 programs -- possibly but not necessarily related to Flightplan -- on BMv2 nodes in Mininet, use the command:
 
 ```shell
 sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
@@ -113,7 +116,8 @@ sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 
 Where the `cfg_file` specifies the topology and initial state of mininet.
 
-Below is the snippet for an example of a simple one switch, two host toplogy.
+Below is the snippet for an example topology consisting of one switch and two hosts.
+Note that the switch (`s1`) is running the [./Sources/Forwarder.p4](./Sources/Forwarder.p4) program that generated `Forwarder.json`.
 
 ``` yaml
 hosts:
@@ -134,11 +138,11 @@ switches:
 
 A detailed list of configurable features is given in the [example_topology.yml](./bmv2/topologies/example_topology.yml)
 
-The most complete topology at this time used for running the test experiments is defined in `bmv2/topologies/complete_topology.yml`
+The most complete topology at this time used for running the test experiments is defined in [./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml).
 
-Running `start_flightplan_mininet.py` with config file `complete_topology.yml` will start up a topology:
+Running [./bmv2/start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py) with config file [./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml) will start up a topology:
 ```
-h1 <--> Complete (s1) <--> Dropper (s2) <--> Complete (s3) <--> h2
+h1 <--> s1(Complete.p4) <--> s2(Dropper.p4) <--> s3(Complete.p4) <--> h2
 ```
 
 The config file also enables FEC from `s1->s2` and `s3->s2`
@@ -175,6 +179,7 @@ They are:
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
+
 #### Test 1- FEC functionality
 ```
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
@@ -193,6 +198,7 @@ testing the FEC functinality.
 
 A sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`
 
+
 #### Running different programs on switches
 The default test runs the same program on switches. The "two halves" tests run
 different programs on different switches, but has the same effect of running
@@ -207,6 +213,8 @@ The more complex test further offloads header compression to a separate switch. 
 ```shell
 TWO_HALVES=2 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 ```
+
+
 #### Test 2- Memcached
 ```
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
