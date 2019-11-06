@@ -72,7 +72,7 @@ Other topology files enable a subset of these features.
 
 Several legacy network functions have also been enabled in the tclust mininet topology setup:
 mcrouter, snort, and ufw.
-Once the relevant programs have been installed, topologies that utilize these programs
+Once the relevant programs have been installed (using `apt`) topologies that utilize these programs
 can be started up using the corresponding topology files in `bmv2/topologies/tclust`
 
 
@@ -96,19 +96,17 @@ All other test programs utilize one of these basic scripts with specific topolog
 
 ## End-to-end testing
 
-As described above, [./bmv2/tclust/tclust_e2e.sh](./bmv2/tclust/tclust_e2e.sh) runs iperf and mcd traffic simultaneously.
-
-To run a full  set of end-to-end experiments, use [./bmv2/tclust/all_tclust_e2e.sh](./bmv2/tclust/all_tclust_e2e.sh), which will
+* As described above, [./bmv2/tclust/tclust_e2e.sh](./bmv2/tclust/tclust_e2e.sh) runs iperf and mcd traffic simultaneously.
+* To run a full  set of end-to-end experiments, use [./bmv2/tclust/all_tclust_e2e.sh](./bmv2/tclust/all_tclust_e2e.sh), which will
 run with each booster enabled in turn.
-
-Results can be analyzed with the notebook contained in [analysis/e2e_analysis.ipynb](analysis/e2e_analysis.ipynb).
+* Results can be analyzed with the notebook contained in [analysis/e2e_analysis.ipynb](analysis/e2e_analysis.ipynb).
 
 
 # Regression tests
 
-Whenever a significant change is made to the code then these scriprts should be
-run to ensure that current features are not broken
+Whenever a significant change is made to the code then these scripts should be
+run to ensure that current features are not broken:
 
-* [run_e2e_tests.sh](run_e2e_tests.sh): Runs tests on the complete.p4 topology (not the tclust topology)
+* [run_e2e_tests.sh](run_e2e_tests.sh): Runs tests on the original Complete.p4 topology (not the tclust topology)
 * [run_tclust_tests.sh](run_tclust_tests.sh): Runs tests with different combinations of boosters on the tclust topology
 * [run_legacy_tests.sh](run_legacy_tests.sh): Runs tests with the legacy boosters on the tclust topology
