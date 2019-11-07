@@ -161,21 +161,21 @@ s2:
 It also sets up the forwarding tables on the different switches
 by sending the commands in the `cmds` files.
 
-The data packets (k paramater) and parity packets (h parameter) to determine the 
+The data packets (K paramater) and parity packets (H parameter) to determine the
 operation of FEC can be defined in the `fec_encoder_commands.txt` and
 `fec_decoder_commands.txt` files for error correction.
-
-In simplest terms, if up to H packets out of a set of H+K packets are dropped, 
-then FEC will be able to recover the data over the faulty links.
-More information on FEC booster can be found [FEC Booster](https://www.seas.upenn.edu/~nsultana/files/netcompute.pdf).
+If up to H packets out of a set of H+K packets are dropped,  then FEC will be able to recover the data over the faulty links.
+More information on the FEC booster can be found [FEC Booster](https://www.seas.upenn.edu/~nsultana/files/netcompute.pdf).
 
 **NB:** MAC addresses are assigned dynamically to the host nodes if their MAC addresses are not specified in the `<cfg_file>`.
 
-The MAC address assigned to host nodes may differ from the MAC address specified in the `cfg_file`. 
-The error message `SIOCSIFHWADDR: Cannot assign requested address`on the mininet CLI indicates the MAC address specifed in the config file is invalid. In such a scenario make sure to use a valid 48 bit MAC address which  can be used for the testing on mininet.
+**NB:** The MAC address assigned to host nodes may differ from the MAC address specified in the `cfg_file`.
+If the error message `SIOCSIFHWADDR: Cannot assign requested address` is
+produced when Mininet attempts to set the MAC address of a virtual interface
+then this means that the MAC address specifed in the config file is invalid.
+Make sure to use a valid 48 bit MAC address.
 
-The command `
-sudo -E python bmv2/start_flightplan_mininet.py --cli` opens the mininet CLI which can be used to confirm the configurations of various nodes in the `cfg_file`.
+The command `sudo -E python bmv2/start_flightplan_mininet.py --cli` opens the Mininet CLI through which you can confirm or tune the configurations of nodes in the `cfg_file`.
 
 
 ### End-to-end tests
@@ -240,6 +240,7 @@ responses received by h1 are as expected. Good input files are:
 in the [Building booster_switch](README.md#building-booster_switch) section.
 
 **NB2** For testing Memcached functionality the source and destination MAC addresses in `bmv2/pcap_tools/pcap_sub.py` must match with the config file `complete_toplology.yml` 
+
 
 ### Mininet file
 The file that runs the mininet simulation is ultimately
