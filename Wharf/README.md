@@ -180,34 +180,31 @@ The command `sudo -E python bmv2/start_flightplan_mininet.py --cli` opens the Mi
 
 ### End-to-end tests
 
-The steps to setup the mininet simulation are enforced in `start_flightplan_mininet.py`
-to initialize the topology and start the hosts & switches defined in the config file `complete_topology.yml`.
+[./bmv2/start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py) sets
+up simulation using Mininet by instantiating the topology and configuring the
+hosts and switches defined in a config file that is provided as a parameter,
+such as
+[./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml).
 
-Two end-to-end tests exist, one for the FEC functionality and one for memcached.
-They are:
-
+Two end-to-end tests exist, one for the FEC functionality and one for Memcached:
 ```shell
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
 
-#### Test 1- FEC functionality
+#### Test 1: FEC
 ```
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 ```
-This FEC functinality test just ensures that the packets received by
-h2 are identical to those sent by h1, even in the presence of drops.
+This test checks that the packets received by h2 are identical to those sent by
+h1, even in the presence of drops.
 
-This FEC test is set to run as follow:
-Replay special packets only between the switches to alter the behavior of the
-system to turn on FEC functionality (faulty links from s2->s1 and s2->s3) in the simulation environment.
-Next, the control plane commands for filling up the forwarding table or FEC paramters (h,k)
-to test complete topology are run on the switches.
-Programs running on the host are started and finally any packets which need to replay from the hosts
-are replayed to ensure the packets leaving the switch are identical to those entering the switch for
-testing the FEC functinality.
-
-A sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`
+This test involves the following steps:
+1. Replay special packets between switches to activate the FEC booster (faulty links from s2->s1 and s2->s3) in the simulation environment.
+2. Execute control plane commands on switches to add records to the tables, used for forwarding and FEC configuration (parameters H and K).
+3. Start programs on the hosts.
+4. Replay packets -- a sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`.
+5. Check to ensure that the packets received by h2 are identical to those sent by h1, even in the presence of drops.
 
 
 #### Running different programs on switches
@@ -226,7 +223,7 @@ TWO_HALVES=2 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 ```
 
 
-#### Test 2- Memcached
+#### Test 2: Memcached
 ```
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
@@ -236,7 +233,7 @@ responses received by h1 are as expected. Good input files are:
 
 **NB** Host programs run for these experiments are iperf for Test 1 and memcached for Test 2.
 
-**NB1** Ensure that enviornment variable `BMV2_REPO` has been set up as mentioned
+**NB1** Ensure that environment variable `BMV2_REPO` has been set up as mentioned
 in the [Building booster_switch](README.md#building-booster_switch) section.
 
 **NB2** For testing Memcached functionality the source and destination MAC addresses in `bmv2/pcap_tools/pcap_sub.py` must match with the config file `complete_toplology.yml` 
