@@ -113,8 +113,25 @@ To execute one or more P4 programs -- possibly but not necessarily related to Fl
 ```shell
 sudo -E python bmv2/start_flightplan_mininet.py <cfg_file.yml>
 ```
+where the `cfg_file` specifies the topology and initial state of mininet.
 
-Where the `cfg_file` specifies the topology and initial state of mininet.
+[./bmv2/start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py) sets
+up simulation using Mininet by instantiating the topology and configuring the
+hosts and switches defined in a config file that is provided as a parameter,
+such as
+[./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml).
+
+[./bmv2/start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py)
+depends on [flightplan_p4_mininet.py](./bmv2/flightplan_p4_mininet.py) which
+borrows very heavily from the
+[p4_mininet.py](https://github.com/p4lang/behavioral-model/blob/master/mininet/p4_mininet.py)
+file located in the P4 behavioral model repository.
+
+[./bmv2/start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py)
+accepts a variety of command line arguments. The full list can be viewed with:
+```
+sudo -E python bmv2/start_flightplan_mininet.py --help
+```
 
 Below is the snippet for an example topology consisting of one switch and two hosts.
 Note that the switch (`s1`) is running the [./Sources/Forwarder.p4](./Sources/Forwarder.p4) program that generated `Forwarder.json`.
@@ -180,17 +197,17 @@ The command `sudo -E python bmv2/start_flightplan_mininet.py --cli` opens the Mi
 
 ### End-to-end tests
 
-[./bmv2/start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py) sets
-up simulation using Mininet by instantiating the topology and configuring the
-hosts and switches defined in a config file that is provided as a parameter,
-such as
-[./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml).
-
 Two end-to-end tests exist, one for the FEC functionality and one for Memcached:
 ```shell
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
+
+**NB** Host programs run for these experiments are iperf for Test 1 and Memcached for Test 2.
+
+**NB1** Ensure that environment variable `BMV2_REPO` has been set up as mentioned
+in the [Building booster_switch](README.md#building-booster_switch) section.
+
 
 #### Test 1: FEC
 ```
@@ -227,53 +244,27 @@ TWO_HALVES=2 ./bmv2/complete_fec_e2e.sh bmv2/pcaps/tcp_100.pcap
 ```
 $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 ```
-This second tests FEC + memcached functionality, ensuring that the memcached
-responses received by h1 are as expected. Good input files are:
- - `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`
+This second tests the Memcached cache, checking that the Memcached
+replies received by h1 are as expected. We used the input files
+`bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`.
 
-**NB** Host programs run for these experiments are iperf for Test 1 and memcached for Test 2.
+**NB** For testing Memcached functionality the MAC addresses in [bmv2/pcap_tools/pcap_sub.py](bmv2/pcap_tools/pcap_sub.py) must match those used in the config file [./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml).
 
-**NB1** Ensure that environment variable `BMV2_REPO` has been set up as mentioned
-in the [Building booster_switch](README.md#building-booster_switch) section.
-
-**NB2** For testing Memcached functionality the source and destination MAC addresses in `bmv2/pcap_tools/pcap_sub.py` must match with the config file `complete_toplology.yml` 
-
-
-### Mininet file
-The file that runs the mininet simulation is ultimately
-[start_flightplan_mininet.py](./bmv2/start_flightplan_mininet.py), which depends on
-[flightplan_p4_mininet.py](./bmv2/flightplan_p4_mininet.py).
-
-The `flightplan_p4_mininet.py` file borrows very heavily from the
-[p4_mininet.py](https://github.com/p4lang/behavioral-model/blob/master/mininet/p4_mininet.py)
-file located in the P4 behavioral model repository.
-
-`start_flightplan_mininet.py` accepts a variety of command line arguments specifying
-which P4 configuration to load on which of s1, s2, and s3 switches among other
-configurations.
-
-The full list of arguments can be viewed with:
-```
-sudo -E python bmv2/start_flightplan_mininet.py --help
-```
 
 # Adding new boosters
-New p4 files may be added to the build process in two steps:
+New boosters can be invoked from existing P4 files, by modifying those files
+to make the extern call, or writing new P4 files. Further the desired topology
+needs to be written or adapted from an existing one.
 
-First, add the necessary functionality to `Complete.p4`, or to a standalone p4 file which
-implements the booster
-
-Modify the makefile to track the new dependencies and targets.
-
-The modifications to the makefile must be made in three locations:
-
+It might be useful to reuse the [Makefile](Makefile) to manage the compilation
+of additional files. Reuse could consist of the following modifications:
 1) Add the source to the `DEPS` variable (`DEPS=... Sources/XXX.p4`)
 2) Add the output as a dependency of the `bmv2` target (`bmv2: ... $(BLD_BMV2)/XXX.json`)
 3) Add relevant externs to the list `EXTERNS` that are split by `split_extern_events.py`
 (`EXTERNS=... XXX`)
 
-# Other experiments
 
+# Other experiments
 * `P4Boosters/Wharf$ ./bmv2/start_checked_topology.sh` runs an experiment involving the extended Flightplan header which apply program-integrity preservation. This uses the "checked" versions of [P4](Sources/CheckedFragment.p4) and [topology](bmv2/topologies/complete_topology_checked.yml) files.
 **NOTE** This requires recompiling the switch (`make configure_runtime BOOSTERS="..."`) to include the stateful extern objects (
 [ReceiverNakState.h](../cpuBoosters/bmv2/booster_switch/ReceiverNakState.h),
