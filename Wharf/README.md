@@ -146,9 +146,20 @@ h1 <--> s1(Complete.p4) <--> s2(Dropper.p4) <--> s3(Complete.p4) <--> h2
 ```
 
 The config file also enables FEC from `s1->s2` and `s3->s2`
-(by replaying the appropriate packets from s2 to s3 & s1), in addition
-to setting up the forwarding tables on the different switches
-(by sending the commands in the `cmds` files).
+by replaying the appropriate packets from s2 to s3 & s1 -- look for the
+entries under `replay:` in the YAML file:
+```
+s2:
+    cfg: ../../build/bmv2/Dropper.json
+    interfaces:
+...
+    replay:
+        s1: ../pcaps/lldp_enable_fec.pcap
+        s3: ../pcaps/lldp_enable_fec.pcap
+...
+```
+It also sets up the forwarding tables on the different switches
+by sending the commands in the `cmds` files.
 
 The data packets (k paramater) and parity packets (h parameter) to determine the 
 operation of FEC can be defined in the `fec_encoder_commands.txt` and
