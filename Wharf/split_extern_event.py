@@ -1,3 +1,27 @@
+#!/usr/bin/env python
+# This script handles the rewriting of bmv2 .json files to ensure
+# proper functionality of the booster_switch
+#
+# In brief:
+# - The bmv2 compiler puts each logical unit of the P4 file
+#   into an "action", which may consist of one or more "primitives".
+# - The booster_switch enables the possibility that externs (a type of primitive)
+#   may create new packets, which begin processing in the same extern that generated
+#   them (the extern thus returning two values, one after another)
+# - In bmv2, actions are treated as a single unit, not primitives,
+#   thus, the primitives must be placed in their own action to ensure
+#   correct functionality.
+#
+# This script rewrites the json to achieve that goal.
+#
+# FIXME: There is a bug in this program that does not affect bmv2 functionality,
+# but does affect labeling:
+# In the case where a table must be split into three parts to isolate the
+# extern primtiive, the "name" field of the third table is not updated to match
+# the name of the third action. The "action_id" is however updated,
+# and that seems to be what bmv2 cares about.
+
+
 import sys
 import json
 import copy
@@ -5,26 +29,37 @@ from argparse import ArgumentParser
 from collections import defaultdict
 from collections import OrderedDict
 
-parser = ArgumentParser()
-parser.add_argument('input', type=str)
-parser.add_argument('output', type=str)
-parser.add_argument('ops', nargs='+')
+parser = ArgumentParser('Isolates extern primtives in their own action')
+parser.add_argument('input', type=str, 'input json file to read from')
+parser.add_argument('output', type=str, 'output json file to write to')
+parser.add_argument('ops', nargs='+', 'The names of the externs which are to be isolated')
 
 args = parser.parse_args()
 
 
 def split_op(j, op):
+    ''' Isolates the action with the specified 'op' field
+    The 'op' field will be the name of the extern.
+    '''
+
+    # A new list of actions will be created (mostly copies of the original actions)
+    # and placed into this list
     actions = []
     id_offset = 0
 
+    # Maps the old action IDs to the new action IDs
     id_map = {}
     split_actions = defaultdict(list)
     action_names = {}
 
+    # Creating the new actions with the isolated externs
     for action in j['actions']:
-        p1 = []
-        p2 = None
-        p3 = []
+
+        # Action may be split into three parts:
+        p1 = [] # pre-extern
+        p2 = None # extern
+        p3 = [] # post-extern
+
         id_map[action['id']] = action['id'] + id_offset
         action['id'] += id_offset
         action_names[action['name']] = action['name']
@@ -71,6 +106,7 @@ def split_op(j, op):
         split_actions[action['name']].append(a3)
     j['actions'] = actions
 
+    # Creating the new tables to match the newly generated actions
     id_offset = 0
     for pipeline in j['pipelines']:
         tables = []
@@ -118,6 +154,9 @@ def split_op(j, op):
         pipeline['tables'] = tables
 
 def add_externs(j):
+    ''' The bmv2 compiler was not properly adding externs to the 'extern_instances' list.
+    This function manually fixes that bug
+    '''
     externs = dict()
     for action in j['actions']:
         for primitive in action['primitives']:
@@ -141,9 +180,10 @@ for op in args.ops:
     split_op(j, op)
 add_externs(j)
 
-
-
 class MyJSONEncoder(json.JSONEncoder):
+    ''' The allows the output to more closely match the formatting of the json input.
+    It is not required for proper functionality, but makes running 'diff' easier.
+    '''
     def __init__(self, *args, **kwargs):
         super(MyJSONEncoder, self).__init__(*args, **kwargs)
         self.current_indent = 0
