@@ -44,7 +44,6 @@ test:
 bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json \
 	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json $(BLD_BMV2)/Compressor.json \
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json \
-	$(BLD_BMV2)/MAC_Forwarder.json $(BLD_BMV2)/MAC_FEC_Forwarder.json $(BLD_BMV2)/MAC_FEC_offload_Forwarder.json $(BLD_BMV2)/MAC_FEC_enc_offload_Fwd.json $(BLD_BMV2)/MAC_enc_Fwd.json $(BLD_BMV2)/MAC_HC_FEC_offload_Fwd.json $(BLD_BMV2)/MAC_HC_Fwd.json $(BLD_BMV2)/MAC_MCD_Forwarder.json $(BLD_BMV2)/MAC_mcd_offloader.json
 
 tclust: Tclust_tofino Tclust_noop \
 	Tclust_encoder Tclust_decoder Tclust_compressor Tclust_decompressor Tclust_mcd
