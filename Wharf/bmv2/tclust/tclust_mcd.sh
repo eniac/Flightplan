@@ -47,7 +47,8 @@ sudo -E python $HERE/start_flightplan_mininet.py \
         --log $LOG_DUMPS \
         --verbose \
         --replay "mcd_c-tofino1:$REWRITTEN" \
-        --host-prog "mcd_s:memcached -u $USER -U 11211 -B ascii" 2> $LOG_DUMPS/flightplan_mininet_log.err
+        --host-prog "mcd_s:memcached -u $USER -U 11211 -B ascii" \
+        --time 1 2> $LOG_DUMPS/flightplan_mininet_log.err
 
 if [[ $? != 0 ]]; then
     echo Error running flightplan_mininet.py >&2
