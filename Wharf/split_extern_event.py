@@ -29,10 +29,10 @@ from argparse import ArgumentParser
 from collections import defaultdict
 from collections import OrderedDict
 
-parser = ArgumentParser('Isolates extern primtives in their own action')
-parser.add_argument('input', type=str, 'input json file to read from')
-parser.add_argument('output', type=str, 'output json file to write to')
-parser.add_argument('ops', nargs='+', 'The names of the externs which are to be isolated')
+parser = ArgumentParser(description='Isolates extern primtives in their own action')
+parser.add_argument('input', type=str, help='input json file to read from')
+parser.add_argument('output', type=str, help='output json file to write to')
+parser.add_argument('ops', nargs='+', help='The names of the externs which are to be isolated')
 
 args = parser.parse_args()
 
