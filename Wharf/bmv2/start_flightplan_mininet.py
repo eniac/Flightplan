@@ -508,6 +508,8 @@ def main():
             CLI(net)
 
         if args.pcap_dump:
+            # Pause for a second before stopping tcpdump to allow process to complete
+            sleep(1)
             topo.stop_tcp_dumps(net)
         print("Stopping mininet")
         net.stop()
