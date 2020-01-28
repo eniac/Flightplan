@@ -1,0 +1,30 @@
+{
+    "pools": {
+        "local": {
+           "servers": [ "10.0.0.101:12345" ]
+        },
+        "remote": {
+            "servers": ["10.0.0.4:11211"]
+        }
+    },
+   "route": {
+       "type": "OperationSelectorRoute",
+       "operation_policies": {
+           "get": {
+                 "type": "WarmUpRoute",
+                 "cold": "PoolRoute|local",
+                 "warm": "PoolRoute|remote"
+           },
+           "set": {
+               "type": "PoolRoute",
+               "pool": "remote",
+               "shadows": [{
+                   "target": "PoolRoute|local",
+                   "index_range": [0, 1],
+                   "key_fraction_range": [0, 1]
+               }]
+           }
+       },
+       "default_policy": ["PoolRoute|remote"]
+   }
+}

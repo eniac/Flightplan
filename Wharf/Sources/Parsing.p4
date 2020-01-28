@@ -86,7 +86,6 @@ header udp_h {
 }
 struct headers_t {
     flightplan_h fp;
-
     eth_h  eth;
     fec_h  fec;
     ipv4_h ipv4;

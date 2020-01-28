@@ -27,6 +27,7 @@ import traceback
 try:
     from runtime_CLI import thrift_connect, load_json_config, RuntimeAPI
     has_api = True
+    from sswitch_CLI import SimpleSwitchAPI
 except Exception as e:
     print("Cannot import RUNTIME_CLI: %s" % traceback.format_exc())
     has_api = False
@@ -36,14 +37,16 @@ def send_commands(thrift_port, json, commands):
         print("Commands requested, but Runtime CLI not present! Ensure $BMV2_REPO/tools is on PYTHONPATH")
         raise Exception("Could not execute commands: Runtime API not present")
 
-    standard_client, mc_client = thrift_connect(
-            'localhost', thrift_port,
-            RuntimeAPI.get_thrift_services('SimplePre')
+    services = RuntimeAPI.get_thrift_services('SimplePre')
+    services.extend(SimpleSwitchAPI.get_thrift_services())
+
+    standard_client, mc_client, sswitch_client = thrift_connect(
+            'localhost', thrift_port, services
     )
 
     load_json_config(standard_client, json)
 
-    api = RuntimeAPI('SimplePre', standard_client, mc_client)
+    api = SimpleSwitchAPI('SimplePre', standard_client, mc_client, sswitch_client)
 
     for command in commands:
         api.onecmd(command)

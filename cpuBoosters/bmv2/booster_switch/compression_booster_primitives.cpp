@@ -9,24 +9,31 @@ using bm::Data;
 using bm::Packet;
 using bm::Header;
 
-class header_compress : public boosters::BoosterExtern<Data &> {
-    using BoosterExtern::BoosterExtern;
+template <typename... Args>
+using BoosterExtern = boosters::BoosterExtern<Args...>;
 
-    void operator ()(Data &forward_d) {
-        if (is_generated()) {
+template <typename ...Args>
+class header_compress_core : public BoosterExtern<Data &, Args...> {
+    // Inherit constructor
+    using BoosterExtern<Data &, Args...>::BoosterExtern;
+
+protected:
+    void core(Data &forward_d, Header *fp_h) {
+        if (this->is_generated()) {
             forward_d.set(true);
+            if (fp_h != nullptr) {
+                fp_h->mark_valid();
+            }
             return;
         }
 
         Packet  &packet = this->get_packet();
         int ingress_port = packet.get_ingress_port();
 
+        if (fp_h != nullptr)
+            fp_h->mark_invalid();
         // Must save packet state so it can be restored after deparsing
-        const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
-
-        // Deparsing the packet makes the headers readable in packet.data()
-        auto deparser = get_p4objects()->get_deparser("deparser");
-        deparser->deparse(&packet);
+        const Packet::buffer_state_t packet_in_state = this->deparse_packet();
 
         char *buff = packet.data();
         size_t buff_size = packet.get_data_size();
@@ -39,38 +46,61 @@ class header_compress : public boosters::BoosterExtern<Data &> {
             } else {
                 no_forward = false;
                 BMLOG_DEBUG("Generating new packet (orig len:{}, new len:{}", buff_size, len);
-                generate_packet((const char *)payload, len, ingress_port);
+                this->generate_packet((const char *)payload, len, ingress_port);
             }
         };
 
         BMLOG_DEBUG("Compressing packet...");
         compress((u_char*)buff, buff_size, forwarder);
 
-        packet.restore_buffer_state(packet_in_state);
+        this->reparse_packet(packet_in_state);
 
         // Drop the packet if another was forwarded
         forward_d.set(no_forward);
+        if (fp_h != nullptr)
+            fp_h->mark_valid();
     }
 };
 
-class header_decompress : public boosters::BoosterExtern<Data &> {
-    using BoosterExtern::BoosterExtern;
+class header_compress : public header_compress_core<> {
+    // Inherit constructor
+    using header_compress_core::header_compress_core;
 
     void operator ()(Data &forward_d) {
-        if (is_generated()) {
+        core(forward_d, nullptr);
+    }
+};
+
+class header_compress_fp : public header_compress_core<Header &> {
+    // Inherit constructor
+    using header_compress_core::header_compress_core;
+
+    void operator ()(Data &forward_d, Header &fp_h) {
+        core(forward_d, &fp_h);
+    }
+};
+
+template <typename ...Args>
+class header_decompress_core : public BoosterExtern<Data &, Args...> {
+    using BoosterExtern<Data &, Args...>::BoosterExtern;
+
+protected:
+    void core(Data &forward_d, Header *fp_h) {
+        if (this->is_generated()) {
             forward_d.set(true);
+            if (fp_h != nullptr) {
+                fp_h->mark_valid();
+            }
             return;
         }
 
         Packet  &packet = this->get_packet();
         int ingress_port = packet.get_ingress_port();
 
-        // Must save packet state so it can be restored after deparsing
-        const Packet::buffer_state_t packet_in_state = packet.save_buffer_state();
-
+        if (fp_h != nullptr)
+            fp_h->mark_invalid();
         // Deparsing the packet makes the headers readable in packet.data()
-        auto deparser = get_p4objects()->get_deparser("deparser");
-        deparser->deparse(&packet);
+        const Packet::buffer_state_t packet_in_state = this->deparse_packet();
 
         char *buff = packet.data();
         size_t buff_size = packet.get_data_size();
@@ -83,7 +113,7 @@ class header_decompress : public boosters::BoosterExtern<Data &> {
             } else {
                 no_forward = false;
                 BMLOG_DEBUG("Generating new packet (orig len:{}, new len:{}", buff_size, len);
-                generate_packet((const char *)payload, len, ingress_port);
+                this->generate_packet((const char *)payload, len, ingress_port);
             }
         };
 
@@ -92,13 +122,36 @@ class header_decompress : public boosters::BoosterExtern<Data &> {
 
         packet.restore_buffer_state(packet_in_state);
 
+        this->reparse_packet(packet_in_state);
+        if (fp_h != nullptr)
+            fp_h->mark_valid();
         // Drop the packet if nothing was forwarded
         forward_d.set(no_forward);
     }
 };
 
+class header_decompress : public header_decompress_core<> {
+    // Inherit constructor
+    using header_decompress_core::header_decompress_core;
+
+    void operator ()(Data &forward_d) {
+        core(forward_d, nullptr);
+    }
+};
+
+class header_decompress_fp : public header_decompress_core<Header &> {
+    // Inherit constructor
+    using header_decompress_core::header_decompress_core;
+
+    void operator ()(Data &forward_d, Header &fp_h) {
+        core(forward_d, &fp_h);
+    }
+};
+
 int import_compression_booster_primitives(SimpleSwitch *sswitch) {
     REGISTER_BOOSTER_EXTERN(header_compress, sswitch);
+    REGISTER_BOOSTER_EXTERN(header_compress_fp, sswitch);
     REGISTER_BOOSTER_EXTERN(header_decompress, sswitch);
+    REGISTER_BOOSTER_EXTERN(header_decompress_fp, sswitch);
     return 0;
 }
