@@ -18,7 +18,7 @@ function master(args)
     local dev_in = device.config {
         port = args.dev_in,
         dropEnable = false,
-        rxDescs = 8192
+        rxDescs = 16384
     }
 
     device.waitForLinks()
@@ -40,8 +40,8 @@ function capture(rxQueue, args)
     local bufs = memory.bufArray()
 
     while lm.running() do
-        local count = rxQueue:tryRecv(bufs, 1000)
-        local batchTime = lm.getTime()
+        local count = rxQueue:tryRecv(bufs, 100)
+	local batchTime = lm.getTime()
         for i = 1, count do
             local buf = bufs[i]
             writer:writeBuf(batchTime, buf, snapLen)

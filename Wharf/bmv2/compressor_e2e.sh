@@ -45,3 +45,5 @@ if [[ $? == 0 ]]; then
     echo Bytes Transferred:
     python $HERE/pcap_tools/pcap_size.py  $PCAP_DUMPS/{h1_to_s1,s1_to_s2,s2_to_h2}.pcap
 fi
+
+exit 0

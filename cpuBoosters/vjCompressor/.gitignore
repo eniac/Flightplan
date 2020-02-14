@@ -1,2 +1,6 @@
 compressorAndDecompressor
 compressorAndDecompressor.log
+hls_comp_pcap
+hls_decomp_pcap
+compressorAndDecompressor_compress.log
+compressorAndDecompressor_decompress.log

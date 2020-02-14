@@ -55,7 +55,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
             decoder_params.apply(hdr.fec.traffic_class, k, h);
             hdr.eth.type = hdr.fec.orig_ethertype;
             FEC_DECODE(hdr.fec, k, h);
-            if (hdr.fec.packet_index >= k) {
+            if (hdr.fec.isValid() && hdr.fec.packet_index >= k) {
                 drop();
                 return;
             }

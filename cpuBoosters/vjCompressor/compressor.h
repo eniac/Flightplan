@@ -37,7 +37,7 @@ struct ipHeader_t {
   uint32_t daddr;       // Fixed.
 };
 
-struct tcpHeader_t {
+struct __attribute__((__packed__)) tcpHeader_t {
   uint16_t source;      // Fixed.
   uint16_t dest;        // Fixed.
   uint32_t seq;         // Conditionally carried.
@@ -68,7 +68,7 @@ struct compressedHeader_t {
   uint16_t urg_ptr;
 };
 
-struct compressorTuple_t { 
+struct __attribute__((__packed__)) compressorTuple_t {
   uint16_t len;
   uint16_t idx;
 

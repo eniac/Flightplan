@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
-# Copyright 2013-present Barefoot Networks, Inc.
+# Copyright 2013-2019 Barefoot Networks, Inc.
+# Copyright 2018,2019 University of Pennsylvania
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +19,9 @@
 import os
 import sys
 if 'BMV2_REPO' in os.environ:
+    newpath  = os.path.join(os.environ['BMV2_REPO'], 'targets', 'booster_switch')
+    print("Appending {} to pythonpath".format(newpath))
+    sys.path.append(newpath)
     newpath  = os.path.join(os.environ['BMV2_REPO'], 'tools')
     print("Appending {} to pythonpath".format(newpath))
     sys.path.append(newpath)
@@ -30,6 +34,7 @@ from mininet.net import Mininet
 from mininet.topo import Topo
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
+from mininet.link import TCLink
 
 from flightplan_p4_mininet import P4Switch, P4Host, send_commands
 
@@ -51,12 +56,26 @@ parser.add_argument('--cli', help='Run CLI',
                     action='store_true')
 parser.add_argument('--bmv2-exe', help='Path to bmv2 executable',
                     type=str, required=False, default=None)
-parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2',
-                    type=str, action='store', required=False, default=False)
+parser.add_argument('--replay', help='Provide a pcap file to be sent through from h1 to h2. '
+                                     'Syntax = "from-to:file.pcap"',
+                    type=str, action='append', required=False, default=[])
 parser.add_argument('--host-prog', help='Run a program on a host. Syntax = "hostname:program to run"',
+                    type=str, action='append', required=False, default=[])
+parser.add_argument('--fg-host-prog', help='Run a program on a host in foreground. Syntax = "hostname:program to run"',
+                    type=str, action='append', required=False, default=[])
+parser.add_argument('--pre-replay', help='Provide a pcap file to be played before a host program '
+                    'in the background. Syntax = "from-to:file.pcap:bg (0 or 1)[:speed]"',
                     type=str, action='append', required=False, default=[])
 parser.add_argument('--time', help='Time to run mininet for',
                     type=int, required=False, default=1)
+parser.add_argument('--bw', help='Bandwidth for all links in Mbps',
+                    type=float, required=False, default=None)
+parser.add_argument('--qlen', help='Queue length for all links',
+                    type=float, required=False, default=None)
+parser.add_argument('--pcap-to', help='Capture traffic to this device (default: all)',
+                    type=str, action='append', required=False, default=[])
+parser.add_argument('--pcap-from', help='Capture traffic from this device (default: all)',
+                    type=str, action='append', required=False, default=[])
 
 class TopoSpecError(Exception):
     pass
@@ -66,7 +85,7 @@ class FPTopo(Topo):
     def cfgpath(self, path):
         return os.path.join(self.cfgbase, path)
 
-    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file):
+    def __init__(self, host_spec, switch_spec, sw_path, log, verbose, cfg_file, bw, qlen):
         Topo.__init__(self)
         print("Flightplan Mininet using config " + cfg_file)
 
@@ -79,6 +98,7 @@ class FPTopo(Topo):
         self.all_nodes = {}
         self.all_switches = {}
         self.all_hosts = {}
+        self.host_prog_num = defaultdict(int)
 
         base_thrift = 9090
 
@@ -154,6 +174,8 @@ class FPTopo(Topo):
                     programs = host_ops.get('programs', [])
             )
 
+            self.all_nodes[host_name] = host
+            self.all_hosts[host_name] = host
             for iface_opts in host_ops.get('interfaces', []):
                 port_num = iface_opts.get('port', next_link_port[host_name])
 
@@ -188,12 +210,10 @@ class FPTopo(Topo):
 
             self.addHost(host_name,
                          ip = host['default_ip'],
-                         port = host['default_mac'],
+                         mac = host['default_mac'],
                          )
 
 
-            self.all_nodes[host_name] = host
-            self.all_hosts[host_name] = host
 
 
         created_links = defaultdict(set)
@@ -224,7 +244,9 @@ class FPTopo(Topo):
                              port1 = port1,
                              port2 = port2,
                              intfName1 = self.iface_name(name1, port1),
-                             intfName2 = self.iface_name(name2, port2)
+                             intfName2 = self.iface_name(name2, port2),
+                             bw=bw,
+                             max_queue_size=qlen
                              )
                 created_links[name1].add(name2)
                 created_links[name2].add(name1)
@@ -252,6 +274,10 @@ class FPTopo(Topo):
                 if interface.get('mac','') == mac:
                     used = True
                     break
+            for host in self.all_hosts.values():
+                if host['default_mac'] == mac:
+                    used = True
+                    break
             if not used:
                 return mac
             i += 1
@@ -263,6 +289,10 @@ class FPTopo(Topo):
             used = False
             for interface in self.iter_interfaces():
                 if interface.get('ip','').split('/')[0] == ip:
+                    used = True
+                    break
+            for host in self.all_hosts.values():
+                if host['default_ip'] == ip:
                     used = True
                     break
             if not used:
@@ -299,6 +329,8 @@ class FPTopo(Topo):
                 continue
             node = net.get(name)
             for iface_ops in opts['interfaces']:
+                if iface_ops['port'] == 0:
+                    continue
                 ifname = self.iface_name(name, iface_ops['port'])
                 if 'ip' in iface_ops:
                     node.setIP(iface_ops['ip'], intf=ifname)
@@ -311,15 +343,19 @@ class FPTopo(Topo):
         fname = os.path.join(directory, '{}_to_{}.pcap'.format(name1, name2))
         net.get(name1).cmd('tcpdump -i {} -Q out -w {}&'.format(iface, fname))
 
-    def start_tcp_dumps(self, net, directory):
+    def start_tcp_dumps(self, net, directory, pcap_to, pcap_from):
         for name1, links in self.link_ports.items():
             for name2, if1 in links.items():
+                if len(pcap_from) > 0 or len(pcap_to) > 0:
+                    if name1 not in pcap_from and name2 not in pcap_to:
+                        continue
                 self.start_tcp_dump(net, directory, name1, name2, if1)
 
     def stop_tcp_dumps(self, net):
         print("Stopping tcpdump")
         for node in self.all_nodes:
-            net.get(node).cmd('pkill tcpdump')
+            os.system('pkill tcpdump')
+            #net.get(node).cmd('pkill tcpdump')
 
     def do_switch_replay(self, net):
         for sw1_name, sw_opts in self.all_switches.items():
@@ -345,20 +381,46 @@ class FPTopo(Topo):
                 send_commands(self.all_nodes[sw_name]['thrift_port'],
                               self.cfgpath(sw_opts['cfg']), commands)
 
-    def run_host_programs(self, net, extras):
+    def run_host_programs(self, net, extras, fg_extras):
         for name, opts in self.all_hosts.items():
-            for i, program in enumerate(opts['programs']):
-                print("Running {} on {}".format(program, name))
-                net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 &'
-                                  .format(program, self.log_dir, name, i))
+            for program in opts['programs']:
+                i = self.host_prog_num[name]
+                self.host_prog_num[name] += 1
+                if isinstance(program, str):
+                    cmd = program
+                    fg = False
+                else:
+                    cmd = program['cmd']
+                    fg = program.get('fg', False)
+                full_cmd = '{} > {}/{}_prog_{}.log 2>&1 {}' \
+                                .format(cmd, self.log_dir, name, i, '&' if not fg else '')
+                print("Running {} on {}".format(full_cmd, name))
+                net.get(name).cmd(full_cmd)
 
-        for i, extra_prog in enumerate(extras):
+        for extra_prog in extras:
             try:
-                name, program = extra_prog.split(':')
-            except:
-                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program'")
+                splitprog = extra_prog.split(":")
+                name = splitprog[0]
+                program = ":".join(splitprog[1:])
+            except Exception as e:
+                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program': %s" % e)
+            i = self.host_prog_num[name]
+            self.host_prog_num[name] += 1
             print("Running {} on {}".format(program, name))
             net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 &'
+                              .format(program, self.log_dir, name, i))
+
+        for extra_prog in fg_extras:
+            try:
+                splitprog = extra_prog.split(':')
+                name = splitprog[0]
+                program = ":".join(splitprog[1:])
+            except Exception as e:
+                raise TopoSpecError("Programs provided from CLI must be of form 'h1:program': %s" % e)
+            i = self.host_prog_num[name]
+            self.host_prog_num[name] += 1
+            print("Running {} on {}".format(program, name))
+            net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1'
                               .format(program, self.log_dir, name, i))
 
     def do_host_replay(self, net, host, towards, file):
@@ -366,6 +428,16 @@ class FPTopo(Topo):
         print("Replaying {} on {}.{}".format(file, host, self.iface_name(host, port_num)))
         net.get(host).cmd(
                 'tcpreplay -p 100 -i {} {}'.format(self.iface_name(host, port_num), file)
+        )
+
+    def do_pre_replay(self, net, host, towards, file, bg, speed):
+        if speed is None:
+            speed = 100
+        port_num = self.link_ports[host][towards]
+        print("Replaying {} on {}.{}".format(file, host, self.iface_name(host, port_num)))
+        net.get(host).cmd(
+                'tcpreplay -p {} -i {} {}{}'.format(speed, self.iface_name(host, port_num), file,
+                                                    '&' if bg else '')
         )
 
 def main():
@@ -380,18 +452,19 @@ def main():
         cfg = yaml.load(f)
 
     topo = FPTopo(cfg['hosts'], cfg['switches'],
-                  bmv2_exe, args.log, args.verbose, args.config)
+                  bmv2_exe, args.log, args.verbose, args.config, args.bw, args.qlen)
 
     print("Starting mininet")
-    net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None)
+    net = Mininet(topo=topo, host=P4Host, switch=P4Switch, controller=None, link=TCLink)
 
     net.start()
+    net.staticArp()
 
     try:
         topo.init(net)
 
         if args.pcap_dump:
-            topo.start_tcp_dumps(net, args.pcap_dump)
+            topo.start_tcp_dumps(net, args.pcap_dump, args.pcap_to, args.pcap_from)
 
 
         sleep(.1)
@@ -402,12 +475,27 @@ def main():
 
         topo.do_commands(net)
 
-        sleep(.1)
+        sleep(1)
 
-        topo.run_host_programs(net, args.host_prog)
+        for arg in args.pre_replay:
+            replay_args = arg.split(":")
+            replay_arg1 = replay_args[0].split('-')
+            if len(replay_args) not in (3,4) or len (replay_arg1) != 2:
+                raise Exception("args.pre_replay must have form Host-Switch:File:bg[:Speed]")
+            if len(replay_args) == 4:
+                speed = int(replay_args[3])
+            else:
+                speed = None
 
-        if args.replay:
-            replay_args = args.replay.split(":")
+            bg = int(replay_args[2])
+
+            topo.do_pre_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1], bg, speed)
+
+        topo.run_host_programs(net, args.host_prog, args.fg_host_prog)
+        sleep(1)
+
+        for to_replay in args.replay:
+            replay_args = to_replay.split(":")
             replay_arg1 = replay_args[0].split('-')
             if len(replay_args) != 2 or len(replay_arg1) != 2:
                 raise Exception("args.replay must have form Host-Switch:File")
@@ -420,6 +508,8 @@ def main():
             CLI(net)
 
         if args.pcap_dump:
+            # Pause for a second before stopping tcpdump to allow process to complete
+            sleep(1)
             topo.stop_tcp_dumps(net)
         print("Stopping mininet")
         net.stop()
