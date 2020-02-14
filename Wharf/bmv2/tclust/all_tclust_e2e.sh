@@ -6,6 +6,7 @@ BW=$2
 QLEN=$3
 
 run_exp() {
+    #echo Running "$HERE/tclust_e2e.sh $HERE/../topologies/tclust/$1 $DUR $BW $QLEN;"
     $HERE/tclust_e2e.sh $HERE/../topologies/tclust/$1 $DUR $BW $QLEN;
     sleep 2
 }
