@@ -101,6 +101,31 @@ All other test programs utilize one of these basic scripts with specific topolog
 run with each booster enabled in turn.
 * Results can be analyzed with the notebook contained in [analysis/e2e_analysis.ipynb](analysis/e2e_analysis.ipynb).
 
+### Dependencies
+Running [./bmv2/tclust/all_tclust_e2e.sh](./bmv2/tclust/all_tclust_e2e.sh) invokes a number of scripts, including
+[generate_memcached.py](../MemcachedFPGATest/generate_memcached.py), which may have other dependencies. In the
+case of [generate_memcached.py](../MemcachedFPGATest/generate_memcached.py), it depends on the numpy package,
+without which you'll get the following output:
+```
+nsultana@tclust9:~/P4Boosters/Wharf$ ./bmv2/tclust/all_tclust_e2e.sh
+Generating 9900 get 1100 set packet trace bmv2/test_output/tclust_e2e/bw_none_q_none_dur_100/tclust_noop/test.pcap
+Traceback (most recent call last):
+  File "bmv2/../../MemcachedFPGATest/generate_memcached.py", line 10, in <module>
+    import numpy.random
+ImportError: No module named numpy.random
+tcpdump: bmv2/test_output/tclust_e2e/bw_none_q_none_dur_100/tclust_noop/warmup.pcap: No such file or directory
+...
+```
+This can be fixing by installing numpy as follows:
+```
+nsultana@tclust9:~/P4Boosters/Wharf$ pip install numpy
+Collecting numpy
+  Downloading https://files.pythonhosted.org/packages/3a/5f/47e578b3ae79e2624e205445ab77a1848acdaa2929a00eeef6b16eaaeb20/numpy-1.16.6-cp27-cp27mu-manylinux1_x86_64.whl (17.0MB)
+    100% |████████████████████████████████| 17.0MB 41kB/s
+Installing collected packages: numpy
+Successfully installed numpy-1.16.6
+```
+
 
 # Regression tests
 
