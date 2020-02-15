@@ -1,0 +1,268 @@
+ssh:
+    user: iped
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+dirs:
+    P4Boosters: '~/dcomp/P4Boosters'
+    dataplane: ~/gits/TofinoP4Boosters/failoverE2e
+    moongen: ~/dcomp/MoonGen
+
+mcd_params:
+    n_get: 450000
+    n_set: 50000
+    key_space: 10000
+    zipf_coef: 1.00
+
+init_cmds:
+    make_mcd_pcap: >-
+        python2 {0.dirs.P4Boosters}/MemcachedFPGATest/generate_memcached.py
+            --smac {0.hosts.mcd_client.mac} --sip {0.hosts.mcd_client.ip}
+            --dmac {0.hosts.mcd_server.mac} --dip {0.hosts.mcd_server.ip}
+            --out {0.files.mcd_pcap.src} --warmup-out {0.files.mcd_warmup_pcap.src}
+            --n-get {0.mcd_params.n_get} --n-set {0.mcd_params.n_set}
+            --key-space {0.mcd_params.key_space} --zipf {0.mcd_params.zipf_coef}
+
+post_cmds:
+    verify_counters: >-
+        python verify_counters.py {0.out}/moongen/moongen.out
+                                  {0.out}/counters_0.out
+                                  {0.out}/counters_1.out
+
+files:
+    moongen_script:
+        src: ./capture.lua
+        dst: '{0.programs.log_dir}/capture.lua'
+        host: moongen
+    mcd_pcap:
+        src: '{0.out}/mcd_test.pcap'
+        dst: '{0.programs.log_dir}/mcd_test.pcap'
+        host: mcd_client
+    mcd_warmup_pcap:
+        src: '{0.out}/mcd_warmup.pcap'
+        dst: '{0.programs.log_dir}/mcd_warmup.pcap'
+        host: mcd_client
+    start_iperf_servers:
+        src: ./start_iperf_servers.sh
+        dst: '{0.programs.log_dir}/start_iperf_servers.sh'
+        host: iperf_server
+    start_iperf_clients:
+        src: ./start_iperf_clients.sh
+        dst: '{0.programs.log_dir}/start_iperf_clients.sh'
+        host: iperf_client
+
+hosts:
+    fpga_programmer:
+        addr: tclust2
+    mcd_client:
+        addr: tclust7
+        mac: 00:02:c9:3a:84:00
+        ip: 10.0.0.7
+        iface: ens3
+    power_monitor:
+        addr: tclust8
+    mcd_server:
+        addr: tclust4
+        mac: 7c:fe:90:1c:36:81
+        ip: 10.0.0.4
+    iperf_client:
+        addr: tclust1
+        ip: 10.0.0.1
+    iperf_server:
+        addr: tclust2
+        ip: 10.0.0.2
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+    moongen:
+        addr: tclust5
+
+programs:
+    log_dir: '~/logs/{0.label}'
+
+    power_check:
+        host: power_monitor
+        start: ~/check_all_power_monitors.sh
+        check_rtn: 0
+        log:
+            out: power_monitor_status.out
+
+    program_compression_fpgas:
+        host: fpga_programmer
+        start: cd {0.dirs.P4Boosters}/FPGA/TopLevelSDx && bash program_compression.sh {log}
+        check_rtn: false
+        log:
+            dir: program_fpgas
+            log: program
+            out: program_fpgas.out
+            err: program_fpgas.err
+
+    program_backup_fpga:
+        host: fpga_programmer
+        start: cd {0.dirs.P4Boosters}/FPGA/TopLevelSDx && bash program_backup_compressor.sh
+        check_rtn: false
+        log:
+            dir: program_fpgas
+            out: program_backup_compressor.out
+            err: program_backup_compressor.err
+
+    stop_dataplane:
+        host: tofino
+        start: cd {0.dirs.dataplane} && ./stop.sh
+        check_rtn: False
+
+    start_dataplane:
+        host: tofino
+        start: cd {0.dirs.dataplane} && ./run_fg.sh  -t -mi 7 -me 7 -fc --failover 130 120 --poll-time {0.args.poll_time}
+        stop: cd {0.dirs.dataplane} && ./stop.sh
+        check_rtn: False
+        enforce_duration: True
+        log:
+            dir: dataplane
+            out: dataplane.out
+            err: dataplane.err
+
+    moongen:
+        host: moongen
+        start: cd {0.dirs.moongen} && ./build/MoonGen {0.files.moongen_script.dst} 5 {log} -s100
+        stop: pkill MoonGen
+        check_rtn: False
+        log:
+            dir: moongen
+            log: moongen.pcap
+            out: moongen.out
+            err: moongen.err
+
+    mcd:
+        host: mcd_server
+        start: memcached -U 11211 -l {0.hosts.mcd_server.ip} --protocol=ascii
+        stop: pkill memcached
+        check_rtn: False
+        log:
+            out: memcached.out
+            err: memcached.err
+
+    iperf_server:
+        host: iperf_server
+        #start: iperf3 -s -J -i .1
+        start: bash {0.files.start_iperf_servers.dst} {n} {log} {0.hosts.iperf_server.ip}
+        check_rtn: False
+        stop: pkill iperf3
+        log:
+            dir: iperf
+            log: server
+            out: server.out
+            err: server.err
+
+    iperf_client:
+        host: iperf_client
+        #start: iperf3 -c {0.hosts.iperf_server.ip} -J -t {time} --parallel {n} -i .1
+        start: bash {0.files.start_iperf_clients.dst} {n} {time} {log} {0.hosts.iperf_client.ip} {0.hosts.iperf_server.ip}
+        log:
+            dir: iperf
+            out: client.out
+            err: client.err
+            log: client
+
+    ping:
+        host: iperf_client
+        start: ping -i .2 {0.hosts.iperf_server.ip}
+        stop: pkill ping
+        check_rtn: False
+        log:
+            dir: ping
+            out: ping.out
+            err: ping.err
+
+    tcpreplay:
+        host: mcd_client
+        start: ~/bin/tcpreplay --preload-pcap -p {rate} -i {0.hosts.mcd_client.iface} --loop {loops} {pcap}
+        log:
+            dir: tcpreplay
+            out: tcpreplay.out
+            err: tcpreplay.err
+
+    fail_link:
+        host: tofino
+        start: >-
+            tmux send ucli ENTER &&
+            tmux send pm ENTER &&
+            tmux send port-dis Space 13/0 ENTER &&
+            tmux send show ENTER &&
+            tmux capture-pane -J -p
+        log:
+            out: fail_link.out
+            err: fail_link.err
+
+
+    get_counters:
+        host: tofino
+        start: >-
+            tmux send ucli ENTER && sleep 1 &&
+            tmux send pm ENTER && sleep 1 &&
+            tmux send show ENTER && sleep 1 &&
+            tmux capture-pane -J -p
+        log:
+            out: counters_{i}.out
+            err: counters_{i}.err
+commands:
+
+    power_check:
+        begin: -190
+    stop_dataplane:
+        begin: -130
+
+    program_compression_fpgas:
+        begin: -180
+
+    program_backup_fpga:
+        begin: -180
+
+    start_dataplane:
+        begin: -60
+        duration: 125
+
+    mcd:
+        begin: -40
+        duration: 95
+
+    moongen:
+        begin: -10
+        duration: 70
+
+    tcpreplay:
+        - begin: -30
+          pcap: '{0.files.mcd_warmup_pcap.dst}'
+          rate: 10000
+          loops: 4
+        - begin: 0
+          pcap: '{0.files.mcd_pcap.dst}'
+          rate: 10000
+          loops: 1
+          enforce_duration: 50
+
+    ping:
+        begin: -1
+        duration: 55
+
+    iperf_server:
+        begin: 0
+        n: 10
+        duration: 50
+
+    fail_link:
+        begin: 20
+
+
+    iperf_client:
+        begin: 5
+        n: 10
+        time: 40
+        enforce_duration: 40
+
+    get_counters:
+        - begin: -5
+        - begin: 60

@@ -1,0 +1,168 @@
+dirs:
+    home: /home/ncshy
+    P4Boosters: '{0.dirs.home}/source/P4Boosters'
+
+ssh:
+    user: ncshy
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+params:
+    rate: '{0.args.rate}'
+    pktgen_template: ./pktgen_template.lua
+    n_set_pkts: 5000
+    n_get_pkts: 45000
+    n_total_pkts: 1000
+
+time:
+    iperf: 60
+
+init_cmds:
+    make_lua: >-
+        python format_lua_template.py {0.params.pktgen_template} {0.files.pktgen_script.src}
+        --rate {0.params.rate} --log  {0.programs.log_dir}/pktgen.log --count {0.params.n_total_pkts}
+    make_capture_script: >-
+        python format_capture_template.py {0.files.capture_pkt.pre_format} {0.files.capture_pkt.src}
+        --duration {0.commands.capture.duration}
+
+post_cmds:
+    verify_counters: >-
+        python verify_counters.py {0.out}/moongen/moongen.out {0.out}/counters_0.out {0.out}/counters_1.out
+
+files:
+    pktgen_script:
+        src: '{0.out}/pktgen.lua'
+        dst: '{0.programs.log_dir}/pktgen.lua'
+        host: pktgen
+    pcap:
+        src: 'pcaps/{0.args.pcap_file}'
+        dst: '{0.programs.log_dir}/input.pcap'
+        host: pktgen
+    capture_sh:
+        src: './dpdk_capture.sh'
+        dst: '{0.programs.log_dir}/dpdk_capture.sh'
+        host: capture
+    capture_pkt:
+        pre_format: ./dpdk_capture_template.pkt
+        src: '{0.out}/dpdk_capture.pkt'
+        dst: '{0.programs.log_dir}/dpdk_capture.pkt'
+        host: capture
+    pktgen_runner:
+        src: './run_lua.sh'
+        dst: '~/source/dpdk/run_lua.sh'
+        host: pktgen
+
+hosts:
+    client:
+            #addr: tclust1
+        addr: 158.130.4.231
+    server:
+            #addr: tclust2
+        addr: 158.130.4.232
+    compressor:
+        addr: dcomp1.seas.upenn.edu
+        port: 112
+    decompressor:
+        addr: dcomp2.seas.upenn.edu
+        port: 111
+    pktgen:
+            #addr: tclust1
+        addr: 158.130.4.231
+    capture:
+        addr: 158.130.4.237
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+    log_dir: '~/logs/{0.label}'
+
+    capture:
+        host: capture
+        start: tmux new -s 42 -d 'cd ~/source/dpdk/ && bash {0.files.capture_sh.dst} {0.files.capture_pkt.dst} {log}' && tmux wait 42
+        log:
+            dir: capture
+            log: capture.pcap
+            out: capture.out
+            err: capture.err
+
+    program_fpgas:
+        host: server
+        start: 'cd ~/source/P4Boosters/FPGA/TopLevelSDx && bash program_encoder.sh {log}'
+        fg: true
+        check_rtn: 1
+        log:
+            dir: program_fpgas
+            log: program
+            out: program_fpgas.out
+            err: program_fpgas.err
+
+    stop_dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
+        check_rtn: 1
+
+    dataplane:
+        host: tofino
+        start: >-
+            cd ~/gits/TofinoP4Boosters/pointToPoint &&
+            ./run.sh 1-121 -cp 7 -mi 121 -me 121
+        stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
+        enforce_duration: False
+
+    pktgen:
+        host: pktgen
+        start: tmux new -s 42 -d '~/source/dpdk/run_lua.sh {0.files.pktgen_script.dst} {0.files.pcap.dst}' && tmux wait 42
+        enforce_duration : false
+        log:
+            out: pktgen.out
+            err: pktgen.err
+
+    tcpreplay:
+        host: pktgen
+        start: '~/source/dpdk/tcpreplay --loop 1 --preload-pcap --quiet -p 100 -i ens1f1 {0.files.pcap.dst}'
+        enforce_duration : false
+        log:
+            out: pktgen.out
+            err: pktgen.err
+
+    ping:
+        host: client
+        start: 'ping -i .2 {0.hosts.server.ip}'
+        stop: 'pkill ping'
+        check_rtn: False
+        log:
+            dir: ping
+            out: ping.out
+            err: ping.err
+
+    get_counters:
+        host: tofino
+        start: >-
+            tmux send ucli ENTER && sleep 1 &&
+            tmux send pm ENTER && sleep 1 &&
+            tmux send show ENTER && sleep 1 &&
+            tmux capture-pane -J -p
+        log:
+            out: counters_{i}.out
+            err: counters_{i}.err
+
+commands:
+    stop_dataplane:
+        begin: -50
+        #program_fpgas:
+        #begin: -49
+    dataplane:
+        begin: -28
+        duration: 90
+    capture:
+        begin: -10
+        duration: 70
+    tcpreplay:
+        begin: 1
+    get_counters:
+        - begin: 0
+        - begin: 48

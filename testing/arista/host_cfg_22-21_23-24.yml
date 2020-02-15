@@ -1,0 +1,13 @@
+# For no-passhthrough mode
+
+client_1:
+    port: 22/1
+
+server_1:
+    port: 21/1
+
+client_2:
+    port: 23/1
+
+server_2:
+    port: 24/1
