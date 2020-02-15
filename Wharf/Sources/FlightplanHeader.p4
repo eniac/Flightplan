@@ -63,16 +63,17 @@ header flightplanReceive1_h {
 #endif
 #if defined(ACKing)
   bit<1> ack;
-#ifndef NAKing
-  bit<7> pad;
-#endif
-#endif
+#endif // defined(ACKing)
 #if defined(NAKing)
   bit<1> nak;
-#ifdef ACKing
-  bit<6> pad;
-#endif
-#endif
+#endif // defined(NAKing)
+#if defined(ACKing) || defined(NAKing)
+#if defined(ACKing) && defined(NAKing)
+  bit<6> k_pad;
+#else
+  bit<7> k_pad;
+#endif // defined(ACKing) && defined(NAKing)
+#endif // defined(ACKing) || defined(NAKing)
 }
 
 #if defined(ACKing) || defined(NAKing)
