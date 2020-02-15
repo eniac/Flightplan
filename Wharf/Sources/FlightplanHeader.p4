@@ -6,6 +6,10 @@ Nik Sultana, UPenn, January 2019
 #ifndef FLIGHTPLAN_HEADER_P4_
 #define FLIGHTPLAN_HEADER_P4_
 
+// Merge comment: next 2 lines removed in adjustment
+//#undef ACKing
+//#undef NAKing
+
 #define FLIGHTPLAN_VERSION_SIZE 4 /*FIXME fudge*/
 #define ETHERTYPE_FLIGHTPLAN 0x2222 /*FIXME fudge*/
 #define SEGMENT_DESC_SIZE 4 /*FIXME fudge*/
