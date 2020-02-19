@@ -13,6 +13,9 @@
 #         doesn't hide from its virtual nodes.
 #   e.g., all hosts get full ARP table (showing all hosts) -- this can be minimised to show only the edge
 #         router and the other hosts it's linked to.
+# USAGE:
+# 1. python generate_alfares_network.py > bmv2/topologies/alfares.yml
+# 2. (Possibly customise and) execute run_alfares.sh
 
 
 import random
@@ -336,11 +339,11 @@ gen_pod_switches_route_tables(route_table_creation_worklist)
 #for pod in Pods:
 #    print "Pod " + str(pod_count)
 #    for element in pod['aggregate']:
-#       print "    " + element.toString() 
+#       print "    " + element.toString()
 #    for element in pod['edge']:
-#       print "    " + element.toString() 
+#       print "    " + element.toString()
 #    for element in pod['hosts']:
-#       print "    " + element.toString() 
+#       print "    " + element.toString()
 #    pod_count += 1
 
 def print_host_yml(host):
@@ -414,3 +417,15 @@ for pod in Pods:
         print_switch_yml(switch)
     for switch in pod['edge']:
         print_switch_yml(switch)
+
+# Generate all-to-all ping test parameters for run_alfares.sh
+Hosts = []
+for pod in Pods:
+    for host in pod['hosts']:
+        Hosts.append(host)
+# Generate all-to-all ping test parameters for run_alfares.sh
+print "# All-to-all ping test parameters:"
+for h1 in Hosts:
+    for h2 in Hosts:
+        #print "#   --fg-host-prog \"" + h1.name + ": ping -c 1 " + h2.name + "\" \\"
+        print "#   --fg-host-prog \"" + h1.name + ": ping -c 1 " + h2.ipv4_address.toString() + "\" \\" # Avoids resolution since this seems to be flaky in Mininet
