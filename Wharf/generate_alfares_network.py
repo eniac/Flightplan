@@ -213,7 +213,7 @@ def gen_core_switches_route_tables():
        # Based on Algorithm 2 in the paper
        for pod_num in range(0, num_pods):
            next_hop = switch.links[pod_num + port_num_index]['element'].ipv4_address
-           switch.route_rules.append(RouteRule(IPv4Address(network_number,pod_num + port_num_index,0,0), 16, next_hop, pod_num + port_num_index, True))
+           switch.route_rules.append(RouteRule(IPv4Address(network_number,pod_num,0,0), 16, next_hop, pod_num + port_num_index, True))
 
 route_table_creation_worklist = []
 
