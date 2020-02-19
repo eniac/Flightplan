@@ -16,6 +16,19 @@
 # USAGE:
 # 1. python generate_alfares_network.py > bmv2/topologies/alfares.yml
 # 2. (Possibly customise and) execute run_alfares.sh
+#
+# DEBUGGING:
+#   Have the run_alfares.sh script use --cli. After running the script and
+#   you're in the Mininet prompt, run problematic commands that fail a test
+#   (e.g., $ORIGINHOST ping -c 1 $DESTHOST).
+#   Then stop Mininet and inspect the contents of test_output/($TOPOLOGY used
+#   in run_alfares.sh).
+#   There are 2 things to inspect: the logs at each switch tells you how each
+#   P4 program instance is executing; inspecting the pcap files shows the
+#   traffic on each link, which reveals how each packet is progressing and how
+#   the contents of the packet are changing  (e.g., headers, checksum).
+#   At a larger scale of testing, you can also could use tcpreplay to send
+#   traffic from a pcap file then looking at the test_output.
 
 
 import random
