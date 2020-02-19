@@ -51,6 +51,8 @@ pod_num_hosts = check_int(pod_num_hosts)
 num_core_switches = check_int(num_core_switches)
 num_hosts = check_int(num_hosts)
 
+print "# This output was auto-generated using generate_alfares_network.py -- modify with care."
+
 print "# k=" + str(k)
 print "# pod_switches_upper=" + str(pod_switches_upper)
 print "# pod_switches_lower=" + str(pod_switches_lower)
