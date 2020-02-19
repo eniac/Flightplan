@@ -160,7 +160,7 @@ class FPTopo(Topo):
         for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
 
             if len(host_name) > 10:
-                raise TopoSpecError('Switch name "{}" too long. Max len == 10'.format(host_name))
+                raise TopoSpecError('Host name "{}" too long. Max len == 10'.format(host_name))
 
             if 'links' in host_ops:
                 raise TopoSpecError("top level 'links' specification no longer supported. " \
