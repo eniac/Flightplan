@@ -64,9 +64,10 @@ indentation = "      " # FIXME const
 CoreSwitches = []
 Pods = []
 
+random.seed(0)
+
 macs_in_use = []
 # based on https://stackoverflow.com/questions/735975/static-methods-in-python
-# FIXME fix the seed of the PRNG, for deterministic yet pseudo-random output.
 def generate_mac_address():
     while True:
         candidate = "02:00:00:%02x:%02x:%02x" % (random.randint(0, 255),
