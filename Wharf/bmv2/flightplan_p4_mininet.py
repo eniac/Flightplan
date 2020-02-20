@@ -177,7 +177,6 @@ class P4Switch(Switch):
         self.output.flush()
         self.cmd('kill %' + self.sw_path)
         self.cmd('wait')
-        self.deleteIntfs()
 
     def attach(self, intf):
         "Connect a data port"
