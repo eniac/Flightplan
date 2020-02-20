@@ -26,6 +26,7 @@ sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 #        --pcap-dump $PCAP_DUMPS \
 #        --log $LOG_DUMPS \
 #        --verbose \
+#        --showExitStatus \
 #        --cli
 ##        2> $LOG_DUMPS/flightplan_mininet_log.err
 
@@ -33,6 +34,7 @@ sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
         --pcap-dump $PCAP_DUMPS \
         --log $LOG_DUMPS \
         --verbose \
+        --showExitStatus \
    --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
    --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
    --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
