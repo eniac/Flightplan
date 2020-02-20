@@ -1,20 +1,45 @@
 #!/bin/bash
 
-if [[ $# > 1 ]]; then
-    echo "Usage $0 [--complete]"
-    exit 1
-fi
+COMPLETE=0
+DESCRIBE=0
+while [ "${1:-}" != "" ]; do
+    case "$1" in
+      "-c" | "--complete")
+        COMPLETE=1
+        ;;
+      "-d" | "--describe")
+        DESCRIBE=1
+        ;;
+       *)
+        echo "Usage $0 [--complete] [--describe]"
+        echo "(--describe option shows only the script's purpose)"
+        exit 1
+    esac
+    shift
+done
 
-if [[ $# == 1 && $1 != "--complete" ]]; then
-    echo "Usage $0 [--complete]"
-    exit 1;
-fi
+if [[ $DESCRIBE == 1 ]]; then
+echo "::: $0 :::
+In this test, two sets of packets are sent (using tcpreplay) between the hosts iperf_c and iperf_s.
+One set of packets is sent to port 80, the other to port 666.
 
+Packets are routed by the 'tofino1' switch through a host running ufw.
+Ufw is set to discard packets sent to port 666.
+
+The test ensures there is no difference between the set of packets sent to port 80,
+and those received by iperf_s.
+
+If the --complete option is provided, traffic is also routed through the
+compressor, encoder, dropper, decoder, and decompressor, and the same
+validity checks are performed.
+"
+exit 0
+fi
 
 HERE="$(realpath `dirname $0`/../ --relative-to $(pwd))"
 BASENAME="tcp_ufw_both"
 
-if [[ $1 == "--complete" ]]; then
+if [[ $COMPLETE == 1 ]]; then
     TOPO=$HERE/topologies/tclust/tclust_ufw_complete.yml
     BASENAME+='_complete'
 else

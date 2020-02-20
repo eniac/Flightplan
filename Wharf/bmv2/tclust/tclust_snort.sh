@@ -1,20 +1,42 @@
 #!/bin/bash
 
-if [[ $# > 1 ]]; then
-    echo "Usage $0 [--complete]"
-    exit 1
-fi
+COMPLETE=0
+DESCRIBE=0
+while [ "${1:-}" != "" ]; do
+    case "$1" in
+      "-c" | "--complete")
+        COMPLETE=1
+        ;;
+      "-d" | "--describe")
+        DESCRIBE=1
+        ;;
+       *)
+        echo "Usage $0 [--complete] [--describe]"
+        echo "(--describe option shows only the script's purpose)"
+        exit 1
+    esac
+    shift
+done
 
-if [[ $# == 1 && $1 != "--complete" ]]; then
-    echo "Usage $0 [--complete]"
-    exit 1;
-fi
+if [[ $DESCRIBE == 1 ]]; then
+echo "::: $0 :::
+In this test, packets are sent (using tcpreplay) between the hosts iperf_c and iperf_s.
+Packets are routed by the 'tofino1' switch through a host running snort.
 
+The test ensures that snort received all of the sent packets, and that they
+were subsequently received by iperf_s.
+
+If the --complete option is provided, traffic is also routed through the
+compressor, encoder, dropper, decoder, and decompressor, and the same
+validity checks are performed.
+"
+exit 0
+fi
 
 HERE="$(realpath `dirname $0`/../ --relative-to $(pwd))"
 BASENAME="snort"
 
-if [[ $1 == '--complete' ]]; then
+if [[ $COMPLETE == 1 ]]; then
     TOPO=$HERE/topologies/tclust/tclust_snort_complete.yml
     BASENAME+='_complete'
 else
