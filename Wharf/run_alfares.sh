@@ -8,7 +8,7 @@ export BMV2_REPO=/home/iped/dcomp/behavioral-model/
 
 HERE=`pwd`
 
-TOPOLOGY=bmv2/topologies/alfares.yml
+TOPOLOGY=bmv2/topologies/alfares_k=4.yml
 
 TESTDIR=$HERE/test_output
 BASENAME=$(basename $TOPOLOGY .yml)
