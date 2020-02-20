@@ -329,8 +329,11 @@ class FPTopo(Topo):
                 continue
             node = net.get(name)
             for iface_ops in opts['interfaces']:
+
+                # The IP and MAC Address for a host's default port (0) are set at startup in __init__
                 if iface_ops['port'] == 0:
                     continue
+                # Non-default ports must have their IP and MAC set manually
                 ifname = self.iface_name(name, iface_ops['port'])
                 if 'ip' in iface_ops:
                     node.setIP(iface_ops['ip'], intf=ifname)
