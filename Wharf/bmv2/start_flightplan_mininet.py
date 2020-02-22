@@ -526,10 +526,7 @@ def main():
 
     except:
         print("Encountered exception running mininet")
-        try:
-            net.stop()
-        except:
-            pass
+        net.stop()
         raise
 
 if __name__ == '__main__':
