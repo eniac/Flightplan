@@ -17,8 +17,8 @@ One should build the behavioral model first, then run `make configure` here
 to apply the appropriate patches and rebuild.
 
 The patches into the behavioral model have been tested with:
-* commit `c67f85d45feea5c31312c9a1e8a7063a976a1469` of the `behavioral_model` repo
-* commit `730986bd4dce83a121159d06beb08ffa961afdc7` of the `p4c` repo
+* commit `c67f85d45feea5c31312c9a1e8a7063a976a1469` of the [behavioral_model](https://github.com/p4lang/behavioral-model/) repo
+* commit `730986bd4dce83a121159d06beb08ffa961afdc7` of the [p4c](https://github.com/p4lang/p4c) repo
 
 though it will likely be applicable to newer revisions as well.
 

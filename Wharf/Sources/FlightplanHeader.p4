@@ -14,6 +14,7 @@ Nik Sultana, UPenn, January 2019
 #define ETHERTYPE_FLIGHTPLAN 0x2222 /*FIXME fudge*/
 #define SEGMENT_DESC_SIZE 4 /*FIXME fudge*/
 #define BYTE 8
+#define QUAD 32
 #define MAX_DATAPLANE_CLIQUE_SIZE 64 /*FIXME fudge*/
 #define SEQ_WIDTH 32 /*FIXME fudge*/
 
@@ -39,14 +40,8 @@ header flightplan_h {
   bit<BYTE> byte7;
   bit<BYTE> byte8;
   bit<BYTE> byte9;
-  bit<BYTE> byte10;
-  bit<BYTE> byte11;
-  bit<BYTE> byte12;
-  bit<BYTE> byte13;
-  bit<BYTE> byte14;
-  bit<BYTE> byte15;
-  bit<BYTE> byte16;
-  bit<BYTE> byte17;
+  bit<QUAD> quad1;
+  bit<QUAD> quad2;
 }
 header flightplanReceive1_h {
   // FIXME replace with fields for actual values that need to be sent.

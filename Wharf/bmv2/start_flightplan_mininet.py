@@ -76,6 +76,8 @@ parser.add_argument('--pcap-to', help='Capture traffic to this device (default: 
                     type=str, action='append', required=False, default=[])
 parser.add_argument('--pcap-from', help='Capture traffic from this device (default: all)',
                     type=str, action='append', required=False, default=[])
+parser.add_argument('--showExitStatus', help='Show exit status of Mininet code commands',
+                    action='store_true')
 
 class TopoSpecError(Exception):
     pass
@@ -160,7 +162,7 @@ class FPTopo(Topo):
         for i, (host_name, host_ops) in enumerate(sorted(host_spec.items())):
 
             if len(host_name) > 10:
-                raise TopoSpecError('Switch name "{}" too long. Max len == 10'.format(host_name))
+                raise TopoSpecError('Host name "{}" too long. Max len == 10'.format(host_name))
 
             if 'links' in host_ops:
                 raise TopoSpecError("top level 'links' specification no longer supported. " \
@@ -384,7 +386,7 @@ class FPTopo(Topo):
                 send_commands(self.all_nodes[sw_name]['thrift_port'],
                               self.cfgpath(sw_opts['cfg']), commands)
 
-    def run_host_programs(self, net, extras, fg_extras):
+    def run_host_programs(self, net, extras, fg_extras, showExitStatus):
         for name, opts in self.all_hosts.items():
             for program in opts['programs']:
                 i = self.host_prog_num[name]
@@ -422,9 +424,17 @@ class FPTopo(Topo):
                 raise TopoSpecError("Programs provided from CLI must be of form 'h1:program': %s" % e)
             i = self.host_prog_num[name]
             self.host_prog_num[name] += 1
-            print("Running {} on {}".format(program, name))
-            net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1'
-                              .format(program, self.log_dir, name, i))
+            if showExitStatus:
+                sys.stdout.write("Running {} on {}".format(program, name))
+                sys.stdout.flush()
+                result = net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 ; echo $?'
+                                           .format(program, self.log_dir, name, i))
+                sys.stdout.write(" -- returned:" + result)
+                sys.stdout.flush()
+            else:
+                print("Running {} on {}".format(program, name))
+                net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1'
+                                  .format(program, self.log_dir, name, i))
 
     def do_host_replay(self, net, host, towards, file):
         port_num = self.link_ports[host][towards]
@@ -494,7 +504,7 @@ def main():
 
             topo.do_pre_replay(net, replay_arg1[0], replay_arg1[1], replay_args[1], bg, speed)
 
-        topo.run_host_programs(net, args.host_prog, args.fg_host_prog)
+        topo.run_host_programs(net, args.host_prog, args.fg_host_prog, args.showExitStatus)
         sleep(1)
 
         for to_replay in args.replay:
@@ -519,10 +529,7 @@ def main():
 
     except:
         print("Encountered exception running mininet")
-        try:
-            net.stop()
-        except:
-            pass
+        net.stop()
         raise
 
 if __name__ == '__main__':
