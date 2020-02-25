@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Generates network spec according to the scheme described by Al-Fares et al. in SIGCOMM'08
+# Generates network spec according to the scheme described by Al-Fares, Loukissas and Vahdat in SIGCOMM'08
 #   http://ccr.sigcomm.org/online/files/p63-alfares.pdf
 #
 # Nik Sultana, UPenn, February 2020
@@ -14,15 +14,15 @@
 #   e.g., all hosts get full ARP table (showing all hosts) -- this can be minimised to show only the edge
 #         router and the other hosts it's linked to.
 # USAGE:
-# 1. python generate_alfares_network.py > bmv2/topologies/alfares.yml
-# 2. (Possibly customise and) execute run_alfares.sh
+# 1. python generate_alv_network.py > bmv2/topologies/alv.yml
+# 2. (Possibly customise and) execute run_alv.sh
 #
 # DEBUGGING:
-#   Have the run_alfares.sh script use --cli. After running the script and
+#   Have the run_alv.sh script use --cli. After running the script and
 #   you're in the Mininet prompt, run problematic commands that fail a test
 #   (e.g., $ORIGINHOST ping -c 1 $DESTHOST).
 #   Then stop Mininet and inspect the contents of test_output/($TOPOLOGY used
-#   in run_alfares.sh).
+#   in run_alv.sh).
 #   There are 2 things to inspect: the logs at each switch tells you how each
 #   P4 program instance is executing; inspecting the pcap files shows the
 #   traffic on each link, which reveals how each packet is progressing and how
@@ -40,7 +40,7 @@ network_number = 192
 
 k = float(4) # This is the only parameter to the networks described by Al-Fares et al.
 
-p4_program = "../../build/bmv2/AlFares.json"
+p4_program = "../../build/bmv2/ALV.json"
 
 num_pods = k
 num_switch_ports = k
@@ -64,7 +64,7 @@ pod_num_hosts = check_int(pod_num_hosts)
 num_core_switches = check_int(num_core_switches)
 num_hosts = check_int(num_hosts)
 
-print "# This output was auto-generated using generate_alfares_network.py -- modify with care."
+print "# This output was auto-generated using generate_alv_network.py -- modify with care."
 
 print "# k=" + str(k)
 print "# pod_switches_upper=" + str(pod_switches_upper)
@@ -434,12 +434,12 @@ for pod in Pods:
     for switch in pod['edge']:
         print_switch_yml(switch)
 
-# Generate all-to-all ping test parameters for run_alfares.sh
+# Generate all-to-all ping test parameters for run_alv.sh
 Hosts = []
 for pod in Pods:
     for host in pod['hosts']:
         Hosts.append(host)
-# Generate all-to-all ping test parameters for run_alfares.sh
+# Generate all-to-all ping test parameters for run_alv.sh
 print "# All-to-all ping test parameters:"
 for h1 in Hosts:
     for h2 in Hosts:

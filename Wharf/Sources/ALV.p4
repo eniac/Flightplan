@@ -1,5 +1,5 @@
 /*
-Accompanying P4 program for my implementation of Al-Fares et al's SIGCOMM 2008 paper.
+Accompanying P4 program for my implementation of Al-Fares, Loukissas and Vahdat's SIGCOMM 2008 paper.
 Nik Sultana, UPenn, February 2020
 
 NOTE:
