@@ -22,16 +22,16 @@ mkdir -p $LOG_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
-        --pcap-dump $PCAP_DUMPS \
-        --log $LOG_DUMPS \
-        --verbose \
-        --showExitStatus \
-   --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
-        --cli
-#        2> $LOG_DUMPS/flightplan_mininet_log.err
-
-exit 0
+#sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+#        --pcap-dump $PCAP_DUMPS \
+#        --log $LOG_DUMPS \
+#        --verbose \
+#        --showExitStatus \
+#   --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
+#        --cli
+##        2> $LOG_DUMPS/flightplan_mininet_log.err
+#
+#exit 0
 
 sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
         --pcap-dump $PCAP_DUMPS \
