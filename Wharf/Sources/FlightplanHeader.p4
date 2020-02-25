@@ -18,6 +18,11 @@ Nik Sultana, UPenn, January 2019
 #define MAX_DATAPLANE_CLIQUE_SIZE 64 /*FIXME fudge*/
 #define SEQ_WIDTH 32 /*FIXME fudge*/
 
+#define STATE 8
+#define NoProblem 0x0
+#define InvalidCodeFlow 0x1
+#define NoOffloadPort 0x2
+
 // Flightplan header scheme
 header flightplan_h {
   // Includes Ethernet header to simplify parsing, and handling by black-box external functions that aren't aware of the Flightplan header.
@@ -27,10 +32,11 @@ header flightplan_h {
 
 //  bit<FLIGHTPLAN_VERSION_SIZE> version; // This could be spared.
 //  bit<16> encapsulated_ethertype; -- This can be removed if we fully encapsulate the Ethernet frame including the original Ethernet header.
-  bit<SEGMENT_DESC_SIZE> from_segment; // This is implicit in ingress port, so could be spared.
-  bit<SEGMENT_DESC_SIZE> to_segment; // This is implicit in ingress port, so could be spared.
+  bit<SEGMENT_DESC_SIZE> from_segment;
+  bit<SEGMENT_DESC_SIZE> to_segment;
 //  bit<4> pad;
 
+  bit<STATE> state;
   bit<BYTE> byte1;
   bit<BYTE> byte2;
   bit<BYTE> byte3;
@@ -39,7 +45,6 @@ header flightplan_h {
   bit<BYTE> byte6;
   bit<BYTE> byte7;
   bit<BYTE> byte8;
-  bit<BYTE> byte9;
   bit<QUAD> quad1;
   bit<QUAD> quad2;
 }
