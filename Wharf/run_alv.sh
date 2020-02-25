@@ -8,7 +8,7 @@ export BMV2_REPO=/home/iped/dcomp/behavioral-model/
 
 HERE=`pwd`
 
-TOPOLOGY=bmv2/topologies/alfares_k=4.yml
+TOPOLOGY=bmv2/topologies/alv_k=4.yml
 
 TESTDIR=$HERE/test_output
 BASENAME=$(basename $TOPOLOGY .yml)
@@ -22,13 +22,16 @@ mkdir -p $LOG_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-#sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
-#        --pcap-dump $PCAP_DUMPS \
-#        --log $LOG_DUMPS \
-#        --verbose \
-#        --showExitStatus \
-#        --cli
-##        2> $LOG_DUMPS/flightplan_mininet_log.err
+sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+        --pcap-dump $PCAP_DUMPS \
+        --log $LOG_DUMPS \
+        --verbose \
+        --showExitStatus \
+   --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
+        --cli
+#        2> $LOG_DUMPS/flightplan_mininet_log.err
+
+exit 0
 
 sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
         --pcap-dump $PCAP_DUMPS \
