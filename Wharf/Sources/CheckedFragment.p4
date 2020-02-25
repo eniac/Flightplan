@@ -4,6 +4,13 @@ Prototype for Flightplan customised API
 Nik Sultana, UPenn, January 2019
 */
 
+// Merge comment: next line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
+#define ACKing
+// Merge comment: next line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
+#define NAKing
+
 #include "Parsing.p4"
 #include <FlightplanHeader.p4>
 #include <FlightplanParser.p4>
@@ -52,8 +59,16 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
       next_dataplane = 1; // It's fine for this value to be hardcoded.
 
       hdr.fp.setValid();
-      hdr.fp.version = 1;
-      hdr.fp.encapsulated_ethertype = hdr.eth.type;
+
+// Merge comment: next code line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
+      // fp version has been removed from flightplan_h
+      //hdr.fp.version = 1;
+
+// Merge comment: next code line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
+      // encapsulated_ethertype removed because of full ethernet encapsulation
+      //hdr.fp.encapsulated_ethertype = hdr.eth.type;
       hdr.eth.type = ETHERTYPE_FLIGHTPLAN;
       hdr.fp.from_segment = 1;
       hdr.fp.to_segment = 2;
@@ -72,7 +87,10 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
           receiver_seq_state.relink(ok); // FIXME not using "ok"
       }
       hdr.fpReceive2.setInvalid();
-      hdr.eth.type = hdr.fp.encapsulated_ethertype;
+// Merge comment: next code line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
+      // encapsulated_ethertype removed because of full ethernet encapsulation
+      //hdr.eth.type = hdr.fp.encapsulated_ethertype;
       hdr.fp.setInvalid();
       flightplan_forward.apply(); // Replace flyto with lookup to determine which egress port to use.
     } else if (hdr.fpReceive1.isValid() && 1 == this_dataplane && 2 == hdr.fp.to_segment) {

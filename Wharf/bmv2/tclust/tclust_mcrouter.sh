@@ -1,16 +1,50 @@
 #!/bin/bash
 
-if [[ $# > 1 ]]; then
-    echo "Usage $0 [--complete]"
-    exit 1
-fi
-if [[ $# > 0 && $1 != "--complete" ]]; then
-    echo "Usage $0 [--complete]"
-    exit 1;
+COMPLETE=0
+DESCRIBE=0
+while [ "${1:-}" != "" ]; do
+    case "$1" in
+      "-c" | "--complete")
+        COMPLETE=1
+        ;;
+      "-d" | "--describe")
+        DESCRIBE=1
+        ;;
+       *)
+        echo "Usage $0 [--complete] [--describe]"
+        echo "(--describe option shows only the script's purpose)"
+        exit 1
+    esac
+    shift
+done
+
+if [[ $DESCRIBE == 1 ]]; then
+echo "::: $0 :::
+In this test, memtier_benchmark is used to send memcached requests
+from one host (mcd_c) to another (mcd_s), and uses the tofino switch
+to route packets through the a third host (mcrouter) along the way.
+
+The mcrouter host is running both mcrouter and a local instance of memcached.
+The mcd_s host is running only one instance of memcached.
+
+The mcrouter config is set up such that GET commands are answered by the local instance,
+and SET commands are forwarded to the remote instance as a backup.
+
+The test ensures that the mcd_c receives a responese for all requests,
+and that mcd_s receives a packet for every SET request.
+
+If the --complete option is provided, traffic is also routed through the
+compressor, encoder, dropper, decoder, and decompressor, and the same
+validity checks are performed
+"
+exit 0
 fi
 
+
+
+
 HERE=$(realpath $(dirname $0)/../ --relative-to `pwd`)
-if [[ $# == 0 ]]; then
+if [[ $COMPLETE == 0 ]]; then
     TOPO="$HERE/topologies/tclust/tclust_mcrouter.yml"
 else
     TOPO="$HERE/topologies/tclust/tclust_mcrouter_complete.yml"

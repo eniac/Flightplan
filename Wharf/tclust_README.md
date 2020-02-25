@@ -71,9 +71,34 @@ Other topology files enable a subset of these features.
 ## Legacy network functions
 
 Several legacy network functions have also been enabled in the tclust mininet topology setup:
-mcrouter, snort, and ufw.
-Once the relevant programs have been installed (using `apt`) topologies that utilize these programs
+mcrouter (and `memtier_benchmark` for testing), snort, and ufw.
+Once the relevant programs have been installed, topologies that utilize these programs
 can be started up using the corresponding topology files in `bmv2/topologies/tclust`
+
+Commands to install the programs are as follows:
+```shell
+# Mcrouter: (from https://github.com/facebook/mcrouter)
+sudo wget -O - https://facebook.github.io/mcrouter/debrepo/bionic/PUBLIC.KEY | sudo apt-key add
+echo "deb [arch=amd64] https://facebook.github.io/mcrouter/debrepo/bionic bionic contrib" | sudo tee -a /etc/apt/sources.list
+sudo apt-get update
+sudo apt-get install mcrouter
+
+# memtier_benchmark: (from https://github.com/RedisLabs/memtier_benchmark)
+sudo apt-get install build-essential autoconf automake libpcre3-dev libevent-dev pkg-config zlib1g-dev libssl-dev
+git clone https://github.com/RedisLabs/memtier_benchmark.git
+cd memtier_benchmark
+autoreconf -ivf
+./configure
+make -j11
+sudo make install
+
+# snort
+# You may delete the interfaces in the prompt that follows so it does not automatically apply
+sudo apt install snort
+
+# ufw
+sudo apt install ufw
+```
 
 
 ## Test Programs

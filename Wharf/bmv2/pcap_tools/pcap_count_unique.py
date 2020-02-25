@@ -14,7 +14,6 @@ tcps = [pkt[TCP] for pkt in in_cap if TCP in pkt and Raw in pkt]
 pkt_loads = []
 pkt_strs = []
 for pkt in tcps:
-    pkt.id = 0
     pkt.chksum = 0
     pkt_strs.append(str(pkt))
     pkt_loads.append(pkt.load)

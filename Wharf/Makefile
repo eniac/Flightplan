@@ -44,13 +44,15 @@ test:
 bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json \
 	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json $(BLD_BMV2)/Compressor.json \
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json \
+	$(BLD_BMV2)/CheckedFragment.json $(BLD_BMV2)/CompleteHeadered.json $(BLD_BMV2)/ForwarderHeadered.json \
+	$(BLD_BMV2)/ALV.json
 
 tclust: Tclust_tofino Tclust_noop \
 	Tclust_encoder Tclust_decoder Tclust_compressor Tclust_decompressor Tclust_mcd
 
 %: $(BLD_BMV2)/%.json;
 
-#$(BLD_BMV2)/CheckedFragment.json: $(BLD_BMV2) Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4 Sources/FlightplanDeparser.p4
+$(BLD_BMV2)/CheckedFragment.json: $(BLD_BMV2) Sources/FlightplanParser.p4 Sources/FlightplanHeader.p4 Sources/FlightplanDeparser.p4
 
 complete: $(BLD_BMV2)/Complete.json
 

@@ -1,5 +1,26 @@
 #!/bin/bash -e
 
+DESCRIBE=0
+while [ "${1:-}" != "" ]; do
+    case "$1" in
+      "-d" | "--describe")
+        DESCRIBE=1
+        ;;
+       *)
+        echo "Usage $0 [--describe]"
+        echo "(--describe option shows only the script's purpose)"
+        exit 1
+    esac
+    shift
+done
+
+if [[ $DESCRIBE == 1 ]]; then
+    bmv2/tclust/tclust_mcrouter.sh --describe
+    bmv2/tclust/tclust_ufw.sh --describe
+    bmv2/tclust/tclust_snort.sh --describe
+    exit 0
+fi
+
 LOG_DIR=bmv2/test_output/tclust_test_output
 
 mkdir -p ${LOG_DIR}
