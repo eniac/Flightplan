@@ -4,9 +4,11 @@ Prototype for Flightplan customised API
 Nik Sultana, UPenn, January 2019
 */
 
-// Merge comment: next line added in adjustment
+// Merge comment: next line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
 #define ACKing
-// Merge comment: next line added in adjustment
+// Merge comment: next line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
 #define NAKing
 
 #include "Parsing.p4"
@@ -58,11 +60,13 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
 
       hdr.fp.setValid();
 
-// Merge comment: next code line commented in adjustment
+// Merge comment: next code line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
       // fp version has been removed from flightplan_h
       //hdr.fp.version = 1;
 
-// Merge comment: next code line commented in adjustment
+// Merge comment: next code line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
       // encapsulated_ethertype removed because of full ethernet encapsulation
       //hdr.fp.encapsulated_ethertype = hdr.eth.type;
       hdr.eth.type = ETHERTYPE_FLIGHTPLAN;
@@ -83,7 +87,8 @@ control FlightplanControl(inout fp_headers_t hdr, inout booster_metadata_t m, in
           receiver_seq_state.relink(ok); // FIXME not using "ok"
       }
       hdr.fpReceive2.setInvalid();
-// Merge comment: next code line commented in adjustment
+// Merge comment: next code line added in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
       // encapsulated_ethertype removed because of full ethernet encapsulation
       //hdr.eth.type = hdr.fp.encapsulated_ethertype;
       hdr.fp.setInvalid();

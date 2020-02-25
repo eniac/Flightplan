@@ -6,7 +6,8 @@ Nik Sultana, UPenn, January 2019
 #ifndef FLIGHTPLAN_HEADER_P4_
 #define FLIGHTPLAN_HEADER_P4_
 
-// Merge comment: next 2 lines removed in adjustment
+// Merge comment: next 2 lines were removed in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
 //#undef ACKing
 //#undef NAKing
 
