@@ -14,6 +14,28 @@ Build the `booster_switch` by following [these instructions](../cpuBoosters/bmv2
 Then set the environment variable `BMV2_REPO` to point the directory
 containing the behavioral model repository.
 
+## `BMV2_REPO`
+
+The environment variable `BMV2_REPO` mentioned in the previous step is also needed when running some configuration scripts,
+otherwise you'll get failures with accompanying output that looks like this:
+```
+Cannot import RUNTIME_CLI: Traceback (most recent call last):
+  File "/home/nsultana/.../Wharf/bmv2/flightplan_p4_mininet.py", line 40, in <module>
+    from runtime_CLI import thrift_connect, load_json_config, RuntimeAPI
+ImportError: No module named runtime_CLI
+```
+and
+```
+Commands requested, but Runtime CLI not present! Ensure $BMV2_REPO/tools is on PYTHONPATH
+Traceback (most recent call last):
+  File "/home/nsultana/.../Wharf/bmv2/send_bmv2_commands.py", line 39, in <module>
+    main()
+  File "/home/nsultana/.../Wharf/bmv2/send_bmv2_commands.py", line 34, in main
+    send_commands(thrift_port, cfg_path, [command])
+  File "/home/nsultana/.../Wharf/bmv2/flightplan_p4_mininet.py", line 50, in send_commands
+    raise Exception("Could not execute commands: Runtime API not present")
+Exception: Could not execute commands: Runtime API not present
+```
 
 ## Building P4 programs to run on booster_switch
 
