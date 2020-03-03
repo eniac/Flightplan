@@ -20,9 +20,13 @@ Nik Sultana, UPenn, January 2019
 #define SEQ_WIDTH 32 /*FIXME fudge*/
 
 #define STATE 8
-#define NoProblem 0x0
-#define InvalidCodeFlow 0x1
-#define NoOffloadPort 0x2
+#define InvalidCodeFlow 0x01
+#define NoOffloadPort 0x02
+#define FPSyn 0x04
+#define FPAck 0x08
+#define FPNak 0x10
+#define FPRelink 0x20
+#define FPResponse 0x40
 
 // Flightplan header scheme
 header flightplan_h {
@@ -42,12 +46,13 @@ header flightplan_h {
   bit<BYTE> byte2;
   bit<BYTE> byte3;
   bit<BYTE> byte4;
-  bit<BYTE> byte5;
-  bit<BYTE> byte6;
-  bit<BYTE> byte7;
-  bit<BYTE> byte8;
+  //bit<BYTE> byte5;
+  //bit<BYTE> byte6;
+  //bit<BYTE> byte7;
+  //bit<BYTE> byte8;
   bit<QUAD> quad1;
   bit<QUAD> quad2;
+  bit<SEQ_WIDTH> seqno;
 }
 header flightplanReceive1_h {
   // FIXME replace with fields for actual values that need to be sent.
