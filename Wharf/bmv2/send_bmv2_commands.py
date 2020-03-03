@@ -12,7 +12,7 @@ def main():
     args = parser.parse_args()
 
     cfgbase = os.path.dirname(os.path.realpath(args.config))
-    cfg = yaml.load(open(args.config))
+    cfg = yaml.load(open(args.config), Loader=yaml.FullLoader)
 
     switch_spec = cfg['switches']
     switch_items = sorted(switch_spec.items(), key = lambda x: x[0])
