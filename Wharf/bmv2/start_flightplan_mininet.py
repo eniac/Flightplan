@@ -537,8 +537,8 @@ def main():
         print("Stopping mininet")
         net.stop()
 
-    except:
-        print("Encountered exception running mininet")
+    except Exception as e:
+        print("Encountered exception running mininet:" + str(e))
         net.stop()
         raise
 
