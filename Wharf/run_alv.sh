@@ -8,6 +8,7 @@ export BMV2_REPO=/home/iped/dcomp/behavioral-model/
 
 HERE=`pwd`
 
+#TOPOLOGY=splits/ALV_split1/alv_k=4.yml
 TOPOLOGY=bmv2/topologies/alv_k=4.yml
 
 TESTDIR=$HERE/test_output
