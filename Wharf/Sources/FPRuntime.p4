@@ -25,6 +25,7 @@ register<bit<SEQ_WIDTH>>(NUM_LINKS) flightplan_pip_ackreq_interval_exceed_max; /
 #define NUM_NEXTSEGS 8
 register<bit<SEGMENT_DESC_SIZE>>(NUM_NEXTSEGS) current_nextseg_state;
 register<bit<SEGMENT_DESC_SIZE>>(NUM_NEXTSEGS) num_nextseg_states; // 2 by default (off and on), and more if there are fail-overs.
+register<bit<1>>(NUM_NEXTSEGS) reg_drop_outgoing;
 
 #define OFF_STATE 0
 #define TRUE 1

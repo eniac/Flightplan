@@ -32,3 +32,9 @@ Nik Sultana, UPenn, February 2020
                 drop();
               }
             }
+
+            bit<1> drop_outgoing;
+            reg_drop_outgoing.read(drop_outgoing, idx_ns);
+            if (TRUE == drop_outgoing) {
+              drop();
+            }

@@ -3,6 +3,8 @@
 # Nik Sultana, UPenn, February 2020
 #
 # NOTE might need to run this script with "sudo"
+#
+# FIXME various hardcoded paths
 
 export BMV2_REPO=/home/iped/dcomp/behavioral-model/
 
@@ -15,10 +17,17 @@ then
 fi
 echo "Using TOPOLOGY=${TOPOLOGY}"
 
+MODES=(interactive selftest demo1 autotest1)
+
 if [ -z "${MODE}" ]
 then
   MODE="interactive"
-  echo "Setting default MODE. Possible choices {interactive,selftest}"
+  echo "Setting default MODE. Possible choices: ${MODES[*]}"
+fi
+if [[ ! " ${MODES[@]} " =~ " ${MODE} " ]]
+then
+  echo "Unrecognised MODE: $MODE"
+  exit 1
 fi
 echo "Using MODE=${MODE}"
 
@@ -40,9 +49,39 @@ function interactive {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
           --cli
   #        2> $LOG_DUMPS/flightplan_mininet_log.err
+}
+
+function demo1 {
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
+     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_split1/start.sh" \
+     --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
+}
+
+# FIXME store in directory containing other files relevant to the test
+function autotest1 {
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_split1/start.sh" \
+     --fg-host-prog "p0h0: ping -c 13 192.0.1.2" \
+     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_split1/step1.sh" \
+     --fg-host-prog "p0h0: ping -c 4 192.0.1.2" \
+     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_split1/step2.sh" \
+     --fg-host-prog "p0h0: ping -c 4 192.0.1.2" \
+     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_split1/step3.sh" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
 }
 
 function selftest {
@@ -310,15 +349,6 @@ function selftest {
           2> $LOG_DUMPS/flightplan_mininet_log.err
 }
 
-if [[ "$MODE" == "interactive" ]]
-then
-	interactive
-elif [[ "$MODE" == "selftest" ]]
-then
-	selftest
-else
-	echo "Unrecognised MODE: $MODE"
-	exit 1
-fi
+eval $MODE
 
 exit 0

@@ -47,6 +47,8 @@ idx_pip_from_lookup_table = "from_segment_idx_pip"
 segment_state_variable = "current_nextseg_state"
 segment_state_cardinality = "num_nextseg_states"
 
+debug_drop_variable = "reg_drop_outgoing"
+
 flightplan_pip_syn_next = "flightplan_pip_syn_next"
 flightplan_pip_seqno = "flightplan_pip_seqno"
 flightplan_pip_expecting_ack = "flightplan_pip_expecting_ack"
@@ -86,8 +88,13 @@ cmd_set_idx_pip_tables = 'set_idx_pip_tables'
 cmd_get_pip_state = "get_pip_state"
 cmd_set_pip_state = "set_pip_state"
 cmd_reset_pip_state = "reset_pip_state"
+cmd_check_state = 'check_state'
+cmd_check_pip_state = "check_pip_state"
+cmd_set_drop_outgoing = "set_drop_outgoing"
+cmd_unset_drop_outgoing = "unset_drop_outgoing"
+cmd_get_drop_outgoing = "get_drop_outgoing"
 
-commands = [cmd_get_state, cmd_start, cmd_stop, cmd_set_state, cmd_transition_state,cmd_get_cardinalities, cmd_set_cardinalities, cmd_reset_cardinalities, cmd_clear_link_table, cmd_get_link_table, cmd_set_link_table, cmd_reset_flightplan, cmd_config_flightplan, cmd_show_control_spanning_tree, cmd_clear_idx_ns_table, cmd_get_idx_ns_table, cmd_set_idx_ns_table, cmd_show_feedback_tables, cmd_clear_mirroring_sessions, cmd_get_mirroring_sessions, cmd_set_mirroring_sessions, cmd_clear_idx_pip_tables, cmd_get_idx_pip_tables, cmd_set_idx_pip_tables, cmd_get_pip_state, cmd_set_pip_state, cmd_reset_pip_state]
+commands = [cmd_get_state, cmd_start, cmd_stop, cmd_set_state, cmd_transition_state,cmd_get_cardinalities, cmd_set_cardinalities, cmd_reset_cardinalities, cmd_clear_link_table, cmd_get_link_table, cmd_set_link_table, cmd_reset_flightplan, cmd_config_flightplan, cmd_show_control_spanning_tree, cmd_clear_idx_ns_table, cmd_get_idx_ns_table, cmd_set_idx_ns_table, cmd_show_feedback_tables, cmd_clear_mirroring_sessions, cmd_get_mirroring_sessions, cmd_set_mirroring_sessions, cmd_clear_idx_pip_tables, cmd_get_idx_pip_tables, cmd_set_idx_pip_tables, cmd_get_pip_state, cmd_set_pip_state, cmd_reset_pip_state, cmd_check_state, cmd_check_pip_state, cmd_set_drop_outgoing, cmd_unset_drop_outgoing, cmd_get_drop_outgoing]
 
 parser = argparse.ArgumentParser(description="Control program for a Flightplan system")
 parser.add_argument('topology', help="Path to YAML-encoded network topology")
@@ -119,7 +126,7 @@ if None != args.ack_interval:
 
 def exec_switch_command(command, matcher):
   result = None
-  extra_matcher = "[eE]rror" # Hack to pick up failures reported by the switch but not interpreted by intermediate script(s)
+  extra_matcher = "([eE]rror)|([Ii]nvalid)" # Hack to pick up failures reported by the switch but not interpreted by intermediate script(s)
   if args.noaction:
     print command
     exit_code = 0
@@ -466,7 +473,6 @@ def set_idx_pip_tables_allswitches(control_data, control_spanning_tree):
     if failed_command and not args.force: break
   return failed_command, None
 
-
 def set_switch_state(control_data, switch, next_segment, new_state):
   if args.verbose:
     print("set_switch_state on " + switch + " of next_segment " + str(next_segment) + " to " + str(new_state))
@@ -684,46 +690,49 @@ def set_link_tables(control_data):
     if failed_command and not args.force: break
   return failed_command, None
 
-def get_pip_state(control_data, switch, idx_pip):
-  failed_command = False
-  result = []
-  for pip_variable in pip_state_variables:
-    subfail, subresult = get_switch_var(control_data, switch, pip_variable, idx_pip)
-    failed_command = failed_command or subfail
-    if failed_command and not args.force: break
-    result.append({pip_variable : subresult})
-  return failed_command, {str(idx_pip) : result}
+def get_pip_state(control_data, switch, idx_pip, pip_state_var_opt):
+  if None != pip_state_var_opt:
+    return get_switch_var(control_data, switch, pip_state_var_opt, idx_pip)
+  else:
+    failed_command = False
+    result = []
+    for pip_variable in pip_state_variables:
+      subfail, subresult = get_switch_var(control_data, switch, pip_variable, idx_pip)
+      failed_command = failed_command or subfail
+      if failed_command and not args.force: break
+      result.append({pip_variable : subresult})
+    return failed_command, {str(idx_pip) : result}
 
-def get_pip_state_idxopt(control_data, control_spanning_tree, switch, idx_pip_opt):
+def get_pip_state_idxopt(control_data, control_spanning_tree, switch, idx_pip_opt, pip_state_var_opt):
   failed_command = False
   result = None
   if None != idx_pip_opt:
-    subfail, subresult = get_pip_state(control_data, switch, idx_pip_opt)
+    subfail, subresult = get_pip_state(control_data, switch, idx_pip_opt, pip_state_var_opt)
     failed_command = failed_command or subfail
     if not failed_command: result = subresult
   else:
     switch_result = []
     for entry in generate_combined_feedback_table(control_spanning_tree, switch):
-      subfail, subresult = get_pip_state(control_data, switch, entry['idx_pip'])
+      subfail, subresult = get_pip_state(control_data, switch, entry['idx_pip'], pip_state_var_opt)
       failed_command = failed_command or subfail
       if failed_command and not args.force: break
       switch_result.append(subresult)
     if not failed_command: result = {switch : switch_result}
   return failed_command, result
 
-def get_pip_state_opt(control_data, control_spanning_tree, switch_opt, idx_pip_opt):
+def get_pip_state_opt(control_data, control_spanning_tree, switch_opt, idx_pip_opt, pip_state_var_opt):
   failed_command = False
   result = []
   if None != switch_opt and None != idx_pip_opt:
-    failed_command, result = get_pip_state(control_data, switch_opt, idx_pip_opt)
+    failed_command, result = get_pip_state(control_data, switch_opt, idx_pip_opt, pip_state_var_opt)
   elif None == switch_opt:
     for switch in control_data['states']:
-      subfail, switch_result = get_pip_state_idxopt(control_data, control_spanning_tree, switch, idx_pip_opt)
+      subfail, switch_result = get_pip_state_idxopt(control_data, control_spanning_tree, switch, idx_pip_opt, pip_state_var_opt)
       failed_command = failed_command or subfail
       if failed_command and not args.force: break
       result.append({switch : switch_result})
   elif None != switch_opt:
-    failed_command, result = get_pip_state_idxopt(control_data, control_spanning_tree, switch_opt, idx_pip_opt)
+    failed_command, result = get_pip_state_idxopt(control_data, control_spanning_tree, switch_opt, idx_pip_opt, pip_state_var_opt)
   return failed_command, result
 
 def set_pip_state(control_data, switch, idx_pip, pip_variable, value):
@@ -770,6 +779,45 @@ def reset_pip_state_opt(control_data, control_spanning_tree, switch_opt, idx_pip
   elif None != switch_opt:
     failed_command, _ = reset_pip_state_idxopt(control_data, control_spanning_tree, switch_opt, idx_pip_opt)
   return failed_command, None
+
+def set_drop_outgoing(control_data, switch, next_segment, new_state):
+  if args.verbose:
+    print("set_drop_outgoing on " + switch + " of next_segment " + str(next_segment))
+  failed_command = False
+  register_idx = generate_idx_nexthop(control_data, switch)[next_segment]
+  exit_code, result = set_switch_var(control_data, switch, debug_drop_variable, register_idx, new_state)
+  if 0 != exit_code:
+    failed_command = True
+  return failed_command, result
+
+def get_drop_outgoing(control_data, switch, next_segment):
+  if args.verbose:
+    print("get_drop_outgoing on " + switch)
+  failed_command = False
+  register_idx = generate_idx_nexthop(control_data, switch)[next_segment]
+  exit_code, result = get_switch_var(control_data, switch, debug_drop_variable, register_idx)
+  if 0 != exit_code:
+    failed_command = True
+  return failed_command, result
+
+def unset_drop_outgoing_switch(control_data, switch, next_segment_opt):
+  if None == next_segment_opt:
+    failed_command = False
+    for next_segment in control_data['states'][switch]:
+      failed_command, _ = set_drop_outgoing(control_data, switch, next_segment, 0)
+      if failed_command and not args.force: break
+    return failed_command, None
+  else:
+    return set_drop_outgoing(control_data, switch, int(next_segment_opt), 0)
+
+def unset_drop_outgoing(control_data, switch_opt, next_segment_opt):
+  if None == switch_opt:
+    for switch in control_data['states']:
+      failed_command, _ = unset_drop_outgoing_switch(control_data, switch, next_segment_opt)
+      if failed_command and not args.force: break
+    return failed_command, None
+  else:
+    return unset_drop_outgoing_switch(control_data, switch_opt, next_segment_opt)
 
 def main():
   control_data = yaml.load(open(args.control_data), Loader=yaml.FullLoader)
@@ -924,9 +972,9 @@ def main():
         print "Beginning tables for " + switch
         show_feedback_tables_for_switch(control_spanning_tree, switch)
         print "Ended tables for " + switch
-  elif cmd_get_pip_state == args.command: 
-    failed_command, result = get_pip_state_opt(control_data, control_spanning_tree, args.switch, args.idx)
-  elif cmd_set_pip_state == args.command: 
+  elif cmd_get_pip_state == args.command:
+    failed_command, result = get_pip_state_opt(control_data, control_spanning_tree, args.switch, args.idx, args.pip_state_var)
+  elif cmd_set_pip_state == args.command:
     if None == args.switch:
       print("Need to provide --switch parameter")
       exit(1)
@@ -949,9 +997,84 @@ def main():
     if None == args.value:
       print("Need to provide --value parameter")
       exit(1)
-    set_pip_state(control_data, args.switch, args.idx, args.pip_state_var, args.value)
-  elif cmd_reset_pip_state == args.command: 
+    failed_command, result = set_pip_state(control_data, args.switch, args.idx, args.pip_state_var, args.value)
+  elif cmd_reset_pip_state == args.command:
     failed_command, result = reset_pip_state_opt(control_data, control_spanning_tree, args.switch, args.idx)
+
+  elif cmd_check_state == args.command:
+    if None == args.switch:
+      print("Need to provide --switch parameter")
+      exit(1)
+    else:
+      try:
+        control_data['state_sequence'][args.switch]
+      except KeyError:
+        print("Invalid switch name: " + args.switch)
+        exit(1)
+    if None == args.next_segment:
+      print("Need to provide --next_segment parameter")
+      exit(1)
+    if None == args.value:
+      print("Need to provide --value parameter")
+      exit(1)
+    failed_command, result = get_switches_states(control_data, args.switch, args.next_segment)
+    if not failed_command:
+      failed_command = not (int(result) == int(args.value))
+    result = None
+  elif cmd_check_pip_state == args.command:
+    if None == args.switch:
+      print("Need to provide --switch parameter")
+      exit(1)
+    else:
+      try:
+        control_data['state_sequence'][args.switch]
+      except KeyError:
+        print("Invalid switch name: " + args.switch)
+        exit(1)
+    if None == args.idx:
+      print("Need to provide --idx parameter")
+      exit(1)
+    if None == args.pip_state_var:
+      print("Need to provide --pip_state_var parameter")
+      exit(1)
+    if None == args.value:
+      print("Need to provide --value parameter")
+      exit(1)
+    failed_command, result = get_pip_state_opt(control_data, control_spanning_tree, args.switch, args.idx, args.pip_state_var)
+    if not failed_command:
+      failed_command = not (int(result) == int(args.value))
+    result = None
+  elif cmd_set_drop_outgoing == args.command:
+    if None == args.switch:
+      print("Need to provide --switch parameter")
+      exit(1)
+    else:
+      try:
+        control_data['state_sequence'][args.switch]
+      except KeyError:
+        print("Invalid switch name: " + args.switch)
+        exit(1)
+    if None == args.next_segment:
+      print("Need to provide --next_segment parameter")
+      exit(1)
+    failed_command, result = set_drop_outgoing(control_data, args.switch, int(args.next_segment), 1)
+  elif cmd_unset_drop_outgoing == args.command:
+    failed_command, result = unset_drop_outgoing(control_data, args.switch, args.next_segment)
+  elif cmd_get_drop_outgoing == args.command:
+    if None == args.switch:
+      print("Need to provide --switch parameter")
+      exit(1)
+    else:
+      try:
+        control_data['state_sequence'][args.switch]
+      except KeyError:
+        print("Invalid switch name: " + args.switch)
+        exit(1)
+    if None == args.next_segment:
+      print("Need to provide --next_segment parameter")
+      exit(1)
+    failed_command, result = get_drop_outgoing(control_data, args.switch, int(args.next_segment))
+
   else:
     print("Unrecognised command: " + args.command)
     exit(1)
