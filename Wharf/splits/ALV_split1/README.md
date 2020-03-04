@@ -1,3 +1,5 @@
+(Run run_alv.sh to use TOPOLOGY=splits/ALV_split1/alv_k=4.yml and MODE=interactive)
+
 TOPOLOGY=splits/ALV_split1/alv_k=4.yml # derived from bmv2/topologies/alv_k=4.yml
 CONTROLDATA=splits/ALV_split1/FPControlData.yml
 
