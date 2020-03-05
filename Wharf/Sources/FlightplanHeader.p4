@@ -52,6 +52,7 @@ header flightplan_h {
   //bit<BYTE> byte8;
   bit<QUAD> quad1;
   bit<QUAD> quad2;
+  bit<QUAD> quad3;
   bit<SEQ_WIDTH> seqno;
 }
 header flightplanReceive1_h {
