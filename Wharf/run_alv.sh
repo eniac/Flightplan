@@ -342,6 +342,7 @@ function selftest2 {
      --host-prog "p3h1: iperf3 -s -B 192.3.0.3" \
      --host-prog "p3h2: iperf3 -s -B 192.3.1.2" \
      --host-prog "p3h3: iperf3 -s -B 192.3.1.3" \
+     --fg-host-prog ": sleep 1" \
      --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.2" \
      --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.3" \
      --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.1.2" \
