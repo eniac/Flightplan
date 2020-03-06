@@ -1,4 +1,7 @@
 #!/bin/bash -e
+if [[ $SDSOC_ROOT=="" ]]; then
+    export SDSOC_ROOT=/opt/Xilinx/SDx/2017.1
+fi 
 source "$SDSOC_ROOT/settings64.sh"
 
 [ $# != 2 ] && echo "Usage: $0 <Project> <Cable ID>"
