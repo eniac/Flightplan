@@ -20,12 +20,15 @@ register<bit<SEQ_WIDTH>>(NUM_LINKS) flightplan_pip_nak_count_max; // Max number 
 register<bit<SEQ_WIDTH>>(NUM_LINKS) flightplan_pip_ackreq_interval; // "regularcheck" On side using next_segment: how frequently to poll serving side for an ACK. Unused on serving side.
 register<bit<SEQ_WIDTH>>(NUM_LINKS) flightplan_pip_ackreq_interval_exceed_max; // "maxsinceack" On side using next_segment: when expecting_ack, after how many sends do we relink. Unused on serving side.
 
+register<bit<SEQ_WIDTH>>(NUM_LINKS) flightplan_pip_ack_relink_count;
+
 // FIXME this value should be customised for each generated program
 //       it's the total of next_segments linked from here.
 #define NUM_NEXTSEGS 8
 register<bit<SEGMENT_DESC_SIZE>>(NUM_NEXTSEGS) current_nextseg_state;
 register<bit<SEGMENT_DESC_SIZE>>(NUM_NEXTSEGS) num_nextseg_states; // 2 by default (off and on), and more if there are fail-overs.
 register<bit<1>>(NUM_NEXTSEGS) reg_drop_outgoing;
+register<bit<1>>(NUM_NEXTSEGS) reg_count_ack_relinks; // Used to disable resets+relink step in update_pip_state() and instead count the number of ACKs beyond the threshold.
 
 #define OFF_STATE 0
 #define TRUE 1
@@ -88,6 +91,8 @@ void reset_pip_state(in bit<32> idx) {
   flightplan_pip_nak_count.write(idx, 0);
   // NOTE flightplan_pip_nak_count_max, flightplan_pip_ackreq_interval and
   //      flightplan_pip_ackreq_interval_exceed_max are only set by the controller.
+  // NOTE since flightplan_pip_ack_relink_count is debug-related we don't
+  //      reset it from here, it must be reset by the control program.
 }
 
 void inc_seqno(inout headers_t hdr, in bit<32> idx) {
@@ -123,10 +128,18 @@ void update_pip_state(inout headers_t hdr, in bit<32> idx_ns, in bit<32> idx_pip
     bit<SEQ_WIDTH> ackreq_interval_exceed_max;
     flightplan_pip_ackreq_interval_exceed_max.read(ackreq_interval_exceed_max, idx_pip);
     if (ackreq_interval_exceed_max > 0 && hdr.fp.seqno - seqno_ackreq_sent > ackreq_interval_exceed_max) {
-      relink(1, idx_ns, idx_pip);
-      hdr.fp.state = hdr.fp.state | FPSyn;
-      reset_pip_state(idx_pip);
-      inc_seqno(hdr, idx_pip);
+      bit<1> count_ack_relinks;
+      reg_count_ack_relinks.read(count_ack_relinks, idx_ns);
+      if (TRUE == count_ack_relinks) {
+        bit<SEQ_WIDTH> relink_count;
+        flightplan_pip_ack_relink_count.read(relink_count, idx_pip);
+        flightplan_pip_ack_relink_count.write(idx_pip, relink_count + 1);
+      } else {
+        relink(1, idx_ns, idx_pip);
+        hdr.fp.state = hdr.fp.state | FPSyn;
+        reset_pip_state(idx_pip);
+        inc_seqno(hdr, idx_pip);
+      }
     } else {
       // Keep raising ACK flag in case some packets to downstream are being lost.
       hdr.fp.state = hdr.fp.state | FPAck;

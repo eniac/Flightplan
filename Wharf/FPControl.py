@@ -48,6 +48,7 @@ segment_state_variable = "current_nextseg_state"
 segment_state_cardinality = "num_nextseg_states"
 
 debug_drop_variable = "reg_drop_outgoing"
+debug_count_ack_relinks_variable = "reg_count_ack_relinks"
 
 flightplan_pip_syn_next = "flightplan_pip_syn_next"
 flightplan_pip_seqno = "flightplan_pip_seqno"
@@ -57,7 +58,8 @@ flightplan_pip_nak_count = "flightplan_pip_nak_count"
 flightplan_pip_nak_count_max = "flightplan_pip_nak_count_max"
 flightplan_pip_ackreq_interval = "flightplan_pip_ackreq_interval"
 flightplan_pip_ackreq_interval_exceed_max = "flightplan_pip_ackreq_interval_exceed_max"
-pip_state_variables = [flightplan_pip_syn_next, flightplan_pip_seqno, flightplan_pip_expecting_ack, flightplan_pip_seqno_ackreq_sent, flightplan_pip_nak_count, flightplan_pip_nak_count_max, flightplan_pip_ackreq_interval, flightplan_pip_ackreq_interval_exceed_max]
+flightplan_pip_ack_relink_count = "flightplan_pip_ack_relink_count"
+pip_state_variables = [flightplan_pip_syn_next, flightplan_pip_seqno, flightplan_pip_expecting_ack, flightplan_pip_seqno_ackreq_sent, flightplan_pip_nak_count, flightplan_pip_nak_count_max, flightplan_pip_ackreq_interval, flightplan_pip_ackreq_interval_exceed_max, flightplan_pip_ack_relink_count]
 
 # FIXME add a description to each of the commands below, to be shown in command-line help.
 #       in the description mention what parameters (e.g., --idx) is needed for each command.
@@ -93,6 +95,9 @@ cmd_check_pip_state = "check_pip_state"
 cmd_set_drop_outgoing = "set_drop_outgoing"
 cmd_unset_drop_outgoing = "unset_drop_outgoing"
 cmd_get_drop_outgoing = "get_drop_outgoing"
+cmd_set_count_ack_relinks = "set_count_ack_relinks"
+cmd_unset_count_ack_relinks = "unset_count_ack_relinks"
+cmd_get_count_ack_relinks = "get_count_ack_relinks"
 
 commands = [cmd_get_state, cmd_start, cmd_stop, cmd_set_state, cmd_transition_state,cmd_get_cardinalities, cmd_set_cardinalities, cmd_reset_cardinalities, cmd_clear_link_table, cmd_get_link_table, cmd_set_link_table, cmd_reset_flightplan, cmd_config_flightplan, cmd_show_control_spanning_tree, cmd_clear_idx_ns_table, cmd_get_idx_ns_table, cmd_set_idx_ns_table, cmd_show_feedback_tables, cmd_clear_mirroring_sessions, cmd_get_mirroring_sessions, cmd_set_mirroring_sessions, cmd_clear_idx_pip_tables, cmd_get_idx_pip_tables, cmd_set_idx_pip_tables, cmd_get_pip_state, cmd_set_pip_state, cmd_reset_pip_state, cmd_check_state, cmd_check_pip_state, cmd_set_drop_outgoing, cmd_unset_drop_outgoing, cmd_get_drop_outgoing]
 
@@ -780,44 +785,44 @@ def reset_pip_state_opt(control_data, control_spanning_tree, switch_opt, idx_pip
     failed_command, _ = reset_pip_state_idxopt(control_data, control_spanning_tree, switch_opt, idx_pip_opt)
   return failed_command, None
 
-def set_drop_outgoing(control_data, switch, next_segment, new_state):
+def set_flag(flag, control_data, switch, next_segment, new_state):
   if args.verbose:
-    print("set_drop_outgoing on " + switch + " of next_segment " + str(next_segment))
+    print("set_flag for " + flag + " on " + switch + " of next_segment " + str(next_segment))
   failed_command = False
   register_idx = generate_idx_nexthop(control_data, switch)[next_segment]
-  exit_code, result = set_switch_var(control_data, switch, debug_drop_variable, register_idx, new_state)
+  exit_code, result = set_switch_var(control_data, switch, flag, register_idx, new_state)
   if 0 != exit_code:
     failed_command = True
   return failed_command, result
 
-def get_drop_outgoing(control_data, switch, next_segment):
+def get_flag(flag, control_data, switch, next_segment):
   if args.verbose:
-    print("get_drop_outgoing on " + switch)
+    print("get_flag for " + flag + " on " + switch)
   failed_command = False
   register_idx = generate_idx_nexthop(control_data, switch)[next_segment]
-  exit_code, result = get_switch_var(control_data, switch, debug_drop_variable, register_idx)
+  exit_code, result = get_switch_var(control_data, switch, flag, register_idx)
   if 0 != exit_code:
     failed_command = True
   return failed_command, result
 
-def unset_drop_outgoing_switch(control_data, switch, next_segment_opt):
+def unset_flag_switch(flag, control_data, switch, next_segment_opt):
   if None == next_segment_opt:
     failed_command = False
     for next_segment in control_data['states'][switch]:
-      failed_command, _ = set_drop_outgoing(control_data, switch, next_segment, 0)
+      failed_command, _ = set_flag(flag, control_data, switch, next_segment, 0)
       if failed_command and not args.force: break
     return failed_command, None
   else:
-    return set_drop_outgoing(control_data, switch, int(next_segment_opt), 0)
+    return set_flag(flag, control_data, switch, int(next_segment_opt), 0)
 
-def unset_drop_outgoing(control_data, switch_opt, next_segment_opt):
+def unset_flag(flag, control_data, switch_opt, next_segment_opt):
   if None == switch_opt:
     for switch in control_data['states']:
-      failed_command, _ = unset_drop_outgoing_switch(control_data, switch, next_segment_opt)
+      failed_command, _ = unset_flag_switch(flag, control_data, switch, next_segment_opt)
       if failed_command and not args.force: break
     return failed_command, None
   else:
-    return unset_drop_outgoing_switch(control_data, switch_opt, next_segment_opt)
+    return unset_flag_switch(flag, control_data, switch_opt, next_segment_opt)
 
 def main():
   control_data = yaml.load(open(args.control_data), Loader=yaml.FullLoader)
@@ -933,7 +938,7 @@ def main():
   elif cmd_reset_flightplan == args.command:
     new_args = filter(lambda x: x != args.command, sys.argv)
     if "--suppress_status_output" not in new_args: new_args.append("--suppress_status_output")
-    command_sequence = [cmd_clear_idx_pip_tables, cmd_clear_idx_ns_table, cmd_clear_link_table, cmd_set_cardinalities, cmd_clear_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_stop]
+    command_sequence = [cmd_clear_idx_pip_tables, cmd_clear_idx_ns_table, cmd_clear_link_table, cmd_set_cardinalities, cmd_clear_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_unset_count_ack_relinks, cmd_stop]
     for command in command_sequence:
       args_instance = list(new_args)
       args_instance.append(command)
@@ -946,7 +951,7 @@ def main():
   elif cmd_config_flightplan == args.command:
     new_args = filter(lambda x: x != args.command, sys.argv)
     if "--suppress_status_output" not in new_args: new_args.append("--suppress_status_output")
-    command_sequence = [cmd_set_idx_pip_tables, cmd_set_idx_ns_table, cmd_set_link_table, cmd_set_cardinalities, cmd_set_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_stop]
+    command_sequence = [cmd_set_idx_pip_tables, cmd_set_idx_ns_table, cmd_set_link_table, cmd_set_cardinalities, cmd_set_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_unset_count_ack_relinks, cmd_stop]
     for command in command_sequence:
       args_instance = list(new_args)
       args_instance.append(command)
@@ -1056,9 +1061,9 @@ def main():
     if None == args.next_segment:
       print("Need to provide --next_segment parameter")
       exit(1)
-    failed_command, result = set_drop_outgoing(control_data, args.switch, int(args.next_segment), 1)
+    failed_command, result = set_flag(debug_drop_variable, control_data, args.switch, int(args.next_segment), 1)
   elif cmd_unset_drop_outgoing == args.command:
-    failed_command, result = unset_drop_outgoing(control_data, args.switch, args.next_segment)
+    failed_command, result = unset_flag(debug_drop_variable, control_data, args.switch, args.next_segment)
   elif cmd_get_drop_outgoing == args.command:
     if None == args.switch:
       print("Need to provide --switch parameter")
@@ -1072,7 +1077,37 @@ def main():
     if None == args.next_segment:
       print("Need to provide --next_segment parameter")
       exit(1)
-    failed_command, result = get_drop_outgoing(control_data, args.switch, int(args.next_segment))
+    failed_command, result = get_flag(debug_drop_variable, control_data, args.switch, int(args.next_segment))
+  elif cmd_set_count_ack_relinks == args.command:
+    if None == args.switch:
+      print("Need to provide --switch parameter")
+      exit(1)
+    else:
+      try:
+        control_data['state_sequence'][args.switch]
+      except KeyError:
+        print("Invalid switch name: " + args.switch)
+        exit(1)
+    if None == args.next_segment:
+      print("Need to provide --next_segment parameter")
+      exit(1)
+    failed_command, result = set_flag(debug_count_ack_relinks_variable, control_data, args.switch, int(args.next_segment), 1)
+  elif cmd_unset_count_ack_relinks == args.command:
+    failed_command, result = unset_flag(debug_count_ack_relinks_variable, control_data, args.switch, args.next_segment)
+  elif cmd_get_count_ack_relinks == args.command:
+    if None == args.switch:
+      print("Need to provide --switch parameter")
+      exit(1)
+    else:
+      try:
+        control_data['state_sequence'][args.switch]
+      except KeyError:
+        print("Invalid switch name: " + args.switch)
+        exit(1)
+    if None == args.next_segment:
+      print("Need to provide --next_segment parameter")
+      exit(1)
+    failed_command, result = get_flag(debug_count_ack_relinks_variable, control_data, args.switch, int(args.next_segment))
 
   else:
     print("Unrecognised command: " + args.command)
