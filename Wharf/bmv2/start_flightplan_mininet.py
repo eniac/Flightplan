@@ -423,7 +423,11 @@ class FPTopo(Topo):
                 program = ":".join(splitprog[1:])
             except Exception as e:
                 raise TopoSpecError("Programs provided from CLI must be of form 'h1:program': %s" % e)
+            is_bg = program.split(' ')[-1] == "&" # FIXME this is brittle, there mustn't be spaces following the "&"
+            if is_bg:
+                program = " ".join(program.split(' ')[:-1])
             if "" == name:
+                # FIXME ignores is_bg
                 sys.stdout.write("Directly running {}".format(program))
                 sys.stdout.flush()
                 subprocess.call("echo 'Running " + program + "' >> " + self.log_dir + "/direct_commands.log", shell=True)
@@ -437,11 +441,17 @@ class FPTopo(Topo):
                 if showExitStatus:
                     sys.stdout.write("Running {} on {}".format(program, name))
                     sys.stdout.flush()
-                    result = net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 ; echo $?'
-                                               .format(program, self.log_dir, name, i))
-                    sys.stdout.write(" -- returned:" + result)
+                    if is_bg:
+                      full_cmd = '{} > {}/{}_prog_{}.log 2>&1 &'.format(program, self.log_dir, name, i)
+                      net.get(name).cmd(full_cmd)
+                      sys.stdout.write(" -- background\n")
+                    else:
+                      full_cmd = '{} > {}/{}_prog_{}.log 2>&1 ; echo $?'.format(program, self.log_dir, name, i)
+                      result = net.get(name).cmd(full_cmd)
+                      sys.stdout.write(" -- returned:" + result)
                     sys.stdout.flush()
                 else:
+                    # FIXME ignores is_bg
                     print("Running {} on {}".format(program, name))
                     net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1'
                                       .format(program, self.log_dir, name, i))
