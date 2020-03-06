@@ -1,21 +1,29 @@
 import sys
+from argparse import ArgumentParser
 from scapy.all import *
 
-if len(sys.argv) != 4:
-    print("Usage: %s <input.pcap> <out.pcap> <dir=[0,1]>" % sys.argv[0])
-    exit()
+parser = ArgumentParser("Set IP and MAC on pcap files")
+parser.add_argument("input", type=str, help="input.pcap")
+parser.add_argument("output", type=str, help="output.pcap")
+parser.add_argument("dir", type=int, default=0, nargs="?", help="If 0, packets originate at src. Otherwise, at dst")
+parser.add_argument("--sip", type=str, default="10.0.0.10", help="Source IP")
+parser.add_argument("--smac", type=str, default='22:11:11:11:11:21', help='Source MAC')
+parser.add_argument('--dip', type=str, default='10.0.0.12', help='Dest IP')
+parser.add_argument('--dmac', type=str, default='22:11:11:11:11:23', help='Dest MAC')
 
-scapy_cap  = rdpcap(sys.argv[1])
+args = parser.parse_args()
+
+scapy_cap  = rdpcap(args.input)
 
 out = []
-print("Swapping out IP addresses for mininet from {} to {} ".format(sys.argv[1], sys.argv[2]))
+print("Swapping out IP addresses for mininet from {} to {} ".format(args.input, args.output))
 
-src_mac = '22:11:11:11:11:22'
-dst_mac = '22:22:22:22:22:22'
-src_ip = '10.0.0.11'
-dst_ip = '10.0.0.12'
+src_mac = args.smac
+dst_mac = args.dmac
+src_ip = args.sip
+dst_ip = args.dip
 
-if sys.argv[3] == '1':
+if args.dir == 1:
     tmp = dst_mac
     dst_mac = src_mac
     src_mac = tmp
@@ -41,4 +49,4 @@ for pkt in scapy_cap:
 
 
 
-wrpcap(sys.argv[2], out)
+wrpcap(args.output, out)

@@ -16,6 +16,15 @@
 
 namespace boosters {
 
+using bm::PHV;
+using bm::Header;
+using bm::Packet;
+using bm::Field;
+using bm::P4Objects;
+
+
+void printHeader(const Header &hdr);
+
 template <typename... Args>
 class BoosterExtern : public bm::ActionPrimitive<Args...> {
 protected:
@@ -46,6 +55,17 @@ protected:
         sswitch->output_booster_packet(std::move(booster_pkt));
     }
 
+    const Packet::buffer_state_t deparse_packet() {
+        Packet::buffer_state_t state = this->get_packet().save_buffer_state();
+        auto deparser = this->get_p4objects()->get_deparser("deparser");
+        deparser->deparse(&this->get_packet());
+        return state;
+    }
+
+    void reparse_packet(const Packet::buffer_state_t state) {
+        this->get_packet().restore_buffer_state(state);
+    }
+
     bool is_generated() {
         return this->pkt->entry_node == this->pkt->current_node;
     }
@@ -56,13 +76,6 @@ public:
 };
 
 void import_booster_externs(SimpleSwitch *sswitch);
-
-using bm::PHV;
-using bm::Header;
-using bm::Packet;
-using bm::Field;
-
-void printHeader(const Header &hdr);
 
 template <typename T>
 T *deparse_header(Header &header) {

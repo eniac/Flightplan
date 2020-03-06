@@ -1,0 +1,128 @@
+hosts:
+    mcd_c :
+            interfaces:
+                    - link: tofino1
+                      ip: 10.0.0.10/24
+                      mac: '22:11:11:11:11:21'
+    mcd_s :
+            interfaces:
+                    - link: tofino2
+                      ip: 10.0.0.12/24
+                      mac: '22:11:11:11:11:23'
+    iperf_c :
+            interfaces:
+                    - link: tofino1
+                      ip: 10.0.0.9/24
+                      mac: '22:11:11:11:11:20'
+    iperf_s :
+            interfaces:
+                    - link: tofino2
+                      ip: 10.0.0.11/24
+                      mac: '22:11:11:11:11:22'
+
+switches:
+    tofino1:
+        cfg: ../../build/bmv2/MAC_HC_FEC_offload_Fwd.json
+        interfaces:
+            - link: dropper
+              port: 19
+            - link: mcd_c
+              port: 2
+            - link: iperf_c
+              port: 1
+            - link: fpga_mcd
+              port: 120
+            - link: fpga_enc
+              port: 121
+            - link: fpga_hcomp
+              port: 130
+        cmds:
+            - table_add MAC_fwd_host strip_fp_hdr 0x221111111121 => 2
+            - table_add MAC_fwd_host strip_fp_hdr 0x221111111120 => 1
+            - table_add forward_segment set_fwd_seg 0x221111111122 => 19
+            - table_add forward_segment set_fwd_seg 0x221111111123 => 19
+            - table_add forward_segment set_seg 0x221111111121 => 1
+            - table_add forward_segment set_seg 0x221111111120 => 2
+            - table_add fec_forward set_egress 2 => 130
+            - table_add fec_forward set_egress 4 => 19
+            - table_add fec_forward set_egress 3 => 121
+            - table_add fec_forward set_egress 5 => 19
+    fpga_mcd:
+        cfg: ../../build/bmv2/Compress.json
+        interfaces:
+            - link: tofino1
+              port: 0
+        cmds:
+               #- table_add egress_compression.port_compression egress_compression.set_port_compression 0 => 1
+            - table_add forward set_egress 0 => 0
+    fpga_hcomp:
+        cfg: ../../build/bmv2/MAC_HC_Fwd.json
+        interfaces:
+            - link: tofino1
+              port: 1
+        cmds:
+            - table_add flightplan_forward set_fp_egress 3 => 1
+            - ../controller_files/compressor_commands.txt
+    fpga_enc:
+        cfg: ../../build/bmv2/MAC_enc_Fwd.json
+        interfaces:
+            - link: tofino1
+              port: 0
+        cmds:
+            - table_add flightplan_forward set_fp_egress 0 => 0
+            - table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1
+    dropper:
+        cfg: ../../build/bmv2/Dropper.json
+        interfaces:
+            - link: tofino1
+              port: 0
+            - link: tofino2
+              port: 1
+        replay:
+              tofino1: ../pcaps/lldp_enable_fec.pcap
+              tofino2: ../pcaps/lldp_enable_fec.pcap
+        cmds:
+            - ../controller_files/forwarding_commands.txt
+            - table_add dropper set_drop_rate 1 => 3 5
+#            - table_add dropper set_drop_rate 0 => 3 5
+    tofino2:
+        cfg: ../../build/bmv2/MAC_HC_FEC_offload_Fwd.json
+        interfaces:
+            - link: dropper
+              port: 20
+            - link: mcd_s
+              port: 4
+            - link: iperf_s
+              port: 3
+            - link: fpga_dec
+              port: 122
+            - link: fpga_dcomp
+              port: 131
+        cmds:
+             - table_add MAC_fwd_dst strip_fp_hdr 0x221111111122 => 3
+             - table_add MAC_fwd_dst strip_fp_hdr 0x221111111123 => 4
+             - table_add forward_segment set_seg 0x221111111121 => 20
+             - table_add forward_segment set_seg 0x221111111120 => 20
+             - table_add forward_segment set_seg 0x221111111122 => 3
+             - table_add forward_segment set_seg 0x221111111123 => 4
+             - table_add MAC_fwd_host strip_fp_hdr 0x221111111122 => 3
+             - table_add MAC_fwd_host strip_fp_hdr 0x221111111123 => 4
+             - table_add fec_forward set_egress 4 => 122
+             - table_add fec_forward set_egress 3 => 131
+    fpga_dec:
+        cfg: ../../build/bmv2/MAC_enc_Fwd.json
+        interfaces:
+            - link: tofino2
+              port: 0
+        cmds:
+              - table_add flightplan_forward set_fp_egress 4 => 0
+              - table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
+    fpga_dcomp:
+        cfg: ../../build/bmv2/MAC_HC_Fwd.json
+        interfaces:
+            - link: tofino2
+              port: 0
+        cmds:
+            - table_add flightplan_forward set_fp_egress 0 => 0
+            - ../controller_files/decompressor_commands.txt
+

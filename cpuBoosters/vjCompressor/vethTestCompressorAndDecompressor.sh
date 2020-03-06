@@ -1,12 +1,18 @@
+#!/bin/bash
 # run the empty booster.
 BOOSTER_NAME=compressorAndDecompressor
 SOURCE_PCAP=$1
 INPUT_PCAP=$1.$BOOSTER_NAME.in.pcap
 OUTPUT_PCAP=$1.$BOOSTER_NAME.out.pcap
 COMPRESS_PCAP=$1.$BOOSTER_NAME.compress.pcap
+if [ $# -ne 2 ]; then
+    echo "USAGE: ./vethTestCompressorAndDecompressor.sh <input pcap> <Implementation: hls_wrapper(0)/ libpcap(1)> " >&2
+    exit 1
+fi
 echo "testing booster $BOOSTER_NAME with veth pairs."
 echo "source pcap: $SOURCE_PCAP"
 echo "output pcap: $OUTPUT_PCAP"
+
 
 if ! [ $(id -u) = 0 ]; then
    echo "The script need to be run as root." >&2
@@ -18,10 +24,6 @@ else
     real_user=$(whoami)
 fi
 
-if [ $# -ne 2 ]; then
-    echo "USAGE: ./vethTestCompressorAndDecompressor.sh <input pcap> <Implementation: hls_wrapper(0)/ libpcap(1)> " >&2
-    exit 1
-fi
 LIBPCAP=$2
 HLS_COMPRESSOR=hls_comp_pcap
 HLS_DECOMPRESSOR=hls_decomp_pcap
@@ -84,3 +86,8 @@ python comparePcaps.py $INPUT_PCAP $OUTPUT_PCAP
 
 # Verify that header has been compressed
 python ../../Wharf/bmv2/pcap_tools/pcap_size.py $INPUT_PCAP $COMPRESS_PCAP $OUTPUT_PCAP 
+if [[ $? == 0 ]]; then
+    echo "NO COMPRESSION OCCURRED!"
+    exit 1;
+fi
+exit 0

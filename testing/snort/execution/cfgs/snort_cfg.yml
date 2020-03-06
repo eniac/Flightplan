@@ -1,0 +1,130 @@
+ssh:
+    user: ncshy
+    key: '~/.ssh/id_rsa_tofino'
+    port: 22
+
+params:
+    rate: '{0.args.rate}'
+    pktgen_template: ./pktgen_template.lua
+    n_set_pkts: 5000
+    n_get_pkts: 45000
+    n_total_pkts: 10000
+    key_space: 10000
+    zipf_coef: 1.00
+
+dirs:
+    home: /home/{0.ssh.user}
+    P4Boosters: '{0.dirs.home}/source/P4Boosters'
+    snort: '{0.dirs.P4Boosters}/testing/snort/'
+
+init_cmds:
+    make_lua: >-
+        python format_lua_template.py {0.params.pktgen_template} {0.files.pktgen_script.src}
+        --rate {0.params.rate} --log  {0.programs.log_dir}/pktgen.log --count {0.params.n_total_pkts}
+
+post_cmds:
+    verify_counters: >-
+        python verify_counters.py {0.out}/moongen/moongen.out {0.out}/counters_0.out {0.out}/counters_1.out
+
+files:
+    pktgen_script:
+        src: '{0.out}/pktgen.lua'
+        dst: '{0.programs.log_dir}/pktgen.lua'
+        host: pktgen
+    pktgen_runner:
+        src: './run_lua.sh'
+        dst: '~/source/dpdk/run_lua.sh'
+        host: pktgen
+    pcap:
+        src: 'pcaps/{0.args.pcap_file}'
+        dst: '{0.programs.log_dir}/input.pcap'
+        host: pktgen
+
+hosts:
+    pktgen:
+        addr: 158.130.4.231
+    mcd:
+        addr: 158.130.4.236
+    moongen:
+        addr: 158.130.4.235
+    encoder:
+        addr: dcomp1.seas.upenn.edu
+        port: 112
+    tofino:
+        addr: 158.130.4.218
+        ssh:
+            user: fpadmin
+            key: '~/.ssh/id_rsa_tofino'
+            port: 22
+
+programs:
+
+    log_dir: ~/logs/{0.label}
+
+    start_dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/pointToPoint && ./run.sh 1-112 
+        stop: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
+        enforce_duration: false
+
+    stop_dataplane:
+        host: tofino
+        start: cd ~/gits/TofinoP4Boosters/pointToPoint && ./stop.sh
+        check_rtn: 1
+
+    snort:
+        host: encoder
+        start: 'snort --perfmon-file {log} -q -u root -g ncshy -c /etc/snort/snort.conf -i eno1'
+        stop: sh -c 'pgrep snort | xargs kill -9'
+        log:
+            dir: snort_log
+            log: snort.stats
+            out: snort.out
+            err: snort.err
+
+    tcpreplay:
+        host: pktgen
+        start: '~/source/dpdk/tcpreplay --loop {0.args.loop} -p {0.args.tcpreplay_rate} -i ens1f1 {pcap}'
+        log:
+            dir: tcpreplay
+            out: tcpreplay.out
+            err: tcpreplay.err
+
+    pktgen:
+        host: pktgen
+        start: tmux new -d '~/source/dpdk/run_lua.sh {lua} {pcap}'
+        enforce_duration: false
+        log:
+            out: pktgen.out
+            err: pktgen.err
+
+    get_counters:
+        host: tofino
+        start: >-
+            tmux send ucli ENTER && sleep 1 &&
+            tmux send pm ENTER && sleep 1 &&
+            tmux send show ENTER && sleep 1 &&
+            tmux capture-pane -J -p
+        log:
+            out: counters_{i}.out
+            err: counters_{i}.err
+
+
+commands:
+
+    stop_dataplane:
+        begin: -30
+
+    start_dataplane:
+        begin: -20
+        duration: 50
+
+    snort:
+        begin: -10
+        duration: 40
+
+    tcpreplay:
+        begin: 0
+        pcap: '{0.files.pcap.dst}'
+        duration: 30
+

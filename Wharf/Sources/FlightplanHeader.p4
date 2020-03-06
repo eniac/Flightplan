@@ -3,16 +3,30 @@ Prototype for Flightplan customised API
 
 Nik Sultana, UPenn, January 2019
 */
+#ifndef FLIGHTPLAN_HEADER_P4_
+#define FLIGHTPLAN_HEADER_P4_
 
-#undef ACKing
-#undef NAKing
+// Merge comment: next 2 lines were removed in adjustment when getting CheckedFragment.p4 to work again,
+//                might want to review this in the future. Eventually this comment might be removed if it's deemed unimportant.
+//#undef ACKing
+//#undef NAKing
 
 #define FLIGHTPLAN_VERSION_SIZE 4 /*FIXME fudge*/
 #define ETHERTYPE_FLIGHTPLAN 0x2222 /*FIXME fudge*/
 #define SEGMENT_DESC_SIZE 4 /*FIXME fudge*/
 #define BYTE 8
+#define QUAD 32
 #define MAX_DATAPLANE_CLIQUE_SIZE 64 /*FIXME fudge*/
 #define SEQ_WIDTH 32 /*FIXME fudge*/
+
+#define STATE 8
+#define InvalidCodeFlow 0x01
+#define NoOffloadPort 0x02
+#define FPSyn 0x04
+#define FPAck 0x08
+#define FPNak 0x10
+#define FPRelink 0x20
+#define FPResponse 0x40
 
 // Flightplan header scheme
 header flightplan_h {
@@ -23,27 +37,22 @@ header flightplan_h {
 
 //  bit<FLIGHTPLAN_VERSION_SIZE> version; // This could be spared.
 //  bit<16> encapsulated_ethertype; -- This can be removed if we fully encapsulate the Ethernet frame including the original Ethernet header.
-  bit<SEGMENT_DESC_SIZE> from_segment; // This is implicit in ingress port, so could be spared.
-  bit<SEGMENT_DESC_SIZE> to_segment; // This is implicit in ingress port, so could be spared.
+  bit<SEGMENT_DESC_SIZE> from_segment;
+  bit<SEGMENT_DESC_SIZE> to_segment;
 //  bit<4> pad;
 
+  bit<STATE> state;
   bit<BYTE> byte1;
   bit<BYTE> byte2;
   bit<BYTE> byte3;
   bit<BYTE> byte4;
-  bit<BYTE> byte5;
-  bit<BYTE> byte6;
-  bit<BYTE> byte7;
-  bit<BYTE> byte8;
-  bit<BYTE> byte9;
-  bit<BYTE> byte10;
-  bit<BYTE> byte11;
-  bit<BYTE> byte12;
-  bit<BYTE> byte13;
-  bit<BYTE> byte14;
-  bit<BYTE> byte15;
-  bit<BYTE> byte16;
-  bit<BYTE> byte17;
+  //bit<BYTE> byte5;
+  //bit<BYTE> byte6;
+  //bit<BYTE> byte7;
+  //bit<BYTE> byte8;
+  bit<QUAD> quad1;
+  bit<QUAD> quad2;
+  bit<SEQ_WIDTH> seqno;
 }
 header flightplanReceive1_h {
   // FIXME replace with fields for actual values that need to be sent.
@@ -60,16 +69,17 @@ header flightplanReceive1_h {
 #endif
 #if defined(ACKing)
   bit<1> ack;
-#ifndef NAKing
-  bit<7> pad;
-#endif
-#endif
+#endif // defined(ACKing)
 #if defined(NAKing)
   bit<1> nak;
-#ifdef ACKing
-  bit<6> pad;
-#endif
-#endif
+#endif // defined(NAKing)
+#if defined(ACKing) || defined(NAKing)
+#if defined(ACKing) && defined(NAKing)
+  bit<6> k_pad;
+#else
+  bit<7> k_pad;
+#endif // defined(ACKing) && defined(NAKing)
+#endif // defined(ACKing) || defined(NAKing)
 }
 
 #if defined(ACKing) || defined(NAKing)
@@ -107,3 +117,5 @@ extern ReceiverNakState {
   void relink(out bit<1> result);
 }
 #endif
+
+#endif // FLIGHTPLAN_HEADER_P4_

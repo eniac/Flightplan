@@ -98,8 +98,11 @@ int main (int argc, char** argv) {
 		LOG_ERR("Could not set immediate");
 		return -1;
 	}
-
 	if (pcap_activate(input_handle) != 0) {
+		return -1;
+	}
+	if (pcap_setdirection(input_handle, PCAP_D_IN) != 0) {
+		LOG_ERR("Could not set direction for input only: %s", pcap_geterr(input_handle));
 		return -1;
 	}
 

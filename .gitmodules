@@ -7,3 +7,6 @@
 [submodule "testing/memcached/analysis/Memoizer"]
 	path = testing/memcached/analysis/Memoizer
 	url = https://github.com/isaac-ped/Memoizer
+[submodule "testing/e2e/analysis/Memoizer"]
+	path = testing/e2e/analysis/Memoizer
+	url = https://github.com/isaac-ped/Memoizer.git

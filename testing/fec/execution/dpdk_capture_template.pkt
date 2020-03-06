@@ -1,0 +1,4 @@
+enable 0 capture
+sleep $duration
+disable 0 capture
+quit

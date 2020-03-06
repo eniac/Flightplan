@@ -13,13 +13,25 @@
 # limitations under the License.
 #
 
+import os
+import sys
+
+if 'BMV2_REPO' in os.environ:
+    newpath  = os.path.join(os.environ['BMV2_REPO'], 'targets', 'booster_switch')
+    if newpath not in sys.path:
+        print("Appending {} to pythonpath".format(newpath))
+        sys.path.append(newpath)
+    newpath  = os.path.join(os.environ['BMV2_REPO'], 'tools')
+    if newpath not in sys.path:
+        print("Appending {} to pythonpath".format(newpath))
+        sys.path.append(newpath)
+
 from mininet.net import Mininet
 from mininet.node import Switch, Host
 from mininet.log import setLogLevel, info, error, debug
 from mininet.moduledeps import pathCheck
 from sys import exit
 import traceback
-import os
 import tempfile
 import socket
 import traceback
@@ -27,6 +39,7 @@ import traceback
 try:
     from runtime_CLI import thrift_connect, load_json_config, RuntimeAPI
     has_api = True
+    from sswitch_CLI import SimpleSwitchAPI
 except Exception as e:
     print("Cannot import RUNTIME_CLI: %s" % traceback.format_exc())
     has_api = False
@@ -36,14 +49,16 @@ def send_commands(thrift_port, json, commands):
         print("Commands requested, but Runtime CLI not present! Ensure $BMV2_REPO/tools is on PYTHONPATH")
         raise Exception("Could not execute commands: Runtime API not present")
 
-    standard_client, mc_client = thrift_connect(
-            'localhost', thrift_port,
-            RuntimeAPI.get_thrift_services('SimplePre')
+    services = RuntimeAPI.get_thrift_services('SimplePre')
+    services.extend(SimpleSwitchAPI.get_thrift_services())
+
+    standard_client, mc_client, sswitch_client = thrift_connect(
+            'localhost', thrift_port, services
     )
 
     load_json_config(standard_client, json)
 
-    api = RuntimeAPI('SimplePre', standard_client, mc_client)
+    api = SimpleSwitchAPI('SimplePre', standard_client, mc_client, sswitch_client)
 
     for command in commands:
         api.onecmd(command)
@@ -174,7 +189,6 @@ class P4Switch(Switch):
         self.output.flush()
         self.cmd('kill %' + self.sw_path)
         self.cmd('wait')
-        self.deleteIntfs()
 
     def attach(self, intf):
         "Connect a data port"

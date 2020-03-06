@@ -1,0 +1,632 @@
+#
+# rules.before
+#
+# Rules that should be run before the ufw command line added rules. Custom
+# rules should be added to one of these chains:
+#   ufw-before-input
+#   ufw-before-output
+#   ufw-before-forward
+#
+
+# NAT table rules
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+# # Port forwardings
+-A PREROUTING -i eno1 -p udp --dport 11230 -j DNAT --to-destination 10.0.0.100
+#
+# # # Forward traffic through eno1 - Change to match you out-interface
+-A POSTROUTING -s 10.0.0.0/24 -o eno1 -j MASQUERADE
+
+COMMIT
+
+
+# Don't delete these required lines, otherwise there will be errors
+*filter
+:ufw-before-input - [0:0]
+:ufw-before-output - [0:0]
+:ufw-before-forward - [0:0]
+:ufw-not-local - [0:0]
+# End required lines
+
+# Don't allow dhcp client to work
+-A ufw-before-input -p udp --sport 67 --dport 68 -j REJECT
+
+# Don't allow dhcp client to work
+-A ufw-before-output -p udp --sport 68 --dport 67 -j REJECT
+
+# allow all on loopback
+-A ufw-before-input -i lo -j ACCEPT
+-A ufw-before-output -o lo -j ACCEPT
+
+# quickly process packets for which we already have a connection
+-A ufw-before-input -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-output -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# drop INVALID packets (logs these in loglevel medium and higher)
+-A ufw-before-input -m conntrack --ctstate INVALID -j ufw-logging-deny
+-A ufw-before-input -m conntrack --ctstate INVALID -j DROP
+
+# ok icmp codes for INPUT
+-A ufw-before-input -p icmp --icmp-type destination-unreachable -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type time-exceeded -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type parameter-problem -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type echo-request -j ACCEPT
+
+# ok icmp code for FORWARD
+-A ufw-before-forward -p icmp --icmp-type destination-unreachable -j ACCEPT
+-A ufw-before-forward -p icmp --icmp-type time-exceeded -j ACCEPT
+-A ufw-before-forward -p icmp --icmp-type parameter-problem -j ACCEPT
+-A ufw-before-forward -p icmp --icmp-type echo-request -j ACCEPT
+
+### tuple ### allow tcp 8080 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8080 -j ACCEPT
+
+#### tuple ### allow tcp 11211 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 11211 -j ACCEPT
+
+#### tuple ### allow tcp 11230 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 11230 -j ACCEPT
+
+### tuple ### allow tcp 8000 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8000 -j ACCEPT
+
+#### tuple ### allow tcp 8001 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8001 -j ACCEPT
+
+#### tuple ### allow tcp 8002 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8002 -j ACCEPT
+
+### tuple ### allow tcp 8003 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8003 -j ACCEPT
+
+#### tuple ### allow tcp 8004 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8004 -j ACCEPT
+
+#### tuple ### allow tcp 8005 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8005 -j ACCEPT
+
+#### tuple ### allow tcp 8006 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p tcp --dport 8006 -j ACCEPT
+
+### tuple ### allow udp 8080 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 8080 -j ACCEPT
+
+#### tuple ### drop udp 11211 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11211 -j DROP
+
+#### tuple ### drop udp 11231 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11231 -j DROP
+
+#### tuple ### drop udp 11232 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11232 -j DROP
+
+### tuple ### drop udp 11233 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11233 -j DROP
+
+#### tuple ### drop udp 11234 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11234 -j DROP
+
+#### tuple ### drop udp 11235 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11235 -j DROP
+
+#### tuple ### drop udp 11236 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11236 -j DROP
+
+#### tuple ### drop udp 11237 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11237 -j DROP
+#### tuple ### drop udp 11238 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11238 -j DROP
+#### tuple ### drop udp 11239 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11239 -j DROP
+
+#### tuple ### drop udp 11241 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11241 -j DROP
+
+#### tuple ### drop udp 11242 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11242 -j DROP
+
+### tuple ### drop udp 11243 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11243 -j DROP
+
+#### tuple ### drop udp 11244 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11244 -j DROP
+
+#### tuple ### drop udp 11245 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11245 -j DROP
+
+#### tuple ### drop udp 11246 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11246 -j DROP
+
+#### tuple ### drop udp 11247 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11247 -j DROP
+#### tuple ### drop udp 11248 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11248 -j DROP
+#### tuple ### drop udp 11249 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11249 -j DROP
+
+#### tuple ### drop udp 11251 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11251 -j DROP
+
+#### tuple ### drop udp 11252 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11252 -j DROP
+
+### tuple ### drop udp 11253 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11253 -j DROP
+
+#### tuple ### drop udp 11254 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11254 -j DROP
+
+#### tuple ### drop udp 11255 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11255 -j DROP
+
+#### tuple ### drop udp 11256 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11256 -j DROP
+
+#### tuple ### drop udp 11257 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11257 -j DROP
+#### tuple ### drop udp 11258 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11258 -j DROP
+#### tuple ### drop udp 11259 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11259 -j DROP
+
+
+#### tuple ### drop udp 11261 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11261 -j DROP
+
+#### tuple ### drop udp 11262 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11262 -j DROP
+
+### tuple ### drop udp 11263 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11263 -j DROP
+
+#### tuple ### drop udp 11264 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11264 -j DROP
+
+#### tuple ### drop udp 11265 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11265 -j DROP
+
+#### tuple ### drop udp 11266 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11266 -j DROP
+
+#### tuple ### drop udp 11267 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11267 -j DROP
+#### tuple ### drop udp 11268 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11268 -j DROP
+#### tuple ### drop udp 11269 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11269 -j DROP
+
+
+#### tuple ### drop udp 11271 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11271 -j DROP
+
+#### tuple ### drop udp 11272 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11272 -j DROP
+
+### tuple ### drop udp 11273 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11273 -j DROP
+
+#### tuple ### drop udp 11274 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11274 -j DROP
+
+#### tuple ### drop udp 11275 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11275 -j DROP
+
+#### tuple ### drop udp 11276 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11276 -j DROP
+
+#### tuple ### drop udp 11277 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11277 -j DROP
+#### tuple ### drop udp 11278 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11278 -j DROP
+#### tuple ### drop udp 11279 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11279 -j DROP
+
+#### tuple ### drop udp 11281 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11281 -j DROP
+
+#### tuple ### drop udp 11282 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11282 -j DROP
+
+### tuple ### drop udp 11283 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11283 -j DROP
+
+#### tuple ### drop udp 11284 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11284 -j DROP
+
+#### tuple ### drop udp 11285 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11285 -j DROP
+
+#### tuple ### drop udp 11286 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11286 -j DROP
+
+#### tuple ### drop udp 11287 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11287 -j DROP
+#### tuple ### drop udp 11288 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11288 -j DROP
+#### tuple ### drop udp 11289 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11289 -j DROP
+
+#### tuple ### drop udp 11291 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11291 -j DROP
+
+#### tuple ### drop udp 11292 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11292 -j DROP
+
+### tuple ### drop udp 11293 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11293 -j DROP
+
+#### tuple ### drop udp 11294 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11294 -j DROP
+
+#### tuple ### drop udp 11295 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11295 -j DROP
+
+#### tuple ### drop udp 11296 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11296 -j DROP
+
+#### tuple ### drop udp 11297 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11297 -j DROP
+#### tuple ### drop udp 11298 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11298 -j DROP
+#### tuple ### drop udp 11299 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11299 -j DROP
+
+#### tuple ### drop udp 11301 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11301 -j DROP
+
+#### tuple ### drop udp 11302 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11302 -j DROP
+
+### tuple ### drop udp 11303 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11303 -j DROP
+
+#### tuple ### drop udp 11304 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11304 -j DROP
+
+#### tuple ### drop udp 11305 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11305 -j DROP
+
+#### tuple ### drop udp 11306 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11306 -j DROP
+
+#### tuple ### drop udp 11307 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11307 -j DROP
+#### tuple ### drop udp 11308 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11308 -j DROP
+#### tuple ### drop udp 11309 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11309 -j DROP
+
+#### tuple ### drop udp 11311 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11311 -j DROP
+
+#### tuple ### drop udp 11312 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11312 -j DROP
+
+### tuple ### drop udp 11313 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11313 -j DROP
+
+#### tuple ### drop udp 11314 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11314 -j DROP
+
+#### tuple ### drop udp 11315 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11315 -j DROP
+
+#### tuple ### drop udp 11316 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11316 -j DROP
+
+#### tuple ### drop udp 11317 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11317 -j DROP
+#### tuple ### drop udp 11318 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11318 -j DROP
+#### tuple ### drop udp 11319 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11319 -j DROP
+
+#### tuple ### drop udp 11321 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11321 -j DROP
+
+#### tuple ### drop udp 11322 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11322 -j DROP
+
+### tuple ### drop udp 11323 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11323 -j DROP
+
+#### tuple ### drop udp 11324 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11324 -j DROP
+
+#### tuple ### drop udp 11325 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11325 -j DROP
+
+#### tuple ### drop udp 11326 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11326 -j DROP
+
+#### tuple ### drop udp 11327 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11327 -j DROP
+#### tuple ### drop udp 11328 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11328 -j DROP
+#### tuple ### drop udp 11329 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11329 -j DROP
+
+#### tuple ### drop udp 11411 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11411 -j DROP
+
+#### tuple ### drop udp 11431 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11431 -j DROP
+
+#### tuple ### drop udp 11432 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11432 -j DROP
+
+### tuple ### drop udp 11433 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11433 -j DROP
+
+#### tuple ### drop udp 11434 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11434 -j DROP
+
+#### tuple ### drop udp 11435 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11435 -j DROP
+
+#### tuple ### drop udp 11436 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11436 -j DROP
+
+#### tuple ### drop udp 11437 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11437 -j DROP
+#### tuple ### drop udp 11438 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11438 -j DROP
+#### tuple ### drop udp 11439 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11439 -j DROP
+
+#### tuple ### drop udp 11441 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11441 -j DROP
+
+#### tuple ### drop udp 11442 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11442 -j DROP
+
+### tuple ### drop udp 11443 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11443 -j DROP
+
+#### tuple ### drop udp 11444 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11444 -j DROP
+
+#### tuple ### drop udp 11445 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11445 -j DROP
+
+#### tuple ### drop udp 11446 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11446 -j DROP
+
+#### tuple ### drop udp 11447 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11447 -j DROP
+#### tuple ### drop udp 11448 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11448 -j DROP
+#### tuple ### drop udp 11449 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11449 -j DROP
+
+#### tuple ### drop udp 11451 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11451 -j DROP
+
+#### tuple ### drop udp 11452 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11452 -j DROP
+
+### tuple ### drop udp 11453 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11453 -j DROP
+
+#### tuple ### drop udp 11454 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11454 -j DROP
+
+#### tuple ### drop udp 11455 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11455 -j DROP
+
+#### tuple ### drop udp 11456 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11456 -j DROP
+
+#### tuple ### drop udp 11457 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11457 -j DROP
+#### tuple ### drop udp 11458 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11458 -j DROP
+#### tuple ### drop udp 11459 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11459 -j DROP
+
+
+#### tuple ### drop udp 11461 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11461 -j DROP
+
+#### tuple ### drop udp 11462 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11462 -j DROP
+
+### tuple ### drop udp 11463 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11463 -j DROP
+
+#### tuple ### drop udp 11464 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11464 -j DROP
+
+#### tuple ### drop udp 11465 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11465 -j DROP
+
+#### tuple ### drop udp 11466 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11466 -j DROP
+
+#### tuple ### drop udp 11467 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11467 -j DROP
+#### tuple ### drop udp 11468 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11468 -j DROP
+#### tuple ### drop udp 11469 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11469 -j DROP
+
+
+#### tuple ### drop udp 11471 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11471 -j DROP
+
+#### tuple ### drop udp 11472 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11472 -j DROP
+
+### tuple ### drop udp 11473 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11473 -j DROP
+
+#### tuple ### drop udp 11474 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11474 -j DROP
+
+#### tuple ### drop udp 11475 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11475 -j DROP
+
+#### tuple ### drop udp 11476 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11476 -j DROP
+
+#### tuple ### drop udp 11477 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11477 -j DROP
+#### tuple ### drop udp 11478 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11478 -j DROP
+#### tuple ### drop udp 11479 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11479 -j DROP
+
+#### tuple ### drop udp 11481 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11481 -j DROP
+
+#### tuple ### drop udp 11482 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11482 -j DROP
+
+### tuple ### drop udp 11483 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11483 -j DROP
+
+#### tuple ### drop udp 11484 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11484 -j DROP
+
+#### tuple ### drop udp 11485 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11485 -j DROP
+
+#### tuple ### drop udp 11486 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11486 -j DROP
+
+#### tuple ### drop udp 11487 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11487 -j DROP
+#### tuple ### drop udp 11488 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11488 -j DROP
+#### tuple ### drop udp 11489 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11489 -j DROP
+
+#### tuple ### drop udp 11491 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11491 -j DROP
+
+#### tuple ### drop udp 11492 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11492 -j DROP
+
+### tuple ### drop udp 11493 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11493 -j DROP
+
+#### tuple ### drop udp 11494 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11494 -j DROP
+
+#### tuple ### drop udp 11495 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11495 -j DROP
+
+#### tuple ### drop udp 11496 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11496 -j DROP
+
+#### tuple ### drop udp 11497 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11497 -j DROP
+#### tuple ### drop udp 11498 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11498 -j DROP
+#### tuple ### drop udp 11499 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11499 -j DROP
+
+#### tuple ### drop udp 11501 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11501 -j DROP
+
+#### tuple ### drop udp 11502 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11502 -j DROP
+
+### tuple ### drop udp 11503 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11503 -j DROP
+
+#### tuple ### drop udp 11504 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11504 -j DROP
+
+#### tuple ### drop udp 11505 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11505 -j DROP
+
+#### tuple ### drop udp 11506 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11506 -j DROP
+
+#### tuple ### drop udp 11507 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11507 -j DROP
+#### tuple ### drop udp 11508 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11508 -j DROP
+#### tuple ### drop udp 11509 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11509 -j DROP
+
+#### tuple ### drop udp 11511 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11511 -j DROP
+
+#### tuple ### drop udp 11512 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11512 -j DROP
+
+### tuple ### drop udp 11513 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11513 -j DROP
+
+#### tuple ### drop udp 11514 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11514 -j DROP
+
+#### tuple ### drop udp 11515 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11515 -j DROP
+
+#### tuple ### drop udp 11516 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11516 -j DROP
+
+#### tuple ### drop udp 11517 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11517 -j DROP
+#### tuple ### drop udp 11518 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11518 -j DROP
+#### tuple ### drop udp 11519 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11519 -j DROP
+
+#### tuple ### drop udp 11521 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11521 -j DROP
+
+#### tuple ### drop udp 11522 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11522 -j DROP
+
+### tuple ### drop udp 11523 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11523 -j DROP
+
+#### tuple ### drop udp 11524 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11524 -j DROP
+
+#### tuple ### drop udp 11525 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11525 -j DROP
+
+#### tuple ### drop udp 11526 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11526 -j DROP
+
+#### tuple ### drop udp 11527 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11527 -j DROP
+
+#### tuple ### allow udp 11230 0.0.0.0/0 any 0.0.0.0/0 in
+-A ufw-before-forward -p udp --dport 11230 -j ACCEPT
+
+# ufw-not-local
+#
+-A ufw-before-input -j ufw-not-local
+
+# if LOCAL, RETURN
+-A ufw-not-local -m addrtype --dst-type LOCAL -j RETURN
+
+# if MULTICAST, RETURN
+-A ufw-not-local -m addrtype --dst-type MULTICAST -j RETURN
+
+# if BROADCAST, RETURN
+-A ufw-not-local -m addrtype --dst-type BROADCAST -j RETURN
+
+# all other non-local packets are dropped
+-A ufw-not-local -m limit --limit 3/min --limit-burst 10 -j ufw-logging-deny
+-A ufw-not-local -j DROP
+
+# allow MULTICAST mDNS for service discovery (be sure the MULTICAST line above
+# is uncommented)
+-A ufw-before-input -p udp -d 224.0.0.251 --dport 5353 -j ACCEPT
+
+# allow MULTICAST UPnP for service discovery (be sure the MULTICAST line above
+# is uncommented)
+-A ufw-before-input -p udp -d 239.255.255.250 --dport 1900 -j ACCEPT
+
+# don't delete the 'COMMIT' line or these rules won't be processed
+COMMIT

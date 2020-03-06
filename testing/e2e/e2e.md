@@ -10,102 +10,102 @@ consists of five experiments:
 * `+ KV cache`
 
 The experiment traffic consists of 10 iperf (TCP) clients server pairs,
-and 100,000 pkts/sec memcached (UDP) packets.
+and 10,000 pkts/sec memcached (UDP) packets.
 
 ## Set-up
 
 ### Topology
 
-The tofino is connected to four servers, three FPGAs, and a loopback cable that extends from onecore of the tofino into another.
+The tofino is connected to four servers, five FPGAs, and a loopback cable that extends from one core of the tofino into another.
 
 The tofino laid out schematically is accessible here:
 ![Tofino Topology](tofino.png?raw=true "Tofino Topology")
 
 ### Moongen
 
-One component is missing from this schematic: the contribution of MoonGen.
+One component is missing from this schematic: the collection server running Moongen.
 
-In reality, the Memcached Client is made up of two machines -- one which is running tcpreplay, sending packets to MoonGen, and then MoonGen itself, which captures the packets and forwards them to the tofino. Moongen also captures the packets received from the tofino.
-
-For the SIGCOMM submission, MoonGen was run using revision: `ee8f575`
-
-Shremote expects MoonGen to be cloned and compiled on `tclust7` in the directory: `~/dcomp/MoonGen`.
+The tofino is set up to place a timestamp in the src MAC address field of packets
+which arrive or depart on a specific port (in this case, the memcached client port),
+and forward the first 100 bytes of those packets to a machine running MoonGen, which
+captures the packets to a pcap file.
 
 ### Packet generation
 
-The generated packets for the memcached testing have already been created, and are located
-in this repo at `./execution/200k_tc7_get_pkts.pcap` and `./execution/200k_tc7_set_pkts.pcap`.
+A random set of packets are generated for each test, using the script located in the
+[MemcachedFPGATest](../../MemcachedFPGATest) directory of this repo.
 
-Packets have hardcoded IP addresses, MAC addresses, and collision rate.
-If these parameters or the number of packets need to be changed, packet regeneration can be
-rerun with the script located in the [MemPacket](../../MemPacket) directory of this repo.
+The command used to generate the pcaps creates 500,000 packets --
+450,000 get packets, 50,000 set packets.
 
-The command that was used to generate the initial set of packets is:
+Each get packet chooses one of 10,000 keys from a zipf distribution with an exponent of 1.
+
+Set packets are chosen from a uniform distribution.
+
+The cache is warmed up with the same keys as the GET packets in reverse order of popularity,
+such that the most popular packets are still in the cache when the experiment starts.
+
+The specific command used to generate the packets is:
 
 ```shell
-python2 ../../MemPacket/generate_memcached.py \
-            --out ./execution/200k_tc7_get_pkts.pcap \
-            --hashlog ./execution/200k_tc7_pktlog.json \
-            --smac 00:02:c9:3a:84:00 --sip 10.0.0.7 \
-            --dmac 7c:fe:90:1c:36:81 --dip 10.0.0.4 \
-            --n-get 200000 --n-set 10000 --collision-prob .1 \
-            --pre-set --set-out ./execution/200k_tc7_set_pkts.pcap
+python2 ../..//MemcachedFPGATest/generate_memcached.py
+    --smac {mcd_client.mac} --sip {mcd_client.ip}
+    --dmac {mcd_server.mac} --dip {mcd_server.ip}
+    --out {mcd_pcap} --warmup-out {mcd_warmup_pcap}
+    --n-get 450000  --n-set 50000
+    --key-space 10000 --zipf 1.00
 ```
 
 ### Machine specifications
 
 Due to a limitation of the FEC, some MAC addresses had to be changed. Also, some MAC addresses were hardcoded in the tofino. Here is a list of the machines that were used for each part of the experiment, their addresses, their roles, and their specifications.
 
-* Memcached Client (tcpdump)
-  * tclust5
-  * Attached via ens1f0 to tclust7:ens3
-  * Sends `200k_tc7_set_pkts.pcap` followed by `200k_tc7_get_pkts.pcap` over ens1f0
-* Memcached Client (moongen)
+* FPGA programmer
+  * tclust2
+  * Attached to the FPGAs, reprogramming them before each experiment
+* Power monitor
+  * tclust8
+  * Attached to power monitors, gathering power utilization
+* Memcached Client (tcpreplay)
   * tclust7
-  * Attached via ens3 to tclust7:ens1f0
-  * Attached via ens3d1 to tofino:3
-  * ip: 10.0.0.7
-  * mac: 00:02:c9:3a:84:00
-    * Mac address should be used for generation of packets
+    * ip: 10.0.0.7
+    * mac: 00:02:c9:3a:84:00 (MUST BE SET MANUALLY)
+  * ens3 --> tofino:7
 * Memcached Server
   * tclust4
-  * Attached via ens1f1 to tofino:4
-  * ip: 10.0.0.4
-  * mac: 7c:fe:90:1c:36:81
-    * Mac address should be used for generation of packets
-  * _NOTE_: I had set ARP on the memcached server so that it knew which on device and MAC to send packets responding to the memcached client. This may not be necessary, but if packets are not making it back to the memcached client, you may try executing: `arp -s 10.0.0.7 00:02:c9:3a:84:00 --dev ens1f1`.
-* Iperf client
+    * ip: 10.0.0.4
+    * mac: 7c:fe:90:1c:36:81
+  * ens1f1 --> tofino:4
+* Iperf Client
   * tclust1
-  * Attached via ens1f1 to tofino:1
-  * ip: 10.0.0.1
-  * mac: 24:8a:07:8f:eb:00
-    * Must be set manually!
-* Iperf server
+    * ip: 10.0.0.1
+    * mac: 24:8a:07:8f:eb:00 (MUST BE SET MANUALLY)
+  * ens1f1 --> tofino:1
+* Iperf Server
   * tclust2
-  * Attached via ens1f1 to tofino:2
-  * ip: 10.0.0.2
-  * mac: unchanged, not directly used
+    * ip: 10.0.0.2
+    * mac: 24:8a:07:5b:15:35
+  * ens1f1 --> tofino:2
 
 ### FPGAs
 
 The three FPGAs are:
 
 * KV cache
-  * Bottom
-  * Power # 2
-  * Tofino port 17/1
-  * Johnshack cable: `jsn-JTAG-SMT2NC-210308A46CBE`
+  * Tofino port 12/0
+  * cable: `jsn-JTAG-SMT2NC-210308A46CBE`
 * Encoder
-  * Middle
-  * Power # 3
-  * Tofino port 17/2
-  * Johnshack cable: `jsn-JTAG-SMT2NC-210308A47676`
+  * Tofino port 12/1
+  * cable: `jsn-JTAG-SMT2NC-210308A47676`
 * Decoder
-  * Top
-  * Power # 4
-  * Tofino port 17/3
-  * Johnshack cable: `jsn-JTAG-SMT2NC-210308A5F0D3`
-
+  * Tofino port 12/2
+  * cable: `jsn-JTAG-SMT2NC-210308A5F0D3`
+* Compressor
+  * Tofino port 13/1
+  * cable: `jsn-JTAG-SMT2NC-210308A4712F`
+* Decompressor
+  * Tofino port 13/2
+  * cable: `jsn-JTAG-SMT2NC-210308A7A487`
 
 ## Test Execution
 Tests were orchestrated from tclust6, though the orchestrator should not
@@ -116,12 +116,12 @@ Tests are executed with Shremote, checked out [here](..) as a git submodule.
 
 If the submodule is not checked out, initialize it with:
 ```shell
-git submodule init
-git submodule update
+git submodule update --init
 ```
 
 ### Shremote Description
-Documentation on Shremote config files is available [here](https://github.com/isaac-ped/Shremote). The specific configs used for this experiment is documented below.
+Documentation on Shremote config files is available [here](https://github.com/isaac-ped/Shremote).
+The specific configs used for this experiment is documented below.
 
 In brief, Shremote is a program which allows for the timed execution of commands over SSH.
 
@@ -136,8 +136,8 @@ pip install pyyaml
 ```
 
 ### Shremote Config
-For these experiments, shremote is run with the config:
-[tc7_e2e_iperf_and_mcd.yml](execution/cfgs/tc7_e2e_iperf_and_mcd.yml).
+For most of these experiments, shremote is run with the config:
+[tofino_e2e_500k.yml](execution/cfgs/tofino_e2e_500k.yml)
 
 **The config necessarily requires the following modification:**
 In the section `ssh:`, change the username and the ssh key
@@ -157,8 +157,7 @@ specific directories, files, or repos outside of the scope of this repo.
 Those are as follows, on the following machines:
 
 * johnshack
-  * `~/P4Boosters/FPGA/TopLevelSDx/program_all.sh`
-    * Programs all three FPGAs with the appropriate bitstreams
+  * This repository checked out at `~/dcomp/P4Boosters`
 * tofino (158.130.4.218)
   * `~fpadmin/gits/TofinoP4Boosters`
     * Contains code to start and stop the dataplane
@@ -177,7 +176,7 @@ All other files will be copied over automatically
 In addition to the files above:
 * `memcached` should be installed on tclust4
 * `iperf3` should be installed on tclust1 and tclust2
-* `tcpreplay` should be installed on tclust5
+* `tcpreplay` should be installed on tclust7
 
 #### SSH config
 The current shremote config file also depends on hostnames being set
@@ -187,19 +186,12 @@ in `~/.ssh/config` to log on to all of the necessary machines.
 If you have not already, append the following to `~/.ssh/config`
 
 ```shell
-# Adding identity files is nice for getting around,
-# But not strictly necessary for shremote
-
 Host tofino
 Hostname 158.130.4.218
-# IdentityFile ~/.ssh/YOUR_SSH_KEY
-
-Host johnshack
-Hostname johnshack.cis.upenn.edu
-# IdentityFile ~/.ssh/YOUR_SSH_KEY
+IdentityFile ~/.ssh/YOUR_SSH_KEY
 
 Host tclust*
-# IdentityFile ~/.ssh/YOUR_SSH_KEY
+IdentityFile ~/.ssh/YOUR_SSH_KEY
 
 Host tclust1
 Hostname 158.130.4.231
@@ -266,8 +258,20 @@ python ../../Shremote/shremote.py \
 
 The full set of end-to-end experiments, containing
 five repetitions of each experiment,
-can be run with the `run_tc7.sh` script:
+can be run with the `run_all_e2e.sh` script:
 
 ```shell
-cd execution && bash run_tc7.sh
+cd execution && bash run_all_e2e.sh 1
+```
+
+Where the `1` is a label that will be appended to all labels.
+
+The experiments can also be run using the arista rather than the tofino,
+with the CPU as header compressor, or with the FPGA as header compressor,
+using the respective scripts:
+
+```shell
+run_all_arista_e2e.sh
+run_all_cpu_hc_e2e.sh
+run_all_fpga_hc_e2e.sh
 ```
