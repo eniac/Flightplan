@@ -14,6 +14,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p0h0'"
                fg: True
+             - cmd: "sudo ifconfig p0h0-eth1 mtu 1450 up"
+               fg: True
              # p0e0
              - cmd: "sudo arp -v -i p0h0-eth1 -s 192.0.0.1 02:00:00:42:82:67"
                fg: True
@@ -56,6 +58,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p0h1'"
+               fg: True
+             - cmd: "sudo ifconfig p0h1-eth1 mtu 1450 up"
                fg: True
              # p0e0
              - cmd: "sudo arp -v -i p0h1-eth1 -s 192.0.0.1 02:00:00:95:e8:81"
@@ -100,6 +104,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p0h2'"
                fg: True
+             - cmd: "sudo ifconfig p0h2-eth1 mtu 1450 up"
+               fg: True
              # p0e1
              - cmd: "sudo arp -v -i p0h2-eth1 -s 192.0.1.1 02:00:00:40:e8:fb"
                fg: True
@@ -142,6 +148,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p0h3'"
+               fg: True
+             - cmd: "sudo ifconfig p0h3-eth1 mtu 1450 up"
                fg: True
              # p0e1
              - cmd: "sudo arp -v -i p0h3-eth1 -s 192.0.1.1 02:00:00:ba:e6:af"
@@ -186,6 +194,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p1h0'"
                fg: True
+             - cmd: "sudo ifconfig p1h0-eth1 mtu 1450 up"
+               fg: True
              # p1e0
              - cmd: "sudo arp -v -i p1h0-eth1 -s 192.1.0.1 02:00:00:16:c1:e0"
                fg: True
@@ -228,6 +238,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p1h1'"
+               fg: True
+             - cmd: "sudo ifconfig p1h1-eth1 mtu 1450 up"
                fg: True
              # p1e0
              - cmd: "sudo arp -v -i p1h1-eth1 -s 192.1.0.1 02:00:00:ec:8a:64"
@@ -272,6 +284,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p1h2'"
                fg: True
+             - cmd: "sudo ifconfig p1h2-eth1 mtu 1450 up"
+               fg: True
              # p1e1
              - cmd: "sudo arp -v -i p1h2-eth1 -s 192.1.1.1 02:00:00:d9:e5:96"
                fg: True
@@ -314,6 +328,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p1h3'"
+               fg: True
+             - cmd: "sudo ifconfig p1h3-eth1 mtu 1450 up"
                fg: True
              # p1e1
              - cmd: "sudo arp -v -i p1h3-eth1 -s 192.1.1.1 02:00:00:a9:ff:ea"
@@ -358,6 +374,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p2h0'"
                fg: True
+             - cmd: "sudo ifconfig p2h0-eth1 mtu 1450 up"
+               fg: True
              # p2e0
              - cmd: "sudo arp -v -i p2h0-eth1 -s 192.2.0.1 02:00:00:d6:eb:2b"
                fg: True
@@ -400,6 +418,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p2h1'"
+               fg: True
+             - cmd: "sudo ifconfig p2h1-eth1 mtu 1450 up"
                fg: True
              # p2e0
              - cmd: "sudo arp -v -i p2h1-eth1 -s 192.2.0.1 02:00:00:ad:d8:57"
@@ -444,6 +464,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p2h2'"
                fg: True
+             - cmd: "sudo ifconfig p2h2-eth1 mtu 1450 up"
+               fg: True
              # p2e1
              - cmd: "sudo arp -v -i p2h2-eth1 -s 192.2.1.1 02:00:00:2c:78:68"
                fg: True
@@ -486,6 +508,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p2h3'"
+               fg: True
+             - cmd: "sudo ifconfig p2h3-eth1 mtu 1450 up"
                fg: True
              # p2e1
              - cmd: "sudo arp -v -i p2h3-eth1 -s 192.2.1.1 02:00:00:5b:d6:40"
@@ -530,6 +554,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p3h0'"
                fg: True
+             - cmd: "sudo ifconfig p3h0-eth1 mtu 1450 up"
+               fg: True
              # p3e0
              - cmd: "sudo arp -v -i p3h0-eth1 -s 192.3.0.1 02:00:00:fc:66:ad"
                fg: True
@@ -572,6 +598,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p3h1'"
+               fg: True
+             - cmd: "sudo ifconfig p3h1-eth1 mtu 1450 up"
                fg: True
              # p3e0
              - cmd: "sudo arp -v -i p3h1-eth1 -s 192.3.0.1 02:00:00:00:d2:87"
@@ -616,6 +644,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p3h2'"
                fg: True
+             - cmd: "sudo ifconfig p3h2-eth1 mtu 1450 up"
+               fg: True
              # p3e1
              - cmd: "sudo arp -v -i p3h2-eth1 -s 192.3.1.1 02:00:00:df:47:fa"
                fg: True
@@ -658,6 +688,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p3h3'"
+               fg: True
+             - cmd: "sudo ifconfig p3h3-eth1 mtu 1450 up"
                fg: True
              # p3e1
              - cmd: "sudo arp -v -i p3h3-eth1 -s 192.3.1.1 02:00:00:14:46:73"
@@ -1431,260 +1463,3 @@ switches:
              - table_add ipv4_forwarding ipv4_forward 0xC0030103&&&0xFFFFFFFF => 192.3.1.3 2 0
              - table_add ipv4_forwarding ipv4_forward 0xFFFFFF02&&&0x000000FF => 192.3.3.1 4 0
              - table_add ipv4_forwarding ipv4_forward 0xFFFFFF03&&&0x000000FF => 192.3.2.1 3 0
-# All-to-all ping test parameters:
-#   --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p0h0: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p0h0: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p0h0: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p0h0: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p0h0: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p0h0: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p0h0: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p0h1: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p0h1: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p0h2: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p0h2: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p0h3: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p0h3: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p1h0: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p1h0: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p1h1: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p1h1: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p1h2: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p1h2: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p1h3: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p1h3: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p2h0: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p2h0: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p2h1: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p2h1: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p2h2: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p2h2: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p2h3: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p2h3: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p3h0: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p3h0: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p3h1: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p3h1: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p3h2: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p3h2: ping -c 1 192.3.1.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.0.0.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.0.0.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.0.1.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.0.1.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.1.0.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.1.0.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.1.1.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.1.1.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.2.0.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.2.0.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.2.1.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.2.1.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.3.0.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.3.0.3" \
-#   --fg-host-prog "p3h3: ping -c 1 192.3.1.2" \
-#   --fg-host-prog "p3h3: ping -c 1 192.3.1.3" \
