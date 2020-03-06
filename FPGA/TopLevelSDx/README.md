@@ -24,7 +24,7 @@ For an example, view `program_decoder.sh`
 
 Finally, the following lines are added to my .bashrc file, and I believe that they are necessary for running the xilinx toolchain to program the FPGAs.
 ```shell
-export LM_LICENSE_FILE=2100@potato.cis.upenn.edu
+export LM_LICENSE_FILE=... # Location of license server
 export SDNET_ROOT=/opt/Xilinx/SDx/2017.1/
 export SDSOC_ROOT=/opt/Xilinx/SDx/2017.1/
 export PATH=$PATH:/opt/Xilinx/SDx/2017.1/bin/
