@@ -93,7 +93,11 @@ void reset_pip_state(in bit<32> idx) {
 void inc_seqno(inout headers_t hdr, in bit<32> idx) {
   flightplan_pip_seqno.read(hdr.fp.seqno, idx);
   flightplan_pip_seqno.write(idx, hdr.fp.seqno + 1);
-  // FIXME if wrapping around then "relink" to same link, to reset state at both ends -- raise "syn" flag
+  if (0 == hdr.fp.seqno + 1) {
+    // if wrapping around then signal that syn is being reset.
+    // NOTE other side calls reset_pip_state(idx_pip), while this side doesn't.
+    hdr.fp.state = hdr.fp.state | FPSyn;
+  }
 }
 
 void update_pip_state(inout headers_t hdr, in bit<32> idx_ns, in bit<32> idx_pip) {
