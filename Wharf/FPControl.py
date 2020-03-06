@@ -933,7 +933,7 @@ def main():
   elif cmd_reset_flightplan == args.command:
     new_args = filter(lambda x: x != args.command, sys.argv)
     if "--suppress_status_output" not in new_args: new_args.append("--suppress_status_output")
-    command_sequence = [cmd_clear_idx_pip_tables, cmd_clear_idx_ns_table, cmd_clear_link_table, cmd_set_cardinalities, cmd_clear_mirroring_sessions, cmd_reset_pip_state, cmd_stop]
+    command_sequence = [cmd_clear_idx_pip_tables, cmd_clear_idx_ns_table, cmd_clear_link_table, cmd_set_cardinalities, cmd_clear_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_stop]
     for command in command_sequence:
       args_instance = list(new_args)
       args_instance.append(command)
@@ -946,7 +946,7 @@ def main():
   elif cmd_config_flightplan == args.command:
     new_args = filter(lambda x: x != args.command, sys.argv)
     if "--suppress_status_output" not in new_args: new_args.append("--suppress_status_output")
-    command_sequence = [cmd_set_idx_pip_tables, cmd_set_idx_ns_table, cmd_set_link_table, cmd_set_cardinalities, cmd_set_mirroring_sessions, cmd_reset_pip_state, cmd_stop]
+    command_sequence = [cmd_set_idx_pip_tables, cmd_set_idx_ns_table, cmd_set_link_table, cmd_set_cardinalities, cmd_set_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_stop]
     for command in command_sequence:
       args_instance = list(new_args)
       args_instance.append(command)
@@ -1000,7 +1000,6 @@ def main():
     failed_command, result = set_pip_state(control_data, args.switch, args.idx, args.pip_state_var, args.value)
   elif cmd_reset_pip_state == args.command:
     failed_command, result = reset_pip_state_opt(control_data, control_spanning_tree, args.switch, args.idx)
-
   elif cmd_check_state == args.command:
     if None == args.switch:
       print("Need to provide --switch parameter")
