@@ -722,7 +722,7 @@ def get_pip_state_idxopt(control_data, control_spanning_tree, switch, idx_pip_op
       failed_command = failed_command or subfail
       if failed_command and not args.force: break
       switch_result.append(subresult)
-    if not failed_command: result = {switch : switch_result}
+    if not failed_command: result = switch_result
   return failed_command, result
 
 def get_pip_state_opt(control_data, control_spanning_tree, switch_opt, idx_pip_opt, pip_state_var_opt):
