@@ -7,7 +7,7 @@ give the serial numbers of each of the FPGAs.
 
 To program an FPGA, issue
 
-```shell`
+```shell
 ./Run_project.bash <ProjectName> <SerialNumber>
 ```
 
