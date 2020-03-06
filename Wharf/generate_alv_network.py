@@ -41,6 +41,7 @@ parser.add_argument('--k', default=default_k, help="ALV networks' k-parameter. D
 parser.add_argument('--output_text_config', action='store_true', help="Outputs config in ad hoc format")
 parser.add_argument('--output_FPMNBMV2_config', action='store_true', help="Outputs config for Flightplan's Mininet+BMv2 test environment")
 parser.add_argument('--output_ping_selftest', action='store_true', help="Outputs an all-to-all ping test")
+parser.add_argument('--host_MTU', default=None, help='Specify MTU for host interfaces')
 args = parser.parse_args()
 
 # FIXME make the following into CLI parameters
@@ -367,6 +368,9 @@ def print_host_yml(host):
     p4_mininet_default_if_name = host.name + "-eth" + str(port_num)
     edge_switch = host.links[port_num]['element']
     switch_mac_address = edge_switch.links[host.links[port_num]['port']]['mac_address']
+    if None != args.host_MTU:
+        print "             - cmd: \"sudo ifconfig " + p4_mininet_default_if_name + " mtu " + str(args.host_MTU) + " up\""
+        print "               fg: True"
     print "             # " + edge_switch.name
     print "             - cmd: \"sudo arp -v -i " + p4_mininet_default_if_name + " -s " + edge_switch.ipv4_address.toString() + " " + switch_mac_address + "\""
     print "               fg: True"
