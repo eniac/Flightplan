@@ -6,13 +6,16 @@
 #
 # FIXME various hardcoded paths
 
-export BMV2_REPO=/home/iped/dcomp/behavioral-model/
+if [ -z "${BMV2_REPO}" ]
+then
+  echo "Need to define BMV2_REPO environment variable"
+  exit 1
+fi
 
 HERE=`pwd`
 
 if [ -z "${TOPOLOGY}" ]
 then
-  #TOPOLOGY=splits/ALV_split1/alv_k=4.yml
   TOPOLOGY=bmv2/topologies/alv_k=4.yml
 fi
 echo "Using TOPOLOGY=${TOPOLOGY}"
