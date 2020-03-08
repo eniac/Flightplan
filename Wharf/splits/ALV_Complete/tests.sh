@@ -321,7 +321,7 @@ function complete_fec_e2e {
           --showExitStatus \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
-     --fg-host-prog "p0h0:  tcpreplay -i p0h0-eth1 ${TRAFFIC_INPUT}"
+     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 ${TRAFFIC_INPUT}"
 
   mv ${TRAFFIC_INPUT} ${PCAP_DUMPS}/
   mv ${CACHEFILE} ${PCAP_DUMPS}/
