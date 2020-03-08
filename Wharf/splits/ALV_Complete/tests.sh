@@ -6,7 +6,7 @@
 # FIXME poor naming choices for tests
 
 TOPOLOGY=splits/ALV_Complete/alv_k=4.yml
-MODES=(autotest autotest_long interactive_complete)
+MODES=(autotest autotest_long interactive_complete complete_fec_e2e)
 DEFAULT_MODE=autotest
 
 if [ -z "${MODE}" ]
@@ -301,6 +301,41 @@ function autotest {
 function autotest_long {
   NUM_PINGS=10
   autotest
+}
+
+function complete_fec_e2e {
+  # Based on bmv2/complete_mcd_e2e.sh
+
+  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  TRAFFIC_PREINPUT=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/tcp_100.pcap
+  TRAFFIC_INPUT=/tmp/tcp_100.pcap
+  CACHEFILE=/tmp/tcprewrite_cachefile
+  # Traffic will be sent from p0h0 to p1h0
+  tcpprep --auto=first --pcap=${TRAFFIC_PREINPUT} --cachefile=${CACHEFILE}
+  tcprewrite --endpoints=192.0.0.2:192.1.0.2 --cachefile=${CACHEFILE} -i ${TRAFFIC_PREINPUT} -o ${TRAFFIC_INPUT}
+
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
+     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
+     --fg-host-prog "p0h0:  tcpreplay -i p0h0-eth1 ${TRAFFIC_INPUT}"
+
+  mv ${TRAFFIC_INPUT} ${PCAP_DUMPS}/
+  mv ${CACHEFILE} ${PCAP_DUMPS}/
+
+  TRAFFIC_INPUT=${PCAP_DUMPS}/`basename ${TRAFFIC_INPUT} `
+
+  diff <(tcpdump -r ${PCAP_DUMPS}/p1e0_to_p1h0.pcap -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq) <(tcpdump -r ${TRAFFIC_INPUT} -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq)
+  if [[ $? == 0 ]]; then
+      echo "Test succeeded"
+      exit 0
+  else
+      echo "Test failed"
+      exit 1
+  fi
 }
 
 source `dirname "$0"`/../../run_alv.sh
