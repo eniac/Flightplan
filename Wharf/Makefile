@@ -46,7 +46,8 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json \
 	$(BLD_BMV2)/CheckedFragment.json $(BLD_BMV2)/CompleteHeadered.json $(BLD_BMV2)/ForwarderHeadered.json \
 	$(BLD_BMV2)/ALV.json $(BLD_BMV2)/ALV_part1.json $(BLD_BMV2)/ALV_part2.json \
-	$(BLD_BMV2)/ALV_S2part1.json $(BLD_BMV2)/ALV_S2part2.json
+	$(BLD_BMV2)/ALV_S2part1.json $(BLD_BMV2)/ALV_S2part2.json \
+	$(BLD_BMV2)/ALV_Complete.json
 
 tclust: Tclust_tofino Tclust_noop \
 	Tclust_encoder Tclust_decoder Tclust_compressor Tclust_decompressor Tclust_mcd
