@@ -304,7 +304,7 @@ function autotest_long {
 }
 
 function complete_fec_e2e {
-  # Based on bmv2/complete_mcd_e2e.sh
+  # Based on bmv2/complete_fec_e2e.sh
 
   FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
   TRAFFIC_PREINPUT=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/tcp_100.pcap
