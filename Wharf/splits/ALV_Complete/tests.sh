@@ -314,6 +314,8 @@ function complete_fec_e2e {
   tcpprep --auto=first --pcap=${TRAFFIC_PREINPUT} --cachefile=${CACHEFILE}
   tcprewrite --endpoints=192.0.0.2:192.1.0.2 --cachefile=${CACHEFILE} -i ${TRAFFIC_PREINPUT} -o ${TRAFFIC_INPUT}
 
+  sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
+
   sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
