@@ -332,7 +332,8 @@ function complete_fec_e2e {
   TRAFFIC_INPUT=${PCAP_DUMPS}/`basename ${TRAFFIC_INPUT} `
 
   diff <(tcpdump -r ${PCAP_DUMPS}/p1e0_to_p1h0.pcap -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq) <(tcpdump -r ${TRAFFIC_INPUT} -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq)
-  if [[ $? == 0 ]]; then
+  if [[ $? == 0 ]]
+  then
       echo "Test succeeded"
       exit 0
   else
