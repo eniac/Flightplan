@@ -3,10 +3,11 @@
 #Nik Sultana, UPenn, March 2020
 #
 # FIXME various hardcoded paths
+# FIXME this and other scripts assume that it's being run in the "Wharf" directory
 # FIXME poor naming choices for tests
 
 TOPOLOGY=splits/ALV_Complete/alv_k=4.yml
-MODES=(autotest autotest_long interactive_complete complete_fec_e2e)
+MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e)
 DEFAULT_MODE=autotest
 
 if [ -z "${MODE}" ]
@@ -340,6 +341,58 @@ function complete_fec_e2e {
       echo "Test failed"
       exit 1
   fi
+}
+
+function complete_mcd_e2e {
+  # Based on bmv2/complete_mcd_e2e.sh
+
+  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  PCAP_TOOLS=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcap_tools/
+
+  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREEXPECT=bmv2/pcaps/Memcached_expected_short.pcap
+
+  SIP="192.0.0.2"
+  DIP="192.1.0.2"
+  SMAC="02:00:00:d8:c2:6b"
+  DMAC="02:00:00:9c:a8:79"
+
+  INPUT_PCAP=$OUTDIR/${BASENAME}_in.pcap
+  echo "Putting pcap in $INPUT_PCAP"
+  python2 ${PCAP_TOOLS}/pcap_sub.py $TRAFFIC_PREINPUT $INPUT_PCAP\
+      --sip="$SIP" --dip="$DIP" --smac="$SMAC" --dmac="$DMAC"
+
+  sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
+
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
+     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
+     --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
+     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
+
+  grep --text -E '^[<>]' ${LOG_DUMPS}/p1h0_prog_18.log | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
+
+  diff -q ${LOG_DUMPS}/mcd_log mcd_log_withoutcache.expected
+  if [[ $? == 0 ]]
+  then
+      echo "Test conclusive: cache was NOT used"
+      exit 0
+  fi
+
+  diff -q ${LOG_DUMPS}/mcd_log mcd_log_withcache.expected
+  if [[ $? == 0 ]]
+  then
+      echo "Test conclusive: cache was used"
+      exit 0
+  fi
+
+  echo "Test inconclusive"
+  exit 1
 }
 
 source `dirname "$0"`/../../run_alv.sh
