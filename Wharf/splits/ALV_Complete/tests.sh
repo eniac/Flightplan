@@ -377,14 +377,14 @@ function complete_mcd_e2e {
 
   grep --text -E '^[<>]' ${LOG_DUMPS}/p1h0_prog_18.log | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
 
-  diff -q ${LOG_DUMPS}/mcd_log mcd_log_withoutcache.expected
+  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was NOT used"
       exit 0
   fi
 
-  diff -q ${LOG_DUMPS}/mcd_log mcd_log_withcache.expected
+  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was used"

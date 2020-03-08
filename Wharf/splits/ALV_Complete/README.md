@@ -13,3 +13,4 @@ test_output/alv_k=4/log_files/p0h0_prog_18.log:10 packets transmitted, 10 receiv
 ```
 
 Experiment can be tweaked by modifying the rules for the following tables in the topology file: dropper, check_run_Complete_ingress, check_run_Complete_egress
+Dropping can interfere randomly with the mcd test -- disabling dropping gives more stable results.
