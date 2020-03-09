@@ -376,6 +376,7 @@ function complete_mcd_e2e {
 
   # FIXME The target log's name might change -- this is brittle!
   TARGET_LOG=${LOG_DUMPS}/p1h0_prog_18.log
+  echo "Using TARGET_LOG=`ls -lh ${TARGET_LOG}`"
 
   grep --text -E '^[<>]' ${TARGET_LOG} | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
 
