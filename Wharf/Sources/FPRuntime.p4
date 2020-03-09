@@ -64,8 +64,9 @@ void init_computation(inout headers_t hdr) {
   hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
 }
 
-void end_computation(inout headers_t hdr) {
+void end_computation(inout headers_t hdr, out bit<1> computation_ended) {
   hdr.fp.setInvalid();
+  computation_ended = TRUE;
 }
 
 void set_computation_order(inout headers_t hdr, in bit<SEGMENT_DESC_SIZE> from_segment, in bit<SEGMENT_DESC_SIZE> to_segment) {

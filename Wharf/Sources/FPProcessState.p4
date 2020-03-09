@@ -5,6 +5,7 @@ Nik Sultana, UPenn, February 2020
     bit<32> idx_ns = 0;
     bit<32> idx_pip = 0;
     bit<SEGMENT_DESC_SIZE> state_buffer;
+    bit<1> computation_ended = FALSE;
 
     action set_offload_port(bit<WIDTH_PORT_NUMBER> offload_port) {
         meta.egress_spec = offload_port;

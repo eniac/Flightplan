@@ -93,7 +93,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         deserialise_metadata(hdr, meta);
 
         if (3 == hdr.fp.to_segment) {
-           end_computation(hdr);
+           end_computation(hdr, computation_ended);
         } else {
            hdr.fp.state = hdr.fp.state | InvalidCodeFlow;
         }
