@@ -350,7 +350,6 @@ function complete_mcd_e2e {
   PCAP_TOOLS=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcap_tools/
 
   TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
-  TRAFFIC_PREEXPECT=bmv2/pcaps/Memcached_expected_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -375,7 +374,10 @@ function complete_mcd_e2e {
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
 
-  grep --text -E '^[<>]' ${LOG_DUMPS}/p1h0_prog_18.log | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
+  # FIXME The target log's name might change -- this is brittle!
+  TARGET_LOG=${LOG_DUMPS}/p1h0_prog_18.log
+
+  grep --text -E '^[<>]' ${TARGET_LOG} | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
 
   diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)
   if [[ $? == 0 ]]
