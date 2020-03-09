@@ -178,6 +178,7 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
             }
 #endif
 
+// NOTE could move this to the later part of the program.
 #if defined(MEMCACHED_BOOSTER)
             // If Memcached REQ/RES then pass through the cache.
             if (hdr.udp.isValid()) {
@@ -192,6 +193,7 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
 #endif
         }
 
+        // NOTE could do the routing step at very beginning, to get clarity on what follows.
         ALV_Route.apply(hdr, m, meta);
 
         check_run_Complete_egress.apply();
