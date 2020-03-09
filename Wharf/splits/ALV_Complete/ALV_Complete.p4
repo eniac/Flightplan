@@ -137,7 +137,6 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
 #endif
 
     apply {
-
         check_run_Complete_ingress.apply();
         if (1 == run_program_ingress) {
 #if defined(FEC_BOOSTER)
