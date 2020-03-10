@@ -7,6 +7,7 @@ Nik Sultana, UPenn, February 2020
     bit<SEGMENT_DESC_SIZE> state_buffer;
     bit<1> computation_ended = FALSE;
     bit<1> computation_continuing = FALSE;
+    bit<1> computation_incoming = FALSE;
 
     action set_offload_port(bit<WIDTH_PORT_NUMBER> offload_port) {
         meta.egress_spec = offload_port;
