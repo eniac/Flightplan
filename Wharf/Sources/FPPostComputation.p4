@@ -5,7 +5,7 @@ Nik Sultana, UPenn, February 2020
 
             if (!hdr.fp.isValid()) {
               return;
-            } else if (0 != hdr.fp.state & InvalidCodeFlow) {
+            } else if (hdr.fp.state & InvalidCodeFlow > 0) {
               drop();
             } else {
               // Hand-over to next segment
