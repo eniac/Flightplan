@@ -84,7 +84,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
 
           //    if (next_hop_arp_lookup.apply().hit) return; // from original program
               init_computation(hdr);
-              set_computation_order(hdr, 1, 2);
+              set_computation_order(hdr, computation_continuing, 1, 2);
               hdr.fp.quad3 = dst_gateway_ipv4;
           }
         }
@@ -94,7 +94,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
         deserialise_metadata(hdr, meta);
 
         if (3 == hdr.fp.to_segment) {
-           end_computation(hdr, computation_ended);
+           end_computation(hdr, computation_continuing, computation_ended);
         } else {
            hdr.fp.state = hdr.fp.state | InvalidCodeFlow;
         }

@@ -85,7 +85,7 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
           // Continue code
           dst_gateway_ipv4 = hdr.fp.quad3;
           if (next_hop_arp_lookup.apply().hit) {
-            set_computation_order(hdr, 2, 3);
+            set_computation_order(hdr, computation_continuing, 2, 3);
           } else {
             drop();
           }

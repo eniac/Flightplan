@@ -64,14 +64,16 @@ void init_computation(inout headers_t hdr) {
   hdr.fp.type = ETHERTYPE_FLIGHTPLAN;
 }
 
-void end_computation(inout headers_t hdr, out bit<1> computation_ended) {
+void end_computation(inout headers_t hdr, in bit<1> computation_continuing, out bit<1> computation_ended) {
+  assert(FALSE == computation_continuing);
   hdr.fp.setInvalid();
   computation_ended = TRUE;
 }
 
-void set_computation_order(inout headers_t hdr, in bit<SEGMENT_DESC_SIZE> from_segment, in bit<SEGMENT_DESC_SIZE> to_segment) {
+void set_computation_order(inout headers_t hdr, out bit<1> computation_continuing, in bit<SEGMENT_DESC_SIZE> from_segment, in bit<SEGMENT_DESC_SIZE> to_segment) {
   hdr.fp.from_segment = from_segment;
   hdr.fp.to_segment = to_segment;
+  computation_continuing = TRUE;
 }
 
 void serialise_metadata(inout headers_t hdr, inout metadata_t meta) {
