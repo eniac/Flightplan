@@ -3,6 +3,8 @@
 #Nik Sultana, UPenn, March 2020
 set -e
 
+echo "Starting ALV_Complete_1"
+
 source /home/nsultana/2/P4Boosters/Wharf/splits/ALV_Complete_1/envars.sh
 
 ${FPControl} ${TOPOLOGY} ${FPCD} configure_flightplan --force
