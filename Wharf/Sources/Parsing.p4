@@ -188,6 +188,13 @@ control FecDeparser(packet_out pkt, in headers_t hdr) {
         pkt.emit(hdr.ipv4);
         pkt.emit(hdr.tcp);
         pkt.emit(hdr.udp);
+
+        pkt.emit(hdr.lldp_tlv_chassis_id);
+        pkt.emit(hdr.lldp_tlv_port_id);
+        pkt.emit(hdr.lldp_tlv_ttl_id);
+        pkt.emit(hdr.lldp_prefix);
+        pkt.emit(hdr.lldp_activate_fec);
+        pkt.emit(hdr.lldp_tlv_end);
     }
 }
 
