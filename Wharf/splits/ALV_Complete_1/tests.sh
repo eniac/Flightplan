@@ -401,14 +401,28 @@ function complete_mcd_e2e {
 
   grep --text -E '^[<>]' ${TARGET_LOG} | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
 
-  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)
+  if [ -n "${UNIQUE_MATTERS}" ]
+  then
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)"
+  else
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)"
+  fi
+  echo $CMD
+  eval $CMD
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was NOT used"
       exit 0
   fi
 
-  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)
+  if [ -n "${UNIQUE_MATTERS}" ]
+  then
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)"
+  else
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)"
+  fi
+  echo $CMD
+  eval $CMD
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was used"
