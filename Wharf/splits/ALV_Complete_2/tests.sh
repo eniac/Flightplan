@@ -401,10 +401,12 @@ function complete_mcd_e2e {
 
   if [ -n "${UNIQUE_MATTERS}" ]
   then
-    diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)"
   else
-    diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)"
   fi
+  echo $CMD
+  eval $CMD
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was NOT used"
@@ -413,10 +415,12 @@ function complete_mcd_e2e {
 
   if [ -n "${UNIQUE_MATTERS}" ]
   then
-    diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)"
   else
-    diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)"
   fi
+  echo $CMD
+  eval $CMD
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was used"
