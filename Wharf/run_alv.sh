@@ -23,6 +23,7 @@ echo "Using TOPOLOGY=${TOPOLOGY}"
 MODES+=(interactive)
 MODES+=(selftest)
 MODES+=(selftest2)
+MODES+=(interactive2)
 
 if [ -z "${MODE}" ]
 then
@@ -603,6 +604,31 @@ function selftest2 {
      --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.2" \
      --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.3" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
+}
+
+function interactive2 {
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3" \
+          --cli
 }
 
 eval $MODE
