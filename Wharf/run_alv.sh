@@ -330,279 +330,279 @@ function selftest2 {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --host-prog "p0h0: iperf3 -s -B 192.0.0.2" \
-     --host-prog "p0h1: iperf3 -s -B 192.0.0.3" \
-     --host-prog "p0h2: iperf3 -s -B 192.0.1.2" \
-     --host-prog "p0h3: iperf3 -s -B 192.0.1.3" \
-     --host-prog "p1h0: iperf3 -s -B 192.1.0.2" \
-     --host-prog "p1h1: iperf3 -s -B 192.1.0.3" \
-     --host-prog "p1h2: iperf3 -s -B 192.1.1.2" \
-     --host-prog "p1h3: iperf3 -s -B 192.1.1.3" \
-     --host-prog "p2h0: iperf3 -s -B 192.2.0.2" \
-     --host-prog "p2h1: iperf3 -s -B 192.2.0.3" \
-     --host-prog "p2h2: iperf3 -s -B 192.2.1.2" \
-     --host-prog "p2h3: iperf3 -s -B 192.2.1.3" \
-     --host-prog "p3h0: iperf3 -s -B 192.3.0.2" \
-     --host-prog "p3h1: iperf3 -s -B 192.3.0.3" \
-     --host-prog "p3h2: iperf3 -s -B 192.3.1.2" \
-     --host-prog "p3h3: iperf3 -s -B 192.3.1.3" \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
      --fg-host-prog ": sleep 1" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.1.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.0.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.0.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.1.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.1.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.0.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.0.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.1.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.1.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.0.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.0.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.1.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.1.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.0.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.0.3" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.2" \
-     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.3" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
 }
 
@@ -612,22 +612,22 @@ function interactive2 {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --host-prog "p0h0: iperf3 -s -B 192.0.0.2" \
-     --host-prog "p0h1: iperf3 -s -B 192.0.0.3" \
-     --host-prog "p0h2: iperf3 -s -B 192.0.1.2" \
-     --host-prog "p0h3: iperf3 -s -B 192.0.1.3" \
-     --host-prog "p1h0: iperf3 -s -B 192.1.0.2" \
-     --host-prog "p1h1: iperf3 -s -B 192.1.0.3" \
-     --host-prog "p1h2: iperf3 -s -B 192.1.1.2" \
-     --host-prog "p1h3: iperf3 -s -B 192.1.1.3" \
-     --host-prog "p2h0: iperf3 -s -B 192.2.0.2" \
-     --host-prog "p2h1: iperf3 -s -B 192.2.0.3" \
-     --host-prog "p2h2: iperf3 -s -B 192.2.1.2" \
-     --host-prog "p2h3: iperf3 -s -B 192.2.1.3" \
-     --host-prog "p3h0: iperf3 -s -B 192.3.0.2" \
-     --host-prog "p3h1: iperf3 -s -B 192.3.0.3" \
-     --host-prog "p3h2: iperf3 -s -B 192.3.1.2" \
-     --host-prog "p3h3: iperf3 -s -B 192.3.1.3" \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
           --cli
 }
 
