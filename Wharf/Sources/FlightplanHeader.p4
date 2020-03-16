@@ -25,9 +25,8 @@ Nik Sultana, UPenn, January 2019
 #define FPSyn 0x04
 #define FPAck 0x08
 #define FPNak 0x10
-// FIXME FPRelink unused
-#define FPRelink 0x20
-#define FPResponse 0x40
+#define FPResponse 0x20
+//#define FPRelink 0x40
 
 // Flightplan header scheme
 header flightplan_h {
