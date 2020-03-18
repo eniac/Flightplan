@@ -426,6 +426,8 @@ function complete_mcd_e2e {
   #echo "Test inconclusive"
   #exit 1
 
+  STATUS=0
+
   SETS_experiment=$(grep set ${LOG_DUMPS}/mcd_log | wc -l)
   SETS_reference=$(grep set mcd_log_withoutcache.expected | wc -l)
   if [ "$SETS_experiment" -eq "$SETS_reference" ]
@@ -433,6 +435,7 @@ function complete_mcd_e2e {
       echo "#SETS: OK ($SETS_experiment vs $SETS_reference)"
   else
       echo "#SETS: Different than reference ($SETS_experiment vs $SETS_reference)"
+      STATUS=1
   fi
 
   GETS_experiment=$(grep get ${LOG_DUMPS}/mcd_log | wc -l)
@@ -445,7 +448,10 @@ function complete_mcd_e2e {
       echo "#GETS: OK (less than reference: ($GETS_experiment vs $GETS_reference))"
   else
       echo "#GETS: Different than reference ($GETS_experiment vs $GETS_reference)"
+      STATUS=1
   fi
+
+  exit $STATUS
 }
 
 source `dirname "$0"`/../../run_alv.sh
