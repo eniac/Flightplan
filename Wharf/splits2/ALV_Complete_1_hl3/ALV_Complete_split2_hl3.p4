@@ -93,33 +93,18 @@ parser CompleteParser(packet_in pkt, out headers_t hdr, inout booster_metadata_t
 
 control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t meta) {
 
-    bit<1> run_program_ingress = 0;
-    bit<1> run_program_egress = 0;
+    bit<1> run_fec_egress = 0;
 
-    action run_Complete_ingress() {
-      run_program_ingress = 1;
+    action run_FEC_egress(bit<1> status) {
+      run_fec_egress = status;
     }
 
-    table check_run_Complete_ingress {
+    table check_run_FEC_egress {
         key = {
-            meta.ingress_port : exact;
+            hdr.ipv4.dst : exact;
         }
         actions = {
-            run_Complete_ingress;
-            NoAction;
-        }
-    }
-
-    action run_Complete_egress() {
-      run_program_egress = 1;
-    }
-
-    table check_run_Complete_egress {
-        key = {
-            meta.egress_spec : exact;
-        }
-        actions = {
-            run_Complete_egress;
+            run_FEC_egress;
             NoAction;
         }
     }
@@ -144,19 +129,7 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
       assert(offload_port_lookup.apply().hit);
       bool did_something = false;
 
-      if (2 == fp_to_segment - 1) {
-          did_something = true;
-// NOTE this is to be replaced by table lookup at egress
-//#if defined(FEC_BOOSTER)
-//          // If we received an FEC update, then update the table.
-//          bit<1> is_ctrl;
-//          FECController.apply(hdr, meta, is_ctrl);
-//          if (is_ctrl == 1) {
-//              drop();
-//              return;
-//          }
-//#endif
-
+      if (2 == fp_to_segment - 1) { did_something = true;
           bit<1> compressed_link = 0;
           bit<1> forward = 0;
 
@@ -198,8 +171,7 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
               }
           }
 #endif
-      } else if (4 == fp_to_segment - 1) {
-          did_something = true;
+      } else if (4 == fp_to_segment - 1) { did_something = true;
 #if defined(COMPRESSION_BOOSTER)
           bit<1> compressed_link = 0;
           bit<1> forward = 0;
@@ -215,11 +187,9 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
 #endif
 
 #if defined(FEC_BOOSTER)
-          bit<1> faulty = 0;
-
           // If heading out on a lossy link, then FEC encode.
-          get_port_status(meta.egress_spec, faulty); // NOTE prototype stand-in for table lookup
-          if (faulty == 1) {
+          check_run_FEC_egress.apply();
+          if (run_fec_egress == 1) {
               if (hdr.tcp.isValid()) {
                   proto_and_port = hdr.ipv4.proto ++ hdr.tcp.dport;
               } else if (hdr.udp.isValid()) {
