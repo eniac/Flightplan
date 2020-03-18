@@ -146,16 +146,16 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
 
       if (2 == fp_to_segment - 1) {
           did_something = true;
-// FIXME use table for this
-#if defined(FEC_BOOSTER)
-          // If we received an FEC update, then update the table.
-          bit<1> is_ctrl;
-          FECController.apply(hdr, meta, is_ctrl);
-          if (is_ctrl == 1) {
-              drop();
-              return;
-          }
-#endif
+// NOTE this is to be replaced by table lookup at egress
+//#if defined(FEC_BOOSTER)
+//          // If we received an FEC update, then update the table.
+//          bit<1> is_ctrl;
+//          FECController.apply(hdr, meta, is_ctrl);
+//          if (is_ctrl == 1) {
+//              drop();
+//              return;
+//          }
+//#endif
 
           bit<1> compressed_link = 0;
           bit<1> forward = 0;
@@ -218,7 +218,7 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
           bit<1> faulty = 0;
 
           // If heading out on a lossy link, then FEC encode.
-          get_port_status(meta.egress_spec, faulty);
+          get_port_status(meta.egress_spec, faulty); // NOTE prototype stand-in for table lookup
           if (faulty == 1) {
               if (hdr.tcp.isValid()) {
                   proto_and_port = hdr.ipv4.proto ++ hdr.tcp.dport;
@@ -241,8 +241,6 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
 #endif
       }
       assert(did_something);
-
-//      #include "FPPostComputationHP.p4"
     }
 }
 
