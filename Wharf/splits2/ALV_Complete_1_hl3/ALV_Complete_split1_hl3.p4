@@ -283,13 +283,9 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
     #include "FPProcessStateHL3.p4"
     // NOTE assuming this block to be extern-free
     apply {
-//      #include "FPEntryProcessingHP.p4"
-
       if (!offload_port_lookup.apply().hit) {
         ALV_Route.apply(hdr, m, meta);
       }
-
-//      #include "FPPostComputationHP.p4"
     }
 #endif
 }
