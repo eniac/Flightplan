@@ -876,7 +876,7 @@ switches:
              - link: p0a0
                port: 1
          cmds:
-             # Crosspod -- ports here refer to those on p0a0
+             # Crosspod
              - table_add ingress_compression.port_compression ingress_compression.set_port_compression 1 => 1
              - table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1
              - table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
@@ -886,7 +886,7 @@ switches:
              - link: p0a0
                port: 1
          cmds:
-             # Crosspod -- ports here refer to those on p0a0
+             # Crosspod
              # table_add egress_compression.port_compression egress_compression.set_port_compression 3 => 1
              - table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1
              - table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
