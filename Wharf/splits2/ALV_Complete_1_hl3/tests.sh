@@ -395,36 +395,57 @@ function complete_mcd_e2e {
 
   grep --text -E '^[<>]' ${TARGET_LOG} | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
 
-  if [ -n "${UNIQUE_MATTERS}" ]
+  #if [ -n "${UNIQUE_MATTERS}" ]
+  #then
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)"
+  #else
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)"
+  #fi
+  #echo $CMD
+  #eval $CMD
+  #if [[ $? == 0 ]]
+  #then
+  #    echo "Test conclusive: cache was NOT used"
+  #    exit 0
+  #fi
+  #
+  #if [ -n "${UNIQUE_MATTERS}" ]
+  #then
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)"
+  #else
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)"
+  #fi
+  #echo $CMD
+  #eval $CMD
+  #if [[ $? == 0 ]]
+  #then
+  #    echo "Test conclusive: cache was used"
+  #    exit 0
+  #fi
+  #
+  #echo "Test inconclusive"
+  #exit 1
+
+  SETS_experiment=$(grep set ${LOG_DUMPS}/mcd_log | wc -l)
+  SETS_reference=$(grep set mcd_log_withoutcache.expected | wc -l)
+  if [ "$SETS_experiment" -eq "$SETS_reference" ]
   then
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)"
+      echo "#SETS: OK ($SETS_experiment vs $SETS_reference)"
   else
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)"
-  fi
-  echo $CMD
-  eval $CMD
-  if [[ $? == 0 ]]
-  then
-      echo "Test conclusive: cache was NOT used"
-      exit 0
+      echo "#SETS: Different than reference ($SETS_experiment vs $SETS_reference)"
   fi
 
-  if [ -n "${UNIQUE_MATTERS}" ]
+  GETS_experiment=$(grep get ${LOG_DUMPS}/mcd_log | wc -l)
+  GETS_reference=$(grep get mcd_log_withoutcache.expected | wc -l)
+  if [ "$GETS_experiment" -eq "$GETS_reference" ]
   then
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)"
+      echo "#GETS: OK (same as reference -- no cache is being used)"
+  elif [ "$GETS_experiment" -lt "$GETS_reference" ]
+  then
+      echo "#GETS: OK (less than reference: ($GETS_experiment vs $GETS_reference))"
   else
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)"
+      echo "#GETS: Different than reference ($GETS_experiment vs $GETS_reference)"
   fi
-  echo $CMD
-  eval $CMD
-  if [[ $? == 0 ]]
-  then
-      echo "Test conclusive: cache was used"
-      exit 0
-  fi
-
-  echo "Test inconclusive"
-  exit 1
 }
 
 source `dirname "$0"`/../../run_alv.sh
