@@ -15,11 +15,11 @@ states:
                 5:
                         state: 4
                         port: 6
-        FPoffload:
+        HL_V2_1:
                 1:
                         state: 3
                         port: 1
-        FPoffload2:
+        HL_V2_2:
                 1:
                         state: 5
                         port: 1
@@ -33,12 +33,12 @@ state_sequence:
                 4:
                           0: 1
                           1: 2
-        FPoffload:
+        HL_V2_1:
                 3:
                           0: 1
                 5:
                           0: 1
-        FPoffload2:
+        HL_V2_2:
                 3:
                           0: 1
                 5:
@@ -50,10 +50,10 @@ progression:
                 1: 2
                 3: 4
                 5:
-        FPoffload:
+        HL_V2_1:
                 2: 3
                 4: 5
-        FPoffload2:
+        HL_V2_2:
                 2: 3
                 4: 5
 

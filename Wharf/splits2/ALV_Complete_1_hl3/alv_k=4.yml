@@ -870,7 +870,7 @@ switches:
              - table_add ipv4_forwarding ipv4_forward 0xC0010000&&&0xFFFF0000 => 192.1.3.1 2 0
              - table_add ipv4_forwarding ipv4_forward 0xC0020000&&&0xFFFF0000 => 192.2.3.1 3 0
              - table_add ipv4_forwarding ipv4_forward 0xC0030000&&&0xFFFF0000 => 192.3.3.1 4 0
-    FPoffload :
+    HL_V2_1 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3.json
          interfaces:
              - link: p0a0
@@ -880,7 +880,7 @@ switches:
              - table_add ingress_compression.port_compression ingress_compression.set_port_compression 1 => 1
              - table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1
              - table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
-    FPoffload2 :
+    HL_V2_2 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3.json
          interfaces:
              - link: p0a0
@@ -910,9 +910,9 @@ switches:
                # ip: 192.0.2.1
                mac: '02:00:00:de:30:91'
                port: 4
-             - link: FPoffload
+             - link: HL_V2_1
                port: 5
-             - link: FPoffload2
+             - link: HL_V2_2
                port: 6
          cmds:
              # Switching
