@@ -3,7 +3,7 @@ states:
                 2:
                           0: 0
                           1: 5
-        c0_D1:
+        D_FW_1:
                 3:
                           0: 0
                           1: 1
@@ -12,7 +12,7 @@ state_sequence:
         c0:
                 2:
                           0: 1
-        c0_D1:
+        D_FW_1:
                 3:
                           0: 1
 
@@ -20,7 +20,7 @@ progression:
         c0:
                 1: 2
                 3:
-        c0_D1:
+        D_FW_1:
                 2: 3
 
 start: c0

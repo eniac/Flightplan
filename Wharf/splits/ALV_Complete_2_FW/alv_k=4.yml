@@ -730,14 +730,13 @@ hosts:
              # p3h2
              - cmd: "sudo arp -v -i p3h3-eth1 -s 192.3.1.2 02:00:00:19:1e:a6"
 switches:
-    c0_D1 :
+    D_FW_1 :
          cfg: ../../build/bmv2/ALV_FW_split2.json
          interfaces:
              - link: c0
                port: 1
     c0 :
          cfg: ../../build/bmv2/ALV_FW_split1.json
-         #cfg: ../../build/bmv2/ALV.json
          interfaces:
              - link: p0a0
                # ip: 192.4.1.1
@@ -755,7 +754,7 @@ switches:
                # ip: 192.4.1.1
                mac: '02:00:00:ca:dc:22'
                port: 4
-             - link: c0_D1
+             - link: D_FW_1
                port: 5
          cmds:
              # Switching
@@ -1149,7 +1148,7 @@ switches:
              - table_add ipv4_forwarding ipv4_forward 0xC0010100&&&0xFFFFFF00 => 192.1.1.1 4 0
              - table_add ipv4_forwarding ipv4_forward 0xFFFFFF02&&&0x000000FF => 192.4.2.2 2 0
              - table_add ipv4_forwarding ipv4_forward 0xFFFFFF03&&&0x000000FF => 192.4.2.1 1 0
-    p1e0_D1 :
+    D_V3_1 :
          cfg: ../../build/bmv2/ALV_Complete_2_split2.json
          interfaces:
              - link: p1e0
@@ -1157,7 +1156,7 @@ switches:
          cmds:
              # Crosspod -- ports here refer to those on p1e0
              - table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1
-    p1e0_D2 :
+    D_V3_2 :
          cfg: ../../build/bmv2/ALV_Complete_2_split3.json
          interfaces:
              - link: p1e0
@@ -1165,7 +1164,7 @@ switches:
          cmds:
              # Crosspod -- ports here refer to those on p1e0
              - table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
-    p1e0_D3 :
+    D_V3_3 :
          cfg: ../../build/bmv2/ALV_Complete_2_split4.json
          interfaces:
              - link: p1e0
@@ -1174,14 +1173,14 @@ switches:
         #    # Crosspod -- ports here refer to those on p1e0
         #    - table_add ingress_compression.port_compression ingress_compression.set_port_compression 3 => 1
         #    - table_add egress_compression.port_compression egress_compression.set_port_compression 3 => 1
-    p1e0_D4 :
+    D_V3_4 :
          cfg: ../../build/bmv2/ALV_Complete_2_split5.json
          interfaces:
              - link: p1e0
                port: 1
         #cmds:
         #    # Crosspod -- ports here refer to those on p1e0
-    p1e0_D5 :
+    D_V3_5 :
          cfg: ../../build/bmv2/ALV_Complete_2_split6.json
          interfaces:
              - link: p1e0
@@ -1209,15 +1208,15 @@ switches:
                # ip: 192.1.0.1
                mac: '02:00:00:05:6c:19'
                port: 4
-             - link: p1e0_D1
+             - link: D_V3_1
                port: 5
-             - link: p1e0_D2
+             - link: D_V3_2
                port: 6
-             - link: p1e0_D3
+             - link: D_V3_3
                port: 7
-             - link: p1e0_D4
+             - link: D_V3_4
                port: 8
-             - link: p1e0_D5
+             - link: D_V3_5
                port: 9
          cmds:
              # Switching
