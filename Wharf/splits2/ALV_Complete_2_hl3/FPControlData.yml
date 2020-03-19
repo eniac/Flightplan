@@ -1,0 +1,66 @@
+states:
+        p0a0:
+                1:
+                        state: 2
+                        port: 5
+                2:
+                        state: 2
+                        port: 5
+                3:
+                        state: 2
+                        port: 5
+                4:
+                        state: 2
+                        port: 5
+                5:
+                        state: 4
+                        port: 6
+                6:
+                        state: 6
+                        port: 7
+                7:
+                        state: 8
+                        port: 8
+                8:
+                        state: 10
+                        port: 9
+        FPoffload:
+                1:
+                        state: 3
+                        port: 1
+        FPoffload2:
+                1:
+                        state: 5
+                        port: 1
+        FPoffload3:
+                1:
+                        state: 7
+                        port: 1
+        FPoffload4:
+                1:
+                        state: 9
+                        port: 1
+        FPoffload5:
+                1:
+                        state: 11
+                        port: 1
+
+# FIXME this part is redundant
+state_sequence:
+        p0a0:
+        FPoffload:
+        FPoffload2:
+        FPoffload3:
+        FPoffload4:
+        FPoffload5:
+
+# FIXME this part seems redundant too
+progression:
+        p0a0:
+        FPoffload:
+        FPoffload2:
+        FPoffload3:
+        FPoffload4:
+        FPoffload5:
+
+start: p0a0

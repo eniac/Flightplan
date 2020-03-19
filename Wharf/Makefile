@@ -56,7 +56,8 @@ bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/
 	$(BLD_BMV2)/ALV_FEC_split1.json $(BLD_BMV2)/ALV_FEC_split2.json \
 	$(BLD_BMV2)/ALV_Complete_split1_hl2.json $(BLD_BMV2)/ALV_Complete_split2_hl2.json \
 	$(BLD_BMV2)/ALV_Complete_split1_hl3.json $(BLD_BMV2)/ALV_Complete_split2_hl3.json \
-	$(BLD_BMV2)/ALV_Complete_hl3_unsplit.json
+	$(BLD_BMV2)/ALV_Complete_hl3_unsplit.json \
+	$(BLD_BMV2)/ALV_Complete_split1_hl3_2.json $(BLD_BMV2)/ALV_Complete_split2_hl3_2.json
 
 #	$(BLD_BMV2)/ALV_Complete_split1_hl.json $(BLD_BMV2)/ALV_Complete_split2_hl.json
 
