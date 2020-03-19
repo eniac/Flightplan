@@ -931,8 +931,6 @@ switches:
              - table_add ipv4_forwarding ipv4_forward 0xFFFFFF02&&&0x000000FF => 192.4.1.1 1 0
              - table_add ipv4_forwarding ipv4_forward 0xFFFFFF03&&&0x000000FF => 192.4.1.2 2 0
              # Crosspod
-             - table_add check_run_Complete_ingress run_Complete_ingress 3 =>
-             - table_add check_run_Complete_egress run_Complete_egress 3 =>
              # table_add ingress_compression.port_compression ingress_compression.set_port_compression 3 => 1
              # table_add egress_compression.port_compression egress_compression.set_port_compression 3 => 1
              # table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1
