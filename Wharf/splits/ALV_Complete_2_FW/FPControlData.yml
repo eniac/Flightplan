@@ -1,5 +1,5 @@
 states:
-        c0:
+        p1e1:
                 2:
                           0: 0
                           1: 5
@@ -9,7 +9,7 @@ states:
                           1: 1
 
 state_sequence:
-        c0:
+        p1e1:
                 2:
                           0: 1
         D_FW_1:
@@ -17,10 +17,10 @@ state_sequence:
                           0: 1
 
 progression:
-        c0:
+        p1e1:
                 1: 2
                 3:
         D_FW_1:
                 2: 3
 
-start: c0
+start: p1e1

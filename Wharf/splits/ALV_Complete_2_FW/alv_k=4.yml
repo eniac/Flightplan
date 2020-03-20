@@ -730,13 +730,8 @@ hosts:
              # p3h2
              - cmd: "sudo arp -v -i p3h3-eth1 -s 192.3.1.2 02:00:00:19:1e:a6"
 switches:
-    D_FW_1 :
-         cfg: ../../build/bmv2/ALV_FW_split2.json
-         interfaces:
-             - link: c0
-               port: 1
     c0 :
-         cfg: ../../build/bmv2/ALV_FW_split1.json
+         cfg: ../../build/bmv2/ALV.json
          interfaces:
              - link: p0a0
                # ip: 192.4.1.1
@@ -754,8 +749,6 @@ switches:
                # ip: 192.4.1.1
                mac: '02:00:00:ca:dc:22'
                port: 4
-             - link: D_FW_1
-               port: 5
          cmds:
              # Switching
              - table_add mac_forwarding mac_forward_set_egress 02:00:00:9c:e9:f7 => 1
@@ -1237,8 +1230,35 @@ switches:
              # Crosspod
              - table_add check_run_Complete_ingress run_Complete_ingress 3 =>
              - table_add check_run_Complete_egress run_Complete_egress 3 =>
+    D_FW_1 :
+         cfg: ../../build/bmv2/ALV_FW_split2.json
+         interfaces:
+             - link: p1e1
+               port: 1
+         cmds:
+         # firewall.p4 -- ports here refer to those on p1e1
+         # p1h3 is considered "inside"; other hosts are "outside".
+             - table_add check_ports set_direction 1 1 => 0
+             - table_add check_ports set_direction 1 2 => 1
+             - table_add check_ports set_direction 1 3 => 0
+             - table_add check_ports set_direction 1 4 => 0
+
+             - table_add check_ports set_direction 2 1 => 0
+             - table_add check_ports set_direction 2 2 => 0
+             - table_add check_ports set_direction 2 3 => 0
+             - table_add check_ports set_direction 2 4 => 0
+
+             - table_add check_ports set_direction 3 1 => 0
+             - table_add check_ports set_direction 3 2 => 1
+             - table_add check_ports set_direction 3 3 => 0
+             - table_add check_ports set_direction 3 4 => 0
+
+             - table_add check_ports set_direction 4 1 => 0
+             - table_add check_ports set_direction 4 2 => 1
+             - table_add check_ports set_direction 4 3 => 0
+             - table_add check_ports set_direction 4 4 => 0
     p1e1 :
-         cfg: ../../build/bmv2/ALV.json
+         cfg: ../../build/bmv2/ALV_FW_split1.json
          interfaces:
              - link: p1h2
                # ip: 192.1.1.1
@@ -1256,6 +1276,8 @@ switches:
                # ip: 192.1.1.1
                mac: '02:00:00:59:2e:80'
                port: 4
+             - link: D_FW_1
+               port: 5
          cmds:
              # Switching
              - table_add mac_forwarding mac_forward_set_egress 02:00:00:b4:46:cf => 1
