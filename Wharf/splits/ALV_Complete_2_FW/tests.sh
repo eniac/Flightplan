@@ -8,7 +8,7 @@
 # NOTE based on splits/ALV_Complete_2/tests.sh
 
 export TOPOLOGY=splits/ALV_Complete_2_FW/alv_k=4.yml
-MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e)
+MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete)
 DEFAULT_MODE=autotest
 
 if [ -z "${MODE}" ]
@@ -456,6 +456,35 @@ function complete_mcd_e2e {
   fi
 
   exit $STATUS
+}
+
+function interactive2_complete {
+  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
+     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
+     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
+          --cli
 }
 
 source `dirname "$0"`/../../run_alv.sh
