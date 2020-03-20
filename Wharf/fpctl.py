@@ -106,6 +106,7 @@ parser.add_argument('topology', help="Path to YAML-encoded network topology")
 parser.add_argument('control_data', help="Path to YAML-encoded control data emitted by Flightplan")
 parser.add_argument('command', help="Command to the Flightplan control program. Pick from " + str(commands))
 parser.add_argument('--switch', default=None, help='Switch parameter, required by some commands')
+parser.add_argument('--start_switch', action='store_true', help='Use "start" swithc as the switch parameter')
 parser.add_argument('--state', default=None, help='State parameter, required by some commands')
 parser.add_argument('--next_segment', default=None, help='Next-segment parameter, required by some commands')
 parser.add_argument('--idx', default=None, help='Index parameter, required by some commands')
@@ -851,6 +852,10 @@ def main():
   control_spanning_tree = []
   if not args.headerless_ipv4 and  not args.headerless:
     generate_control_spanning_tree(topology, control_data, control_data['start'], [], control_spanning_tree)
+
+  if args.start_switch:
+    assert(None == args.switch)
+    args.switch = control_data['start']
 
   failed_command = False
   result = None
