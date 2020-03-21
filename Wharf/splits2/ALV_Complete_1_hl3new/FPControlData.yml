@@ -39,35 +39,14 @@ states: # "ports" would be a better name
 # FIXME this part is redundant
 state_sequence:
         p0a0:
-                2:
-                          0: 1
-                          1: 2
-                4:
-                          0: 1
-                          1: 2
         HL_V2_1:
-                3:
-                          0: 1
-                5:
-                          0: 1
         HL_V2_2:
-                3:
-                          0: 1
-                5:
-                          0: 1
 
 # FIXME this part seems redundant too
 progression:
         p0a0:
-                1: 2
-                3: 4
-                5:
         HL_V2_1:
-                2: 3
-                4: 5
         HL_V2_2:
-                2: 3
-                4: 5
 
 start: p0a0
 end_port: 6 # FIXME hackish
