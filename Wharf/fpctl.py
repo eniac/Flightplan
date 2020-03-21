@@ -28,7 +28,7 @@ bmv2_send_command_script="/home/nsultana/2/P4Boosters/Wharf/bmv2/send_bmv2_comma
 temp_file = ".fpctl.tmp" # Can be user-configured using the --temp_file parameter.
 default_flightplan_pip_nak_count_max = 5 # Can be user-configured using the --max_nak parameter.
 default_flightplan_pip_ackreq_interval_exceed_max = 10 # Can be user-configured using the --max_ack_interval parameter.
-default_flightplan_pip_ackreq_interval = 10# Can be user-configured using the --ack_interval parameter.
+default_flightplan_pip_ackreq_interval = 10 # Can be user-configured using the --ack_interval parameter.
 
 #StopState and StartState are constants
 StopState = 0
@@ -36,6 +36,14 @@ StartState = 1
 
 offload_port_lookup_table = "offload_port_lookup"
 offload_port_lookup_action = "set_offload_port"
+ingress_offload_port_lookup_table = "ingress_offload_port_lookup"
+egress_offload_port_lookup_table = "egress_offload_port_lookup"
+egress_terminal_lookup_table = "egress_terminal_lookup"
+have_hit_action = "have_hit"
+incoming_heading = "incoming"
+intermediate_heading = "intermediate"
+outgoing_heading = "outgoing"
+terminal_lookup_table = "terminal_lookup"
 
 idx_ns_lookup_tables = ["idx_next_segment", "idx_next_segment_COPY"]
 idx_ns_lookup_action = "set_idx_next_segment"
@@ -122,6 +130,7 @@ parser.add_argument('--suppress_status_output', action='store_true', help='Suppr
 parser.add_argument('--force', action='store_true', help='Proceed through failed (sub)commands')
 parser.add_argument('--headerless_ipv4', action='store_true', help="Using bits from IPv4 header instead of Flightplan header")
 parser.add_argument('--headerless', action='store_true', help="Don't assume Flightplan header is being used")
+parser.add_argument('--headerless_new', action='store_true', help="More configurability about which ports relate to the program")
 args = parser.parse_args()
 if None != args.temp_file:
   temp_file = args.temp_file
@@ -656,7 +665,15 @@ def set_cardinalities(control_data, reset = False):
   return failed_command, None
 
 def clear_link_table(switch):
-  return table_clear(switch, offload_port_lookup_table)
+  failed_command = False
+  failed_command, _ = table_clear(switch, offload_port_lookup_table)
+  if failed_command and not args.force: return failed_command, None
+  if args.headerless_new:
+    failed_command, _ = table_clear(switch, ingress_offload_port_lookup_table)
+    if failed_command and not args.force: return failed_command, None
+    failed_command, _ = table_clear(switch, egress_offload_port_lookup_table)
+    if failed_command and not args.force: return failed_command, None
+  return failed_command, None
 
 def clear_link_tables(control_data):
   failed_command = False
@@ -667,7 +684,15 @@ def clear_link_tables(control_data):
   return failed_command, None
 
 def get_link_table(switch):
-  return table_dump(switch, offload_port_lookup_table)
+  failed_command = False
+  failed_command, _ = table_dump(switch, offload_port_lookup_table)
+  if failed_command and not args.force: return failed_command, None
+  if args.headerless_new:
+    failed_command, _ = table_dump(switch, ingress_offload_port_lookup_table)
+    if failed_command and not args.force: return failed_command, None
+    failed_command, _ = table_dump(switch, egress_offload_port_lookup_table)
+    if failed_command and not args.force: return failed_command, None
+  return failed_command, None
 
 def get_link_tables(control_data):
   failed_command = False
@@ -679,14 +704,50 @@ def get_link_tables(control_data):
     result.append({'switch' : switch, 'result' : subresult})
   return failed_command, result
 
+def set_link_table_headerless(control_data, switch):
+  failed_command = False
+  for in_port in control_data['states'][switch]:
+    if failed_command and not args.force: break
+    state = control_data['states'][switch][in_port]['state']
+    offload_port = control_data['states'][switch][in_port]['port']
+    failed_command, _ = table_add(switch, offload_port_lookup_table, offload_port_lookup_action, [str(in_port)], [str(state), str(offload_port)])
+  return failed_command, None
+
+def set_terminal_table_headerless(control_data, switch): # FIXME this feature is a bit hackish
+  failed_command = False
+  failed_command, _ = table_clear(switch, terminal_lookup_table)
+  if failed_command and not args.force: return failed_command, None
+  failed_command, _ = table_add(switch, terminal_lookup_table, offload_port_lookup_action, [str(control_data['end_port'])], ["1", str(control_data['terminal_port'])]) # FIXME const
+  return failed_command, None
+
+def set_egress_terminal_table_headerless(control_data, switch): # FIXME this feature is a bit hackish
+  failed_command = False
+  failed_command, _ = table_clear(switch, egress_terminal_lookup_table)
+  if failed_command and not args.force: return failed_command, None
+  failed_command, _ = table_add(switch, egress_terminal_lookup_table, have_hit_action, [str(control_data['end_port'])], ["1"]) # FIXME const
+  return failed_command, None
+
+def set_link_cotable_headerless(control_data, switch, table, heading):
+  failed_command = False
+  if None == control_data['states'][switch][heading]: return False, None
+  for in_port in control_data['states'][switch][heading]:
+    if failed_command and not args.force: break
+    state = control_data['states'][switch][heading][in_port]['state']
+    offload_port = control_data['states'][switch][heading][in_port]['port']
+    failed_command, _ = table_add(switch, table, offload_port_lookup_action, [str(in_port)], [str(state), str(offload_port)])
+  return failed_command, None
+
 def set_link_table(control_data, switch):
   failed_command = False
-  if args.headerless:
-    for in_port in control_data['states'][switch]:
-      if failed_command and not args.force: break
-      state = control_data['states'][switch][in_port]['state']
-      offload_port = control_data['states'][switch][in_port]['port']
-      failed_command, _ = table_add(switch, offload_port_lookup_table, offload_port_lookup_action, [str(in_port)], [str(state), str(offload_port)])
+  if args.headerless_new:
+    if switch == control_data['start']:
+      failed_command, _ = set_link_cotable_headerless(control_data, switch, offload_port_lookup_table, incoming_heading)
+      if not failed_command or args.force: failed_command, _ = set_link_cotable_headerless(control_data, switch, ingress_offload_port_lookup_table, intermediate_heading)
+      if not failed_command or args.force: failed_command, _ = set_link_cotable_headerless(control_data, switch, egress_offload_port_lookup_table, outgoing_heading)
+    else:
+      failed_command, _ = set_link_table_headerless(control_data, switch)
+  elif args.headerless:
+    failed_command, _ = set_link_table_headerless(control_data, switch)
   else:
     for next_segment in control_data['states'][switch]:
       if failed_command and not args.force: break
@@ -841,16 +902,21 @@ def unset_flag(flag, control_data, switch_opt, next_segment_opt):
     return unset_flag_switch(flag, control_data, switch_opt, next_segment_opt)
 
 def main():
+  assert(not ((args.headerless and args.headerless_ipv4) or (args.headerless and args.headerless_new) or (args.headerless_new and args.headerless_ipv4)))
+
   control_data = yaml.load(open(args.control_data), Loader=yaml.FullLoader)
 
-  if not args.headerless:
+  if not (args.headerless or args.headerless_new):
     assert(len(control_data['states']) == len(control_data['state_sequence']))
     for switch in control_data['states']:
       assert(len(control_data['states'][switch]) == len(control_data['state_sequence'][switch]))
 
+  if args.headerless_new:
+    assert(None != control_data['end_port'] and None != control_data['terminal_port'])
+
   topology = yaml.load(open(args.topology), Loader=yaml.FullLoader)
   control_spanning_tree = []
-  if not args.headerless_ipv4 and  not args.headerless:
+  if not (args.headerless_ipv4 or args.headerless or args.headerless_new):
     generate_control_spanning_tree(topology, control_data, control_data['start'], [], control_spanning_tree)
 
   if args.start_switch:
@@ -861,25 +927,25 @@ def main():
   result = None
 
   if cmd_start == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, _ = set_switches_states(control_data, args.switch, args.next_segment, StartState)
   elif cmd_stop == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, _ = set_switches_states(control_data, args.switch, args.next_segment, StopState)
   elif cmd_set_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, result = set_switches_states(control_data, args.switch, args.next_segment)
   elif cmd_transition_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -897,13 +963,13 @@ def main():
       exit(1)
     failed_command, result = transition_state(control_data, args.switch, int(args.next_segment))
   elif cmd_get_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, result = get_switches_states(control_data, args.switch, args.next_segment)
   elif cmd_get_cardinalities == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -912,7 +978,7 @@ def main():
     else:
       failed_command, result = get_switch_cardinalities(control_data, args.switch)
   elif cmd_set_cardinalities == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -921,7 +987,7 @@ def main():
     else:
       failed_command, result = set_switch_cardinalities(control_data, args.switch)
   elif cmd_reset_cardinalities == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -940,12 +1006,17 @@ def main():
     else:
       failed_command, result = get_link_table(args.switch)
   elif cmd_set_link_table == args.command:
-    if None == args.switch:
-      failed_command, result = set_link_tables(control_data)
-    else:
-      failed_command, result = set_link_table(control_data, args.switch)
+    if args.headerless_new:
+      failed_command, result = set_egress_terminal_table_headerless(control_data, control_data['start'])
+      if not failed_command or args.force:
+        failed_command, result = set_terminal_table_headerless(control_data, control_data['start'])
+        if not failed_command or args.force:
+          if None == args.switch:
+            failed_command, result = set_link_tables(control_data)
+          else:
+            failed_command, result = set_link_table(control_data, args.switch)
   elif cmd_clear_idx_ns_table == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -954,7 +1025,7 @@ def main():
     else:
       failed_command, result = clear_idx_ns_table(args.switch)
   elif cmd_get_idx_ns_table == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -963,7 +1034,7 @@ def main():
     else:
       failed_command, result = get_idx_ns_table(args.switch)
   elif cmd_set_idx_ns_table == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -972,7 +1043,7 @@ def main():
     else:
       failed_command, result = set_idx_ns_table(args.switch, generate_idx_nexthop(control_data, switch))
   elif cmd_clear_mirroring_sessions == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -981,7 +1052,7 @@ def main():
     else:
       failed_command, _ = clear_mirroring_sessions_switch(control_spanning_tree, args.switch)
   elif cmd_get_mirroring_sessions == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -990,7 +1061,7 @@ def main():
     else:
       failed_command, result = get_mirroring_sessions_switch(control_spanning_tree, args.switch)
   elif cmd_set_mirroring_sessions == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -999,7 +1070,7 @@ def main():
     else:
       failed_command, _ = set_mirroring_sessions_switch(control_spanning_tree, args.switch)
   elif cmd_clear_idx_pip_tables == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1008,7 +1079,7 @@ def main():
     else:
       failed_command, result = clear_idx_pip_tables_switch(args.switch)
   elif cmd_get_idx_pip_tables == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1017,7 +1088,7 @@ def main():
     else:
       failed_command, result = get_idx_pip_tables_switch(args.switch)
   elif cmd_set_idx_pip_tables == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1028,7 +1099,7 @@ def main():
   elif cmd_reset_flightplan == args.command:
     new_args = filter(lambda x: x != args.command, sys.argv)
     if "--suppress_status_output" not in new_args: new_args.append("--suppress_status_output")
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       command_sequence = [cmd_clear_link_table]
     else:
       command_sequence = [cmd_clear_idx_pip_tables, cmd_clear_idx_ns_table, cmd_clear_link_table, cmd_set_cardinalities, cmd_clear_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_unset_count_ack_relinks, cmd_stop]
@@ -1044,7 +1115,7 @@ def main():
   elif cmd_config_flightplan == args.command:
     new_args = filter(lambda x: x != args.command, sys.argv)
     if "--suppress_status_output" not in new_args: new_args.append("--suppress_status_output")
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       command_sequence = [cmd_set_link_table]
     else:
       command_sequence = [cmd_set_idx_pip_tables, cmd_set_idx_ns_table, cmd_set_link_table, cmd_set_cardinalities, cmd_set_mirroring_sessions, cmd_reset_pip_state, cmd_unset_drop_outgoing, cmd_unset_count_ack_relinks, cmd_stop]
@@ -1058,13 +1129,13 @@ def main():
       failed_command = 0 != exit_code
       if failed_command and not args.force: break
   elif cmd_show_control_spanning_tree == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     print dot_control_spanning_tree(control_data, control_spanning_tree)
   elif cmd_show_feedback_tables == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1082,13 +1153,13 @@ def main():
         show_feedback_tables_for_switch(control_spanning_tree, switch)
         print "Ended tables for " + switch
   elif cmd_get_pip_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, result = get_pip_state_opt(control_data, control_spanning_tree, args.switch, args.idx, args.pip_state_var)
   elif cmd_set_pip_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1116,13 +1187,13 @@ def main():
       exit(1)
     failed_command, result = set_pip_state(control_data, args.switch, args.idx, args.pip_state_var, args.value)
   elif cmd_reset_pip_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, result = reset_pip_state_opt(control_data, control_spanning_tree, args.switch, args.idx)
   elif cmd_check_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1146,7 +1217,7 @@ def main():
       failed_command = not (int(result) == int(args.value))
     result = None
   elif cmd_check_pip_state == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1173,7 +1244,7 @@ def main():
       failed_command = not (int(result) == int(args.value))
     result = None
   elif cmd_set_drop_outgoing == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1191,13 +1262,13 @@ def main():
       exit(1)
     failed_command, result = set_flag(debug_drop_variable, control_data, args.switch, int(args.next_segment), 1)
   elif cmd_unset_drop_outgoing == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, result = unset_flag(debug_drop_variable, control_data, args.switch, args.next_segment)
   elif cmd_get_drop_outgoing == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1215,7 +1286,7 @@ def main():
       exit(1)
     failed_command, result = get_flag(debug_drop_variable, control_data, args.switch, int(args.next_segment))
   elif cmd_set_count_ack_relinks == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
@@ -1233,13 +1304,13 @@ def main():
       exit(1)
     failed_command, result = set_flag(debug_count_ack_relinks_variable, control_data, args.switch, int(args.next_segment), 1)
   elif cmd_unset_count_ack_relinks == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
     failed_command, result = unset_flag(debug_count_ack_relinks_variable, control_data, args.switch, args.next_segment)
   elif cmd_get_count_ack_relinks == args.command:
-    if args.headerless_ipv4 or args.headerless:
+    if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
       print("Command '" + args.command + "' not supported in headerless mode")
       exit(1)
