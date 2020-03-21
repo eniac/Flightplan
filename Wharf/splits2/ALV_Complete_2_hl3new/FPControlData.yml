@@ -1,0 +1,81 @@
+states:
+        p0a0:
+                incoming:
+                                1:
+                                        state: 2
+                                        port: 5
+                                2:
+                                        state: 2
+                                        port: 5
+                                3:
+                                        state: 2
+                                        port: 5
+                                4:
+                                        state: 2
+                                        port: 5
+                intermediate:
+                                5:
+                                        state: 4
+                                        port: 6
+                                6:
+                                        state: 6
+                                        port: 7
+
+                                8:
+                                        state: 10
+                                        port: 9
+                outgoing:
+                                1:
+                                        state: 4
+                                        port: 8
+#                               2:
+#                                       state: 4
+#                                       port: 8
+#                               3:
+#                                       state: 4
+#                                       port: 8
+#                               4:
+#                                       state: 4
+#                                       port: 8
+        HL_V3_1:
+                1:
+                        state: 3
+                        port: 1
+        HL_V3_2:
+                1:
+                        state: 5
+                        port: 1
+        HL_V3_3:
+                1:
+                        state: 7
+                        port: 1
+        HL_V3_4:
+                1:
+                        state: 9
+                        port: 1
+        HL_V3_5:
+                1:
+                        state: 11
+                        port: 1
+
+# FIXME this part is redundant
+state_sequence:
+        p0a0:
+        HL_V3_1:
+        HL_V3_2:
+        HL_V3_3:
+        HL_V3_4:
+        HL_V3_5:
+
+# FIXME this part seems redundant too
+progression:
+        p0a0:
+        HL_V3_1:
+        HL_V3_2:
+        HL_V3_3:
+        HL_V3_4:
+        HL_V3_5:
+
+start: p0a0
+end_port: 9 # FIXME hackish
+terminal_port: 1 # FIXME hackish
