@@ -306,6 +306,11 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
       }
 #endif
 
+#if !defined(END_FORWARDING_DECISION)
+      // Default point at which forwarding decision is made
+      ALV_Route.apply(hdr, m, meta);
+#endif // !defined(END_FORWARDING_DECISION)
+
 #if defined(COMPRESSION_BOOSTER)
       // If heading out on a multiplexed link, then header compress.
       egress_compression.apply(meta.egress_spec, compressed_link);
@@ -342,7 +347,9 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
       }
 #endif
 
+#if defined(END_FORWARDING_DECISION)
       ALV_Route.apply(hdr, m, meta);
+#endif // defined(END_FORWARDING_DECISION)
     }
 #endif
 }
