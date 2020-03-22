@@ -1006,15 +1006,15 @@ def main():
     else:
       failed_command, result = get_link_table(args.switch)
   elif cmd_set_link_table == args.command:
-    if args.headerless_new:
-      failed_command, result = set_egress_terminal_table_headerless(control_data, control_data['start'])
-      if not failed_command or args.force:
-        failed_command, result = set_terminal_table_headerless(control_data, control_data['start'])
+    if None == args.switch:
+      failed_command, result = set_link_tables(control_data)
+    else:
+      failed_command, result = set_link_table(control_data, args.switch)
+    if not failed_command or args.force:
+      if args.headerless_new:
+        failed_command, result = set_egress_terminal_table_headerless(control_data, control_data['start'])
         if not failed_command or args.force:
-          if None == args.switch:
-            failed_command, result = set_link_tables(control_data)
-          else:
-            failed_command, result = set_link_table(control_data, args.switch)
+          failed_command, result = set_terminal_table_headerless(control_data, control_data['start'])
   elif cmd_clear_idx_ns_table == args.command:
     if args.headerless_ipv4 or args.headerless or args.headerless_new:
       # FIXME print errors on stderr
