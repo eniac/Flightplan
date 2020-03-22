@@ -44,8 +44,24 @@ test:
 bmv2: $(BLD_BMV2) $(BLD_BMV2)/Encoder.json $(BLD_BMV2)/Decoder.json $(BLD_BMV2)/Dropper.json \
 	  $(BLD_BMV2)/Forwarder.json $(BLD_BMV2)/Complete.json $(BLD_BMV2)/Compressor.json \
 	$(BLD_BMV2)/FirstHalf.json $(BLD_BMV2)/SecondHalf.json $(BLD_BMV2)/FirstHalfWithoutCompression.json $(BLD_BMV2)/Compress.json \
+	$(BLD_BMV2)/ALV.json \
+	$(BLD_BMV2)/ALV_FW.json \
 	$(BLD_BMV2)/CheckedFragment.json $(BLD_BMV2)/CompleteHeadered.json $(BLD_BMV2)/ForwarderHeadered.json \
-	$(BLD_BMV2)/ALV.json
+	$(BLD_BMV2)/ALV_part1.json $(BLD_BMV2)/ALV_part2.json \
+	$(BLD_BMV2)/ALV_S2part1.json $(BLD_BMV2)/ALV_S2part2.json \
+	$(BLD_BMV2)/ALV_Complete.json \
+	$(BLD_BMV2)/ALV_Complete_split1.json $(BLD_BMV2)/ALV_Complete_split2.json \
+	$(BLD_BMV2)/ALV_Complete_2_split1.json $(BLD_BMV2)/ALV_Complete_2_split2.json $(BLD_BMV2)/ALV_Complete_2_split3.json $(BLD_BMV2)/ALV_Complete_2_split4.json $(BLD_BMV2)/ALV_Complete_2_split5.json $(BLD_BMV2)/ALV_Complete_2_split6.json \
+	$(BLD_BMV2)/ALV_FW_split1.json $(BLD_BMV2)/ALV_FW_split2.json \
+	$(BLD_BMV2)/ALV_FEC_split1.json $(BLD_BMV2)/ALV_FEC_split2.json \
+	$(BLD_BMV2)/ALV_Complete_split1_hl2.json $(BLD_BMV2)/ALV_Complete_split2_hl2.json \
+	$(BLD_BMV2)/ALV_Complete_split1_hl3.json $(BLD_BMV2)/ALV_Complete_split2_hl3.json \
+	$(BLD_BMV2)/ALV_Complete_hl3_unsplit.json \
+	$(BLD_BMV2)/ALV_Complete_split1_hl3_2.json $(BLD_BMV2)/ALV_Complete_split2_hl3_2.json \
+	$(BLD_BMV2)/ALV_Complete_split1_hl3new.json $(BLD_BMV2)/ALV_Complete_split2_hl3new.json \
+	$(BLD_BMV2)/ALV_Complete_split1_hl3new_2.json $(BLD_BMV2)/ALV_Complete_split2_hl3new_2.json
+
+#	$(BLD_BMV2)/ALV_Complete_split1_hl.json $(BLD_BMV2)/ALV_Complete_split2_hl.json
 
 tclust: Tclust_tofino Tclust_noop \
 	Tclust_encoder Tclust_decoder Tclust_compressor Tclust_decompressor Tclust_mcd
@@ -65,6 +81,7 @@ configure_runtime: bmv2
 $(BLD_BMV2)/%.json: Sources/%.p4 $(DEPS) $(BMV2_REPO_M)/targets/booster_switch/Makefile $(BLD_BMV2)
 	p4c-bm2-ss --emit-externs -I../FPGA/RSEConfig -I../FPGA/MemcachedP4 -I../FPGA/RSEVivadoHLS/ -I Sources $< -o $@_orig --target bmv2 --arch v1model -D$(TARGET) -DMID_FORWARDING_DECISION ${BOOSTER_DEFINES}
 	python2 split_extern_event.py $@_orig $@ ${EXTERNS}
+
 
 clean:
 	rm -fr $(BLD)

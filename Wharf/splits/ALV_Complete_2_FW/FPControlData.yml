@@ -1,0 +1,26 @@
+states:
+        p1e1:
+                2:
+                          0: 0
+                          1: 5
+        D_FW_1:
+                3:
+                          0: 0
+                          1: 1
+
+state_sequence:
+        p1e1:
+                2:
+                          0: 1
+        D_FW_1:
+                3:
+                          0: 1
+
+progression:
+        p1e1:
+                1: 2
+                3:
+        D_FW_1:
+                2: 3
+
+start: p1e1

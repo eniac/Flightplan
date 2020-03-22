@@ -25,8 +25,8 @@ Nik Sultana, UPenn, January 2019
 #define FPSyn 0x04
 #define FPAck 0x08
 #define FPNak 0x10
-#define FPRelink 0x20
-#define FPResponse 0x40
+#define FPResponse 0x20
+//#define FPRelink 0x40
 
 // Flightplan header scheme
 header flightplan_h {
@@ -52,6 +52,7 @@ header flightplan_h {
   //bit<BYTE> byte8;
   bit<QUAD> quad1;
   bit<QUAD> quad2;
+  bit<QUAD> quad3;
   bit<SEQ_WIDTH> seqno;
 }
 header flightplanReceive1_h {

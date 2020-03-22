@@ -3,12 +3,40 @@
 # Nik Sultana, UPenn, February 2020
 #
 # NOTE might need to run this script with "sudo"
+#
+# FIXME various hardcoded paths
 
-export BMV2_REPO=/home/iped/dcomp/behavioral-model/
+if [ -z "${BMV2_REPO}" ]
+then
+  echo "Need to define BMV2_REPO environment variable"
+  exit 1
+fi
 
 HERE=`pwd`
 
-TOPOLOGY=bmv2/topologies/alv_k=4.yml
+if [ -z "${TOPOLOGY}" ]
+then
+  TOPOLOGY=bmv2/topologies/alv_k=4.yml
+fi
+echo "Using TOPOLOGY=${TOPOLOGY}"
+
+MODES+=(interactive)
+MODES+=(selftest)
+MODES+=(selftest2)
+MODES+=(interactive2)
+MODES+=(selftest3)
+
+if [ -z "${MODE}" ]
+then
+  MODE="selftest"
+  echo "Using default MODE from $0"
+fi
+if [[ ! " ${MODES[@]} " =~ " ${MODE} " ]]
+then
+  echo "Unrecognised MODE: $MODE. Possible choices: ${MODES[*]}"
+  exit 1
+fi
+echo "Using MODE=${MODE}. Possible choices: ${MODES[*]}"
 
 TESTDIR=$HERE/test_output
 BASENAME=$(basename $TOPOLOGY .yml)
@@ -22,276 +50,873 @@ mkdir -p $LOG_DUMPS
 
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-#sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
-#        --pcap-dump $PCAP_DUMPS \
-#        --log $LOG_DUMPS \
-#        --verbose \
-#        --showExitStatus \
-#   --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
-#        --cli
-##        2> $LOG_DUMPS/flightplan_mininet_log.err
-#
-#exit 0
+function interactive {
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+          --cli
+  #        2> $LOG_DUMPS/flightplan_mininet_log.err
+}
 
-sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
-        --pcap-dump $PCAP_DUMPS \
-        --log $LOG_DUMPS \
-        --verbose \
-        --showExitStatus \
-   --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p0h0: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p0h0: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p0h0: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p0h0: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p0h0: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p0h0: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p0h0: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p0h1: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p0h1: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p0h2: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p0h2: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p0h3: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p0h3: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p1h0: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p1h0: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p1h1: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p1h1: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p1h2: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p1h2: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p1h3: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p1h3: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p2h0: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p2h0: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p2h1: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p2h1: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p2h2: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p2h2: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p2h3: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p2h3: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p3h0: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p3h0: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p3h1: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p3h1: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p3h2: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p3h2: ping -c 1 192.3.1.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.0.0.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.0.0.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.0.1.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.0.1.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.1.0.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.1.0.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.1.1.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.1.1.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.2.0.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.2.0.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.2.1.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.2.1.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.3.0.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.3.0.3" \
-   --fg-host-prog "p3h3: ping -c 1 192.3.1.2" \
-   --fg-host-prog "p3h3: ping -c 1 192.3.1.3" \
-        2> $LOG_DUMPS/flightplan_mininet_log.err
+function selftest {
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p0h0: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p0h0: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p0h0: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p0h0: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p0h0: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p0h0: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p0h0: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p0h1: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p0h1: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p0h2: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p0h2: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p0h3: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p0h3: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p1h0: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p1h0: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p1h1: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p1h1: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p1h2: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p1h2: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p1h3: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p1h3: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p2h0: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p2h0: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p2h1: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p2h1: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p2h2: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p2h2: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p2h3: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p2h3: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p3h0: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p3h0: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p3h1: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p3h1: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p3h2: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p3h2: ping -c 1 192.3.1.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.0.0.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.0.0.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.0.1.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.0.1.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.1.0.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.1.0.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.1.1.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.1.1.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.2.0.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.2.0.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.2.1.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.2.1.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.3.0.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.3.0.3" \
+     --fg-host-prog "p3h3: ping -c 1 192.3.1.2" \
+     --fg-host-prog "p3h3: ping -c 1 192.3.1.3" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
+}
+
+function selftest2 {
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
+     --fg-host-prog ": sleep 1" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p0h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p1h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p2h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h0: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h1: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h2: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.0.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.1.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.2.1.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.0.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.0.3 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.2 -p 5201" \
+     --fg-host-prog "p3h3: iperf3 -t 2 -O 1 -c 192.3.1.3 -p 5201" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
+}
+
+function selftest3 {
+  # NOTE Self-pinging using hping3 doesn't work in this setup.
+  #      The reason is that the packet is sent to the switch,
+  #      which doesn't expect to have to send a packet back.
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
+     --fg-host-prog ": sleep 1" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p0h0: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p0h1: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p0h2: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p0h3: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p1h0: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p1h1: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p1h2: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p1h3: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p2h0: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p2h1: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p2h2: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p2h3: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p3h0: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p3h1: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p3h2: hping3 -c 1 -S -p 5201 192.3.1.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.0.0.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.0.0.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.0.1.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.1.0.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.1.0.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.1.1.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.2.0.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.2.0.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.2.1.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.2.1.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.3.0.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.3.0.3" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.3.1.2" \
+     --fg-host-prog "p3h3: hping3 -c 1 -S -p 5201 192.3.1.3" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
+}
+
+function interactive2 {
+  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
+          --cli
+}
+
+eval $MODE
+
+exit 0

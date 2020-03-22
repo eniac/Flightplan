@@ -14,7 +14,7 @@
 #   e.g., all hosts get full ARP table (showing all hosts) -- this can be minimised to show only the edge
 #         router and the other hosts it's linked to.
 # USAGE:
-# 1. python generate_alv_network.py > bmv2/topologies/alv.yml
+# 1. python generate_alv_network.py --output_FPMNBMV2_config > bmv2/topologies/alv.yml
 # 2. (Possibly customise and) execute run_alv.sh
 #
 # DEBUGGING:
@@ -31,16 +31,26 @@
 #   traffic from a pcap file then looking at the test_output.
 
 
+import argparse
 import random
 
+default_k = float(4) # This is the only parameter to the networks described by Al-Fares et al.
+
+parser = argparse.ArgumentParser(description="Generator for ALV networks")
+parser.add_argument('--k', default=default_k, help="ALV networks' k-parameter. Default is " + str(default_k))
+parser.add_argument('--output_text_config', action='store_true', help="Outputs config in ad hoc format")
+parser.add_argument('--output_FPMNBMV2_config', action='store_true', help="Outputs config for Flightplan's Mininet+BMv2 test environment")
+parser.add_argument('--output_ping_selftest', action='store_true', help="Outputs an all-to-all ping test")
+parser.add_argument('--host_MTU', default=None, help='Specify MTU for host interfaces')
+args = parser.parse_args()
+
+# FIXME make the following into CLI parameters
 long_names = False # Because Mininet appears to have a 10-character maximum wrt element names.
 port_num_index = 1  # Because our BMv2-on-Mininet system starts indexing ports from 1.
-
 network_number = 192
-
-k = float(4) # This is the only parameter to the networks described by Al-Fares et al.
-
+k = args.k
 p4_program = "../../build/bmv2/ALV.json"
+random.seed(0)
 
 num_pods = k
 num_switch_ports = k
@@ -78,8 +88,6 @@ indentation = "      " # FIXME const
 
 CoreSwitches = []
 Pods = []
-
-random.seed(0)
 
 macs_in_use = []
 # based on https://stackoverflow.com/questions/735975/static-methods-in-python
@@ -347,21 +355,6 @@ for pod_num in range(0, num_pods):
 gen_core_switches_route_tables()
 gen_pod_switches_route_tables(route_table_creation_worklist)
 
-## Iterate through core switches and pods, and print out configuration info
-#print "Configuration (topology+routing):"
-#for core_switch in CoreSwitches:
-#    print core_switch.toString()
-#pod_count = 0
-#for pod in Pods:
-#    print "Pod " + str(pod_count)
-#    for element in pod['aggregate']:
-#       print "    " + element.toString()
-#    for element in pod['edge']:
-#       print "    " + element.toString()
-#    for element in pod['hosts']:
-#       print "    " + element.toString()
-#    pod_count += 1
-
 def print_host_yml(host):
     port_num = port_num_index
     print "    " + host.name + " :"
@@ -375,6 +368,9 @@ def print_host_yml(host):
     p4_mininet_default_if_name = host.name + "-eth" + str(port_num)
     edge_switch = host.links[port_num]['element']
     switch_mac_address = edge_switch.links[host.links[port_num]['port']]['mac_address']
+    if None != args.host_MTU:
+        print "             - cmd: \"sudo ifconfig " + p4_mininet_default_if_name + " mtu " + str(args.host_MTU) + " up\""
+        print "               fg: True"
     print "             # " + edge_switch.name
     print "             - cmd: \"sudo arp -v -i " + p4_mininet_default_if_name + " -s " + edge_switch.ipv4_address.toString() + " " + switch_mac_address + "\""
     print "               fg: True"
@@ -421,27 +417,52 @@ def print_switch_yml(switch):
         if rule_string != "": # Some rules (default routes) don't result in BMv2 commands, since they don't matter for this network.
             print "             - " + rule_string
 
-print "hosts:"
-for pod in Pods:
-    for host in pod['hosts']:
-        print_host_yml(host)
-print "switches:"
-for switch in CoreSwitches:
-        print_switch_yml(switch)
-for pod in Pods:
-    for switch in pod['aggregate']:
-        print_switch_yml(switch)
-    for switch in pod['edge']:
-        print_switch_yml(switch)
+def output_text_config():
+    # Iterate through core switches and pods, and print out configuration info
+    print "Configuration (topology+routing):"
+    for core_switch in CoreSwitches:
+        print core_switch.toString()
+    pod_count = 0
+    for pod in Pods:
+        print "Pod " + str(pod_count)
+        for element in pod['aggregate']:
+           print "    " + element.toString()
+        for element in pod['edge']:
+           print "    " + element.toString()
+        for element in pod['hosts']:
+           print "    " + element.toString()
+        pod_count += 1
 
-# Generate all-to-all ping test parameters for run_alv.sh
-Hosts = []
-for pod in Pods:
-    for host in pod['hosts']:
-        Hosts.append(host)
-# Generate all-to-all ping test parameters for run_alv.sh
-print "# All-to-all ping test parameters:"
-for h1 in Hosts:
-    for h2 in Hosts:
-        #print "#   --fg-host-prog \"" + h1.name + ": ping -c 1 " + h2.name + "\" \\"
-        print "#   --fg-host-prog \"" + h1.name + ": ping -c 1 " + h2.ipv4_address.toString() + "\" \\" # Avoids resolution since this seems to be flaky in Mininet
+def output_FPMNBMV2_config():
+    print "hosts:"
+    for pod in Pods:
+        for host in pod['hosts']:
+            print_host_yml(host)
+    print "switches:"
+    for switch in CoreSwitches:
+            print_switch_yml(switch)
+    for pod in Pods:
+        for switch in pod['aggregate']:
+            print_switch_yml(switch)
+        for switch in pod['edge']:
+            print_switch_yml(switch)
+
+def output_ping_selftest():
+    # Generate all-to-all ping test parameters for run_alv.sh
+    Hosts = []
+    for pod in Pods:
+        for host in pod['hosts']:
+            Hosts.append(host)
+    # Generate all-to-all ping test parameters for run_alv.sh
+    print "# All-to-all ping test parameters:"
+    for h1 in Hosts:
+        for h2 in Hosts:
+            #print "#   --fg-host-prog \"" + h1.name + ": ping -c 1 " + h2.name + "\" \\"
+            print "#   --fg-host-prog \"" + h1.name + ": ping -c 1 " + h2.ipv4_address.toString() + "\" \\" # Avoids resolution since this seems to be flaky in Mininet
+
+if args.output_text_config:
+    output_text_config()
+if args.output_FPMNBMV2_config:
+    output_FPMNBMV2_config()
+if args.output_ping_selftest:
+    output_ping_selftest()

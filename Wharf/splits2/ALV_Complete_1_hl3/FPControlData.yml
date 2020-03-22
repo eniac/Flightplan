@@ -1,0 +1,60 @@
+states:
+        p0a0:
+                1:
+                        state: 2
+                        port: 5
+                2:
+                        state: 2
+                        port: 5
+                3:
+                        state: 2
+                        port: 5
+                4:
+                        state: 2
+                        port: 5
+                5:
+                        state: 4
+                        port: 6
+        HL_V2_1:
+                1:
+                        state: 3
+                        port: 1
+        HL_V2_2:
+                1:
+                        state: 5
+                        port: 1
+
+# FIXME this part is redundant
+state_sequence:
+        p0a0:
+                2:
+                          0: 1
+                          1: 2
+                4:
+                          0: 1
+                          1: 2
+        HL_V2_1:
+                3:
+                          0: 1
+                5:
+                          0: 1
+        HL_V2_2:
+                3:
+                          0: 1
+                5:
+                          0: 1
+
+# FIXME this part seems redundant too
+progression:
+        p0a0:
+                1: 2
+                3: 4
+                5:
+        HL_V2_1:
+                2: 3
+                4: 5
+        HL_V2_2:
+                2: 3
+                4: 5
+
+start: p0a0

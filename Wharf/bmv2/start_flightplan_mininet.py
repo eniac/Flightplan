@@ -18,6 +18,7 @@
 
 import os
 import sys
+import subprocess
 if 'BMV2_REPO' in os.environ:
     newpath  = os.path.join(os.environ['BMV2_REPO'], 'targets', 'booster_switch')
     print("Appending {} to pythonpath".format(newpath))
@@ -422,19 +423,38 @@ class FPTopo(Topo):
                 program = ":".join(splitprog[1:])
             except Exception as e:
                 raise TopoSpecError("Programs provided from CLI must be of form 'h1:program': %s" % e)
-            i = self.host_prog_num[name]
-            self.host_prog_num[name] += 1
-            if showExitStatus:
-                sys.stdout.write("Running {} on {}".format(program, name))
+            is_bg = program.split(' ')[-1] == "&" # FIXME this is brittle, there mustn't be spaces following the "&"
+            if is_bg:
+                program = " ".join(program.split(' ')[:-1])
+            if "" == name:
+                # FIXME ignores is_bg
+                sys.stdout.write("Directly running {}".format(program))
                 sys.stdout.flush()
-                result = net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1 ; echo $?'
-                                           .format(program, self.log_dir, name, i))
-                sys.stdout.write(" -- returned:" + result)
+                subprocess.call("echo 'Running " + program + "' >> " + self.log_dir + "/direct_commands.log", shell=True)
+                result = subprocess.call(program + " 2>&1 >> " + self.log_dir + "/direct_commands.log", shell=True)
+                sys.stdout.write(" -- returned:" + str(result))
+                sys.stdout.write("\n")
                 sys.stdout.flush()
             else:
-                print("Running {} on {}".format(program, name))
-                net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1'
-                                  .format(program, self.log_dir, name, i))
+                i = self.host_prog_num[name]
+                self.host_prog_num[name] += 1
+                if showExitStatus:
+                    sys.stdout.write("Running {} on {}".format(program, name))
+                    sys.stdout.flush()
+                    if is_bg:
+                      full_cmd = '{} > {}/{}_prog_{}.log 2>&1 &'.format(program, self.log_dir, name, i)
+                      net.get(name).cmd(full_cmd)
+                      sys.stdout.write(" -- background\n")
+                    else:
+                      full_cmd = '{} > {}/{}_prog_{}.log 2>&1 ; echo $?'.format(program, self.log_dir, name, i)
+                      result = net.get(name).cmd(full_cmd)
+                      sys.stdout.write(" -- returned:" + result)
+                    sys.stdout.flush()
+                else:
+                    # FIXME ignores is_bg
+                    print("Running {} on {}".format(program, name))
+                    net.get(name).cmd('{} > {}/{}_prog_{}.log 2>&1'
+                                      .format(program, self.log_dir, name, i))
 
     def do_host_replay(self, net, host, towards, file):
         port_num = self.link_ports[host][towards]
@@ -527,8 +547,8 @@ def main():
         print("Stopping mininet")
         net.stop()
 
-    except:
-        print("Encountered exception running mininet")
+    except Exception as e:
+        print("Encountered exception running mininet:" + str(e))
         net.stop()
         raise
 

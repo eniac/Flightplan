@@ -1,0 +1,45 @@
+states:
+        p0e0:
+                2:
+                          # For each transition have states. State 0 could be implicit. It always "forwards" to port 0, since port 0 has special meaning (drop).
+                          # 1 is the first user-defined state.
+                          0: 0 # State number, offload port
+                          1: 5 # FPoffload, seg3
+                          2: 6 # FPoffload2, seg3
+        FPoffload:
+                3:
+                          0: 0
+                          1: 1
+        FPoffload2:
+                3:
+                          0: 0
+                          1: 1
+
+# This isn't a global sequence, but a set of sequences. Doesn't make sense to have a global sequence, since there's possible interleavings.
+# FIXME this info doesn't make much sense to state explicitly -- state transition is always strictly sequential, so this info is redundant. The dataplane won't consult it, and it would cost extra resources to encode it in the dataplane. Consider eliminating this info.
+state_sequence:
+        p0e0:
+                2: # Next segment number
+                          0: 1 # Current state, next state
+                          1: 2
+        FPoffload:
+                3:
+                          0: 1
+        FPoffload2:
+                3:
+                          0: 1
+
+progression:
+        p0e0:
+                # start: end -- when the segments arise. in the case of "1" it starts in the
+                # switch. in this case we exit the switch to get to segment "2". we find out
+                # which port to exit on from the "states" table.
+                1: 2
+                # "3" is a terminal progression. The computation does not progress further.
+                3:
+        FPoffload:
+                2: 3
+        FPoffload2:
+                2: 3
+
+start: p0e0

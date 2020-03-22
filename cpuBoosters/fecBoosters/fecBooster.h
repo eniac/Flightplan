@@ -65,7 +65,7 @@ typedef unsigned short int tclass_type;
 #define TCLASS_MAX 0x05
 #define TCLASS_NULL 0xFF
 #define DEFAULT_PORT  0
-#define MAX_PORT 4
+#define MAX_PORT 10
 
 /** Sets the parameters k and h for a given traffic class */
 void set_fec_params(tclass_type tclass, fec_sym k, fec_sym h);
