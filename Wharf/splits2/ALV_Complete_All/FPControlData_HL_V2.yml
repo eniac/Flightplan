@@ -1,0 +1,44 @@
+states:
+        c0:
+                incoming:
+                               1:
+                                       state: 2
+                                       port: 5
+                               2:
+                                       state: 2
+                                       port: 5
+                               3:
+                                       state: 2
+                                       port: 5
+                               4:
+                                       state: 2
+                                       port: 5
+                intermediate:
+                outgoing:
+                               2:
+                                       state: 4
+                                       port: 6
+        HL_V2_1:
+                1:
+                        state: 3
+                        port: 1
+        HL_V2_2:
+                1:
+                        state: 5
+                        port: 1
+
+# FIXME this part is redundant
+state_sequence:
+        c0:
+        HL_V2_1:
+        HL_V2_2:
+
+# FIXME this part seems redundant too
+progression:
+        c0:
+        HL_V2_1:
+        HL_V2_2:
+
+start: c0
+end_port: 6 # FIXME hackish
+terminal_port: 2 # FIXME hackish

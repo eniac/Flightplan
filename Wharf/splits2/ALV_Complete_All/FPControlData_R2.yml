@@ -1,0 +1,26 @@
+states:
+        p1a1:
+                2:
+                          0: 0
+                          1: 5
+        FPolS2:
+                3:
+                          0: 0
+                          1: 1
+
+state_sequence:
+        p1a1:
+                2:
+                          0: 1
+        FPolS2:
+                3:
+                          0: 1
+
+progression:
+        p1a1:
+                1: 2
+                3:
+        FPolS2:
+                2: 3
+
+start: p1a1
