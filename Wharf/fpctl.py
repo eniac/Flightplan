@@ -928,15 +928,13 @@ def main():
 
   if cmd_start == args.command:
     if args.headerless_ipv4 or args.headerless or args.headerless_new:
-      # FIXME print errors on stderr
-      print("Command '" + args.command + "' not supported in headerless mode")
-      exit(1)
+      # FIXME print warnings on stderr
+      print("WARNING: Command '" + args.command + "' has no effect in headerless mode")
     failed_command, _ = set_switches_states(control_data, args.switch, args.next_segment, StartState)
   elif cmd_stop == args.command:
     if args.headerless_ipv4 or args.headerless or args.headerless_new:
-      # FIXME print errors on stderr
-      print("Command '" + args.command + "' not supported in headerless mode")
-      exit(1)
+      # FIXME print warnings on stderr
+      print("WARNING: Command '" + args.command + "' has no effect in headerless mode")
     failed_command, _ = set_switches_states(control_data, args.switch, args.next_segment, StopState)
   elif cmd_set_state == args.command:
     if args.headerless_ipv4 or args.headerless or args.headerless_new:
