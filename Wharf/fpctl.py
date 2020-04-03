@@ -131,6 +131,7 @@ parser.add_argument('--force', action='store_true', help='Proceed through failed
 parser.add_argument('--headerless_ipv4', action='store_true', help="Using bits from IPv4 header instead of Flightplan header")
 parser.add_argument('--headerless', action='store_true', help="Don't assume Flightplan header is being used")
 parser.add_argument('--headerless_new', action='store_true', help="More configurability about which ports relate to the program")
+parser.add_argument('--directflow', action='store_true', help="Emit DirectFlow config")
 args = parser.parse_args()
 if None != args.temp_file:
   temp_file = args.temp_file
@@ -925,6 +926,34 @@ def main():
 
   failed_command = False
   result = None
+
+  if args.directflow:
+    assert(args.headerless_new)
+    if cmd_config_flightplan == args.command:
+      result = ["# DirectFlow configuration script follows"]
+      result.append("directflow")
+      start_switch = control_data['start']
+      for inport in control_data[start_switch]['incoming']:
+        outport = control_data[start_switch]['incoming'][inport]['port']
+        outdevice = None
+        for interface in topology['switches'][start_switch]['interfaces']:
+          if outport == topology['switches'][start_switch]['interfaces'][interface]['port']:
+            outdevice = topology['switches'][start_switch]['interfaces'][interface]['link']
+            break
+        assert(None != outdevice)
+        flowname = start_switch + "_" + str(outport) + "_" + outdevice
+        result.append("# Forwarding from port " + str(inport) + " --> port " + str(outport))
+        result.append("flow " + flowname)
+        suffix = "/1" # FIXME const
+        result.append("match input interface ethernet " + str(inport) + suffix)
+        result.append("action output interface ethernet " + str(outport) + suffix)
+        result.append("exit")
+      result.append("show active rules")
+      exit(int(True)) # FIXME clunky
+    else:
+      # FIXME print errors on stderr
+      print("Flag '--directflow' only supported for command '" + cmd_config_flightplan + "'")
+      exit(1)
 
   if cmd_start == args.command:
     if args.headerless_ipv4 or args.headerless or args.headerless_new:
