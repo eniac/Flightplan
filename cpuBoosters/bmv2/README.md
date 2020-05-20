@@ -13,10 +13,10 @@ and applied upon running `make`.
 Before building, the environment variable `BMV2_REPO` must be set to reference
 the location of the cloned `behavioral_model` repository.
 
-If building the Memcached booster, `Vivado_HLS` is also required. Vivado version 2017.1 is required. 
-Install vivado 2017.1 
+If building the Memcached booster, `Vivado_HLS` is also required. `Vivado_HLS` version 2017.1 is required. 
+Install `vivado_HLS` 2017.1 
 Set the environment variable `XILINX_DIR` to be the parent directory
-of the `VIVADO_HLS` directory to properly build the Memcached booster.
+of the `Vivado_HLS` directory to properly build the Memcached booster.
 
 One should build the behavioral model first, then run `make configure` here
 to apply the appropriate patches and rebuild.

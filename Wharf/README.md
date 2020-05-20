@@ -119,13 +119,13 @@ target-specific code, but this doesn't do much at the moment.
 # Testing in Mininet
 Install `mininet`.
 
-Perform `sudo apt install net-tools` otherwise you may encounter the following error:
+Perform `sudo apt install net-tools` to avoid the following error:
 ```
 Cannot find required executable ifconfig.
 
 Please make sure that Mininet is installed and available in your $PATH:...'
 ```
-Install pyyaml using `pip install pyyaml`
+Install `pyyaml` using `pip install pyyaml`
 
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
