@@ -13,6 +13,11 @@ and applied upon running `make`.
 Before building, the environment variable `BMV2_REPO` must be set to reference
 the location of the cloned `behavioral_model` repository.
 
+If building the Memcached booster, `Vivado_HLS` is also required. Vivado version 2017.1 is required. 
+Install vivado 2017.1 
+Set the environment variable `XILINX_DIR` to be the parent directory
+of the `VIVADO_HLS` directory to properly build the Memcached booster.
+
 One should build the behavioral model first, then run `make configure` here
 to apply the appropriate patches and rebuild.
 
@@ -21,10 +26,6 @@ The patches into the behavioral model have been tested with:
 * commit `730986bd4dce83a121159d06beb08ffa961afdc7` of the [p4c](https://github.com/p4lang/p4c) repo
 
 though it will likely be applicable to newer revisions as well.
-
-If building the Memcached booster, `Vivado_HLS` is also required.
-Set the environment variable `XILINX_DIR` to be the parent directory
-of the `VIVADO_HLS` directory to properly build the Memcached booster.
 
 
 ## Build Process

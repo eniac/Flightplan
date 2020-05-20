@@ -6,6 +6,10 @@ Compiling P4 programs into JSON files for BMv2 requires p4c (https://github.com/
 Running the resulting compiled programs requires installation of BMv2 (https://github.com/p4lang/behavioral-model/),
 with the additional `booster_switch` as explained [here](../cpuBoosters/bmv2/README.md).
 
+The recommended p4c and behavirol-model version are:
+* commit `c67f85d45feea5c31312c9a1e8a7063a976a1469` of the [behavioral_model](https://github.com/p4lang/behavioral-model/) repo
+* commit `730986bd4dce83a121159d06beb08ffa961afdc7` of the [p4c](https://github.com/p4lang/p4c) repo
+
 
 ## Building booster_switch
 
@@ -113,7 +117,15 @@ target-specific code, but this doesn't do much at the moment.
 
 
 # Testing in Mininet
+Install `mininet`.
 
+Perform `sudo apt install net-tools` otherwise you may encounter the following error:
+```
+Cannot find required executable ifconfig.
+
+Please make sure that Mininet is installed and available in your $PATH:...'
+```
+Install pyyaml using `pip install pyyaml`
 
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
