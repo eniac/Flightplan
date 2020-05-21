@@ -126,6 +126,7 @@ Cannot find required executable ifconfig.
 Please make sure that Mininet is installed and available in your $PATH:...'
 ```
 Install `pyyaml` using `pip install pyyaml`
+Install `dpkt` using `sudo apt-get install python-dpkt`
 
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
