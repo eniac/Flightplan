@@ -11,9 +11,9 @@ The recommended p4c and behavirol-model version are:
 * commit `730986bd4dce83a121159d06beb08ffa961afdc7` of the [p4c](https://github.com/p4lang/p4c) repo
 
 The code modules and submodles can be synched to the above commit HASH as follows:
-* git clone --recursive https://github.com/p4lang/p4c.git
+* `git clone --recursive https://github.com/p4lang/p4c.git`
 * git checkout HASH
-* git submodule update
+* `git submodule update`
 
 ## Building booster_switch
 
@@ -131,6 +131,7 @@ Please make sure that Mininet is installed and available in your $PATH:...'
 ```
 Install `pyyaml` using `pip install pyyaml`
 Install `dpkt` using `sudo apt-get install python-dpkt`
+Install `tcpreplay` from `https://launchpad.net/ubuntu/bionic/+package/tcpreplay` or any other link that you prefer.
 
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
