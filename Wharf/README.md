@@ -133,6 +133,17 @@ Install `pyyaml` using `pip install pyyaml`
 Install `dpkt` using `sudo apt-get install python-dpkt`
 Install `tcpreplay` from `https://launchpad.net/ubuntu/bionic/+package/tcpreplay` or any other link that you prefer.
 
+# Memcached
+Install `memcached`
+First, make sure that your local package index is updated:
+`sudo apt-get update`
+
+Next, install the official package as follows:
+`sudo apt-get install memcached`
+
+Install libmemcached-tools, a library that provides several tools to work with your Memcached server:
+`sudo apt-get install libmemcached-tools`
+
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
 view [tclust_README.md](tclust_README.md).
