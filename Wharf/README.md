@@ -270,6 +270,15 @@ This test involves the following steps:
 4. Replay packets -- a sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`.
 5. Check to ensure that the packets received by h2 are identical to those sent by h1, even in the presence of drops.
 
+#Debugging
+```
+$ ./bmv2/complete_fec_e2e.sh <input.pcap>
+```
+This is the simplest test and should be your first test.
+In case the test is declared failed, go through the messages that get printed on the console. In case there is nothing obviously wrong in the console messages, then switch to log files. Go through the log files, scanning particularly for errors and missing things. For example, in case you missed to install tcpreplay from the previos steps, then the log file portion will read as:
+```
+bash: tcpreplay: command not found
+```
 
 #### Running different programs on switches
 The default test runs the same program on switches. The "two halves" tests run
