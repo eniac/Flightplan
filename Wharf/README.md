@@ -270,7 +270,7 @@ This test involves the following steps:
 4. Replay packets -- a sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`.
 5. Check to ensure that the packets received by h2 are identical to those sent by h1, even in the presence of drops.
 
-#Debugging
+##Debugging
 ```
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 ```
