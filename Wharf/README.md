@@ -144,6 +144,11 @@ Next, install the official package as follows:
 Install libmemcached-tools, a library that provides several tools to work with your Memcached server:
 `sudo apt-get install libmemcached-tools`
 
+# iperf3
+Install `iperf3`
+`sudo apt-get update -y`
+`sudo apt-get install -y iperf3`
+
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
 view [tclust_README.md](tclust_README.md).
@@ -270,7 +275,7 @@ This test involves the following steps:
 4. Replay packets -- a sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`.
 5. Check to ensure that the packets received by h2 are identical to those sent by h1, even in the presence of drops.
 
-##Debugging
+# Debugging
 ```
 $ ./bmv2/complete_fec_e2e.sh <input.pcap>
 ```
