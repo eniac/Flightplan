@@ -121,7 +121,7 @@ target-specific code, but this doesn't do much at the moment.
 
 
 # Testing in Mininet
-Install `mininet`.
+### Install Mininet
 ```
 git clone git://github.com/mininet/mininet
 mininet/util/install.sh -a
@@ -135,15 +135,17 @@ Please make sure that Mininet is installed and available in your $PATH:...'
 
 test mininet `sudo mn --test pingall`
 
-Install `pyyaml` using `pip install pyyaml`
+#### Install 'pyyaml'
+`pip install pyyaml`
 
+#### Install 'dpkt'
 Install `dpkt` using `sudo apt-get install python-dpkt`
 
+#### Install 'tcpreplay'
 Install `tcpreplay` from `https://launchpad.net/ubuntu/bionic/+package/tcpreplay` or any other link that you prefer.
 
-# Memcached
-Install `memcached`
-First, make sure that your local package index is updated:
+#### Install 'Memcached'
+First, update the local package index:
 `sudo apt-get update`
 
 Next, install the official package as follows:
@@ -152,10 +154,13 @@ Next, install the official package as follows:
 Install libmemcached-tools, a library that provides several tools to work with your Memcached server:
 `sudo apt-get install libmemcached-tools`
 
-# iperf3
-Install `iperf3`
+#### Install 'iperf3'
 `sudo apt-get update -y`
 `sudo apt-get install -y iperf3`
+
+#### Install 'hping3'
+`sudo apt update`
+`sudo apt install hping3`
 
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
