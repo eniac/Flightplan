@@ -122,13 +122,19 @@ target-specific code, but this doesn't do much at the moment.
 
 # Testing in Mininet
 Install `mininet`.
-
+```
+git clone git://github.com/mininet/mininet
+mininet/util/install.sh -a
+```
 Perform `sudo apt install net-tools` to avoid the following error:
 ```
 Cannot find required executable ifconfig.
 
 Please make sure that Mininet is installed and available in your $PATH:...'
 ```
+
+test mininet `sudo mn --test pingall'
+
 Install `pyyaml` using `pip install pyyaml`
 Install `dpkt` using `sudo apt-get install python-dpkt`
 Install `tcpreplay` from `https://launchpad.net/ubuntu/bionic/+package/tcpreplay` or any other link that you prefer.
