@@ -268,6 +268,17 @@ $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 **NB1** Ensure that environment variable `BMV2_REPO` has been set up as mentioned
 in the [Building booster_switch](README.md#building-booster_switch) section.
 
+# Debugging
+
+#### Test 0:
+```
+$ ./bmv2/complete_fec_e2e.sh <input.pcap>
+```
+This is the simplest test and should be your first test.
+In case the test is declared failed, go through the messages that get printed on the console. In case there is nothing obviously wrong in the console messages, then switch to log files. Go through the log files, scanning particularly for errors and missing things. For example, in case you missed to install tcpreplay from the previos steps, then the log file portion will read as:
+```
+bash: tcpreplay: command not found
+```
 
 #### Test 1: FEC
 ```
@@ -282,16 +293,6 @@ This test involves the following steps:
 3. Start programs on the hosts.
 4. Replay packets -- a sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`.
 5. Check to ensure that the packets received by h2 are identical to those sent by h1, even in the presence of drops.
-
-# Debugging
-```
-$ ./bmv2/complete_fec_e2e.sh <input.pcap>
-```
-This is the simplest test and should be your first test.
-In case the test is declared failed, go through the messages that get printed on the console. In case there is nothing obviously wrong in the console messages, then switch to log files. Go through the log files, scanning particularly for errors and missing things. For example, in case you missed to install tcpreplay from the previos steps, then the log file portion will read as:
-```
-bash: tcpreplay: command not found
-```
 
 #### Running different programs on switches
 The default test runs the same program on switches. The "two halves" tests run
@@ -318,6 +319,20 @@ replies received by h1 are as expected. We used the input files
 `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`.
 
 **NB** For testing Memcached functionality the MAC addresses in [bmv2/pcap_tools/pcap_sub.py](bmv2/pcap_tools/pcap_sub.py) must match those used in the config file [./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml).
+
+#### Test 3: run_alv.sh
+
+Before tackling splits, first try running run_alv.sh -- that's an
+example with the most sophisticated topology we have: alv_k=4.yml.
+The goal here is to check that the alv_k=4.yml-based experiment works,
+since that's a baseline for what follows
+
+`run_alv.sh` has different modes to test. By default the mode is 'selftest'. run it to run the test.
+Open `run_alv.sh` in text editor and change mode to 'selftest2' and run this test. Similarly run all the modes test by changing the mode.
+
+### Result Interpretation:
+All the `selftest` modes use python facility `line oriented command interpretors`. It returns the exit code of a program run. Exit code `0` means success.
+On console, messages `-- returned:0` indicates `Test Succeeded`.
 
 
 # Adding new boosters
