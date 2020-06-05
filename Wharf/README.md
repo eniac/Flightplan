@@ -133,10 +133,12 @@ Cannot find required executable ifconfig.
 Please make sure that Mininet is installed and available in your $PATH:...'
 ```
 
-test mininet `sudo mn --test pingall'
+test mininet `sudo mn --test pingall`
 
 Install `pyyaml` using `pip install pyyaml`
+
 Install `dpkt` using `sudo apt-get install python-dpkt`
+
 Install `tcpreplay` from `https://launchpad.net/ubuntu/bionic/+package/tcpreplay` or any other link that you prefer.
 
 # Memcached
