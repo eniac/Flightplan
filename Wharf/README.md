@@ -335,9 +335,13 @@ since that's a baseline for what follows
 `run_alv.sh` has different modes to test. By default the mode is 'selftest'. run it to run the test.
 Open `run_alv.sh` in text editor and change mode to 'selftest2' and run this test. Similarly run all the modes test by changing the mode.
 
-### Result Interpretation:
+#### Result Interpretation:
 All the `selftest` modes use python facility `line oriented command interpretors`. It returns the exit code of a program run. Exit code `0` means success.
 On console, messages `-- returned:0` indicates `Test Succeeded`.
+
+The exit code `127` suggests that the the required installation is not available. for example, the following suggests that `hping3` is not installed.
+
+`Running  hping3 -c 1 -S -p 5201 192.0.0.2 on p0h0 -- returned:127`
 
 
 # Adding new boosters
