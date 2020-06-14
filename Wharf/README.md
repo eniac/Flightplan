@@ -47,6 +47,10 @@ Exception: Could not execute commands: Runtime API not present
 
 **WARNINGS** The `BMV2_REPO` variable is hardcoded in several scripts, beware.
 
+## `WHARF_REPO`
+Set the environment variable `WHARF_REPO` to point the directory
+containing the Wharf repository.
+
 ## Building P4 programs to run on booster_switch
 
 If the `booster_switch` was built with only certain boosters enabled
