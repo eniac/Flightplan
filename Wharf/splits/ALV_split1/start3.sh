@@ -3,9 +3,7 @@
 #Nik Sultana, UPenn, March 2020
 set -e
 
-HERE=`pwd`
-
-source $HERE/envars.sh
+source $WHARF_REPO/splits/ALV_split1/envars.sh
 
 ${FPControl} ${TOPOLOGY} ${FPCD} configure_flightplan --force
 #${FPControl} ${TOPOLOGY} ${FPCD} set_pip_state --switch p0e0 --idx 0 --pip_state_var flightplan_pip_nak_count_max --value 0

@@ -3,9 +3,7 @@
 #Nik Sultana, UPenn, March 2020
 set -e
 
-HERE=`pwd`
-
-source $HERE/envars.sh
+source $WHARF_REPO/splits/ALV_split1/envars.sh
 
 ${FPControl} ${TOPOLOGY} ${FPCD} configure_flightplan --force
 ${FPControl} ${TOPOLOGY} ${FPCD} start

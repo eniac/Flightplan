@@ -123,6 +123,7 @@ target-specific code, but this doesn't do much at the moment.
 # Testing in Mininet
 ### Install Mininet
 ```
+mininet commit HASH: bfc42f6d028a9d5ac1bc121090ca4b3041829f86
 git clone git://github.com/mininet/mininet
 mininet/util/install.sh -a
 ```
@@ -135,16 +136,16 @@ Please make sure that Mininet is installed and available in your $PATH:...'
 
 test mininet `sudo mn --test pingall`
 
-#### Install 'pyyaml'
+#### Install 'pyyaml' (Ver 5.3.1)
 `pip install pyyaml`
 
-#### Install 'dpkt'
+#### Install 'dpkt' (Ver 1.9.2)
 Install `dpkt` using `sudo apt-get install python-dpkt`
 
-#### Install 'tcpreplay'
+#### Install 'tcpreplay' (Ver 4.3.3)
 Install `tcpreplay` from `https://launchpad.net/ubuntu/bionic/+package/tcpreplay` or any other link that you prefer.
 
-#### Install 'Memcached'
+#### Install 'Memcached' (Ver 1.6.6)
 First, update the local package index:
 `sudo apt-get update`
 
@@ -154,11 +155,11 @@ Next, install the official package as follows:
 Install libmemcached-tools, a library that provides several tools to work with your Memcached server:
 `sudo apt-get install libmemcached-tools`
 
-#### Install 'iperf3'
+#### Install 'iperf3' (Ver 3.1.3)
 `sudo apt-get update -y`
 `sudo apt-get install -y iperf3`
 
-#### Install 'hping3'
+#### Install 'hping3' (Ver 3.0.0)
 `sudo apt update`
 `sudo apt install hping3`
 
@@ -333,7 +334,7 @@ The goal here is to check that the alv_k=4.yml-based experiment works,
 since that's a baseline for what follows
 
 `run_alv.sh` has different modes to test. By default the mode is 'selftest'. run it to run the test.
-Open `run_alv.sh` in text editor and change mode to 'selftest2' and run this test. Similarly run all the modes test by changing the mode.
+The mode can be set from the command line by setting the MODE environment variable. run all the modes one by one.
 
 #### Result Interpretation:
 All the `selftest` modes use python facility `line oriented command interpretors`. It returns the exit code of a program run. Exit code `0` means success.
