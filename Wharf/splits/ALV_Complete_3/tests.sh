@@ -18,13 +18,13 @@ then
 fi
 
 function interactive_complete {
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -38,14 +38,14 @@ function autotest {
     NUM_PINGS=1
   fi
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -317,8 +317,8 @@ function autotest_long {
 function complete_fec_e2e {
   # Based on bmv2/complete_fec_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  TRAFFIC_PREINPUT=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/tcp_100.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
   TRAFFIC_INPUT=/tmp/tcp_100.pcap
   CACHEFILE=/tmp/tcprewrite_cachefile
   # Traffic will be sent from p0h0 to p1h0
@@ -327,12 +327,12 @@ function complete_fec_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth2 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth1 ${FEC_INIT_PCAP}" \
@@ -370,8 +370,8 @@ function complete_fec_e2e {
 function complete_mcd_e2e {
   # Based on bmv2/complete_mcd_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  PCAP_TOOLS=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcap_tools/
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
   TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
 
@@ -387,12 +387,12 @@ function complete_mcd_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \

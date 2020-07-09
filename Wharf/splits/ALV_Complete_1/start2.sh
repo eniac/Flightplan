@@ -5,7 +5,7 @@ set -e
 
 echo "Starting ALV_Complete_1"
 
-source /home/nsultana/2/P4Boosters/Wharf/splits/ALV_Complete_1/envars.sh
+source $WHARF_REPO/splits/ALV_Complete_1/envars.sh
 
 ${FPControl} ${TOPOLOGY} ${FPCD} configure_flightplan --force
 ${FPControl} ${TOPOLOGY} ${FPCD} set_pip_state --switch p0a0 --idx 0 --pip_state_var flightplan_pip_nak_count_max --value 0

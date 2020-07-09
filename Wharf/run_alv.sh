@@ -16,7 +16,7 @@ HERE=`pwd`
 
 if [ -z "${TOPOLOGY}" ]
 then
-  TOPOLOGY=bmv2/topologies/alv_k=4.yml
+  TOPOLOGY=$WHARF_REPO/bmv2/topologies/alv_k=4.yml
 fi
 echo "Using TOPOLOGY=${TOPOLOGY}"
 
@@ -51,7 +51,7 @@ mkdir -p $LOG_DUMPS
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
 function interactive {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -61,7 +61,7 @@ function interactive {
 }
 
 function selftest {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -326,7 +326,7 @@ function selftest {
 }
 
 function selftest2 {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -611,7 +611,7 @@ function selftest3 {
   # NOTE Self-pinging using hping3 doesn't work in this setup.
   #      The reason is that the packet is sent to the switch,
   #      which doesn't expect to have to send a packet back.
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -893,7 +893,7 @@ function selftest3 {
 }
 
 function interactive2 {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \

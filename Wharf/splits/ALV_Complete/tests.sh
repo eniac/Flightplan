@@ -6,7 +6,7 @@
 # FIXME this and other scripts assume that it's being run in the "Wharf" directory
 # FIXME poor naming choices for tests
 
-TOPOLOGY=splits/ALV_Complete/alv_k=4.yml
+TOPOLOGY=$WHARF_REPO/splits/ALV_Complete/alv_k=4.yml
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e)
 DEFAULT_MODE=autotest
 
@@ -17,7 +17,7 @@ then
 fi
 
 function interactive_complete {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -31,9 +31,9 @@ function autotest {
     NUM_PINGS=1
   fi
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -307,8 +307,8 @@ function autotest_long {
 function complete_fec_e2e {
   # Based on bmv2/complete_fec_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  TRAFFIC_PREINPUT=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/tcp_100.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
   TRAFFIC_INPUT=/tmp/tcp_100.pcap
   CACHEFILE=/tmp/tcprewrite_cachefile
   # Traffic will be sent from p0h0 to p1h0
@@ -317,7 +317,7 @@ function complete_fec_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -346,8 +346,8 @@ function complete_fec_e2e {
 function complete_mcd_e2e {
   # Based on bmv2/complete_mcd_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  PCAP_TOOLS=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcap_tools/
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
   TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
 
@@ -363,7 +363,7 @@ function complete_mcd_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
