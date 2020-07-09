@@ -16,9 +16,14 @@ HERE=`pwd`
 
 if [ -z "${TOPOLOGY}" ]
 then
-  TOPOLOGY=bmv2/topologies/alv_k=4.yml
+  TOPOLOGY=$WHARF_REPO/bmv2/topologies/alv_k=4.yml
 fi
 echo "Using TOPOLOGY=${TOPOLOGY}"
+
+if [ -z "${SPLIT2_START}" ]
+then
+  SPLIT2_START=""
+fi
 
 MODES+=(interactive)
 MODES+=(selftest)
@@ -51,21 +56,23 @@ mkdir -p $LOG_DUMPS
 sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
 function interactive {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-          --cli
-  #        2> $LOG_DUMPS/flightplan_mininet_log.err
+     --fg-host-prog "${SPLIT2_START}" \
+     --cli
+         2> $LOG_DUMPS/flightplan_mininet_log.err
 }
 
 function selftest {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
+     --fg-host-prog "${SPLIT2_START}" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
      --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
@@ -326,11 +333,12 @@ function selftest {
 }
 
 function selftest2 {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
+     --fg-host-prog "${SPLIT2_START}" \
      --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
      --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
      --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
@@ -611,11 +619,12 @@ function selftest3 {
   # NOTE Self-pinging using hping3 doesn't work in this setup.
   #      The reason is that the packet is sent to the switch,
   #      which doesn't expect to have to send a packet back.
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
+     --fg-host-prog "${SPLIT2_START}" \
      --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
      --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
      --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
@@ -893,11 +902,12 @@ function selftest3 {
 }
 
 function interactive2 {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
+     --fg-host-prog "${SPLIT2_START}" \
      --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
      --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
      --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
