@@ -21,7 +21,7 @@ function autotest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_split2/start.sh" \
+     --fg-host-prog "${SPLIT2_START}" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
      --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
