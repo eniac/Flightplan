@@ -333,6 +333,32 @@ function complete_fec_e2e {
   TRAFFIC_INPUT=${PCAP_DUMPS}/`basename ${TRAFFIC_INPUT} `
 
   diff <(tcpdump -r ${PCAP_DUMPS}/p1e0_to_p1h0.pcap -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq) <(tcpdump -r ${TRAFFIC_INPUT} -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq)
+
+  GRAPH_LOG="graph_log.txt"
+  if [ -f ${GRAPH_LOG} ]
+  then
+	echo "Graph Log file already exists"
+  else
+	touch ${GRAPH_LOG}
+  fi
+  p_p0h0_p0e0=$(tcpdump -r ${PCAP_DUMPS}/p0h0_to_p0e0.pcap 2>/dev/null| grep "length" |  wc -l)
+  p_p1e0_p1h0=$(tcpdump -r ${PCAP_DUMPS}/p1e0_to_p1h0.pcap 2>/dev/null| grep "length" |  wc -l)
+  p_p0e0_dropper=$(tcpdump -r ${PCAP_DUMPS}/p0e0_to_dropper.pcap 2>/dev/null| grep "length" |  wc -l)
+  p_dropper_p0a0=$(tcpdump -r ${PCAP_DUMPS}/dropper_to_p0a0.pcap 2>/dev/null| grep "length" |  wc -l)
+  drop=$(( p_p0e0_dropper -  p_dropper_p0a0 ))
+  drop_rate=$(( drop/p_p0e0_dropper )).$(( (drop * 100 / p_p0e0_dropper) % 100 ))
+  fec=$(( p_p0h0_p0e0 - p_p1e0_p1h0  ))
+  fec_eff=$(( p_p1e0_p1h0/p_p0h0_p0e0 )).$(( (p_p1e0_p1h0 * 100 / p_p0h0_p0e0) % 100  ))
+
+  echo "p_p0h0_p0e0 = "${p_p0h0_p0e0}
+  echo "p_p1e0_p1h0 = "${p_p1e0_p1h0}
+  echo "p_p0e0_dropper = "${p_p0e0_dropper}
+  echo "p_dropper_p0a0 = "${p_dropper_p0a0}
+  echo "drop_rate = "${drop_rate}
+  echo "fec_eff = "${fec_eff}
+
+  echo ${drop_rate}" "${fec_eff} >> ${GRAPH_LOG}
+
   if [[ $? == 0 ]]
   then
       echo "Test succeeded"
@@ -349,7 +375,7 @@ function complete_mcd_e2e {
   FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
   PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -380,14 +406,14 @@ function complete_mcd_e2e {
 
   grep --text -E '^[<>]' ${TARGET_LOG} | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
 
-  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)
+  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withoutcache.expected)
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was NOT used"
       exit 0
   fi
 
-  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)
+  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withcache.expected)
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was used"
