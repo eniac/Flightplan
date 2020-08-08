@@ -334,30 +334,45 @@ function complete_fec_e2e {
 
   diff <(tcpdump -r ${PCAP_DUMPS}/p1e0_to_p1h0.pcap -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq) <(tcpdump -r ${TRAFFIC_INPUT} -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq)
 
-  GRAPH_LOG="graph_log.txt"
-  if [ -f ${GRAPH_LOG} ]
-  then
-	echo "Graph Log file already exists"
-  else
-	touch ${GRAPH_LOG}
-  fi
-  p_p0h0_p0e0=$(tcpdump -r ${PCAP_DUMPS}/p0h0_to_p0e0.pcap 2>/dev/null| grep "length" |  wc -l)
-  p_p1e0_p1h0=$(tcpdump -r ${PCAP_DUMPS}/p1e0_to_p1h0.pcap 2>/dev/null| grep "length" |  wc -l)
-  p_p0e0_dropper=$(tcpdump -r ${PCAP_DUMPS}/p0e0_to_dropper.pcap 2>/dev/null| grep "length" |  wc -l)
-  p_dropper_p0a0=$(tcpdump -r ${PCAP_DUMPS}/dropper_to_p0a0.pcap 2>/dev/null| grep "length" |  wc -l)
-  drop=$(( p_p0e0_dropper -  p_dropper_p0a0 ))
-  drop_rate=$(( drop/p_p0e0_dropper )).$(( (drop * 100 / p_p0e0_dropper) % 100 ))
-  fec=$(( p_p0h0_p0e0 - p_p1e0_p1h0  ))
-  fec_eff=$(( p_p1e0_p1h0/p_p0h0_p0e0 )).$(( (p_p1e0_p1h0 * 100 / p_p0h0_p0e0) % 100  ))
+  # Creating graph log file
+  GRAPH_LOG=$LOG_DUMPS/graph_log.txt
+  echo "Using GRAPH LOG = ${GRAPH_LOG}"
+  touch ${GRAPH_LOG}
+  > ${GRAPH_LOG}
+	
+  # Creating empty temp file
+  TEMP=$LOG_DUMPS/temp.txt
+  echo "Using TEMP = ${TEMP}"
+  touch ${TEMP}
+  > ${TEMP}
 
-  echo "p_p0h0_p0e0 = "${p_p0h0_p0e0}
-  echo "p_p1e0_p1h0 = "${p_p1e0_p1h0}
-  echo "p_p0e0_dropper = "${p_p0e0_dropper}
-  echo "p_dropper_p0a0 = "${p_dropper_p0a0}
-  echo "drop_rate = "${drop_rate}
-  echo "fec_eff = "${fec_eff}
+  # Take the tcp dump to temp file
+  tcpdump -xx -r ${PCAP_DUMPS}/p0h0_to_p0e0.pcap > ${TEMP}
 
-  echo ${drop_rate}" "${fec_eff} >> ${GRAPH_LOG}
+  # First packet time is a reference time to calculate the elapsed time of all the packets
+  time=$(head -n 1 ${TEMP})
+  readarray -d " " -t time_stream <<< ${time}
+
+  awk -v BASE="${time_stream[0]}" '{ 
+    if(/length/){
+    split(BASE, base_time_array, /[:.]/)
+    split($1, time_array, /[:.]/) 
+    elapsed_time=(time_array[1] - base_time_array[1])*60*60*1000*1000 + (time_array[2] - base_time_array[2])*60*1000*1000 + (time_array[3] - base_time_array[3])*1000*1000 + time_array[4] - base_time_array[4]
+      printf "%s ", elapsed_time
+      
+      getline
+      getline
+      getline
+      
+      if(seq_count[$5$6]+0 > 0){
+        retransmission_count++
+      }
+      seq_count[$5$6]++
+      printf "%d\n", retransmission_count+0 
+    }
+  }' ${TEMP} > ${GRAPH_LOG}
+
+  rm ${TEMP}
 
   if [[ $? == 0 ]]
   then
