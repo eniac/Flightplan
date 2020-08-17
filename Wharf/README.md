@@ -348,6 +348,24 @@ The exit code `127` suggests that the the required installation is not available
 
 `Running  hping3 -c 1 -S -p 5201 192.0.0.2 on p0h0 -- returned:127`
 
+#### Wharf/splits2:
+Headerless(hl) Runtime: 'ALV_Complete_1_hl3new' splits ALV_Complete in three parts (2 offload devices for booster offloading + connected switch p0a0 for routing). Whereas, 'ALV_Complete_2_hl3new' splits ALV_Complete in six parts (5 offload devices for booster offloading + connected switch p0a0 for routing).
+
+### Wharf/splits:
+Full Runtime:
+
+(A) splits/ALV_Complete_1:
+p0a0 has two supporting devices
+
+(B) splits/ALV_Complete_2:
+p0a0 has two supporting devices
++ p1e0 has five supporting devices
+
+(C) splits/ALV_Complete_3:
+p0a0 has two supporting devices
++ p1e0 has five supporting devices
++ c0 has firewall on supporting devices
+
 
 # Adding new boosters
 New boosters can be invoked from existing P4 files, by modifying those files
