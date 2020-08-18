@@ -4,7 +4,9 @@
 #
 # FIXME various hardcoded paths
 
-TOPOLOGY=splits/ALV_split2/alv_k=4.yml
+TOPOLOGY=$WHARF_REPO/splits/ALV_split2/alv_k=4.yml
+SPLIT2_START=": $WHARF_REPO/splits/ALV_split2/start.sh"
+
 MODES=(autotest)
 
 if [ -z "${MODE}" ]
@@ -14,12 +16,12 @@ then
 fi
 
 function autotest {
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits/ALV_split2/start.sh" \
+     --fg-host-prog "${SPLIT2_START}" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
      --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
