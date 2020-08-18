@@ -333,6 +333,44 @@ function complete_fec_e2e {
   TRAFFIC_INPUT=${PCAP_DUMPS}/`basename ${TRAFFIC_INPUT} `
 
   diff <(tcpdump -r ${PCAP_DUMPS}/p1e0_to_p1h0.pcap -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq) <(tcpdump -r ${TRAFFIC_INPUT} -XX -S -vv | grep -v " IP (tos " | grep -v 0x0010 | grep -v 0x0000 | grep -v ": Flags" | sort | uniq)
+
+  # Creating graph log file
+  GRAPH_LOG=$LOG_DUMPS/graph_log.txt
+	
+  # Creating empty temp file
+  TEMP=$LOG_DUMPS/temp.txt
+
+  # Take the tcp dump to temp file
+  tcpdump -xx -r ${PCAP_DUMPS}/p0h0_to_p0e0.pcap > ${TEMP}
+
+  # First packet time is a reference time to calculate the elapsed time of all the packets
+  time=$(head -n 1 ${TEMP})
+  readarray -d " " -t time_stream <<< ${time}
+
+  awk -v BASE="${time_stream[0]}" '{ 
+    # from tcpdump, find the line containing keyword "length" for each packet in tcpdump
+    if(/length/){
+    # split time string to hr, minute, second, microsecond
+    split(BASE, base_time_array, /[:.]/)
+    split($1, time_array, /[:.]/) 
+    # find out elapsed time for current packet
+    elapsed_time=(time_array[1] - base_time_array[1])*60*60*1000*1000 + (time_array[2] - base_time_array[2])*60*1000*1000 + (time_array[3] - base_time_array[3])*1000*1000 + time_array[4] - base_time_array[4]
+      printf "%s ", elapsed_time
+      
+      getline
+      getline
+      getline
+      # check the seq number, if it has repeated, it indicates retransmission.
+      if(seq_count[$5$6]+0 > 0){
+        retransmission_count++
+      }
+      seq_count[$5$6]++
+      printf "%d\n", retransmission_count+0 
+    }
+  }' ${TEMP} > ${GRAPH_LOG}
+
+  rm ${TEMP}
+
   if [[ $? == 0 ]]
   then
       echo "Test succeeded"
@@ -349,7 +387,7 @@ function complete_mcd_e2e {
   FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
   PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -380,14 +418,14 @@ function complete_mcd_e2e {
 
   grep --text -E '^[<>]' ${TARGET_LOG} | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
 
-  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)
+  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withoutcache.expected)
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was NOT used"
       exit 0
   fi
 
-  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)
+  diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withcache.expected)
   if [[ $? == 0 ]]
   then
       echo "Test conclusive: cache was used"
