@@ -1,6 +1,7 @@
 # This output was partly auto-generated using generate_alv_network.py -- modify with care.
 # Test setup for Flightplan
 # Nik Sultana, UPenn, March 2020
+# Rakesh Nagda, UPenn, July 2020
 #
 # k=4
 # pod_switches_upper=2
@@ -16,6 +17,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p0h0'"
+               fg: True
+             - cmd: "sudo ifconfig p0h0-eth1 mtu 1449 up"
                fg: True
              # p0e0
              - cmd: "sudo arp -v -i p0h0-eth1 -s 192.0.0.1 02:00:00:42:82:67"
@@ -60,6 +63,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p0h1'"
                fg: True
+             - cmd: "sudo ifconfig p0h1-eth1 mtu 1449 up"
+               fg: True
              # p0e0
              - cmd: "sudo arp -v -i p0h1-eth1 -s 192.0.0.1 02:00:00:95:e8:81"
                fg: True
@@ -102,6 +107,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p0h2'"
+               fg: True
+             - cmd: "sudo ifconfig p0h2-eth1 mtu 1449 up"
                fg: True
              # p0e1
              - cmd: "sudo arp -v -i p0h2-eth1 -s 192.0.1.1 02:00:00:40:e8:fb"
@@ -146,6 +153,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p0h3'"
                fg: True
+             - cmd: "sudo ifconfig p0h3-eth1 mtu 1449 up"
+               fg: True
              # p0e1
              - cmd: "sudo arp -v -i p0h3-eth1 -s 192.0.1.1 02:00:00:ba:e6:af"
                fg: True
@@ -188,6 +197,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p1h0'"
+               fg: True
+             - cmd: "sudo ifconfig p1h0-eth1 mtu 1449 up"
                fg: True
              # p1e0
              - cmd: "sudo arp -v -i p1h0-eth1 -s 192.1.0.1 02:00:00:16:c1:e0"
@@ -232,6 +243,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p1h1'"
                fg: True
+             - cmd: "sudo ifconfig p1h1-eth1 mtu 1449 up"
+               fg: True
              # p1e0
              - cmd: "sudo arp -v -i p1h1-eth1 -s 192.1.0.1 02:00:00:ec:8a:64"
                fg: True
@@ -274,6 +287,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p1h2'"
+               fg: True
+             - cmd: "sudo ifconfig p1h2-eth1 mtu 1449 up"
                fg: True
              # p1e1
              - cmd: "sudo arp -v -i p1h2-eth1 -s 192.1.1.1 02:00:00:d9:e5:96"
@@ -318,6 +333,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p1h3'"
                fg: True
+             - cmd: "sudo ifconfig p1h3-eth1 mtu 1449 up"
+               fg: True
              # p1e1
              - cmd: "sudo arp -v -i p1h3-eth1 -s 192.1.1.1 02:00:00:a9:ff:ea"
                fg: True
@@ -360,6 +377,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p2h0'"
+               fg: True
+             - cmd: "sudo ifconfig p2h0-eth1 mtu 1449 up"
                fg: True
              # p2e0
              - cmd: "sudo arp -v -i p2h0-eth1 -s 192.2.0.1 02:00:00:d6:eb:2b"
@@ -404,6 +423,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p2h1'"
                fg: True
+             - cmd: "sudo ifconfig p2h1-eth1 mtu 1449 up"
+               fg: True
              # p2e0
              - cmd: "sudo arp -v -i p2h1-eth1 -s 192.2.0.1 02:00:00:ad:d8:57"
                fg: True
@@ -446,6 +467,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p2h2'"
+               fg: True
+             - cmd: "sudo ifconfig p2h2-eth1 mtu 1449 up"
                fg: True
              # p2e1
              - cmd: "sudo arp -v -i p2h2-eth1 -s 192.2.1.1 02:00:00:2c:78:68"
@@ -490,6 +513,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p2h3'"
                fg: True
+             - cmd: "sudo ifconfig p2h3-eth1 mtu 1449 up"
+               fg: True
              # p2e1
              - cmd: "sudo arp -v -i p2h3-eth1 -s 192.2.1.1 02:00:00:5b:d6:40"
                fg: True
@@ -532,6 +557,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p3h0'"
+               fg: True
+             - cmd: "sudo ifconfig p3h0-eth1 mtu 1449 up"
                fg: True
              # p3e0
              - cmd: "sudo arp -v -i p3h0-eth1 -s 192.3.0.1 02:00:00:fc:66:ad"
@@ -576,6 +603,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p3h1'"
                fg: True
+             - cmd: "sudo ifconfig p3h1-eth1 mtu 1449 up"
+               fg: True
              # p3e0
              - cmd: "sudo arp -v -i p3h1-eth1 -s 192.3.0.1 02:00:00:00:d2:87"
                fg: True
@@ -619,6 +648,8 @@ hosts:
          programs:
              - cmd: "echo 'Hello from p3h2'"
                fg: True
+             - cmd: "sudo ifconfig p3h2-eth1 mtu 1449 up"
+               fg: True
              # p3e1
              - cmd: "sudo arp -v -i p3h2-eth1 -s 192.3.1.1 02:00:00:df:47:fa"
                fg: True
@@ -661,6 +692,8 @@ hosts:
                port: 1
          programs:
              - cmd: "echo 'Hello from p3h3'"
+               fg: True
+             - cmd: "sudo ifconfig p3h3-eth1 mtu 1449 up"
                fg: True
              # p3e1
              - cmd: "sudo arp -v -i p3h3-eth1 -s 192.3.1.1 02:00:00:14:46:73"

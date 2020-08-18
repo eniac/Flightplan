@@ -718,7 +718,7 @@ def set_terminal_table_headerless(control_data, switch): # FIXME this feature is
   failed_command = False
   failed_command, _ = table_clear(switch, terminal_lookup_table)
   if failed_command and not args.force: return failed_command, None
-  failed_command, _ = table_add(switch, terminal_lookup_table, offload_port_lookup_action, [str(control_data['end_port'])], ["1", str(control_data['terminal_port'])]) # FIXME const
+  failed_command, _ = table_add(switch, terminal_lookup_table, offload_port_lookup_action, [str(control_data['end_port'])], ["1", str(control_data['terminal_port'])]) # FIXME "1" is a const, standing for a throw-away to_segment value
   return failed_command, None
 
 def set_egress_terminal_table_headerless(control_data, switch): # FIXME this feature is a bit hackish
