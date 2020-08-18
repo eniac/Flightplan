@@ -6,6 +6,14 @@ Compiling P4 programs into JSON files for BMv2 requires p4c (https://github.com/
 Running the resulting compiled programs requires installation of BMv2 (https://github.com/p4lang/behavioral-model/),
 with the additional `booster_switch` as explained [here](../cpuBoosters/bmv2/README.md).
 
+The recommended p4c and behavirol-model version are:
+* commit `c67f85d45feea5c31312c9a1e8a7063a976a1469` of the [behavioral_model](https://github.com/p4lang/behavioral-model/) repo
+* commit `730986bd4dce83a121159d06beb08ffa961afdc7` of the [p4c](https://github.com/p4lang/p4c) repo
+
+The code modules and submodles can be synched to the above commit HASH as follows:
+* `git clone --recursive https://github.com/p4lang/p4c.git`
+* git checkout HASH
+* `git submodule update`
 
 ## Building booster_switch
 
@@ -38,6 +46,10 @@ Exception: Could not execute commands: Runtime API not present
 ```
 
 **WARNINGS** The `BMV2_REPO` variable is hardcoded in several scripts, beware.
+
+## `WHARF_REPO`
+Set the environment variable `WHARF_REPO` to point the directory
+containing the Wharf repository.
 
 ## Building P4 programs to run on booster_switch
 
@@ -113,7 +125,47 @@ target-specific code, but this doesn't do much at the moment.
 
 
 # Testing in Mininet
+### Install Mininet
+```
+mininet commit HASH: bfc42f6d028a9d5ac1bc121090ca4b3041829f86
+git clone git://github.com/mininet/mininet
+mininet/util/install.sh -a
+```
+Perform `sudo apt install net-tools` to avoid the following error:
+```
+Cannot find required executable ifconfig.
 
+Please make sure that Mininet is installed and available in your $PATH:...'
+```
+
+test mininet `sudo mn --test pingall`
+
+#### Install 'pyyaml' (Ver 5.3.1)
+`pip install pyyaml`
+
+#### Install 'dpkt' (Ver 1.9.2)
+Install `dpkt` using `sudo apt-get install python-dpkt`
+
+#### Install 'tcpreplay' (Ver 4.3.3)
+Install `tcpreplay` from `https://launchpad.net/ubuntu/bionic/+package/tcpreplay` or any other link that you prefer.
+
+#### Install 'Memcached' (Ver 1.6.6)
+First, update the local package index:
+`sudo apt-get update`
+
+Next, install the official package as follows:
+`sudo apt-get install memcached`
+
+Install libmemcached-tools, a library that provides several tools to work with your Memcached server:
+`sudo apt-get install libmemcached-tools`
+
+#### Install 'iperf3' (Ver 3.1.3)
+`sudo apt-get update -y`
+`sudo apt-get install -y iperf3`
+
+#### Install 'hping3' (Ver 3.0.0)
+`sudo apt update`
+`sudo apt install hping3`
 
 ## Tclust tests
 For information on the tests that mimic the tclust topology,
@@ -226,6 +278,17 @@ $ ./bmv2/complete_mcd_e2e.sh <input.pcap> <expected.pcap>
 **NB1** Ensure that environment variable `BMV2_REPO` has been set up as mentioned
 in the [Building booster_switch](README.md#building-booster_switch) section.
 
+# Debugging
+
+#### Test 0:
+```
+$ ./bmv2/complete_fec_e2e.sh <input.pcap>
+```
+This is the simplest test and should be your first test.
+In case the test is declared failed, go through the messages that get printed on the console. In case there is nothing obviously wrong in the console messages, then switch to log files. Go through the log files, scanning particularly for errors and missing things. For example, in case you missed to install tcpreplay from the previos steps, then the log file portion will read as:
+```
+bash: tcpreplay: command not found
+```
 
 #### Test 1: FEC
 ```
@@ -240,7 +303,6 @@ This test involves the following steps:
 3. Start programs on the hosts.
 4. Replay packets -- a sample input file for the FEC functionality test is `bmv2/pcaps/tcp_100.pcap`.
 5. Check to ensure that the packets received by h2 are identical to those sent by h1, even in the presence of drops.
-
 
 #### Running different programs on switches
 The default test runs the same program on switches. The "two halves" tests run
@@ -267,6 +329,42 @@ replies received by h1 are as expected. We used the input files
 `bmv2/pcaps/Memcached_in_short.pcap` and `bmv2/pcaps/Memcached_expected_short.pcap`.
 
 **NB** For testing Memcached functionality the MAC addresses in [bmv2/pcap_tools/pcap_sub.py](bmv2/pcap_tools/pcap_sub.py) must match those used in the config file [./bmv2/topologies/complete_topology.yml](./bmv2/topologies/complete_topology.yml).
+
+#### Test 3: run_alv.sh
+
+Before tackling splits, first try running run_alv.sh -- that's an
+example with the most sophisticated topology we have: alv_k=4.yml.
+The goal here is to check that the alv_k=4.yml-based experiment works,
+since that's a baseline for what follows
+
+`run_alv.sh` has different modes to test. By default the mode is 'selftest'. run it to run the test.
+The mode can be set from the command line by setting the MODE environment variable. run all the modes one by one.
+
+#### Result Interpretation:
+All the `selftest` modes use python facility `line oriented command interpretors`. It returns the exit code of a program run. Exit code `0` means success.
+On console, messages `-- returned:0` indicates `Test Succeeded`.
+
+The exit code `127` suggests that the the required installation is not available. for example, the following suggests that `hping3` is not installed.
+
+`Running  hping3 -c 1 -S -p 5201 192.0.0.2 on p0h0 -- returned:127`
+
+#### Wharf/splits2:
+Headerless(hl) Runtime: 'ALV_Complete_1_hl3new' splits ALV_Complete in three parts (2 offload devices for booster offloading + connected switch p0a0 for routing). Whereas, 'ALV_Complete_2_hl3new' splits ALV_Complete in six parts (5 offload devices for booster offloading + connected switch p0a0 for routing).
+
+### Wharf/splits:
+Full Runtime:
+
+(A) splits/ALV_Complete_1:
+p0a0 has two supporting devices
+
+(B) splits/ALV_Complete_2:
+p0a0 has two supporting devices
++ p1e0 has five supporting devices
+
+(C) splits/ALV_Complete_3:
+p0a0 has two supporting devices
++ p1e0 has five supporting devices
++ c0 has firewall on supporting devices
 
 
 # Adding new boosters

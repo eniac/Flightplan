@@ -23,7 +23,7 @@ import subprocess
 import sys
 import yaml
 
-bmv2_send_command_script="/home/nsultana/2/P4Boosters/Wharf/bmv2/send_bmv2_commands.py" # FIXME const
+bmv2_send_command_script="$WHARF_REPO/bmv2/send_bmv2_commands.py"
 
 temp_file = ".fpctl.tmp" # Can be user-configured using the --temp_file parameter.
 default_flightplan_pip_nak_count_max = 5 # Can be user-configured using the --max_nak parameter.
