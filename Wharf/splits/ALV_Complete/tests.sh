@@ -336,15 +336,9 @@ function complete_fec_e2e {
 
   # Creating graph log file
   GRAPH_LOG=$LOG_DUMPS/graph_log.txt
-  echo "Using GRAPH LOG = ${GRAPH_LOG}"
-  touch ${GRAPH_LOG}
-  > ${GRAPH_LOG}
 	
   # Creating empty temp file
   TEMP=$LOG_DUMPS/temp.txt
-  echo "Using TEMP = ${TEMP}"
-  touch ${TEMP}
-  > ${TEMP}
 
   # Take the tcp dump to temp file
   tcpdump -xx -r ${PCAP_DUMPS}/p0h0_to_p0e0.pcap > ${TEMP}
@@ -354,16 +348,19 @@ function complete_fec_e2e {
   readarray -d " " -t time_stream <<< ${time}
 
   awk -v BASE="${time_stream[0]}" '{ 
+    # from tcpdump, find the line containing keyword "length" for each packet in tcpdump
     if(/length/){
+    # split time string to hr, minute, second, microsecond
     split(BASE, base_time_array, /[:.]/)
     split($1, time_array, /[:.]/) 
+    # find out elapsed time for current packet
     elapsed_time=(time_array[1] - base_time_array[1])*60*60*1000*1000 + (time_array[2] - base_time_array[2])*60*1000*1000 + (time_array[3] - base_time_array[3])*1000*1000 + time_array[4] - base_time_array[4]
       printf "%s ", elapsed_time
       
       getline
       getline
       getline
-      
+      # check the seq number, if it has repeated, it indicates retransmission.
       if(seq_count[$5$6]+0 > 0){
         retransmission_count++
       }
