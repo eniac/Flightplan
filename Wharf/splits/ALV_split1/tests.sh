@@ -62,9 +62,9 @@ function autotest2 {
 
   # Creating graph log file
   #log file for first supporting device
-  GRAPH_LOG1=$LOG_DUMPS/graph_log1.txt
+  GRAPH_LOG1=$LOG_DUMPS/FPoffload_graph.txt
   #log file for second supporting device
-  GRAPH_LOG2=$LOG_DUMPS/graph_log2.txt
+  GRAPH_LOG2=$LOG_DUMPS/FPoffload2_graph.txt
 
   # Creating empty temp file
   TEMP=$LOG_DUMPS/temp.txt
