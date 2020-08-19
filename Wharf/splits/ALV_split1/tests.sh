@@ -101,7 +101,7 @@ function autotest2 {
     }
   }' ${TEMP} > ${GRAPH_LOG1}
 
-  > ${TEMP}
+  truncate -s 0 ${TEMP}
 
   # Take the tcp dump to temp file
   tcpdump -e -xx -r ${PCAP_DUMPS}/p0e0_to_FPoffload2.pcap | grep length > ${TEMP}
