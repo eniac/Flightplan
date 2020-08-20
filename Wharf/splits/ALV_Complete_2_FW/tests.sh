@@ -7,8 +7,8 @@
 # FIXME poor naming choices for tests
 # NOTE based on splits/ALV_Complete_2/tests.sh
 
-export TOPOLOGY=splits/ALV_Complete_2_FW/alv_k=4.yml
-MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest)
+export TOPOLOGY=$WHARF_REPO/splits/ALV_Complete_2_FW/alv_k=4.yml
+MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest_positive fwtest_negative)
 DEFAULT_MODE=autotest
 
 if [ -z "${MODE}" ]
@@ -487,7 +487,7 @@ function interactive2_complete {
           --cli
 }
 
-function fwtest {
+function fwtest_positive {
   if [ -z "${NUM_PINGS}" ]
   then
     NUM_PINGS=1
@@ -519,13 +519,74 @@ function fwtest {
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.1.1.2" \
-     --fg-host-prog "p1h2: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
-     --fg-host-prog "p1h1: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.1.0.3" \
      --fg-host-prog "p1h2: hping3 -c $NUM_PINGS -S -p 5201 192.1.0.3" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.2.0.3" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.3.1.2" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.0.1.3" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
+     # where:
+     #   p1h2 = 192.1.1.2
+     #   p1h3 = 192.1.1.3
+     #   p1h1 = 192.1.0.3
+     #   p2h1 = 192.2.0.3
+     #   p3h2 = 192.3.1.2
+     #   p0h3 = 192.0.1.3
+
+  # Creating graph log file
+  ERR_LOG=$LOG_DUMPS/flightplan_mininet_log.err
+  echo "Using ERR LOG = ${ERR_LOG}"
+
+  GRAPH_LOG=$LOG_DUMPS/graph_fw_positive.txt
+  echo "Using GRAPH LOG = ${GRAPH_LOG}"
+  touch ${GRAPH_LOG}
+  > ${GRAPH_LOG}
+
+  awk -v N_PING="$NUM_PINGS" '{ 
+    if(/hping3/){
+      getline
+      n_packets = n_packets + N_PING
+      n_passed = n_passed+(1-$1)*N_PING
+      success_rate = n_passed/n_packets*100
+      printf "%d %d\n", n_packets+0,  success_rate+0
+    }
+  }' ${ERR_LOG} > ${GRAPH_LOG}
+  
+}
+
+function fwtest_negative {
+  if [ -z "${NUM_PINGS}" ]
+  then
+    NUM_PINGS=1
+  fi
+
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
+     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
+     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
+     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
+     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
+     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
+     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
+     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
+     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
+     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
+     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
+     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
+     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
+     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
+     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
+     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
+     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
+     --fg-host-prog "p1h2: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h1: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
      --fg-host-prog "p1h3: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
      --fg-host-prog "p1h3: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
      --fg-host-prog "p1h3: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
@@ -537,6 +598,26 @@ function fwtest {
      #   p2h1 = 192.2.0.3
      #   p3h2 = 192.3.1.2
      #   p0h3 = 192.0.1.3
+
+  # Creating graph log file
+  ERR_LOG=$LOG_DUMPS/flightplan_mininet_log.err
+  echo "Using ERR LOG = ${ERR_LOG}"
+
+  GRAPH_LOG=$LOG_DUMPS/graph_fw_negative.txt
+  echo "Using GRAPH LOG = ${GRAPH_LOG}"
+  touch ${GRAPH_LOG}
+  > ${GRAPH_LOG}
+
+  awk -v N_PING="$NUM_PINGS" '{ 
+    if(/hping3/){
+      getline
+      n_packets = n_packets + N_PING
+      n_passed = n_passed+(1-$1)*N_PING
+      success_rate = n_passed/n_packets*100
+      printf "%d %d\n", n_packets+0,  success_rate+0
+    }
+  }' ${ERR_LOG} > ${GRAPH_LOG}
+
 }
 
 source `dirname "$0"`/../../run_alv.sh
