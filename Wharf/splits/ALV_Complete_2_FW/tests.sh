@@ -535,13 +535,11 @@ function fwtest_positive {
 
   # Creating graph log file
   ERR_LOG=$LOG_DUMPS/flightplan_mininet_log.err
-  echo "Using ERR LOG = ${ERR_LOG}"
 
   GRAPH_LOG=$LOG_DUMPS/graph_fw_positive.txt
-  echo "Using GRAPH LOG = ${GRAPH_LOG}"
-  touch ${GRAPH_LOG}
-  > ${GRAPH_LOG}
 
+  # find out hping3 from the log file and the success status. Update the sucees rate so far
+  # log success rate to relevant file
   awk -v N_PING="$NUM_PINGS" '{ 
     if(/hping3/){
       getline
@@ -601,13 +599,11 @@ function fwtest_negative {
 
   # Creating graph log file
   ERR_LOG=$LOG_DUMPS/flightplan_mininet_log.err
-  echo "Using ERR LOG = ${ERR_LOG}"
 
   GRAPH_LOG=$LOG_DUMPS/graph_fw_negative.txt
-  echo "Using GRAPH LOG = ${GRAPH_LOG}"
-  touch ${GRAPH_LOG}
-  > ${GRAPH_LOG}
 
+  # find out hping3 from the log file and the success status. Update the sucees rate so far
+  # log success rate to relevant file
   awk -v N_PING="$NUM_PINGS" '{ 
     if(/hping3/){
       getline
