@@ -367,7 +367,7 @@ function complete_mcd_e2e {
   FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
   PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -433,7 +433,7 @@ function complete_mcd_e2e {
   STATUS=0
 
   SETS_experiment=$(grep set ${LOG_DUMPS}/mcd_log | wc -l)
-  SETS_reference=$(grep set mcd_log_withoutcache.expected | wc -l)
+  SETS_reference=$(grep set $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$SETS_experiment" -eq "$SETS_reference" ]
   then
       echo "#SETS: OK ($SETS_experiment vs $SETS_reference)"
@@ -443,7 +443,7 @@ function complete_mcd_e2e {
   fi
 
   GETS_experiment=$(grep get ${LOG_DUMPS}/mcd_log | wc -l)
-  GETS_reference=$(grep get mcd_log_withoutcache.expected | wc -l)
+  GETS_reference=$(grep get $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$GETS_experiment" -eq "$GETS_reference" ]
   then
       echo "#GETS: OK (same as reference -- no cache is being used)"
