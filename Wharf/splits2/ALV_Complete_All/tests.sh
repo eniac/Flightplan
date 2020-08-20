@@ -7,8 +7,8 @@
 # FIXME poor naming choices for tests
 # NOTE based on splits/ALV_Complete_2_FW/tests.sh
 
-export TOPOLOGY=splits2/ALV_Complete_All/alv_k=4.yml
-MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest)
+export TOPOLOGY=$WHARF_REPO/splits2/ALV_Complete_All/alv_k=4.yml
+MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest complete_all_e2e)
 DEFAULT_MODE=autotest
 
 if [ -z "${MODE}" ]
@@ -18,13 +18,13 @@ then
 fi
 
 function interactive_complete {
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -38,14 +38,14 @@ function autotest {
     NUM_PINGS=1
   fi
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -317,8 +317,8 @@ function autotest_long {
 function complete_fec_e2e {
   # Based on bmv2/complete_fec_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  TRAFFIC_PREINPUT=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/tcp_100.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
   TRAFFIC_INPUT=/tmp/tcp_100.pcap
   CACHEFILE=/tmp/tcprewrite_cachefile
   # Traffic will be sent from p0h0 to p1h0
@@ -327,12 +327,12 @@ function complete_fec_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -370,10 +370,10 @@ function complete_fec_e2e {
 function complete_mcd_e2e {
   # Based on bmv2/complete_mcd_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  PCAP_TOOLS=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcap_tools/
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -387,12 +387,12 @@ function complete_mcd_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -441,7 +441,7 @@ function complete_mcd_e2e {
   STATUS=0
 
   SETS_experiment=$(grep set ${LOG_DUMPS}/mcd_log | wc -l)
-  SETS_reference=$(grep set mcd_log_withoutcache.expected | wc -l)
+  SETS_reference=$(grep set $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$SETS_experiment" -eq "$SETS_reference" ]
   then
       echo "#SETS: OK ($SETS_experiment vs $SETS_reference)"
@@ -451,7 +451,7 @@ function complete_mcd_e2e {
   fi
 
   GETS_experiment=$(grep get ${LOG_DUMPS}/mcd_log | wc -l)
-  GETS_reference=$(grep get mcd_log_withoutcache.expected | wc -l)
+  GETS_reference=$(grep get $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$GETS_experiment" -eq "$GETS_reference" ]
   then
       echo "#GETS: OK (same as reference -- no cache is being used)"
@@ -467,8 +467,8 @@ function complete_mcd_e2e {
 }
 
 function interactive2_complete {
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -489,7 +489,7 @@ function interactive2_complete {
      --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
      --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
      --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -503,8 +503,8 @@ function fwtest {
     NUM_PINGS=1
   fi
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -525,7 +525,7 @@ function fwtest {
      --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
      --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
      --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -563,6 +563,115 @@ function fwtest {
      #   p3h2 = 192.3.1.2
      #   p0h2 = 192.0.1.2
      #   p0h3 = 192.0.1.3
+}
+
+
+function complete_all_e2e {
+
+  # Based on bmv2/complete_mcd_e2e.sh
+
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
+
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
+
+  SIP="192.0.0.2"
+  DIP="192.1.0.2"
+  SMAC="02:00:00:d8:c2:6b"
+  DMAC="02:00:00:9c:a8:79"
+
+  INPUT_PCAP=$OUTDIR/${BASENAME}_in.pcap
+  echo "Putting pcap in $INPUT_PCAP"
+  python2 ${PCAP_TOOLS}/pcap_sub.py $TRAFFIC_PREINPUT $INPUT_PCAP\
+      --sip="$SIP" --dip="$DIP" --smac="$SMAC" --dmac="$DMAC"
+
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
+  TRAFFIC_INPUT=/tmp/tcp_100.pcap
+  CACHEFILE=/tmp/tcprewrite_cachefile
+  # Traffic will be sent from p0h0 to p1h0
+  tcpprep --auto=first --pcap=${TRAFFIC_PREINPUT} --cachefile=${CACHEFILE}
+  tcprewrite --endpoints=192.0.0.2:192.1.0.2 --cachefile=${CACHEFILE} -i ${TRAFFIC_PREINPUT} -o ${TRAFFIC_INPUT}
+
+  sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
+
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+          --pcap-dump $PCAP_DUMPS \
+          --log $LOG_DUMPS \
+          --verbose \
+          --showExitStatus \
+     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
+     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
+     --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
+     --fg-host-prog ": tcpreplay -i dropper2-eth1 ${FEC_INIT_PCAP}" \
+     --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
+     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
+     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 ${TRAFFIC_INPUT}" \
+          2> $LOG_DUMPS/flightplan_mininet_log.err
+
+  # FIXME The target log's name might change -- this is brittle!
+  TARGET_LOG=${LOG_DUMPS}/p1h0_prog_19.log
+  echo "Using TARGET_LOG=`ls -lh ${TARGET_LOG}`"
+
+  grep --text -E '^[<>]' ${TARGET_LOG} | grep --text -v "server" | grep --text -v "buffer" | sed -E 's/^([<>])[0-9]+/\1/' | grep --text -v STORED | grep --text -v "sending key" | grep --text -v END > ${LOG_DUMPS}/mcd_log
+
+  #if [ -n "${UNIQUE_MATTERS}" ]
+  #then
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)"
+  #else
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)"
+  #fi
+  #echo $CMD
+  #eval $CMD
+  #if [[ $? == 0 ]]
+  #then
+  #    echo "Test conclusive: cache was NOT used"
+  #    exit 0
+  #fi
+  #
+  #if [ -n "${UNIQUE_MATTERS}" ]
+  #then
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)"
+  #else
+  #  CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)"
+  #fi
+  #echo $CMD
+  #eval $CMD
+  #if [[ $? == 0 ]]
+  #then
+  #    echo "Test conclusive: cache was used"
+  #    exit 0
+  #fi
+  #
+  #echo "Test inconclusive"
+  #exit 1
+
+  STATUS=0
+
+  SETS_experiment=$(grep set ${LOG_DUMPS}/mcd_log | wc -l)
+  SETS_reference=$(grep set $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
+  if [ "$SETS_experiment" -eq "$SETS_reference" ]
+  then
+      echo "#SETS: OK ($SETS_experiment vs $SETS_reference)"
+  else
+      echo "#SETS: Different than reference ($SETS_experiment vs $SETS_reference)"
+      STATUS=1
+  fi
+
+  GETS_experiment=$(grep get ${LOG_DUMPS}/mcd_log | wc -l)
+  GETS_reference=$(grep get $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
+  if [ "$GETS_experiment" -eq "$GETS_reference" ]
+  then
+      echo "#GETS: OK (same as reference -- no cache is being used)"
+  elif [ "$GETS_experiment" -lt "$GETS_reference" ]
+  then
+      echo "#GETS: OK (less than reference: ($GETS_experiment vs $GETS_reference))"
+  else
+      echo "#GETS: Different than reference ($GETS_experiment vs $GETS_reference)"
+      STATUS=1
+  fi
+
+  exit $STATUS
 }
 
 source `dirname "$0"`/../../run_alv.sh
