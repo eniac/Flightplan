@@ -8,7 +8,7 @@
 # NOTE based on splits/ALV_Complete_2_FW/tests.sh
 
 export TOPOLOGY=$WHARF_REPO/splits2/ALV_Complete_All/alv_k=4.yml
-MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest complete_all_e2e complete_all_1_e2e)
+MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest complete_all_e2e)
 DEFAULT_MODE=autotest
 
 if [ -z "${MODE}" ]
@@ -565,54 +565,8 @@ function fwtest {
      #   p0h3 = 192.0.1.3
 }
 
+
 function complete_all_e2e {
-  # Based on bmv2/complete_fec_e2e.sh
-
-  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
-  PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
-
-  TRAFFIC_PREINPUT_MCD=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
-
-  SIP="192.0.0.2"
-  DIP="192.1.0.2"
-  SMAC="02:00:00:d8:c2:6b"
-  DMAC="02:00:00:9c:a8:79"
-
-  INPUT_PCAP=$OUTDIR/${BASENAME}_in.pcap
-  echo "Putting pcap in $INPUT_PCAP"
-  python2 ${PCAP_TOOLS}/pcap_sub.py $TRAFFIC_PREINPUT_MCD $INPUT_PCAP\
-      --sip="$SIP" --dip="$DIP" --smac="$SMAC" --dmac="$DMAC"
-
-  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
-  TRAFFIC_INPUT=/tmp/tcp_100.pcap
-  CACHEFILE=/tmp/tcprewrite_cachefile
-  # Traffic will be sent from p0h0 to p1h0
-  tcpprep --auto=first --pcap=${TRAFFIC_PREINPUT} --cachefile=${CACHEFILE}
-  tcprewrite --endpoints=192.0.0.2:192.1.0.2 --cachefile=${CACHEFILE} -i ${TRAFFIC_PREINPUT} -o ${TRAFFIC_INPUT}
-
-
-  sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
-
-  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
-          --pcap-dump $PCAP_DUMPS \
-          --log $LOG_DUMPS \
-          --verbose \
-          --showExitStatus \
-     --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
-     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
-     --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
-     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
-     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 ${TRAFFIC_INPUT}" \
-          2> $LOG_DUMPS/flightplan_mininet_log.err
-
-  mv ${TRAFFIC_INPUT} ${PCAP_DUMPS}/
-  mv ${CACHEFILE} ${PCAP_DUMPS}/
-
-  echo "Test succeeded"
-
-}
-
-function complete_all_1_e2e {
 
   # Based on bmv2/complete_mcd_e2e.sh
 
