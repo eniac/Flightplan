@@ -56,9 +56,84 @@ function autotest2 {
      --fg-host-prog ": $WHARF_REPO/splits/ALV_split1/autotest2_step1.sh" \
      --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
      --fg-host-prog ": $WHARF_REPO/splits/ALV_split1/autotest2_step2.sh" \
-     --fg-host-prog "p0h0: ping -c 4 192.0.1.2" \
+     --fg-host-prog "p0h0: ping -c 12 192.0.1.2" \
      --fg-host-prog ": $WHARF_REPO/splits/ALV_split1/autotest2_step3.sh" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
+
+  # Creating graph log file
+  #log file for first supporting device
+  GRAPH_LOG1=$LOG_DUMPS/FPoffload_graph.txt
+  #log file for second supporting device
+  GRAPH_LOG2=$LOG_DUMPS/FPoffload2_graph.txt
+
+  # Creating empty temp file
+  TEMP=$LOG_DUMPS/temp.txt
+
+  # Take the tcp dump to temp file
+  tcpdump -e -r ${PCAP_DUMPS}/p0e0_to_FPoffload.pcap | grep length > ${TEMP}
+
+  # First packet time is a reference time to calculate the elapsed time of all the packets
+  time=$(head -n 1 ${TEMP})
+  readarray -d " " -t time_stream <<< ${time}
+
+  awk -v BASE="${time_stream[0]}" '{ 
+    if(/length/){
+    split(BASE, base_time_array, /[:.]/)
+    this_time=$1
+    this_line=$0
+
+        # split time in hr, mm, sec, milliseconds
+		split(this_time, time_array, /[:.]/) 
+        # convert time to microseconds
+		elapsed_time=(time_array[1] - base_time_array[1])*60*60*1000*1000 + (time_array[2] - base_time_array[2])*60*1000*1000 + (time_array[3] - base_time_array[3])*1000*1000 + time_array[4] - base_time_array[4]
+        printf "%s ", elapsed_time
+    
+        n=split(this_line, full_array, /[ ]/)
+        idx=1
+        for (i=1; i<=n+0; i++){
+                if(full_array[i]=="length"){
+                        idx=i+1
+                        break
+                }
+        }
+        len=len+full_array[idx+0]
+        printf "%d\n", len+0
+    }
+  }' ${TEMP} > ${GRAPH_LOG1}
+
+  truncate -s 0 ${TEMP}
+
+  # Take the tcp dump to temp file
+  tcpdump -e -xx -r ${PCAP_DUMPS}/p0e0_to_FPoffload2.pcap | grep length > ${TEMP}
+
+  # The second device takes over in the same test, 
+  # So reference time for its packets is still the first packet time of the test.
+  # and NOT the time of first packet through new device
+  awk -v BASE="${time_stream[0]}" '{ 
+    if(/length/){
+    split(BASE, base_time_array, /[:.]/)
+    this_time=$1
+    this_line=$0
+
+        split(this_time, time_array, /[:.]/) 
+        elapsed_time=(time_array[1] - base_time_array[1])*60*60*1000*1000 + (time_array[2] - base_time_array[2])*60*1000*1000 + (time_array[3] - base_time_array[3])*1000*1000 + time_array[4] - base_time_array[4]
+        printf "%s ", elapsed_time
+    
+    # find out "length" keyword. Next element to this position is actual length
+		n=split(this_line, full_array, /[ ]/)
+        idx=1
+        for (i=1; i<=n+0; i++){
+                if(full_array[i]=="length"){
+                        idx=i+1
+                        break
+                }
+        }
+        len=len+full_array[idx+0]
+        printf "%d\n", len+0
+    }
+
+  }' ${TEMP} > ${GRAPH_LOG2}
+  rm ${TEMP}
 }
 
 function autotest2B {
