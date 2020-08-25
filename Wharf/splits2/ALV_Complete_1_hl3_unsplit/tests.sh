@@ -7,7 +7,7 @@
 # FIXME this and other scripts assume that it's being run in the "Wharf" directory
 # FIXME poor naming choices for tests
 
-export TOPOLOGY=splits2/ALV_Complete_1_hl3_unsplit/alv_k=4.yml
+export TOPOLOGY=$WHARF_REPO/splits2/ALV_Complete_1_hl3_unsplit/alv_k=4.yml
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e)
 DEFAULT_MODE=autotest
 
@@ -18,8 +18,8 @@ then
 fi
 
 function interactive_complete {
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -34,9 +34,9 @@ function autotest {
     NUM_PINGS=1
   fi
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -307,10 +307,10 @@ function autotest_long {
 }
 
 function complete_fec_e2e {
-  # Based on bmv2/complete_fec_e2e.sh
+  # Based on $WHARF_REPO/bmv2/complete_fec_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  TRAFFIC_PREINPUT=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/tcp_100.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
   TRAFFIC_INPUT=/tmp/tcp_100.pcap
   CACHEFILE=/tmp/tcprewrite_cachefile
   # Traffic will be sent from p0h0 to p1h0
@@ -319,7 +319,7 @@ function complete_fec_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -356,12 +356,12 @@ function complete_fec_e2e {
 }
 
 function complete_mcd_e2e {
-  # Based on bmv2/complete_mcd_e2e.sh
+  # Based on $WHARF_REPO/bmv2/complete_mcd_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  PCAP_TOOLS=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcap_tools/
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -375,7 +375,7 @@ function complete_mcd_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
@@ -425,7 +425,7 @@ function complete_mcd_e2e {
   STATUS=0
 
   SETS_experiment=$(grep set ${LOG_DUMPS}/mcd_log | wc -l)
-  SETS_reference=$(grep set mcd_log_withoutcache.expected | wc -l)
+  SETS_reference=$(grep set $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$SETS_experiment" -eq "$SETS_reference" ]
   then
       echo "#SETS: OK ($SETS_experiment vs $SETS_reference)"
@@ -435,7 +435,7 @@ function complete_mcd_e2e {
   fi
 
   GETS_experiment=$(grep get ${LOG_DUMPS}/mcd_log | wc -l)
-  GETS_reference=$(grep get mcd_log_withoutcache.expected | wc -l)
+  GETS_reference=$(grep get $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$GETS_experiment" -eq "$GETS_reference" ]
   then
       echo "#GETS: OK (same as reference -- no cache is being used)"

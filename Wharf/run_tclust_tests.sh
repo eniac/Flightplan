@@ -1,15 +1,15 @@
 #!/bin/bash -e
 
-LOG_DIR=bmv2/test_output/tclust_test_output
+LOG_DIR=$WHARF_REPO/bmv2/test_output/tclust_test_output
 
 mkdir -p ${LOG_DIR}
 
 tclust_test() {
   TITLE=$1
-  SCRIPT=bmv2/tclust/$2
-  PCAP=bmv2/pcaps/$3
+  SCRIPT=$WHARF_REPO/bmv2/tclust/$2
+  PCAP=$WHARF_REPO/bmv2/pcaps/$3
   if [[ $# == 4 ]]; then
-      EXPECTED=bmv2/pcaps/$4
+      EXPECTED=$WHARF_REPO/bmv2/pcaps/$4
   else
       EXPECTED=""
   fi

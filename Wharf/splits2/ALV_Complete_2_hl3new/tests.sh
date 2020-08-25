@@ -8,6 +8,7 @@
 # FIXME poor naming choices for tests
 
 export TOPOLOGY=$WHARF_REPO/splits2/ALV_Complete_2_hl3new/alv_k=4.yml
+START_CFG=": $WHARF_REPO/splits2/ALV_Complete_2_hl3new/start2.sh"
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e complete_all_e2e)
 DEFAULT_MODE=autotest
 
@@ -24,7 +25,7 @@ function interactive_complete {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_2_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --cli
 }
@@ -42,7 +43,7 @@ function autotest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_2_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.2" \
      --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.3" \
@@ -326,7 +327,7 @@ function complete_fec_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_2_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${TRAFFIC_INPUT}" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
@@ -383,7 +384,7 @@ function complete_mcd_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_2_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
@@ -487,17 +488,12 @@ function complete_all_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
-     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
-     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 ${TRAFFIC_INPUT}" \
+     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
-
-  mv ${TRAFFIC_INPUT} ${PCAP_DUMPS}/
-  mv ${CACHEFILE} ${PCAP_DUMPS}/
-
-  echo "Test succeeded"
 
 }
 

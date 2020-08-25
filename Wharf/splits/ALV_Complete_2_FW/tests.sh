@@ -8,7 +8,8 @@
 # NOTE based on splits/ALV_Complete_2/tests.sh
 
 export TOPOLOGY=$WHARF_REPO/splits/ALV_Complete_2_FW/alv_k=4.yml
-MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest_positive fwtest_negative)
+START_CFG=": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh"
+MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest)
 DEFAULT_MODE=autotest
 
 if [ -z "${MODE}" ]
@@ -24,7 +25,7 @@ function interactive_complete {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --cli
@@ -43,121 +44,16 @@ function autotest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p0h1: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p0h2: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p0h3: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p1h0: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p1h1: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p1h2: ping -c $NUM_PINGS 192.3.1.3" \
      --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.0.0.2" \
      --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.0.0.3" \
      --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.0.1.2" \
@@ -166,142 +62,14 @@ function autotest {
      --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.1.0.3" \
      --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p1h3: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p2h0: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p2h1: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p2h2: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p2h3: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p3h0: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p3h1: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p3h2: ping -c $NUM_PINGS 192.3.1.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.0.0.2" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.0.0.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.0.1.2" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.0.1.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.1.0.2" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.1.0.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.1.1.2" \
      --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.1.1.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.2.0.2" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.2.0.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.2.1.2" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.2.1.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.3.0.2" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.3.0.3" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.3.1.2" \
-     --fg-host-prog "p3h3: ping -c $NUM_PINGS 192.3.1.3" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
 }
 
@@ -328,7 +96,7 @@ function complete_fec_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${TRAFFIC_INPUT}" \
@@ -386,7 +154,7 @@ function complete_mcd_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
@@ -481,13 +249,14 @@ function interactive2_complete {
      --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
      --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
      --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
           --cli
 }
 
-function fwtest_positive {
+
+function fwtest {
   if [ -z "${NUM_PINGS}" ]
   then
     NUM_PINGS=1
@@ -499,7 +268,7 @@ function fwtest_positive {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
+      --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
      --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
      --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
      --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
@@ -515,7 +284,7 @@ function fwtest_positive {
      --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
      --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
      --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.1.1.2" \
@@ -524,6 +293,12 @@ function fwtest_positive {
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.2.0.3" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.3.1.2" \
      --fg-host-prog "p1h3: hping3 -c $NUM_PINGS -S -p 5201 192.0.1.3" \
+     --fg-host-prog "p1h2: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h1: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h0: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h1: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p2h0: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
+     --fg-host-prog "p1h0: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
      # where:
      #   p1h2 = 192.1.1.2
@@ -536,7 +311,7 @@ function fwtest_positive {
   # Creating graph log file
   ERR_LOG=$LOG_DUMPS/flightplan_mininet_log.err
 
-  GRAPH_LOG=$LOG_DUMPS/graph_fw_positive.txt
+  GRAPH_LOG=$LOG_DUMPS/graph_fw_full.txt
 
   # find out hping3 from the log file and the success status. Update the sucees rate so far
   # log success rate to relevant file
@@ -544,76 +319,14 @@ function fwtest_positive {
     if(/hping3/){
       getline
       n_packets = n_packets + N_PING
+      packet_rate = (n_packet/12)*100
       n_passed = n_passed+(1-$1)*N_PING
       success_rate = n_passed/n_packets*100
-      printf "%d %d\n", n_packets+0,  success_rate+0
+      printf "%d %d\n", packet_rate+0,  success_rate+0
     }
   }' ${ERR_LOG} > ${GRAPH_LOG}
   
 }
 
-function fwtest_negative {
-  if [ -z "${NUM_PINGS}" ]
-  then
-    NUM_PINGS=1
-  fi
-
-  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
-  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
-          --pcap-dump $PCAP_DUMPS \
-          --log $LOG_DUMPS \
-          --verbose \
-          --showExitStatus \
-     --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
-     --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
-     --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
-     --host-prog "p0h3: iperf3 -s -B 192.0.1.3 -p 5201" \
-     --host-prog "p1h0: iperf3 -s -B 192.1.0.2 -p 5201" \
-     --host-prog "p1h1: iperf3 -s -B 192.1.0.3 -p 5201" \
-     --host-prog "p1h2: iperf3 -s -B 192.1.1.2 -p 5201" \
-     --host-prog "p1h3: iperf3 -s -B 192.1.1.3 -p 5201" \
-     --host-prog "p2h0: iperf3 -s -B 192.2.0.2 -p 5201" \
-     --host-prog "p2h1: iperf3 -s -B 192.2.0.3 -p 5201" \
-     --host-prog "p2h2: iperf3 -s -B 192.2.1.2 -p 5201" \
-     --host-prog "p2h3: iperf3 -s -B 192.2.1.3 -p 5201" \
-     --host-prog "p3h0: iperf3 -s -B 192.3.0.2 -p 5201" \
-     --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
-     --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
-     --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2_FW/start2.sh" \
-     --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
-     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
-     --fg-host-prog "p1h2: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
-     --fg-host-prog "p1h1: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
-     --fg-host-prog "p1h3: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
-     --fg-host-prog "p1h3: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
-     --fg-host-prog "p1h3: ! hping3 -c $NUM_PINGS -S -p 5201 192.1.1.3" \
-          2> $LOG_DUMPS/flightplan_mininet_log.err
-     # where:
-     #   p1h2 = 192.1.1.2
-     #   p1h3 = 192.1.1.3
-     #   p1h1 = 192.1.0.3
-     #   p2h1 = 192.2.0.3
-     #   p3h2 = 192.3.1.2
-     #   p0h3 = 192.0.1.3
-
-  # Creating graph log file
-  ERR_LOG=$LOG_DUMPS/flightplan_mininet_log.err
-
-  GRAPH_LOG=$LOG_DUMPS/graph_fw_negative.txt
-
-  # find out hping3 from the log file and the success status. Update the sucees rate so far
-  # log success rate to relevant file
-  awk -v N_PING="$NUM_PINGS" '{ 
-    if(/hping3/){
-      getline
-      n_packets = n_packets + N_PING
-      n_passed = n_passed+(1-$1)*N_PING
-      success_rate = n_passed/n_packets*100
-      printf "%d %d\n", n_packets+0,  success_rate+0
-    }
-  }' ${ERR_LOG} > ${GRAPH_LOG}
-
-}
 
 source `dirname "$0"`/../../run_alv.sh

@@ -15,19 +15,19 @@ while [ "${1:-}" != "" ]; do
 done
 
 if [[ $DESCRIBE == 1 ]]; then
-    bmv2/tclust/tclust_mcrouter.sh --describe
-    bmv2/tclust/tclust_ufw.sh --describe
-    bmv2/tclust/tclust_snort.sh --describe
+    $WHARF_REPO/bmv2/tclust/tclust_mcrouter.sh --describe
+    $WHARF_REPO/bmv2/tclust/tclust_ufw.sh --describe
+    $WHARF_REPO/bmv2/tclust/tclust_snort.sh --describe
     exit 0
 fi
 
-LOG_DIR=bmv2/test_output/tclust_test_output
+LOG_DIR=$WHARF_REPO/bmv2/test_output/tclust_test_output
 
 mkdir -p ${LOG_DIR}
 
 legacy_test() {
   TITLE=$1
-  SCRIPT=bmv2/tclust/$2
+  SCRIPT=$WHARF_REPO/bmv2/tclust/$2
   if [[ $# == 3 ]]; then
       FLAGS=$3;
   else
