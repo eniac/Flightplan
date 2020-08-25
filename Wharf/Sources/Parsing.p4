@@ -30,7 +30,9 @@ header fec_h
 header ipv4_h {
   	bit<4>   version;
   	bit<4>   ihl;
-  	bit<8>   tos;
+//	bit<8>   tos;
+  	bit<6>   diffserv;
+  	bit<2>   ecn;
   	bit<16>  len;
   	bit<16>  id;
   	bit<3>   flags;
