@@ -367,6 +367,9 @@ p0a0 has two supporting devices
 + c0 has firewall on supporting devices
 
 
+### Disk Space:
+As you go along and perform several experiments, `test_output` folders can grow up and take disk space. It is recommended to remove `test_output` folders periodically.
+
 # Adding new boosters
 New boosters can be invoked from existing P4 files, by modifying those files
 to make the extern call, or writing new P4 files. Further the desired topology
