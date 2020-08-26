@@ -30,7 +30,9 @@ header fec_h
 header ipv4_h {
   	bit<4>   version;
   	bit<4>   ihl;
-  	bit<8>   tos;
+//	bit<8>   tos;
+  	bit<6>   diffserv;
+  	bit<2>   ecn;
   	bit<16>  len;
   	bit<16>  id;
   	bit<3>   flags;
@@ -40,6 +42,13 @@ header ipv4_h {
   	bit<16>  chksum;
   	bit<32>  src;
   	bit<32>  dst;
+}
+
+// from tutorials/exercises/basic_tunnel
+const bit<16> TYPE_MYTUNNEL = 0x1212;
+header myTunnel_t {
+    bit<16> proto_id;
+    bit<16> dst_id;
 }
 
 #define ETHERTYPE_WHARF 0x081C
@@ -88,6 +97,7 @@ struct headers_t {
     flightplan_h fp;
     eth_h  eth;
     fec_h  fec;
+    myTunnel_t   myTunnel;
     ipv4_h ipv4;
     tcp_h tcp;
     udp_h udp;
@@ -117,6 +127,7 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
             ETHERTYPE_WHARF : parse_fec;
             ETHERTYPE_IPV4 : parse_ipv4;
             ETHERTYPE_LLDP: parse_lldp;
+            TYPE_MYTUNNEL: parse_myTunnel; // from tutorials/exercises/basic_tunnel
             default : accept;
         }
     }
@@ -129,6 +140,15 @@ parser FecParser(packet_in pkt, out headers_t hdr) {
     state parse_fec {
         pkt.extract(hdr.fec);
         transition select(hdr.fec.orig_ethertype) {
+            ETHERTYPE_IPV4: parse_ipv4;
+            default: accept;
+        }
+    }
+
+    // from tutorials/exercises/basic_tunnel
+    state parse_myTunnel {
+        pkt.extract(hdr.myTunnel);
+        transition select(hdr.myTunnel.proto_id) {
             ETHERTYPE_IPV4: parse_ipv4;
             default: accept;
         }
@@ -185,6 +205,7 @@ control FecDeparser(packet_out pkt, in headers_t hdr) {
         pkt.emit(hdr.fp);
         pkt.emit(hdr.eth);
         pkt.emit(hdr.fec);
+        pkt.emit(hdr.myTunnel);
         pkt.emit(hdr.ipv4);
         pkt.emit(hdr.tcp);
         pkt.emit(hdr.udp);

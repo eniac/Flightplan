@@ -1,0 +1,35 @@
+states: # "ports" would be a better name
+        p0e1:
+                incoming:
+                               1:
+                                       state: 2
+                                       port: 5
+                               2:
+                                       state: 2
+                                       port: 5
+                               3:
+                                       state: 2
+                                       port: 5
+                               4:
+                                       state: 2
+                                       port: 5
+                intermediate:
+                outgoing:
+        HL_QOS:
+                1:
+                        state: 3
+                        port: 1
+
+# FIXME this part is redundant
+state_sequence:
+        p0e1:
+        HL_QOS:
+
+# FIXME this part seems redundant too
+progression:
+        p0e1:
+        HL_QOS:
+
+start: p0e1
+end_port: 0 # FIXME hackish
+terminal_port: 0 # FIXME hackish
