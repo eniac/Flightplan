@@ -7,7 +7,8 @@
 # FIXME poor naming choices for tests
 # NOTE based on splits/ALV_Complete_1/tests.sh
 
-export TOPOLOGY=splits/ALV_Complete_2/alv_k=4.yml
+export TOPOLOGY=$WHARF_REPO/splits/ALV_Complete_2/alv_k=4.yml
+START_CFG=": $WHARF_REPO/splits/ALV_Complete_2/start2.sh"
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e)
 DEFAULT_MODE=autotest
 
@@ -24,7 +25,7 @@ function interactive_complete {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --cli
@@ -43,7 +44,7 @@ function autotest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.2" \
@@ -328,7 +329,7 @@ function complete_fec_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${TRAFFIC_INPUT}" \
@@ -367,7 +368,7 @@ function complete_mcd_e2e {
   FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
   PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -386,7 +387,7 @@ function complete_mcd_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
@@ -433,7 +434,7 @@ function complete_mcd_e2e {
   STATUS=0
 
   SETS_experiment=$(grep set ${LOG_DUMPS}/mcd_log | wc -l)
-  SETS_reference=$(grep set mcd_log_withoutcache.expected | wc -l)
+  SETS_reference=$(grep set $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$SETS_experiment" -eq "$SETS_reference" ]
   then
       echo "#SETS: OK ($SETS_experiment vs $SETS_reference)"
@@ -443,7 +444,7 @@ function complete_mcd_e2e {
   fi
 
   GETS_experiment=$(grep get ${LOG_DUMPS}/mcd_log | wc -l)
-  GETS_reference=$(grep get mcd_log_withoutcache.expected | wc -l)
+  GETS_reference=$(grep get $WHARF_REPO/mcd_log_withoutcache.expected | wc -l)
   if [ "$GETS_experiment" -eq "$GETS_reference" ]
   then
       echo "#GETS: OK (same as reference -- no cache is being used)"

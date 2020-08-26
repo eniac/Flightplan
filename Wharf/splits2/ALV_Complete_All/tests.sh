@@ -8,6 +8,7 @@
 # NOTE based on splits/ALV_Complete_2_FW/tests.sh
 
 export TOPOLOGY=$WHARF_REPO/splits2/ALV_Complete_All/alv_k=4.yml
+START_CFG=": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh"
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e interactive2_complete fwtest complete_all_e2e)
 DEFAULT_MODE=autotest
 
@@ -24,7 +25,7 @@ function interactive_complete {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -45,7 +46,7 @@ function autotest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -332,7 +333,7 @@ function complete_fec_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -392,7 +393,7 @@ function complete_mcd_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -489,7 +490,7 @@ function interactive2_complete {
      --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
      --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
      --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -525,7 +526,7 @@ function fwtest {
      --host-prog "p3h1: iperf3 -s -B 192.3.0.3 -p 5201" \
      --host-prog "p3h2: iperf3 -s -B 192.3.1.2 -p 5201" \
      --host-prog "p3h3: iperf3 -s -B 192.3.1.3 -p 5201" \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -599,7 +600,7 @@ function complete_all_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_All/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \

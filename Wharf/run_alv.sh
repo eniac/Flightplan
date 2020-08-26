@@ -20,9 +20,9 @@ then
 fi
 echo "Using TOPOLOGY=${TOPOLOGY}"
 
-if [ -z "${SPLIT2_START}" ]
+if [ -z "${START_CFG}" ]
 then
-  SPLIT2_START=""
+  START_CFG=""
 fi
 
 MODES+=(interactive)
@@ -61,7 +61,7 @@ function interactive {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog "${SPLIT2_START}" \
+     --fg-host-prog "${START_CFG}" \
      --cli
          2> $LOG_DUMPS/flightplan_mininet_log.err
 }
@@ -72,7 +72,7 @@ function selftest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog "${SPLIT2_START}" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.2" \
      --fg-host-prog "p0h0: ping -c 1 192.0.0.3" \
      --fg-host-prog "p0h0: ping -c 1 192.0.1.2" \
@@ -338,7 +338,7 @@ function selftest2 {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog "${SPLIT2_START}" \
+     --fg-host-prog "${START_CFG}" \
      --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
      --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
      --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
@@ -624,7 +624,7 @@ function selftest3 {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog "${SPLIT2_START}" \
+     --fg-host-prog "${START_CFG}" \
      --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
      --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
      --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \
@@ -907,7 +907,7 @@ function interactive2 {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog "${SPLIT2_START}" \
+     --fg-host-prog "${START_CFG}" \
      --host-prog "p0h0: iperf3 -s -B 192.0.0.2 -p 5201" \
      --host-prog "p0h1: iperf3 -s -B 192.0.0.3 -p 5201" \
      --host-prog "p0h2: iperf3 -s -B 192.0.1.2 -p 5201" \

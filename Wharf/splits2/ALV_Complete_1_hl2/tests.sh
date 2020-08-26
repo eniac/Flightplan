@@ -7,7 +7,8 @@
 # FIXME this and other scripts assume that it's being run in the "Wharf" directory
 # FIXME poor naming choices for tests
 
-export TOPOLOGY=splits2/ALV_Complete_1_hl2/alv_k=4.yml
+export TOPOLOGY=$WHARF_REPO/splits2/ALV_Complete_1_hl2/alv_k=4.yml
+START_CFG=": $WHARF_REPO/splits2/ALV_Complete_1_hl2/start2.sh"
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e)
 DEFAULT_MODE=autotest
 
@@ -18,13 +19,13 @@ then
 fi
 
 function interactive_complete {
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_1_hl2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --cli
@@ -36,14 +37,14 @@ function autotest {
     NUM_PINGS=1
   fi
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_1_hl2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.2" \
@@ -311,10 +312,10 @@ function autotest_long {
 }
 
 function complete_fec_e2e {
-  # Based on bmv2/complete_fec_e2e.sh
+  # Based on $WHARF_REPO/bmv2/complete_fec_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  TRAFFIC_PREINPUT=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/tcp_100.pcap
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
   TRAFFIC_INPUT=/tmp/tcp_100.pcap
   CACHEFILE=/tmp/tcprewrite_cachefile
   # Traffic will be sent from p0h0 to p1h0
@@ -323,12 +324,12 @@ function complete_fec_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_1_hl2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${TRAFFIC_INPUT}" \
@@ -362,12 +363,12 @@ function complete_fec_e2e {
 }
 
 function complete_mcd_e2e {
-  # Based on bmv2/complete_mcd_e2e.sh
+  # Based on $WHARF_REPO/bmv2/complete_mcd_e2e.sh
 
-  FEC_INIT_PCAP=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcaps/lldp_enable_fec.pcap
-  PCAP_TOOLS=/home/nsultana/2/P4Boosters/Wharf/bmv2/pcap_tools/
+  FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
+  PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -381,12 +382,12 @@ function complete_mcd_e2e {
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
-  sudo -E python bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
+  sudo -E python $WHARF_REPO/bmv2/start_flightplan_mininet.py ${TOPOLOGY} \
           --pcap-dump $PCAP_DUMPS \
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": /home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_1_hl2/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
@@ -401,9 +402,9 @@ function complete_mcd_e2e {
 
   if [ -n "${UNIQUE_MATTERS}" ]
   then
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)"
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withoutcache.expected)"
   else
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)"
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort $WHARF_REPO/mcd_log_withoutcache.expected | uniq)"
   fi
   echo $CMD
   eval $CMD
@@ -415,9 +416,9 @@ function complete_mcd_e2e {
 
   if [ -n "${UNIQUE_MATTERS}" ]
   then
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)"
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withcache.expected)"
   else
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)"
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort $WHARF_REPO/mcd_log_withcache.expected | uniq)"
   fi
   echo $CMD
   eval $CMD

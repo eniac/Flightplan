@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #Test setup for Flightplan
 #Nik Sultana, UPenn, March 2020
-export FPControl=/home/nsultana/2/P4Boosters/Wharf/fpctl.py
-export FPCD=/home/nsultana/2/P4Boosters/Wharf/splits2/ALV_Complete_1_hl3/FPControlData.yml
+export FPControl=$WHARF_REPO/fpctl.py
+export FPCD=$WHARF_REPO/splits2/ALV_Complete_1_hl3/FPControlData.yml
 
 if [ -z "${TOPOLOGY}" ]
 then

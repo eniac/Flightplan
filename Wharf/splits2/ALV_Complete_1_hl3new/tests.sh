@@ -8,6 +8,7 @@
 # FIXME poor naming choices for tests
 
 export TOPOLOGY=$WHARF_REPO/splits2/ALV_Complete_1_hl3new/alv_k=4.yml
+START_CFG=": $WHARF_REPO/splits2/ALV_Complete_1_hl3new/start2.sh"
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e complete_all_e2e)
 DEFAULT_MODE=autotest
 
@@ -24,7 +25,7 @@ function interactive_complete {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_1_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --cli
 }
@@ -42,7 +43,7 @@ function autotest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_1_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.2" \
      --fg-host-prog "p0h0: ping -c $NUM_PINGS 192.0.0.3" \
@@ -326,7 +327,7 @@ function complete_fec_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_1_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${TRAFFIC_INPUT}" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
@@ -383,7 +384,7 @@ function complete_mcd_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits2/ALV_Complete_1_hl3new/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
@@ -455,12 +456,12 @@ function complete_mcd_e2e {
 }
 
 function complete_all_e2e {
-  # Based on bmv2/complete_fec_e2e.sh
+  # Based on bmv2/complete_mcd_e2e.sh
 
   FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
   PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT_MCD=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -469,16 +470,15 @@ function complete_all_e2e {
 
   INPUT_PCAP=$OUTDIR/${BASENAME}_in.pcap
   echo "Putting pcap in $INPUT_PCAP"
-  python2 ${PCAP_TOOLS}/pcap_sub.py $TRAFFIC_PREINPUT_MCD $INPUT_PCAP\
+  python2 ${PCAP_TOOLS}/pcap_sub.py $TRAFFIC_PREINPUT $INPUT_PCAP\
       --sip="$SIP" --dip="$DIP" --smac="$SMAC" --dmac="$DMAC"
 
-  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
+  TRAFFIC_PREINPUT_FEC=$WHARF_REPO/bmv2/pcaps/tcp_100.pcap
   TRAFFIC_INPUT=/tmp/tcp_100.pcap
   CACHEFILE=/tmp/tcprewrite_cachefile
   # Traffic will be sent from p0h0 to p1h0
-  tcpprep --auto=first --pcap=${TRAFFIC_PREINPUT} --cachefile=${CACHEFILE}
-  tcprewrite --endpoints=192.0.0.2:192.1.0.2 --cachefile=${CACHEFILE} -i ${TRAFFIC_PREINPUT} -o ${TRAFFIC_INPUT}
-
+  tcpprep --auto=first --pcap=${TRAFFIC_PREINPUT_FEC} --cachefile=${CACHEFILE}
+  tcprewrite --endpoints=192.0.0.2:192.1.0.2 --cachefile=${CACHEFILE} -i ${TRAFFIC_PREINPUT_FEC} -o ${TRAFFIC_INPUT}
 
   sudo mn -c 2> $LOG_DUMPS/mininet_clean.err
 
@@ -487,17 +487,12 @@ function complete_all_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
-     --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog "p1h0: memcached -u $USER -U 11211 -B ascii -vv &" \
+     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${TRAFFIC_INPUT}" \
      --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 --pps=10 ${INPUT_PCAP}" \
-     --fg-host-prog "p0h0: tcpreplay -i p0h0-eth1 ${TRAFFIC_INPUT}" \
           2> $LOG_DUMPS/flightplan_mininet_log.err
-
-  mv ${TRAFFIC_INPUT} ${PCAP_DUMPS}/
-  mv ${CACHEFILE} ${PCAP_DUMPS}/
-
-  echo "Test succeeded"
 
 }
 

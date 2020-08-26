@@ -7,7 +7,8 @@
 # FIXME poor naming choices for tests
 # NOTE based on splits/ALV_Complete_2/tests.sh
 
-export TOPOLOGY=splits/ALV_Complete_3/alv_k=4.yml
+export TOPOLOGY=$WHARF_REPO/splits/ALV_Complete_3/alv_k=4.yml
+START_CFG=": $WHARF_REPO/splits/ALV_Complete_3/start2.sh"
 MODES=(autotest autotest_long interactive_complete complete_fec_e2e complete_mcd_e2e)
 DEFAULT_MODE=autotest
 
@@ -24,7 +25,7 @@ function interactive_complete {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -45,7 +46,7 @@ function autotest {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -332,7 +333,7 @@ function complete_fec_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth2 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth1 ${FEC_INIT_PCAP}" \
@@ -373,7 +374,7 @@ function complete_mcd_e2e {
   FEC_INIT_PCAP=$WHARF_REPO/bmv2/pcaps/lldp_enable_fec.pcap
   PCAP_TOOLS=$WHARF_REPO/bmv2/pcap_tools/
 
-  TRAFFIC_PREINPUT=bmv2/pcaps/Memcached_in_short.pcap
+  TRAFFIC_PREINPUT=$WHARF_REPO/bmv2/pcaps/Memcached_in_short.pcap
 
   SIP="192.0.0.2"
   DIP="192.1.0.2"
@@ -392,7 +393,7 @@ function complete_mcd_e2e {
           --log $LOG_DUMPS \
           --verbose \
           --showExitStatus \
-     --fg-host-prog ": $WHARF_REPO/splits/ALV_Complete_3/start2.sh" \
+     --fg-host-prog "${START_CFG}" \
      --fg-host-prog ": tcpreplay -i dropper-eth0 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper-eth1 ${FEC_INIT_PCAP}" \
      --fg-host-prog ": tcpreplay -i dropper2-eth0 ${FEC_INIT_PCAP}" \
@@ -409,9 +410,9 @@ function complete_mcd_e2e {
 
   if [ -n "${UNIQUE_MATTERS}" ]
   then
-    diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withoutcache.expected)
+    diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withoutcache.expected)
   else
-    diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withoutcache.expected | uniq)
+    diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort $WHARF_REPO/mcd_log_withoutcache.expected | uniq)
   fi
   if [[ $? == 0 ]]
   then
@@ -421,9 +422,9 @@ function complete_mcd_e2e {
 
   if [ -n "${UNIQUE_MATTERS}" ]
   then
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort mcd_log_withcache.expected)"
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log) <(sort $WHARF_REPO/mcd_log_withcache.expected)"
   else
-    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort mcd_log_withcache.expected | uniq)"
+    CMD="diff -q <(sort ${LOG_DUMPS}/mcd_log | uniq) <(sort $WHARF_REPO/mcd_log_withcache.expected | uniq)"
   fi
   echo $CMD
   eval $CMD

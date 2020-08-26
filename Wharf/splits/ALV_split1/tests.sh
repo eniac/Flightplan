@@ -6,6 +6,7 @@
 # FIXME poor naming choices for tests
 
 TOPOLOGY=$WHARF_REPO/splits/ALV_split1/alv_k=4.yml
+START_CFG=": $WHARF_REPO/splits/ALV_split1/start2.sh"
 MODES=(demo1 autotest1 autotest2 autotest2B autotest_long autotest3B)
 
 if [ -z "${MODE}" ]
