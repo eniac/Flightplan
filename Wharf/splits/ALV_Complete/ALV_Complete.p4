@@ -3,6 +3,12 @@ Fusion of ALV.p4 and Complete.p4
 Nik Sultana, UPenn, March 2020
 */
 
+#ifdef FP_ANNOTATE
+#include "Flightplan.p4"
+extern Landing Point_Alpha();
+extern Landing Point_Bravo();
+#endif // FP_ANNOTATE
+
 #if !defined(TARGET_BMV2)
 #error Currently unsupported target
 #endif
@@ -65,6 +71,7 @@ control ALV_Route(inout headers_t hdr, inout booster_metadata_t m, inout metadat
     }
 
     apply {
+#if 0
         if (hdr.eth.isValid()) {
             if (mac_forwarding.apply().hit) return;
             if (hdr.ipv4.isValid() &&
@@ -74,6 +81,24 @@ control ALV_Route(inout headers_t hdr, inout booster_metadata_t m, inout metadat
             }
         }
         drop();
+#endif // 0
+
+        bit<1> processed = 0;
+        if (hdr.eth.isValid()) {
+            if (mac_forwarding.apply().hit) {
+                processed = 1;
+            } else if (hdr.ipv4.isValid() &&
+                  hdr.ipv4.ttl > 1 &&
+                  ipv4_forwarding.apply().hit) {
+                if (next_hop_arp_lookup.apply().hit) {
+                    processed = 1;
+                }
+            }
+        }
+        if (0 == processed) {
+            drop();
+            exit;
+        }
     }
 }
 
@@ -137,7 +162,15 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
 #endif
 
     apply {
+        bit<1> compressed_link = 0;
+        bit<1> forward = 0;
+
         check_run_Complete_ingress.apply();
+
+#ifdef FP_ANNOTATE
+        flyto(Point_Alpha());
+#endif // FP_ANNOTATE
+
         if (1 == run_program_ingress) {
 #if defined(FEC_BOOSTER)
             // If we received an FEC update, then update the table.
@@ -145,12 +178,9 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
             FECController.apply(hdr, meta, is_ctrl);
             if (is_ctrl == 1) {
                 drop();
-                return;
+                exit;
             }
 #endif
-
-            bit<1> compressed_link = 0;
-            bit<1> forward = 0;
 
 #if defined(FEC_BOOSTER)
             // If lossy link, then FEC decode.
@@ -160,7 +190,7 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
                 FEC_DECODE(hdr.fec, k, h);
                 if (hdr.fec.isValid() && hdr.fec.packet_index >= k) {
                     drop();
-                    return;
+                    exit;
                 }
                 hdr.fec.setInvalid();
             }
@@ -173,7 +203,7 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
                 header_decompress(forward);
                 if (forward == 0) {
                     drop();
-                    return;
+                    exit;
                 }
             }
 #endif
@@ -186,28 +216,37 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
                     memcached(forward);
                     if (forward == 0) {
                         drop();
-                        return;
+                        exit;
                     }
                 }
             }
 #endif
         }
 
+#ifdef FP_ANNOTATE
+        flyto(FlightStart());
+#endif // FP_ANNOTATE
+
         // NOTE could do the routing step at very beginning, to get clarity on what follows.
         ALV_Route.apply(hdr, m, meta);
 
         check_run_Complete_egress.apply();
+
+#ifdef FP_ANNOTATE
+        flyto(Point_Bravo());
+#endif // FP_ANNOTATE
+
         if (1 == run_program_egress) {
 #if defined(COMPRESSION_BOOSTER)
-            bit<1> compressed_link = 0;
-            bit<1> forward = 0;
+            compressed_link = 0;
+            forward = 0;
             // If heading out on a multiplexed link, then header compress.
             egress_compression.apply(meta.egress_spec, compressed_link);
             if (compressed_link == 1) {
                 header_compress(forward);
                 if (forward == 0) {
                     drop();
-                    return;
+                    exit;
                 }
             }
 #endif
@@ -238,6 +277,10 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
             }
 #endif
         }
+
+#ifdef FP_ANNOTATE
+        flyto(FlightStart());
+#endif // FP_ANNOTATE
     }
 }
 
