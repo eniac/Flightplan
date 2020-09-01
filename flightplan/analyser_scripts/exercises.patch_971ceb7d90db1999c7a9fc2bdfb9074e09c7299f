@@ -1,0 +1,129 @@
+diff --git a/exercises/basic_tunnel/solution/basic_tunnel.p4 b/exercises/basic_tunnel/solution/basic_tunnel.p4
+index 3402307..c6d85b0 100644
+--- a/exercises/basic_tunnel/solution/basic_tunnel.p4
++++ b/exercises/basic_tunnel/solution/basic_tunnel.p4
+@@ -2,6 +2,11 @@
+ #include <core.p4>
+ #include <v1model.p4>
+ 
++#ifdef FP_ANNOTATE
++#include "Flightplan.p4"
++extern Landing Point_Alpha();
++#endif // FP_ANNOTATE
++
+ const bit<16> TYPE_MYTUNNEL = 0x1212;
+ const bit<16> TYPE_IPV4 = 0x800;
+ 
+@@ -103,7 +108,7 @@ control MyIngress(inout headers hdr,
+                   inout metadata meta,
+                   inout standard_metadata_t standard_metadata) {
+     action drop() {
+-        mark_to_drop(standard_metadata);
++        mark_to_drop();
+     }
+     
+     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
+@@ -149,8 +154,16 @@ control MyIngress(inout headers hdr,
+         }
+ 
+         if (hdr.myTunnel.isValid()) {
++#ifdef FP_ANNOTATE
++            flyto(Point_Alpha());
++#endif // FP_ANNOTATE
++
+             // process tunneled packets
+             myTunnel_exact.apply();
++
++#ifdef FP_ANNOTATE
++            flyto(FlightStart());
++#endif // FP_ANNOTATE
+         }
+     }
+ }
+diff --git a/exercises/qos/solution/qos.p4 b/exercises/qos/solution/qos.p4
+index 01c6aff..687a662 100644
+--- a/exercises/qos/solution/qos.p4
++++ b/exercises/qos/solution/qos.p4
+@@ -2,6 +2,13 @@
+ #include <core.p4>
+ #include <v1model.p4>
+ 
++#ifdef FP_ANNOTATE
++#include "Flightplan.p4"
++extern Landing Point_Alpha();
++extern Landing Point_Bravo();
++extern Landing Point_Charlie();
++#endif // FP_ANNOTATE
++
+ const bit<16> TYPE_IPV4 = 0x800;
+ 
+ /* IP protocols */
+@@ -104,7 +111,7 @@ control MyIngress(inout headers hdr,
+                   inout metadata meta,
+                   inout standard_metadata_t standard_metadata) {
+     action drop() {
+-        mark_to_drop(standard_metadata);
++        mark_to_drop();
+     }
+ 
+     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
+@@ -204,15 +211,59 @@ control MyIngress(inout headers hdr,
+     }
+ 
+     apply {
++#if 0
+         if (hdr.ipv4.isValid()) {
+             if (hdr.ipv4.protocol == IP_PROTOCOLS_UDP) {
++#ifdef FP_ANNOTATE
++                flyto(Point_Alpha());
++#endif // FP_ANNOTATE
+                 expedited_forwarding();
+ 	    }
+             else if (hdr.ipv4.protocol == IP_PROTOCOLS_TCP) {
++#ifdef FP_ANNOTATE
++                flyto(Point_Bravo());
++#endif // FP_ANNOTATE
+ 	        voice_admit();
+             }
++
++            ipv4_lpm.apply();
++#ifdef FP_ANNOTATE
++            flyto(FlightStart());
++#endif // FP_ANNOTATE
++        }
++#endif // 0
++
++#ifndef FP_ANNOTATE
++        if (hdr.ipv4.isValid()) {
++            if (hdr.ipv4.protocol == IP_PROTOCOLS_UDP) {
++                expedited_forwarding();
++	    }
++            else if (hdr.ipv4.protocol == IP_PROTOCOLS_TCP) {
++	        voice_admit();
++            }
++
+             ipv4_lpm.apply();
+         }
++#else
++        if (hdr.ipv4.isValid()) {
++            if (hdr.ipv4.protocol == IP_PROTOCOLS_UDP) {
++                flyto(Point_Alpha());
++                expedited_forwarding();
++                ipv4_lpm.apply();
++                flyto(FlightStart());
++	    }
++            else if (hdr.ipv4.protocol == IP_PROTOCOLS_TCP) {
++                flyto(Point_Bravo());
++	        voice_admit();
++                ipv4_lpm.apply();
++                flyto(FlightStart());
++            }
++
++            ipv4_lpm.apply();
++        }
++#endif // ndef FP_ANNOTATE
++
++
+     }
+ }
+ 

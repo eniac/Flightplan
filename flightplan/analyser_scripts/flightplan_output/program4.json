@@ -1,0 +1,47 @@
+{
+  "Parameters" : {
+    "flightplan_runtime" : "HL",
+    "flightplan_switch_md" : "switch_metadata_t",
+    "flightplan_standard_md" : "meta",
+    "flightplan_egress_var" : "egress_spec",
+    "flightplan_ingress_var" : "ingress_port",
+    "flightplan_max_handover_bytes" : -1,
+    "flightplan_routing_segment" : "FlightStart",
+    "flightplan_offload_cflow" : 1,
+    "mem_cells" : [8, 8, 8, 8, 8, 32, 32]
+  },
+  "Abstract program" : [
+    {"0.FlightStart": [
+      {"Index": 0, "Props": ["mac_forwarding"], "Desc": ["Table"]},
+      {"Index": 1, "Props": ["drop", "update_checksum"], "Desc": ["Extern", "Extern"]},
+      {"Index": 2, "Props": ["mac_forwarding", "ipv4_forwarding", "next_hop_arp_lookup"], "Desc": ["Table", "Table", "Table"]},
+      {"Index": 3, "Props": ["mac_forwarding", "ipv4_forwarding", "next_hop_arp_lookup", "drop", "update_checksum"], "Desc": ["Table", "Table", "Table", "Extern", "Extern"]},
+      {"Index": 4, "Props": ["mac_forwarding", "ipv4_forwarding", "drop", "update_checksum"], "Desc": ["Table", "Table", "Extern", "Extern"]}
+    ]}
+  ],
+  "FlightStartAliases" : [
+    "0.FlightStart"
+  ],
+  "Allocations" : {
+    "0.FlightStart" : {
+    }
+  },
+  "CFG" : [
+  ],
+  "Signature" : {
+    "Prop": ["0.FlightStart"],
+    "V": []
+  },
+  "Tables": {
+    "ipv4_forwarding": [],
+    "mac_forwarding": [],
+    "next_hop_arp_lookup": []
+  },
+  "Externs": {
+    "drop": [],
+    "update_checksum": []
+  },
+  "Hand-over Overheads" : {
+    "0.FlightStart" : {    }
+  }
+}
