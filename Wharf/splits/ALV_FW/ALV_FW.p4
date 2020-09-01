@@ -7,6 +7,11 @@ Nik Sultana, UPenn, March 2020
 #error Currently unsupported target
 #endif
 
+#ifdef FP_ANNOTATE
+#include "Flightplan.p4"
+extern Landing Point_Alpha();
+#endif // FP_ANNOTATE
+
 #include "targets.h"
 #include "EmptyBMDefinitions.p4"
 #include "Memcached_extern.p4"
@@ -65,6 +70,7 @@ control ALV_Route(inout headers_t hdr, inout booster_metadata_t m, inout metadat
     }
 
     apply {
+#if 0
         if (hdr.eth.isValid()) {
             if (mac_forwarding.apply().hit) return;
             if (hdr.ipv4.isValid() &&
@@ -74,6 +80,24 @@ control ALV_Route(inout headers_t hdr, inout booster_metadata_t m, inout metadat
             }
         }
         drop();
+#endif // 0
+
+        bit<1> processed = 0;
+        if (hdr.eth.isValid()) {
+            if (mac_forwarding.apply().hit) {
+                processed = 1;
+            } else if (hdr.ipv4.isValid() &&
+                  hdr.ipv4.ttl > 1 &&
+                  ipv4_forwarding.apply().hit) {
+                if (next_hop_arp_lookup.apply().hit) {
+                    processed = 1;
+                }
+            }
+        }
+        if (0 == processed) {
+            drop();
+            exit;
+        }
     }
 }
 
@@ -172,9 +196,15 @@ control ALV_FW(inout headers_t hdr, inout booster_metadata_t m, inout metadata_t
     apply {
       if (hdr.ipv4.isValid()) {
         ALV_Route.apply(hdr, m, meta);
+#ifdef FP_ANNOTATE
+        flyto(Point_Alpha());
+#endif // FP_ANNOTATE
         if (hdr.tcp.isValid()){
           FW.apply(hdr, m, meta);
         }
+#ifdef FP_ANNOTATE
+        flyto(FlightStart());
+#endif // FP_ANNOTATE
       }
     }
 }

@@ -7,6 +7,11 @@ NOTE:
   necessary for this example to work, but are reused as they are for expedience.
 */
 
+#ifdef FP_ANNOTATE
+#include "Flightplan.p4"
+extern Landing Point_Alpha();
+#endif // FP_ANNOTATE
+
 #include "targets.h"
 #include "EmptyBMDefinitions.p4"
 #include "Memcached_extern.p4"
@@ -73,10 +78,34 @@ control Process(inout headers_t hdr, inout booster_metadata_t m, inout metadata_
     apply {
         if (hdr.eth.isValid()) {
             if (mac_forwarding.apply().hit) return;
+#ifdef FP_ANNOTATE
+
+#if !defined(FP_SPLIT1) && !defined(FP_SPLIT2)
+#error Must define FP_SPLIT1/FP_SPLIT2/FP_SPLIT3 in addition to FP_ANNOTATE
+#endif // !defined(FP_SPLIT1) && !defined(FP_SPLIT2)
+
+#if defined(FP_SPLIT1) && defined(FP_SPLIT2)
+#error Must define only ONE of FP_SPLIT1/FP_SPLIT2/FP_SPLIT3
+#endif // defined(FP_SPLIT1) && defined(FP_SPLIT2)
+
+#ifdef FP_SPLIT1
+            flyto(Point_Alpha());
+#endif // FP_SPLIT1
+#endif // FP_ANNOTATE
             if (hdr.ipv4.isValid() &&
                   hdr.ipv4.ttl > 1 &&
                   ipv4_forwarding.apply().hit) {
-                if (next_hop_arp_lookup.apply().hit) return;
+#ifdef FP_ANNOTATE
+#ifdef FP_SPLIT2
+                flyto(Point_Alpha());
+#endif // FP_SPLIT2
+#endif // FP_ANNOTATE
+                if (next_hop_arp_lookup.apply().hit) {
+#ifdef FP_ANNOTATE
+                    flyto(FlightStart());
+#endif // FP_ANNOTATE
+                    return;
+                }
             }
         }
         drop();

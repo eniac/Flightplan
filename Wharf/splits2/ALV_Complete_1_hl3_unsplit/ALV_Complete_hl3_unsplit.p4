@@ -7,6 +7,15 @@ Nik Sultana, UPenn, March 2020
 #error Currently unsupported target
 #endif
 
+#ifdef FP_ANNOTATE
+#include "Flightplan.p4"
+extern Landing FEC_Encode();
+extern Landing Compress();
+extern Landing MCD_Cache();
+extern Landing FEC_Decode();
+extern Landing Decompress();
+#endif // FP_ANNOTATE
+
 #include "targets.h"
 #include "EmptyBMDefinitions.p4"
 #include "Memcached_extern.p4"
@@ -65,6 +74,7 @@ control ALV_Route(inout headers_t hdr, inout booster_metadata_t m, inout metadat
     }
 
     apply {
+#if 0
         if (hdr.eth.isValid()) {
             if (mac_forwarding.apply().hit) return;
             if (hdr.ipv4.isValid() &&
@@ -74,6 +84,24 @@ control ALV_Route(inout headers_t hdr, inout booster_metadata_t m, inout metadat
             }
         }
         drop();
+#endif
+
+        bit<1> processed = 0;
+        if (hdr.eth.isValid()) {
+            if (mac_forwarding.apply().hit) {
+                processed = 1;
+            } else if (hdr.ipv4.isValid() &&
+                  hdr.ipv4.ttl > 1 &&
+                  ipv4_forwarding.apply().hit) {
+                if (next_hop_arp_lookup.apply().hit) {
+                    processed = 1;
+                }
+            }
+        }
+        if (0 == processed) {
+            drop();
+            exit;
+        }
     }
 }
 
@@ -267,6 +295,10 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
       bit<1> compressed_link = 0;
       bit<1> forward = 0;
 
+#ifdef FP_ANNOTATE
+        flyto(FEC_Decode());
+#endif // FP_ANNOTATE
+
 #if defined(FEC_BOOSTER)
       // If lossy link, then FEC decode.
       if (hdr.fec.isValid()) {
@@ -281,6 +313,10 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
       }
 #endif
 
+#ifdef FP_ANNOTATE
+        flyto(Decompress());
+#endif // FP_ANNOTATE
+
 #if defined(COMPRESSION_BOOSTER)
       // If multiplexed link, then header decompress.
       ingress_compression.apply(meta.ingress_port, compressed_link);
@@ -292,6 +328,10 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
           }
       }
 #endif
+
+#ifdef FP_ANNOTATE
+        flyto(MCD_Cache());
+#endif // FP_ANNOTATE
 
 #if defined(MEMCACHED_BOOSTER)
       // If Memcached REQ/RES then pass through the cache.
@@ -306,10 +346,18 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
       }
 #endif
 
+#ifdef FP_ANNOTATE
+        flyto(FlightStart());
+#endif // FP_ANNOTATE
+
 #if !defined(END_FORWARDING_DECISION)
       // Default point at which forwarding decision is made
       ALV_Route.apply(hdr, m, meta);
 #endif // !defined(END_FORWARDING_DECISION)
+
+#ifdef FP_ANNOTATE
+        flyto(Compress());
+#endif // FP_ANNOTATE
 
 #if defined(COMPRESSION_BOOSTER)
       // If heading out on a multiplexed link, then header compress.
@@ -322,6 +370,10 @@ control Crosspod(inout headers_t hdr, inout booster_metadata_t m, inout metadata
           }
       }
 #endif
+
+#ifdef FP_ANNOTATE
+        flyto(FEC_Encode());
+#endif // FP_ANNOTATE
 
 #if defined(FEC_BOOSTER)
       // If heading out on a lossy link, then FEC encode.
