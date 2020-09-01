@@ -1,0 +1,66 @@
+{
+  "Parameters" : {
+    "flightplan_runtime" : "Full",
+    "flightplan_switch_md" : "switch_metadata_t",
+    "flightplan_standard_md" : "meta",
+    "flightplan_egress_var" : "egress_spec",
+    "flightplan_ingress_var" : "ingress_port",
+    "flightplan_max_handover_bytes" : 13,
+    "flightplan_routing_segment" : "",
+    "flightplan_offload_cflow" : 0,
+    "mem_cells" : [8, 8, 8, 8, 8, 32, 32]
+  },
+  "Abstract program" : [
+    {"0.FlightStart": [
+      {"Index": 0, "Props": ["mac_forwarding"], "Desc": ["Table"]},
+      {"Index": 1, "Props": ["drop", "update_checksum"], "Desc": ["Extern", "Extern"]},
+      {"Index": 2, "Props": ["mac_forwarding"], "Desc": ["Table"]}
+    ]},
+    {"1.Point_Alpha": [
+      {"Index": 0, "Props": ["ipv4_forwarding", "drop", "update_checksum"], "Desc": ["Table", "Extern", "Extern"]},
+      {"Index": 1, "Props": ["ipv4_forwarding", "next_hop_arp_lookup"], "Desc": ["Table", "Table"]},
+      {"Index": 2, "Props": ["ipv4_forwarding", "next_hop_arp_lookup", "drop", "update_checksum"], "Desc": ["Table", "Table", "Extern", "Extern"]}
+    ]},
+    {"2.FlightStart": []}
+  ],
+  "FlightStartAliases" : [
+    "0.FlightStart",
+    "2.FlightStart"
+  ],
+  "Allocations" : {
+    "0.FlightStart" : {
+    },
+    "1.Point_Alpha" : {
+      "meta.egress_spec" : [0,1]
+    },
+    "2.FlightStart" : {
+      "meta.egress_spec" : [0,1]
+    }
+  },
+  "CFG" : [
+    {"0.FlightStart": "1.Point_Alpha"},
+    {"1.Point_Alpha": "2.FlightStart"}
+  ],
+  "Signature" : {
+    "Prop": ["0.FlightStart", "1.Point_Alpha", "2.FlightStart"],
+    "V": []
+  },
+  "Tables": {
+    "ipv4_forwarding": [],
+    "mac_forwarding": [],
+    "next_hop_arp_lookup": []
+  },
+  "Externs": {
+    "drop": [],
+    "update_checksum": []
+  },
+  "Hand-over Overheads" : {
+    "0.FlightStart" : {    },
+    "1.Point_Alpha" : {
+      "meta.egress_spec" : 9
+    },
+    "2.FlightStart" : {
+      "meta.egress_spec" : 9
+    }
+  }
+}
