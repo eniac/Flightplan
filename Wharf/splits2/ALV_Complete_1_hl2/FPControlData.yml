@@ -8,14 +8,14 @@ states:
 #                          0: 0
 #                          1: 5
 #                          2: 6
-        FPoffload:
+        SA_1:
                 3: 1
 #                          0: 0
 #                          1: 1
                 5: 1
 #                          0: 0
 #                          1: 1
-        FPoffload2:
+        SA_2:
                 3: 1
 #                          0: 0
 #                          1: 1
@@ -32,12 +32,12 @@ state_sequence:
                 4:
                           0: 1
                           1: 2
-        FPoffload:
+        SA_1:
                 3:
                           0: 1
                 5:
                           0: 1
-        FPoffload2:
+        SA_2:
                 3:
                           0: 1
                 5:
@@ -48,10 +48,10 @@ progression:
                 1: 2
                 3: 4
                 5:
-        FPoffload:
+        SA_1:
                 2: 3
                 4: 5
-        FPoffload2:
+        SA_2:
                 2: 3
                 4: 5
 

@@ -10,5 +10,5 @@ ${FPControl} ${TOPOLOGY} ${FPCD} get_state
 
 ${FPControl} ${TOPOLOGY} ${FPCD} check_state --switch p0e0 --next_segment 2 --value 2
 ${FPControl} ${TOPOLOGY} ${FPCD} check_pip_state --switch p0e0 --idx 0 --pip_state_var flightplan_pip_nak_count --value 0
-${FPControl} ${TOPOLOGY} ${FPCD} check_pip_state --switch FPoffload --idx 0 --pip_state_var flightplan_pip_nak_count --value 1
-${FPControl} ${TOPOLOGY} ${FPCD} check_pip_state --switch FPoffload2 --idx 0 --pip_state_var flightplan_pip_nak_count --value 0
+${FPControl} ${TOPOLOGY} ${FPCD} check_pip_state --switch SA_1 --idx 0 --pip_state_var flightplan_pip_nak_count --value 1
+${FPControl} ${TOPOLOGY} ${FPCD} check_pip_state --switch SA_2 --idx 0 --pip_state_var flightplan_pip_nak_count --value 0

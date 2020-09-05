@@ -4,13 +4,13 @@ states:
                           # For each transition have states. State 0 could be implicit. It always "forwards" to port 0, since port 0 has special meaning (drop).
                           # 1 is the first user-defined state.
                           0: 0 # State number, offload port
-                          1: 5 # FPoffload, seg3
-                          2: 6 # FPoffload2, seg3
-        FPoffload:
+                          1: 5 # SA_1, seg3
+                          2: 6 # SA_2, seg3
+        SA_1:
                 3:
                           0: 0
                           1: 1
-        FPoffload2:
+        SA_2:
                 3:
                           0: 0
                           1: 1
@@ -22,10 +22,10 @@ state_sequence:
                 2: # Next segment number
                           0: 1 # Current state, next state
                           1: 2
-        FPoffload:
+        SA_1:
                 3:
                           0: 1
-        FPoffload2:
+        SA_2:
                 3:
                           0: 1
 
@@ -37,9 +37,9 @@ progression:
                 1: 2
                 # "3" is a terminal progression. The computation does not progress further.
                 3:
-        FPoffload:
+        SA_1:
                 2: 3
-        FPoffload2:
+        SA_2:
                 2: 3
 
 start: p0e0
