@@ -63,15 +63,15 @@ function autotest2 {
 
   # Creating graph log file
   #log file for first supporting device
-  GRAPH_LOG1=$LOG_DUMPS/FPoffload_graph.txt
+  GRAPH_LOG1=$LOG_DUMPS/SA_1_graph.txt
   #log file for second supporting device
-  GRAPH_LOG2=$LOG_DUMPS/FPoffload2_graph.txt
+  GRAPH_LOG2=$LOG_DUMPS/SA_2_graph.txt
 
   # Creating empty temp file
   TEMP=$LOG_DUMPS/temp.txt
 
   # Take the tcp dump to temp file
-  tcpdump -e -r ${PCAP_DUMPS}/p0e0_to_FPoffload.pcap | grep length > ${TEMP}
+  tcpdump -e -r ${PCAP_DUMPS}/p0e0_to_SA_1.pcap | grep length > ${TEMP}
 
   # First packet time is a reference time to calculate the elapsed time of all the packets
   time=$(head -n 1 ${TEMP})
@@ -105,7 +105,7 @@ function autotest2 {
   truncate -s 0 ${TEMP}
 
   # Take the tcp dump to temp file
-  tcpdump -e -xx -r ${PCAP_DUMPS}/p0e0_to_FPoffload2.pcap | grep length > ${TEMP}
+  tcpdump -e -xx -r ${PCAP_DUMPS}/p0e0_to_SA_2.pcap | grep length > ${TEMP}
 
   # The second device takes over in the same test, 
   # So reference time for its packets is still the first packet time of the test.
