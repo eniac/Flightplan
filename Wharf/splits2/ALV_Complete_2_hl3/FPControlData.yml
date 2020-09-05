@@ -24,23 +24,23 @@ states:
                 8:
                         state: 10
                         port: 9
-        HL_V3_1:
+        S2_1:
                 1:
                         state: 3
                         port: 1
-        HL_V3_2:
+        S2_2:
                 1:
                         state: 5
                         port: 1
-        HL_V3_3:
+        S2_3:
                 1:
                         state: 7
                         port: 1
-        HL_V3_4:
+        S2_4:
                 1:
                         state: 9
                         port: 1
-        HL_V3_5:
+        S2_5:
                 1:
                         state: 11
                         port: 1
@@ -48,19 +48,19 @@ states:
 # FIXME this part is redundant
 state_sequence:
         p0a0:
-        HL_V3_1:
-        HL_V3_2:
-        HL_V3_3:
-        HL_V3_4:
-        HL_V3_5:
+        S2_1:
+        S2_2:
+        S2_3:
+        S2_4:
+        S2_5:
 
 # FIXME this part seems redundant too
 progression:
         p0a0:
-        HL_V3_1:
-        HL_V3_2:
-        HL_V3_3:
-        HL_V3_4:
-        HL_V3_5:
+        S2_1:
+        S2_2:
+        S2_3:
+        S2_4:
+        S2_5:
 
 start: p0a0

@@ -188,8 +188,8 @@ def get_mirroring_session(switch, session):
 # For a given switch calculate session+port info to invoke add_mirroring_session and delete_mirroring_session
 # use the "control spanning tree" for this, from which we derive paths for feedback to flow.
 # e.g.:
-#   * FPoffload doesn't ACK-probe p0e0
-#   * p0e0 shouldn't send NAK to FPoffload
+#   * SA_1 doesn't ACK-probe p0e0
+#   * p0e0 shouldn't send NAK to SA_1
 #NOTE:
 # * no "session" is required for forward feedback path.
 # * a link that is judged to support feedback (by spanning tree) should ahve PIP state at both ends -- on each participating dataplane.

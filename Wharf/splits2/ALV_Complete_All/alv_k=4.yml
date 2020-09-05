@@ -730,7 +730,7 @@ hosts:
              # p3h2
              - cmd: "sudo arp -v -i p3h3-eth1 -s 192.3.1.2 02:00:00:19:1e:a6"
 switches:
-    HL_V2_1 :
+    S1 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3new.json
          interfaces:
              - link: c0
@@ -740,7 +740,7 @@ switches:
              - table_add ingress_compression.port_compression ingress_compression.set_port_compression 1 => 1
              - table_add encoder_params.fec_params encoder_params.set_k_h 0 => 5 1
              - table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
-    HL_V2_2 :
+    S2 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3new.json
          interfaces:
              - link: c0
@@ -785,9 +785,9 @@ switches:
                # ip: 192.4.1.1
                mac: '02:00:00:ca:dc:22'
                port: 4
-             - link: HL_V2_1
+             - link: S1
                port: 5
-             - link: HL_V2_2
+             - link: S2
                port: 6
          cmds:
              # Switching
@@ -807,7 +807,7 @@ switches:
              - table_add ipv4_forwarding ipv4_forward 0xC0030000&&&0xFFFF0000 => 192.3.2.1 4 0
              # Crosspod (HL3new)
              # (No commands to this element in this case)
-    HL_V3_1 :
+    S2_1 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3new_2.json
          interfaces:
              - link: c1
@@ -815,7 +815,7 @@ switches:
          cmds:
              # Crosspod
              - table_add decoder_params.fec_params decoder_params.set_k_h 0 => 5 1
-    HL_V3_2 :
+    S2_2 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3new_2.json
          interfaces:
              - link: c1
@@ -823,21 +823,21 @@ switches:
          cmds:
              # Crosspod
              - table_add ingress_compression.port_compression ingress_compression.set_port_compression 1 => 1
-    HL_V3_3 :
+    S2_3 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3new_2.json
          interfaces:
              - link: c1
                port: 1
          #cmds:
              # Crosspod
-    HL_V3_4 :
+    S2_4 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3new_2.json
          interfaces:
              - link: c1
                port: 1
          #cmds:
              # Crosspod
-    HL_V3_5 :
+    S2_5 :
          cfg: ../../build/bmv2/ALV_Complete_split2_hl3new_2.json
          interfaces:
              - link: c1
@@ -864,15 +864,15 @@ switches:
                # ip: 192.4.1.2
                mac: '02:00:00:df:47:04'
                port: 4
-             - link: HL_V3_1
+             - link: S2_1
                port: 5
-             - link: HL_V3_2
+             - link: S2_2
                port: 6
-             - link: HL_V3_3
+             - link: S2_3
                port: 7
-             - link: HL_V3_4
+             - link: S2_4
                port: 8
-             - link: HL_V3_5
+             - link: S2_5
                port: 9
          cmds:
              # Switching
