@@ -1,0 +1,530 @@
+[
+  {
+    "node": "tofino1",
+    "provides": {
+       "props" : ["Data::Prop::PSwitch"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "10",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "100000000000.0"]}]
+        }
+      },
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "2",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "3",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "4",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "5",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "11",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "12",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "13",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "14",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "15",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "21",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "22",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "23",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "24",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+
+  {
+    "node": "tofino2",
+    "provides": {
+       "props" : ["Data::Prop::PSwitch"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "10",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "100000000000.0"]}]
+        }
+      },
+      { "port": "4",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "5",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "13",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "14",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+
+  {
+    "node": "arista1",
+    "provides": {
+       "props" : ["Data::Prop::Switch"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "10",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "40000000000.0"]}]
+        }
+      },
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "2",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "3",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "4",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "5",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "11",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "12",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "13",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "14",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "15",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "21",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "22",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "23",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "24",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+
+  {
+    "node": "arista2",
+    "provides": {
+       "props" : ["Data::Prop::Switch"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "10",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "40000000000.0"]}]
+        }
+      },
+      { "port": "4",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "5",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "13",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      },
+      { "port": "14",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+
+  {
+    "node": "fpga1",
+    "provides": {
+       "props" : ["Data::Prop::FPGA"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "fpga2",
+    "provides": {
+       "props" : ["Data::Prop::FPGA"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "fpga3",
+    "provides": {
+       "props" : ["Data::Prop::FPGA"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "fpga4",
+    "provides": {
+       "props" : ["Data::Prop::FPGA"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "fpga5",
+    "provides": {
+       "props" : ["Data::Prop::FPGA"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+
+  {
+    "node": "cpu1",
+    "provides": {
+       "props" : ["Data::Prop::CPU"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "cpu2",
+    "provides": {
+       "props" : ["Data::Prop::CPU"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "cpu3",
+    "provides": {
+       "props" : ["Data::Prop::CPU"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "cpu4",
+    "provides": {
+       "props" : ["Data::Prop::CPU"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "cpu5",
+    "provides": {
+       "props" : ["Data::Prop::CPU"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+
+  {
+    "node": "server1",
+    "provides": {
+       "props" : ["Data::Prop::Host"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "server2",
+    "provides": {
+       "props" : ["Data::Prop::Host"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "server3",
+    "provides": {
+       "props" : ["Data::Prop::Host"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  },
+  {
+    "node": "server4",
+    "provides": {
+       "props" : ["Data::Prop::Host"]
+    },
+    "requires": {
+       "bounds" : []
+    },
+    "ports": [
+      { "port": "1",
+        "requires": {
+          "props" : [],
+          "bounds" : [{"lt":["Data::Bound::InputRate", "10000000000.0"]}]
+        }
+      }
+    ]
+  }
+]

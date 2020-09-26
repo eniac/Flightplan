@@ -1,0 +1,198 @@
+name,props (singular),bounds:ltData::Bound::InputRate,bounds:gt:Data::Bound::PacketSize,g:aP:Data::Bound::Latency,g:aM:Data::Bound::InputRate,g:aO:Data::Bound::Power,g:aO:Data::Bound::Cost,g:aF:LUTs,g:aF:BRAMs,g:aF:FFs,conclusion
+
+
+# Fixed on-switch functions
+PSwitch update_checksum,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,update_checksum
+PSwitch drop,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,drop
+Switch update_checksum,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,update_checksum
+Switch drop,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,drop
+
+
+# Other abstract tables and functions
+PSwitch check_run_Complete_ingress,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,check_run_Complete_ingress
+PSwitch check_run_Complete_egress,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,check_run_Complete_egress
+
+PSwitch hash,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,hash
+Switch hash,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,hash
+CPU hash,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,hash
+FPGA hash,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,hash
+
+PSwitch mark_to_drop,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,mark_to_drop
+Switch mark_to_drop,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,mark_to_drop
+CPU mark_to_drop,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,mark_to_drop
+FPGA mark_to_drop,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,mark_to_drop
+
+PSwitch mac_forwarding,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,mac_forwarding
+Switch mac_forwarding,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,mac_forwarding
+CPU mac_forwarding,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,mac_forwarding
+FPGA mac_forwarding,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,mac_forwarding
+
+PSwitch ipv4_forwarding,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,ipv4_forwarding
+Switch ipv4_forwarding,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,ipv4_forwarding
+CPU ipv4_forwarding,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,ipv4_forwarding
+FPGA ipv4_forwarding,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,ipv4_forwarding
+
+PSwitch next_hop_arp_lookup,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,next_hop_arp_lookup
+Switch next_hop_arp_lookup,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,next_hop_arp_lookup
+CPU next_hop_arp_lookup,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,next_hop_arp_lookup
+FPGA next_hop_arp_lookup,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,next_hop_arp_lookup
+
+PSwitch FW_check_ports,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,FW_check_ports
+Switch FW_check_ports,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,FW_check_ports
+CPU FW_check_ports,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,FW_check_ports
+FPGA FW_check_ports,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,FW_check_ports
+
+PSwitch ipv4_lpm,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,ipv4_lpm
+Switch ipv4_lpm,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,ipv4_lpm
+CPU ipv4_lpm,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,ipv4_lpm
+FPGA ipv4_lpm,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,ipv4_lpm
+
+PSwitch myTunnel_exact,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,myTunnel_exact
+Switch myTunnel_exact,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,myTunnel_exact
+CPU myTunnel_exact,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,myTunnel_exact
+FPGA myTunnel_exact,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,myTunnel_exact
+
+PSwitch set_port_status,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,set_port_status
+Switch set_port_status,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,set_port_status
+CPU set_port_status,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,set_port_status
+FPGA set_port_status,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,set_port_status
+
+PSwitch get_port_status,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,get_port_status
+Switch get_port_status,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,get_port_status
+CPU get_port_status,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,get_port_status
+FPGA get_port_status,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,get_port_status
+
+
+# On-switch table look-ups
+PSwitch ALV_Route_ipv4_forwarding,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,ALV_Route_ipv4_forwarding
+PSwitch ALV_Route_next_hop_arp_lookup,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,ALV_Route_next_hop_arp_lookup
+PSwitch ALV_Route_mac_forwarding,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,ALV_Route_mac_forwarding
+Switch ALV_Route_ipv4_forwarding,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,ALV_Route_ipv4_forwarding
+Switch ALV_Route_next_hop_arp_lookup,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,ALV_Route_next_hop_arp_lookup
+Switch ALV_Route_mac_forwarding,Data::Prop::Switch,40000000000,64,0,1.0,110,1,,,,ALV_Route_mac_forwarding
+
+
+# Tables and functions are also allocatable to CPUs and FPGAs
+FPGA update_checksum,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,update_checksum
+FPGA drop,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,drop
+FPGA check_run_Complete_ingress,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,check_run_Complete_ingress
+FPGA check_run_Complete_egress,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,check_run_Complete_egress
+FPGA ALV_Route_ipv4_forwarding,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,ALV_Route_ipv4_forwarding
+FPGA ALV_Route_next_hop_arp_lookup,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,ALV_Route_next_hop_arp_lookup
+FPGA ALV_Route_mac_forwarding,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,ALV_Route_mac_forwarding
+CPU update_checksum,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,update_checksum
+CPU drop,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,drop
+CPU check_run_Complete_ingress,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,check_run_Complete_ingress
+CPU check_run_Complete_egress,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,check_run_Complete_egress
+CPU ALV_Route_ipv4_forwarding,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,ALV_Route_ipv4_forwarding
+CPU ALV_Route_next_hop_arp_lookup,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,ALV_Route_next_hop_arp_lookup
+CPU ALV_Route_mac_forwarding,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,ALV_Route_mac_forwarding
+
+
+# Programmed on-switch functions
+PSwitch egress_compression_port_compression,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,egress_compression_port_compression
+PSwitch ingress_compression_port_compression,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,ingress_compression_port_compression
+PSwitch header_compress,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,header_compress
+PSwitch header_decompress,Data::Prop::PSwitch,100000000000,64,0,1.0,110,12,,,,header_decompress
+
+
+# Abstracted non-switch table look-ups, assumed to run at 10Gbps
+CPU check_run_FEC_egress,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,check_run_FEC_egress
+CPU classification_classification,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,classification_classification
+CPU decoder_params_fec_params,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,decoder_params_fec_params
+CPU egress_compression_port_compression,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,egress_compression_port_compression
+CPU encoder_params_fec_params,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,encoder_params_fec_params
+CPU ingress_compression_port_compression,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,ingress_compression_port_compression
+FPGA check_run_FEC_egress,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,check_run_FEC_egress
+FPGA classification_classification,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,classification_classification
+FPGA decoder_params_fec_params,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,decoder_params_fec_params
+FPGA egress_compression_port_compression,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,egress_compression_port_compression
+FPGA encoder_params_fec_params,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,encoder_params_fec_params
+FPGA ingress_compression_port_compression,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,ingress_compression_port_compression
+
+
+# Abstracted operations, assumed to run at 10Gbps
+CPU drop,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,drop
+CPU update_checksum,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,update_checksum
+CPU update_fec_state,Data::Prop::CPU,10000000000,64,0,1.0,150,5,,,,update_fec_state
+FPGA drop,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,drop
+FPGA update_checksum,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,update_checksum
+FPGA update_fec_state,Data::Prop::FPGA,10000000000,64,0,1.0,30,2,,,,update_fec_state
+
+
+# Abstracted operations, assumed to run at 1Gbps
+# These entries are only used to explore solutions, since we don't run them in the physical testbed.
+CPU memcached 0.01,Data::Prop::CPU,1000000000,1000,0.001,1,150,5,,,,memcached
+
+
+# Per-device and per-function rules
+CPU header_compress 0.0001,Data::Prop::CPU,1000000,1000,0.00423,0.977459016393443,150,5,,,,header_compress
+CPU header_compress 0.001,Data::Prop::CPU,10000000,1000,0.00446,0.976434426229508,150,5,,,,header_compress
+CPU header_compress 0.0025,Data::Prop::CPU,25000000,1000,0.00467,0.977030352748154,150,5,,,,header_compress
+CPU header_compress 0.003,Data::Prop::CPU,30000000,1000,0.00472,0.97469220246238,150,5,,,,header_compress
+CPU header_compress 0.005,Data::Prop::CPU,50000000,1000,0.00503,0.977641025641026,150,5,,,,header_compress
+CPU header_compress 0.01,Data::Prop::CPU,100000000,1000,0.00580,0.977011494252874,150,5,,,,header_compress
+CPU header_compress 0.02,Data::Prop::CPU,200000000,1000,0.00740,0.975096277278562,150,5,,,,header_compress
+CPU header_decompress 0.0001,Data::Prop::CPU,1000000,1000,0.00490,1.022494887525562,150,5,,,,header_decompress
+CPU header_decompress 0.001,Data::Prop::CPU,10000000,1000,0.00440,1.022517911975435,150,5,,,,header_decompress
+CPU header_decompress 0.0025,Data::Prop::CPU,25000000,1000,0.00442,1.024180327868852,150,5,,,,header_decompress
+CPU header_decompress 0.005,Data::Prop::CPU,50000000,1000,0.00465,1.02233606557377,150,5,,,,header_decompress
+CPU header_decompress 0.02,Data::Prop::CPU,200000000,1000,0.00590,1.018499538792662,150,5,,,,header_decompress
+CPU fec_encode 0.0001,Data::Prop::CPU,1000000,1050,0.00013,1.198770491803279,150,5,,,,fec_encode
+CPU fec_encode 0.001,Data::Prop::CPU,10000000,1050,0.00014,1.199795081967213,150,5,,,,fec_encode
+CPU fec_encode 0.0025,Data::Prop::CPU,25000000,1050,0.00021,1.199918066366243,150,5,,,,fec_encode
+CPU fec_encode 0.003,Data::Prop::CPU,30000000,1050,0.00030,1.196172248803828,150,5,,,,fec_encode
+CPU fec_decode 0.0001,Data::Prop::CPU,1000000,1050,0.00015,0.833677685950413,150,5,,,,fec_decode
+CPU fec_decode 0.001,Data::Prop::CPU,10000000,1050,0.00006,0.833677685950413,150,5,,,,fec_decode
+CPU fec_decode 0.0025,Data::Prop::CPU,25000000,1050,0.000041,0.833539859562164,150,5,,,,fec_decode
+CPU fec_decode 0.003,Data::Prop::CPU,30000000,1050,0.000042,0.833677685950413,150,5,,,,fec_decode
+CPU fec_decode 0.005,Data::Prop::CPU,50000000,1050,0.000059,0.83336778995245,150,5,,,,fec_decode
+CPU fec_decode 0.008,Data::Prop::CPU,80000000,1050,0.000090,0.833376421923475,150,5,,,,fec_decode
+FPGA header_compress 0.001,Data::Prop::FPGA,10000000,100,0.0000049,0.739454094292804,30,2,24.4,54.4,15.8,header_compress
+FPGA header_compress 0.01,Data::Prop::FPGA,100000000,100,0.00000298,0.738385093167702,30,2,24.4,54.4,15.8,header_compress
+FPGA header_compress 0.05,Data::Prop::FPGA,500000000,100,0.00000309,0.741379310344828,30,2,24.4,54.4,15.8,header_compress
+FPGA header_compress 0.5,Data::Prop::FPGA,5000000000,100,0.00000518,0.977272727272727,30,2,24.4,54.4,15.8,header_compress
+FPGA header_compress 0.95,Data::Prop::FPGA,9500000000,100,0.00000644,0.983870967741935,30,2,24.4,54.4,15.8,header_compress
+FPGA header_decompress 0.1,Data::Prop::FPGA,1000000000,1000,0.00000435,1.020618556701031,30,2,24.4,54.4,15.8,header_decompress
+FPGA header_decompress 0.3,Data::Prop::FPGA,3000000000,1000,0.00000436,1.023972602739726,30,2,24.4,54.4,15.8,header_decompress
+FPGA header_decompress 0.5,Data::Prop::FPGA,5000000000,1000,0.00000435,1.022727272727273,30,2,24.4,54.4,15.8,header_decompress
+FPGA header_decompress 0.7,Data::Prop::FPGA,7000000000,1000,0.00000436,1.023598820058997,30,2,24.4,54.4,15.8,header_decompress
+FPGA header_decompress 0.9,Data::Prop::FPGA,9000000000,1000,0.00000447,1.02301495972382,30,2,24.4,54.4,15.8,header_decompress
+FPGA header_decompress 0.94,Data::Prop::FPGA,9400000000,1000,0.00000503,1.023153252480706,30,2,24.4,54.4,15.8,header_decompress
+FPGA fec_decode 0.01,Data::Prop::FPGA,100000000,1050,0.000182,0.833677685950413,30,2,17.4,72.4,11.6,fec_decode
+FPGA fec_decode 0.1,Data::Prop::FPGA,1000000000,1050,0.0000284,0.833333333333333,30,2,17.4,72.4,11.6,fec_decode
+FPGA fec_decode 0.3,Data::Prop::FPGA,3000000000,1050,0.0000169,0.833333333333333,30,2,17.4,72.4,11.6,fec_decode
+FPGA fec_decode 0.5,Data::Prop::FPGA,5000000000,1050,0.00001469,0.835073068893528,30,2,17.4,72.4,11.6,fec_decode
+FPGA fec_decode 0.7,Data::Prop::FPGA,7000000000,1050,0.0000137,0.833832335329341,30,2,17.4,72.4,11.6,fec_decode
+FPGA fec_decode 0.9,Data::Prop::FPGA,9000000000,1050,0.00001319,0.834298957126304,30,2,17.4,72.4,11.6,fec_decode
+FPGA fec_decode 1.0,Data::Prop::FPGA,10000000000,1050,0.0000328,0.830721003134796,30,2,17.4,72.4,11.6,fec_decode
+FPGA fec_encode 0.01,Data::Prop::FPGA,100000000,1050,0.00000458,1.159950784374039,30,2,12.1,11.4,9.6,fec_encode
+FPGA fec_encode 0.1,Data::Prop::FPGA,1000000000,1050,0.00000458,1.195876288659794,30,2,12.1,11.4,9.6,fec_encode
+FPGA fec_encode 0.3,Data::Prop::FPGA,3000000000,1050,0.00000459,1.199312714776632,30,2,12.1,11.4,9.6,fec_encode
+FPGA fec_encode 0.5,Data::Prop::FPGA,5000000000,1050,0.00000460,1.2,30,2,12.1,11.4,9.6,fec_encode
+FPGA fec_encode 0.7,Data::Prop::FPGA,7000000000,1050,0.00000475,1.200886262924668,30,2,12.1,11.4,9.6,fec_encode
+FPGA fec_encode 0.75,Data::Prop::FPGA,7500000000,1050,0.00000483,1.200553250345781,30,2,12.1,11.4,9.6,fec_encode
+# InputRate inflation is too crude -- conflates all links -- making these entries overly conservative.
+#FPGA memcached 0.01,Data::Prop::FPGA,100000000,1050,0.00000432,3.036585365853659,30,2,24.4,54.4,15.8,memcached
+#FPGA memcached 0.1,Data::Prop::FPGA,1000000000,1050,0.00000474,3,30,2,24.4,54.4,15.8,memcached
+#FPGA memcached 0.25,Data::Prop::FPGA,2500000000,1050,0.00000574,3.009852216748768,30,2,24.4,54.4,15.8,memcached
+#FPGA memcached 0.3,Data::Prop::FPGA,3000000000,1050,0.00000655,3.042553191489362,30,2,24.4,54.4,15.8,memcached
+#FPGA memcached 0.32,Data::Prop::FPGA,3200000000,1050,0.0000159,3.01953125,30,2,24.4,54.4,15.8,memcached
+FPGA memcached 0.01,Data::Prop::FPGA,100000000,1050,0.00000432,1,30,2,24.4,54.4,15.8,memcached
+FPGA memcached 0.1,Data::Prop::FPGA,1000000000,1050,0.00000474,1,30,2,24.4,54.4,15.8,memcached
+FPGA memcached 0.25,Data::Prop::FPGA,2500000000,1050,0.00000574,1,30,2,24.4,54.4,15.8,memcached
+FPGA memcached 0.3,Data::Prop::FPGA,3000000000,1050,0.00000655,1,30,2,24.4,54.4,15.8,memcached
+FPGA memcached 0.32,Data::Prop::FPGA,3200000000,1050,0.0000159,1,30,2,24.4,54.4,15.8,memcached
+
+
+# Templates
+#CPU fec_decode,Data::Prop::CPU,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),150,5,,,,fec_decode
+#CPU fec_encode,Data::Prop::CPU,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),150,5,,,,fec_encode
+#CPU header_compress,Data::Prop::CPU,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),150,5,,,,header_compress
+#CPU header_decompress,Data::Prop::CPU,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),150,5,,,,header_decompress
+#CPU memcached,Data::Prop::CPU,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),150,5,,,,memcached
+#FPGA fec_decode,Data::Prop::FPGA,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),30,2,(LUTs),(BRAMs),(FFs),fec_decode
+#FPGA fec_encode,Data::Prop::FPGA,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),30,2,(LUTs),(BRAMs),(FFs),fec_encode
+#FPGA header_compress,Data::Prop::FPGA,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),30,2,(LUTs),(BRAMs),(FFs),header_compress
+#FPGA header_decompress,Data::Prop::FPGA,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),30,2,(LUTs),(BRAMs),(FFs),header_decompress
+#FPGA memcached,Data::Prop::FPGA,(RATE),(PACKETSIZE),(DELAY),(RATECHANGE),30,2,(LUTs),(BRAMs),(FFs),memcached

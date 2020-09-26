@@ -1,0 +1,114 @@
+[
+  {
+    "node": "tofino1",
+    "port": "1",
+    "linked": {
+       "node" : "fpga1",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "2",
+    "linked": {
+       "node" : "fpga2",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "3",
+    "linked": {
+       "node" : "fpga3",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "4",
+    "linked": {
+       "node" : "fpga4",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "5",
+    "linked": {
+       "node" : "fpga5",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "11",
+    "linked": {
+       "node" : "cpu1",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "12",
+    "linked": {
+       "node" : "cpu2",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "21",
+    "linked": {
+       "node" : "server1",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "22",
+    "linked": {
+       "node" : "server2",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "23",
+    "linked": {
+       "node" : "server3",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "24",
+    "linked": {
+       "node" : "server4",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "13",
+    "linked": {
+       "node" : "cpu3",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "14",
+    "linked": {
+       "node" : "cpu4",
+       "port" : "1"
+    }
+  },
+  {
+    "node": "tofino1",
+    "port": "15",
+    "linked": {
+       "node" : "cpu5",
+       "port" : "1"
+    }
+  }
+]

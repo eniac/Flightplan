@@ -1,0 +1,42 @@
+bash-3.2$ command time examples/test_all_programs.sh
+Testing with program[1-19]
+  program1.json
+        0.06 real         0.05 user         0.00 sys
+  program2.json
+        0.13 real         0.11 user         0.00 sys
+  program3.json
+        0.11 real         0.10 user         0.00 sys
+  program4.json
+        0.08 real         0.06 user         0.00 sys
+  program5.json
+        0.07 real         0.06 user         0.00 sys
+  program6.json
+        0.12 real         0.11 user         0.00 sys
+  program7.json
+        0.06 real         0.05 user         0.00 sys
+  program8.json
+        0.11 real         0.10 user         0.00 sys
+  program9.json
+        0.05 real         0.05 user         0.00 sys
+  program10.json
+        0.05 real         0.05 user         0.00 sys
+  program11.json
+        0.66 real         0.64 user         0.01 sys
+  program12.json
+        0.06 real         0.05 user         0.00 sys
+  program13.json
+        0.06 real         0.05 user         0.00 sys
+  program14.json
+        0.08 real         0.07 user         0.00 sys
+  program15.json
+        0.83 real         0.78 user         0.01 sys
+  program16.json
+      674.84 real       657.38 user         3.06 sys
+  program17.json
+        0.50 real         0.38 user         0.01 sys
+  program18.json
+        0.40 real         0.37 user         0.00 sys
+  program19.json
+    15022.06 real     14190.40 user        65.62 sys
+Testing with program20
+    39890.36 real     36320.25 user       389.19 sys

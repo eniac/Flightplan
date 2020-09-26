@@ -1,0 +1,203 @@
+Rules (235): 
+  Network = 14
+  Devices (18):
+    Port = 54
+  Performance = 140
+  Program (7):
+    Rules = 27
+Outcome: Complete
+Solutions = 38400
+id=41190 |tips|=0
+alloc_node:
+  0.FlightStart: fpga1
+  1.FEC_Decode: fpga1
+  2.Decompress: fpga1
+  3.MCD_Cache: fpga1
+  4.FlightStart: fpga1
+  5.Compress: fpga1
+  6.FEC_Encode: fpga1
+alloc_state:
+  tip for entry: (soln.41190) 0.FlightStart --> 1.FEC_Decode
+    proves 0.FlightStart @ fpga1.1
+      0.FlightStart <-(0.FlightStart)-{}
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 2000000000.000000
+      Data::Bound::Latency: 0.000000
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.41190) 1.FEC_Decode --> 2.Decompress
+    proves 1.FEC_Decode @ fpga1.1
+      1.FEC_Decode <-(1.FEC_Decode)-{decoder_params_fec_params <-(FPGA decoder_params_fec_params)-{[Data::Prop::FPGA] } fec_decode <-(FPGA fec_decode 0.9)-{[Data::Prop::FPGA] } drop <-(FPGA drop)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 1668597914.252608
+      Data::Bound::Latency: 0.000013
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.41190) 2.Decompress --> 3.MCD_Cache
+    proves 2.Decompress @ fpga1.1
+      2.Decompress <-(2.Decompress)-{ingress_compression_port_compression <-(FPGA ingress_compression_port_compression)-{[Data::Prop::FPGA] } header_decompress <-(FPGA header_decompress 0.5)-{[Data::Prop::FPGA] } drop <-(FPGA drop)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 1706520594.121986
+      Data::Bound::Latency: 0.000018
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.41190) 3.MCD_Cache --> 4.FlightStart
+    proves 3.MCD_Cache @ fpga1.1
+      3.MCD_Cache <-(3.MCD_Cache)-{memcached <-(FPGA memcached 0.25)-{[Data::Prop::FPGA] } drop <-(FPGA drop)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 1706520594.121986
+      Data::Bound::Latency: 0.000023
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.41190) 4.FlightStart --> 5.Compress
+    proves 4.FlightStart @ fpga1.1
+      4.FlightStart <-(4.FlightStart)-{ALV_Route_mac_forwarding <-(FPGA ALV_Route_mac_forwarding)-{[Data::Prop::FPGA] } ALV_Route_ipv4_forwarding <-(FPGA ALV_Route_ipv4_forwarding)-{[Data::Prop::FPGA] } ALV_Route_next_hop_arp_lookup <-(FPGA ALV_Route_next_hop_arp_lookup)-{[Data::Prop::FPGA] } drop <-(FPGA drop)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 1706520594.121986
+      Data::Bound::Latency: 0.000023
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.41190) 5.Compress --> 6.FEC_Encode
+    proves 5.Compress @ fpga1.1
+      5.Compress <-(5.Compress)-{egress_compression_port_compression <-(FPGA egress_compression_port_compression)-{[Data::Prop::FPGA] } header_compress <-(FPGA header_compress 0.5)-{[Data::Prop::FPGA] } drop <-(FPGA drop)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 1667736035.164668
+      Data::Bound::Latency: 0.000028
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.41190) 6.FEC_Encode --> (terminal)
+    proves 6.FEC_Encode @ fpga1.1
+      6.FEC_Encode <-(6.FEC_Encode)-{check_run_FEC_egress <-(FPGA check_run_FEC_egress)-{[Data::Prop::FPGA] } classification_classification <-(FPGA classification_classification)-{[Data::Prop::FPGA] } encoder_params_fec_params <-(FPGA encoder_params_fec_params)-{[Data::Prop::FPGA] } update_fec_state <-(FPGA update_fec_state)-{[Data::Prop::FPGA] } fec_encode <-(FPGA fec_encode 0.3)-{[Data::Prop::FPGA] } update_checksum <-(FPGA update_checksum)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 2000137031.864154
+      Data::Bound::Latency: 0.000033
+      Data::Bound::PacketSize: 1100.000000
+Global State (Solution):
+  Data::Bound::Cost: 2.000000
+  Data::Bound::Power: 30.000000
+Global State (Nodes):
+  fpga1
+    Data::Bound::Cost: 2.000000
+    Data::Bound::FPGA1_Area_BRAMs: 247.000000
+    Data::Bound::FPGA1_Area_FFs: 68.600000
+    Data::Bound::FPGA1_Area_LUTs: 102.700000
+    Data::Bound::Power: 30.000000
+Global State (Links):
+Coarsening:
+  0.FlightStart ~ 1.FEC_Decode
+  1.FEC_Decode ~ 2.Decompress
+  2.Decompress ~ 3.MCD_Cache
+  3.MCD_Cache ~ 4.FlightStart
+  4.FlightStart ~ 5.Compress
+  5.Compress ~ 6.FEC_Encode
+
+Terminal tips:
+  @fpga1 (6.FEC_Encode): Data::Bound::Latency = 0.000033
+Solution state:
+  Data::Bound::Cost = 2.000000
+  Data::Bound::Power = 30.000000
+Node state:
+  fpga1:
+    Data::Bound::Cost = 2.000000
+    Data::Bound::Power = 30.000000
+
+Found idx: -1

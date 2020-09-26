@@ -1,0 +1,110 @@
+{
+  "Initial State" :
+    {
+      "Data::Bound::FPGA1_Area_BRAMs" : "0",
+      "Data::Bound::FPGA1_Area_FFs" : "0",
+      "Data::Bound::FPGA1_Area_LUTs" : "0",
+      "Data::Bound::FPGA2_Area_BRAMs" : "0",
+      "Data::Bound::FPGA2_Area_FFs" : "0",
+      "Data::Bound::FPGA2_Area_LUTs" : "0",
+      "Data::Bound::FPGA3_Area_BRAMs" : "0",
+      "Data::Bound::FPGA3_Area_FFs" : "0",
+      "Data::Bound::FPGA3_Area_LUTs" : "0",
+      "Data::Bound::FPGA4_Area_BRAMs" : "0",
+      "Data::Bound::FPGA4_Area_FFs" : "0",
+      "Data::Bound::FPGA4_Area_LUTs" : "0",
+      "Data::Bound::FPGA5_Area_BRAMs" : "0",
+      "Data::Bound::FPGA5_Area_FFs" : "0",
+      "Data::Bound::FPGA5_Area_LUTs" : "0",
+
+      "Data::Bound::Latency" : "0.0",
+      "Data::Bound::PacketSize" : "1100.0",
+      "Data::Bound::InputRate" : "2000000000.0"
+    },
+  "show_worst_solution_too" : false,
+  "greedy_search" : false,
+  "single_allocation" : true,
+  "excluded_ports": ["0"],
+
+  "find": {
+    "latency" : ["0.000038"],
+    "_cost" : "8.000000",
+    "cost" : "18.000000",
+    "power" : "200.000000"
+  },
+
+  "Order" : [
+    {"Data::Bound::Latency" : "min"},
+    {"Data::Bound::Cost" : "min"},
+    {"Data::Bound::Power" : "min"}
+  ],
+  "Supporting Device Classes" : [
+     "Data::Prop::CPU",
+     "Data::Prop::FPGA",
+     "Data::Prop::Switch",
+     "Data::Prop::PSwitch"
+  ],
+  "Rough Latency Offsets" : {
+     "Data::Prop::CPU" : 0.0001,
+     "Data::Prop::FPGA" : 0.0000002,
+     "Data::Prop::Switch" : 0.0000001,
+     "Data::Prop::PSwitch" : 0.0000001
+  },
+  "AllocatableFPGA" : {
+    "fpga1" : {
+      "LUTs" : "Data::Bound::FPGA1_Area_LUTs",
+      "BRAMs" : "Data::Bound::FPGA1_Area_BRAMs",
+      "FFs" : "Data::Bound::FPGA1_Area_FFs"
+    },
+    "fpga2" : {
+      "LUTs" : "Data::Bound::FPGA2_Area_LUTs",
+      "BRAMs" : "Data::Bound::FPGA2_Area_BRAMs",
+      "FFs" : "Data::Bound::FPGA2_Area_FFs"
+    },
+    "fpga3" : {
+      "LUTs" : "Data::Bound::FPGA3_Area_LUTs",
+      "BRAMs" : "Data::Bound::FPGA3_Area_BRAMs",
+      "FFs" : "Data::Bound::FPGA3_Area_FFs"
+    },
+    "fpga4" : {
+      "LUTs" : "Data::Bound::FPGA4_Area_LUTs",
+      "BRAMs" : "Data::Bound::FPGA4_Area_BRAMs",
+      "FFs" : "Data::Bound::FPGA4_Area_FFs"
+    },
+    "fpga5" : {
+      "LUTs" : "Data::Bound::FPGA5_Area_LUTs",
+      "BRAMs" : "Data::Bound::FPGA5_Area_BRAMs",
+      "FFs" : "Data::Bound::FPGA5_Area_FFs"
+    }
+  },
+  "link_bound_accumulate": [
+    "Data::Bound::InputRate"
+  ],
+  "Units" : {
+    "Data::Bound::LineRate" : "bits per second",
+    "Data::Bound::InputRate" : "bits per second",
+    "Data::Bound::ProcessRate" : "packets per second",
+    "Data::Bound::Throughput" : "bits per second",
+    "Data::Bound::Latency" : "seconds",
+    "Data::Bound::PacketSize" : "packets",
+    "Data::Bound::FEC_Active" : "(bool)",
+    "Data::Bound::HC_Active" : "(bool)",
+    "Data::Bound::Power" : "Watts",
+    "Data::Bound::Cost" : "(Cost)",
+    "Data::Bound::FPGA1_Area_LUTs" : "%",
+    "Data::Bound::FPGA1_Area_BRAMs" : "%",
+    "Data::Bound::FPGA1_Area_FFs" : "%",
+    "Data::Bound::FPGA2_Area_LUTs" : "%",
+    "Data::Bound::FPGA2_Area_BRAMs" : "%",
+    "Data::Bound::FPGA2_Area_FFs" : "%",
+    "Data::Bound::FPGA3_Area_LUTs" : "%",
+    "Data::Bound::FPGA3_Area_BRAMs" : "%",
+    "Data::Bound::FPGA3_Area_FFs" : "%",
+    "Data::Bound::FPGA4_Area_LUTs" : "%",
+    "Data::Bound::FPGA4_Area_BRAMs" : "%",
+    "Data::Bound::FPGA4_Area_FFs" : "%",
+    "Data::Bound::FPGA5_Area_LUTs" : "%",
+    "Data::Bound::FPGA5_Area_BRAMs" : "%",
+    "Data::Bound::FPGA5_Area_FFs" : "%"
+  }
+}

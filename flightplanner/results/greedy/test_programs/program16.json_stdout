@@ -1,0 +1,184 @@
+Rules (295): 
+  Network = 14
+  Devices (18):
+    Port = 54
+  Performance = 140
+  Program (5):
+    Rules = 87
+Outcome: Complete
+Solutions = 1
+::(GREEDY) BEST SOLUTION::
+id=295 |tips|=0
+alloc_node:
+  0.FlightStart: tofino1
+  1.Point_Alpha: fpga5
+  2.FlightStart: tofino1
+  3.Point_Bravo: fpga4
+  4.FlightStart: tofino1
+alloc_state:
+  tip for entry: (soln.295) 0.FlightStart --> 1.Point_Alpha
+    proves 0.FlightStart @ tofino1.1
+      0.FlightStart <-(0.FlightStart)-{check_run_Complete_ingress <-(PSwitch check_run_Complete_ingress)-{[Data::Prop::PSwitch] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 2000000000.000000
+      Data::Bound::Latency: 0.000000
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.295) 1.Point_Alpha --> 2.FlightStart
+    proves 1.Point_Alpha @ fpga5.1 (reached through tofino1.5 -- fpga5.1)
+      1.Point_Alpha <-(1.Point_Alpha)-{set_port_status <-(FPGA set_port_status)-{[Data::Prop::FPGA] } drop <-(FPGA drop)-{[Data::Prop::FPGA] } decoder_params_fec_params <-(FPGA decoder_params_fec_params)-{[Data::Prop::FPGA] } fec_decode <-(FPGA fec_decode 0.3)-{[Data::Prop::FPGA] } ingress_compression_port_compression <-(FPGA ingress_compression_port_compression)-{[Data::Prop::FPGA] } header_decompress <-(FPGA header_decompress 0.3)-{[Data::Prop::FPGA] } memcached <-(FPGA memcached 0.25)-{[Data::Prop::FPGA] } drop <-(FPGA drop)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 1706621004.566210
+      Data::Bound::Latency: 0.000027
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.295) 2.FlightStart --> 3.Point_Bravo
+    proves 2.FlightStart @ tofino1.5 (reached through tofino1.5 -- fpga5.1)
+      2.FlightStart <-(2.FlightStart)-{ALV_Route_mac_forwarding <-(PSwitch ALV_Route_mac_forwarding)-{[Data::Prop::PSwitch] } ALV_Route_ipv4_forwarding <-(PSwitch ALV_Route_ipv4_forwarding)-{[Data::Prop::PSwitch] } ALV_Route_next_hop_arp_lookup <-(PSwitch ALV_Route_next_hop_arp_lookup)-{[Data::Prop::PSwitch] } check_run_Complete_egress <-(PSwitch check_run_Complete_egress)-{[Data::Prop::PSwitch] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 1706621004.566210
+      Data::Bound::Latency: 0.000027
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.295) 3.Point_Bravo --> 4.FlightStart
+    proves 3.Point_Bravo @ fpga4.1 (reached through tofino1.4 -- fpga4.1)
+      3.Point_Bravo <-(3.Point_Bravo)-{egress_compression_port_compression <-(FPGA egress_compression_port_compression)-{[Data::Prop::FPGA] } header_compress <-(FPGA header_compress 0.95)-{[Data::Prop::FPGA] } get_port_status <-(FPGA get_port_status)-{[Data::Prop::FPGA] } classification_classification <-(FPGA classification_classification)-{[Data::Prop::FPGA] } encoder_params_fec_params <-(FPGA encoder_params_fec_params)-{[Data::Prop::FPGA] } update_fec_state <-(FPGA update_fec_state)-{[Data::Prop::FPGA] } fec_encode <-(FPGA fec_encode 0.75)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 2015842791.009048
+      Data::Bound::Latency: 0.000038
+      Data::Bound::PacketSize: 1100.000000
+  tip for entry: (soln.295) 4.FlightStart --> (terminal)
+    proves 4.FlightStart @ tofino1.4 (reached through tofino1.4 -- fpga4.1)
+      4.FlightStart <-(4.FlightStart)-{update_checksum <-(PSwitch update_checksum)-{[Data::Prop::PSwitch] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 2015842791.009048
+      Data::Bound::Latency: 0.000038
+      Data::Bound::PacketSize: 1100.000000
+Global State (Solution):
+  Data::Bound::Cost: 16.000000
+  Data::Bound::Power: 170.000000
+Global State (Nodes):
+  tofino1
+    Data::Bound::Cost: 12.000000
+    Data::Bound::Power: 110.000000
+  fpga4
+    Data::Bound::Cost: 2.000000
+    Data::Bound::FPGA4_Area_BRAMs: 65.800000
+    Data::Bound::FPGA4_Area_FFs: 25.400000
+    Data::Bound::FPGA4_Area_LUTs: 36.500000
+    Data::Bound::Power: 30.000000
+  fpga5
+    Data::Bound::Cost: 2.000000
+    Data::Bound::FPGA5_Area_BRAMs: 181.200000
+    Data::Bound::FPGA5_Area_FFs: 43.200000
+    Data::Bound::FPGA5_Area_LUTs: 66.200000
+    Data::Bound::Power: 30.000000
+Global State (Links):
+  tofino1.1 -- fpga1.1
+    (=>) Data::Bound::InputRate: 3706621004.566210
+  tofino1.2 -- fpga2.1
+    (=>) Data::Bound::InputRate: 3706621004.566210
+  tofino1.3 -- fpga3.1
+    (=>) Data::Bound::InputRate: 3706621004.566210
+  tofino1.4 -- fpga4.1
+    (=>) Data::Bound::InputRate: 3706621004.566210
+    (<=) Data::Bound::InputRate: 2015842791.009048
+  tofino1.5 -- fpga5.1
+    (=>) Data::Bound::InputRate: 2000000000.000000
+    (<=) Data::Bound::InputRate: 1706621004.566210
+  tofino1.11 -- cpu1.1
+  tofino1.12 -- cpu2.1
+  tofino1.13 -- cpu3.1
+  tofino1.14 -- cpu4.1
+  tofino1.15 -- cpu5.1
+Coarsening: none
+
+Terminal tips:
+  @tofino1 (4.FlightStart): Data::Bound::Latency = 0.000038
+Solution state:
+  Data::Bound::Cost = 16.000000
+  Data::Bound::Power = 170.000000
+Node state:
+  tofino1:
+    Data::Bound::Cost = 12.000000
+    Data::Bound::Power = 110.000000
+  fpga4:
+    Data::Bound::Cost = 2.000000
+    Data::Bound::Power = 30.000000
+  fpga5:
+    Data::Bound::Cost = 2.000000
+    Data::Bound::Power = 30.000000
+
+Found idx: -1

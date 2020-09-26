@@ -1,0 +1,57 @@
+Rules (1175): 
+  Network = 14
+  Devices (18):
+    Port = 54
+  Performance = 140
+  Program (1):
+    Rules = 967
+Outcome: Complete
+Solutions = 1
+::(GREEDY) BEST SOLUTION::
+id=1 |tips|=0
+alloc_node:
+  0.FlightStart: fpga1
+alloc_state:
+  tip for entry: (soln.1) 0.FlightStart --> +
+    proves 0.FlightStart @ fpga1.1
+      0.FlightStart <-(0.FlightStart)-{decoder_params_fec_params <-(FPGA decoder_params_fec_params)-{[Data::Prop::FPGA] } fec_decode <-(FPGA fec_decode 0.3)-{[Data::Prop::FPGA] } ingress_compression_port_compression <-(FPGA ingress_compression_port_compression)-{[Data::Prop::FPGA] } header_decompress <-(FPGA header_decompress 0.3)-{[Data::Prop::FPGA] } memcached <-(FPGA memcached 0.25)-{[Data::Prop::FPGA] } ALV_Route_mac_forwarding <-(FPGA ALV_Route_mac_forwarding)-{[Data::Prop::FPGA] } ALV_Route_ipv4_forwarding <-(FPGA ALV_Route_ipv4_forwarding)-{[Data::Prop::FPGA] } ALV_Route_next_hop_arp_lookup <-(FPGA ALV_Route_next_hop_arp_lookup)-{[Data::Prop::FPGA] } egress_compression_port_compression <-(FPGA egress_compression_port_compression)-{[Data::Prop::FPGA] } header_compress <-(FPGA header_compress 0.5)-{[Data::Prop::FPGA] } check_run_FEC_egress <-(FPGA check_run_FEC_egress)-{[Data::Prop::FPGA] } classification_classification <-(FPGA classification_classification)-{[Data::Prop::FPGA] } encoder_params_fec_params <-(FPGA encoder_params_fec_params)-{[Data::Prop::FPGA] } update_fec_state <-(FPGA update_fec_state)-{[Data::Prop::FPGA] } fec_encode <-(FPGA fec_encode 0.3)-{[Data::Prop::FPGA] } update_checksum <-(FPGA update_checksum)-{[Data::Prop::FPGA] } }
+    State:
+      Data::Bound::FPGA1_Area_BRAMs: 0.000000
+      Data::Bound::FPGA1_Area_FFs: 0.000000
+      Data::Bound::FPGA1_Area_LUTs: 0.000000
+      Data::Bound::FPGA2_Area_BRAMs: 0.000000
+      Data::Bound::FPGA2_Area_FFs: 0.000000
+      Data::Bound::FPGA2_Area_LUTs: 0.000000
+      Data::Bound::FPGA3_Area_BRAMs: 0.000000
+      Data::Bound::FPGA3_Area_FFs: 0.000000
+      Data::Bound::FPGA3_Area_LUTs: 0.000000
+      Data::Bound::FPGA4_Area_BRAMs: 0.000000
+      Data::Bound::FPGA4_Area_FFs: 0.000000
+      Data::Bound::FPGA4_Area_LUTs: 0.000000
+      Data::Bound::FPGA5_Area_BRAMs: 0.000000
+      Data::Bound::FPGA5_Area_FFs: 0.000000
+      Data::Bound::FPGA5_Area_LUTs: 0.000000
+      Data::Bound::InputRate: 2000254718.488370
+      Data::Bound::Latency: 0.000037
+      Data::Bound::PacketSize: 1100.000000
+Global State (Solution):
+  Data::Bound::Cost: 2.000000
+  Data::Bound::Power: 30.000000
+Global State (Nodes):
+  fpga1
+    Data::Bound::Cost: 2.000000
+    Data::Bound::FPGA1_Area_BRAMs: 247.000000
+    Data::Bound::FPGA1_Area_FFs: 68.600000
+    Data::Bound::FPGA1_Area_LUTs: 102.700000
+    Data::Bound::Power: 30.000000
+Global State (Links):
+
+Solution state:
+  Data::Bound::Cost = 2.000000
+  Data::Bound::Power = 30.000000
+Node state:
+  fpga1:
+    Data::Bound::Cost = 2.000000
+    Data::Bound::Power = 30.000000
+
+Found idx: -1

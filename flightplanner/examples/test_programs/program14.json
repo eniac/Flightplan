@@ -1,0 +1,65 @@
+{
+  "Parameters" : {
+    "flightplan_runtime" : "Full",
+    "flightplan_switch_md" : "switch_metadata_t",
+    "flightplan_standard_md" : "standard_metadata",
+    "flightplan_egress_var" : "egress_spec",
+    "flightplan_ingress_var" : "ingress_port",
+    "flightplan_max_handover_bytes" : 13,
+    "flightplan_routing_segment" : "",
+    "flightplan_offload_cflow" : 0,
+    "mem_cells" : [8, 8, 8, 8, 8, 32, 32]
+  },
+  "Abstract program" : [
+    {"0.FlightStart": [
+      {"Index": 0, "Props": ["ipv4_lpm", "mark_to_drop"], "Desc": ["Table", "Extern"]},
+      {"Index": 1, "Props": ["ipv4_lpm", "mark_to_drop", "update_checksum"], "Desc": ["Table", "Extern", "Extern"]},
+      {"Index": 2, "Props": ["update_checksum"], "Desc": ["Extern"]}
+    ]},
+    {"1.Point_Alpha": [
+      {"Index": 0, "Props": ["myTunnel_exact"], "Desc": ["Table"]}
+    ]},
+    {"2.FlightStart": [
+      {"Index": 0, "Props": ["update_checksum"], "Desc": ["Extern"]}
+    ]}
+  ],
+  "FlightStartAliases" : [
+    "0.FlightStart",
+    "2.FlightStart"
+  ],
+  "Allocations" : {
+    "0.FlightStart" : {
+    },
+    "1.Point_Alpha" : {
+      "standard_metadata.egress_spec" : [0,1]
+    },
+    "2.FlightStart" : {
+      "standard_metadata.egress_spec" : [0,1]
+    }
+  },
+  "CFG" : [
+    {"0.FlightStart": "1.Point_Alpha"},
+    {"1.Point_Alpha": "2.FlightStart"}
+  ],
+  "Signature" : {
+    "Prop": ["0.FlightStart", "1.Point_Alpha", "2.FlightStart"],
+    "V": []
+  },
+  "Tables": {
+    "ipv4_lpm": [],
+    "myTunnel_exact": []
+  },
+  "Externs": {
+    "mark_to_drop": [],
+    "update_checksum": []
+  },
+  "Hand-over Overheads" : {
+    "0.FlightStart" : {    },
+    "1.Point_Alpha" : {
+      "standard_metadata.egress_spec" : 9
+    },
+    "2.FlightStart" : {
+      "standard_metadata.egress_spec" : 9
+    }
+  }
+}

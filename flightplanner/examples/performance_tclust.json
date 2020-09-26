@@ -1,0 +1,2566 @@
+[
+{
+  "name" : "PSwitch update_checksum",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "update_checksum"
+},
+{
+  "name" : "PSwitch drop",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "drop"
+},
+{
+  "name" : "Switch update_checksum",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "update_checksum"
+},
+{
+  "name" : "Switch drop",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "drop"
+},
+{
+  "name" : "PSwitch check_run_Complete_ingress",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "check_run_Complete_ingress"
+},
+{
+  "name" : "PSwitch check_run_Complete_egress",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "check_run_Complete_egress"
+},
+{
+  "name" : "PSwitch hash",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "hash"
+},
+{
+  "name" : "Switch hash",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "hash"
+},
+{
+  "name" : "CPU hash",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "hash"
+},
+{
+  "name" : "FPGA hash",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "hash"
+},
+{
+  "name" : "PSwitch mark_to_drop",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "mark_to_drop"
+},
+{
+  "name" : "Switch mark_to_drop",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "mark_to_drop"
+},
+{
+  "name" : "CPU mark_to_drop",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "mark_to_drop"
+},
+{
+  "name" : "FPGA mark_to_drop",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "mark_to_drop"
+},
+{
+  "name" : "PSwitch mac_forwarding",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "mac_forwarding"
+},
+{
+  "name" : "Switch mac_forwarding",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "mac_forwarding"
+},
+{
+  "name" : "CPU mac_forwarding",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "mac_forwarding"
+},
+{
+  "name" : "FPGA mac_forwarding",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "mac_forwarding"
+},
+{
+  "name" : "PSwitch ipv4_forwarding",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "ipv4_forwarding"
+},
+{
+  "name" : "Switch ipv4_forwarding",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "ipv4_forwarding"
+},
+{
+  "name" : "CPU ipv4_forwarding",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "ipv4_forwarding"
+},
+{
+  "name" : "FPGA ipv4_forwarding",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "ipv4_forwarding"
+},
+{
+  "name" : "PSwitch next_hop_arp_lookup",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "next_hop_arp_lookup"
+},
+{
+  "name" : "Switch next_hop_arp_lookup",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "next_hop_arp_lookup"
+},
+{
+  "name" : "CPU next_hop_arp_lookup",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "next_hop_arp_lookup"
+},
+{
+  "name" : "FPGA next_hop_arp_lookup",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "next_hop_arp_lookup"
+},
+{
+  "name" : "PSwitch FW_check_ports",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "FW_check_ports"
+},
+{
+  "name" : "Switch FW_check_ports",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "FW_check_ports"
+},
+{
+  "name" : "CPU FW_check_ports",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "FW_check_ports"
+},
+{
+  "name" : "FPGA FW_check_ports",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "FW_check_ports"
+},
+{
+  "name" : "PSwitch ipv4_lpm",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "ipv4_lpm"
+},
+{
+  "name" : "Switch ipv4_lpm",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "ipv4_lpm"
+},
+{
+  "name" : "CPU ipv4_lpm",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "ipv4_lpm"
+},
+{
+  "name" : "FPGA ipv4_lpm",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "ipv4_lpm"
+},
+{
+  "name" : "PSwitch myTunnel_exact",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "myTunnel_exact"
+},
+{
+  "name" : "Switch myTunnel_exact",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "myTunnel_exact"
+},
+{
+  "name" : "CPU myTunnel_exact",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "myTunnel_exact"
+},
+{
+  "name" : "FPGA myTunnel_exact",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "myTunnel_exact"
+},
+{
+  "name" : "PSwitch set_port_status",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "set_port_status"
+},
+{
+  "name" : "Switch set_port_status",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "set_port_status"
+},
+{
+  "name" : "CPU set_port_status",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "set_port_status"
+},
+{
+  "name" : "FPGA set_port_status",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "set_port_status"
+},
+{
+  "name" : "PSwitch get_port_status",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "get_port_status"
+},
+{
+  "name" : "Switch get_port_status",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "get_port_status"
+},
+{
+  "name" : "CPU get_port_status",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "get_port_status"
+},
+{
+  "name" : "FPGA get_port_status",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "get_port_status"
+},
+{
+  "name" : "PSwitch ALV_Route_ipv4_forwarding",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "ALV_Route_ipv4_forwarding"
+},
+{
+  "name" : "PSwitch ALV_Route_next_hop_arp_lookup",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "ALV_Route_next_hop_arp_lookup"
+},
+{
+  "name" : "PSwitch ALV_Route_mac_forwarding",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "ALV_Route_mac_forwarding"
+},
+{
+  "name" : "Switch ALV_Route_ipv4_forwarding",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "ALV_Route_ipv4_forwarding"
+},
+{
+  "name" : "Switch ALV_Route_next_hop_arp_lookup",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "ALV_Route_next_hop_arp_lookup"
+},
+{
+  "name" : "Switch ALV_Route_mac_forwarding",
+  "props" : ["Data::Prop::Switch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "40000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "1"]}
+    ],
+  "conclusion" : "ALV_Route_mac_forwarding"
+},
+{
+  "name" : "FPGA update_checksum",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "update_checksum"
+},
+{
+  "name" : "FPGA drop",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "drop"
+},
+{
+  "name" : "FPGA check_run_Complete_ingress",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "check_run_Complete_ingress"
+},
+{
+  "name" : "FPGA check_run_Complete_egress",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "check_run_Complete_egress"
+},
+{
+  "name" : "FPGA ALV_Route_ipv4_forwarding",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "ALV_Route_ipv4_forwarding"
+},
+{
+  "name" : "FPGA ALV_Route_next_hop_arp_lookup",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "ALV_Route_next_hop_arp_lookup"
+},
+{
+  "name" : "FPGA ALV_Route_mac_forwarding",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "ALV_Route_mac_forwarding"
+},
+{
+  "name" : "CPU update_checksum",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "update_checksum"
+},
+{
+  "name" : "CPU drop",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "drop"
+},
+{
+  "name" : "CPU check_run_Complete_ingress",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "check_run_Complete_ingress"
+},
+{
+  "name" : "CPU check_run_Complete_egress",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "check_run_Complete_egress"
+},
+{
+  "name" : "CPU ALV_Route_ipv4_forwarding",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "ALV_Route_ipv4_forwarding"
+},
+{
+  "name" : "CPU ALV_Route_next_hop_arp_lookup",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "ALV_Route_next_hop_arp_lookup"
+},
+{
+  "name" : "CPU ALV_Route_mac_forwarding",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "ALV_Route_mac_forwarding"
+},
+{
+  "name" : "PSwitch egress_compression_port_compression",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "egress_compression_port_compression"
+},
+{
+  "name" : "PSwitch ingress_compression_port_compression",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "ingress_compression_port_compression"
+},
+{
+  "name" : "PSwitch header_compress",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "PSwitch header_decompress",
+  "props" : ["Data::Prop::PSwitch"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "110"]},
+      {"aO":["Data::Bound::Cost", "12"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "CPU check_run_FEC_egress",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "check_run_FEC_egress"
+},
+{
+  "name" : "CPU classification_classification",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "classification_classification"
+},
+{
+  "name" : "CPU decoder_params_fec_params",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "decoder_params_fec_params"
+},
+{
+  "name" : "CPU egress_compression_port_compression",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "egress_compression_port_compression"
+},
+{
+  "name" : "CPU encoder_params_fec_params",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "encoder_params_fec_params"
+},
+{
+  "name" : "CPU ingress_compression_port_compression",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "ingress_compression_port_compression"
+},
+{
+  "name" : "FPGA check_run_FEC_egress",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "check_run_FEC_egress"
+},
+{
+  "name" : "FPGA classification_classification",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "classification_classification"
+},
+{
+  "name" : "FPGA decoder_params_fec_params",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "decoder_params_fec_params"
+},
+{
+  "name" : "FPGA egress_compression_port_compression",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "egress_compression_port_compression"
+},
+{
+  "name" : "FPGA encoder_params_fec_params",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "encoder_params_fec_params"
+},
+{
+  "name" : "FPGA ingress_compression_port_compression",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "ingress_compression_port_compression"
+},
+{
+  "name" : "CPU drop",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "drop"
+},
+{
+  "name" : "CPU update_checksum",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "update_checksum"
+},
+{
+  "name" : "CPU update_fec_state",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "update_fec_state"
+},
+{
+  "name" : "FPGA drop",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "drop"
+},
+{
+  "name" : "FPGA update_checksum",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "update_checksum"
+},
+{
+  "name" : "FPGA update_fec_state",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "64"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0"]},
+      {"aM":["Data::Bound::InputRate", "1.0"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "update_fec_state"
+},
+{
+  "name" : "CPU memcached 0.01",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "1000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.001"]},
+      {"aM":["Data::Bound::InputRate", "1"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "memcached"
+},
+{
+  "name" : "CPU header_compress 0.0001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "1000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00423"]},
+      {"aM":["Data::Bound::InputRate", "0.977459016393443"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "CPU header_compress 0.001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00446"]},
+      {"aM":["Data::Bound::InputRate", "0.976434426229508"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "CPU header_compress 0.0025",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "25000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00467"]},
+      {"aM":["Data::Bound::InputRate", "0.977030352748154"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "CPU header_compress 0.003",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "30000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00472"]},
+      {"aM":["Data::Bound::InputRate", "0.97469220246238"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "CPU header_compress 0.005",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "50000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00503"]},
+      {"aM":["Data::Bound::InputRate", "0.977641025641026"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "CPU header_compress 0.01",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "100000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00580"]},
+      {"aM":["Data::Bound::InputRate", "0.977011494252874"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "CPU header_compress 0.02",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "200000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00740"]},
+      {"aM":["Data::Bound::InputRate", "0.975096277278562"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "CPU header_decompress 0.0001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "1000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00490"]},
+      {"aM":["Data::Bound::InputRate", "1.022494887525562"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "CPU header_decompress 0.001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00440"]},
+      {"aM":["Data::Bound::InputRate", "1.022517911975435"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "CPU header_decompress 0.0025",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "25000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00442"]},
+      {"aM":["Data::Bound::InputRate", "1.024180327868852"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "CPU header_decompress 0.005",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "50000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00465"]},
+      {"aM":["Data::Bound::InputRate", "1.02233606557377"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "CPU header_decompress 0.02",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "200000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00590"]},
+      {"aM":["Data::Bound::InputRate", "1.018499538792662"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "CPU fec_encode 0.0001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "1000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00013"]},
+      {"aM":["Data::Bound::InputRate", "1.198770491803279"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "CPU fec_encode 0.001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00014"]},
+      {"aM":["Data::Bound::InputRate", "1.199795081967213"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "CPU fec_encode 0.0025",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "25000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00021"]},
+      {"aM":["Data::Bound::InputRate", "1.199918066366243"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "CPU fec_encode 0.003",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "30000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00030"]},
+      {"aM":["Data::Bound::InputRate", "1.196172248803828"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "CPU fec_decode 0.0001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "1000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00015"]},
+      {"aM":["Data::Bound::InputRate", "0.833677685950413"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "CPU fec_decode 0.001",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "10000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00006"]},
+      {"aM":["Data::Bound::InputRate", "0.833677685950413"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "CPU fec_decode 0.0025",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "25000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.000041"]},
+      {"aM":["Data::Bound::InputRate", "0.833539859562164"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "CPU fec_decode 0.003",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "30000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.000042"]},
+      {"aM":["Data::Bound::InputRate", "0.833677685950413"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "CPU fec_decode 0.005",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "50000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.000059"]},
+      {"aM":["Data::Bound::InputRate", "0.83336778995245"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "CPU fec_decode 0.008",
+  "props" : ["Data::Prop::CPU"],
+  "bounds" : [
+      {"lt":["Data::Bound::InputRate", "80000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.000090"]},
+      {"aM":["Data::Bound::InputRate", "0.833376421923475"]},
+      {"aO":["Data::Bound::Power", "150"]},
+      {"aO":["Data::Bound::Cost", "5"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA header_compress 0.001",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "10000000"]},
+      {"gt":["Data::Bound::PacketSize", "100"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.0000049"]},
+      {"aM":["Data::Bound::InputRate", "0.739454094292804"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "FPGA header_compress 0.01",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "100000000"]},
+      {"gt":["Data::Bound::PacketSize", "100"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000298"]},
+      {"aM":["Data::Bound::InputRate", "0.738385093167702"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "FPGA header_compress 0.05",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "500000000"]},
+      {"gt":["Data::Bound::PacketSize", "100"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000309"]},
+      {"aM":["Data::Bound::InputRate", "0.741379310344828"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "FPGA header_compress 0.5",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "5000000000"]},
+      {"gt":["Data::Bound::PacketSize", "100"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000518"]},
+      {"aM":["Data::Bound::InputRate", "0.977272727272727"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "FPGA header_compress 0.95",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "9500000000"]},
+      {"gt":["Data::Bound::PacketSize", "100"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000644"]},
+      {"aM":["Data::Bound::InputRate", "0.983870967741935"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_compress"
+},
+{
+  "name" : "FPGA header_decompress 0.1",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "1000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000435"]},
+      {"aM":["Data::Bound::InputRate", "1.020618556701031"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "FPGA header_decompress 0.3",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "3000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000436"]},
+      {"aM":["Data::Bound::InputRate", "1.023972602739726"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "FPGA header_decompress 0.5",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "5000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000435"]},
+      {"aM":["Data::Bound::InputRate", "1.022727272727273"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "FPGA header_decompress 0.7",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "7000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000436"]},
+      {"aM":["Data::Bound::InputRate", "1.023598820058997"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "FPGA header_decompress 0.9",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "9000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000447"]},
+      {"aM":["Data::Bound::InputRate", "1.02301495972382"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "FPGA header_decompress 0.94",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "9400000000"]},
+      {"gt":["Data::Bound::PacketSize", "1000"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000503"]},
+      {"aM":["Data::Bound::InputRate", "1.023153252480706"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "header_decompress"
+},
+{
+  "name" : "FPGA fec_decode 0.01",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "100000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.000182"]},
+      {"aM":["Data::Bound::InputRate", "0.833677685950413"]},
+{"aF":["17.4", "72.4", "11.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA fec_decode 0.1",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "1000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.0000284"]},
+      {"aM":["Data::Bound::InputRate", "0.833333333333333"]},
+{"aF":["17.4", "72.4", "11.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA fec_decode 0.3",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "3000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.0000169"]},
+      {"aM":["Data::Bound::InputRate", "0.833333333333333"]},
+{"aF":["17.4", "72.4", "11.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA fec_decode 0.5",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "5000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00001469"]},
+      {"aM":["Data::Bound::InputRate", "0.835073068893528"]},
+{"aF":["17.4", "72.4", "11.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA fec_decode 0.7",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "7000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.0000137"]},
+      {"aM":["Data::Bound::InputRate", "0.833832335329341"]},
+{"aF":["17.4", "72.4", "11.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA fec_decode 0.9",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "9000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00001319"]},
+      {"aM":["Data::Bound::InputRate", "0.834298957126304"]},
+{"aF":["17.4", "72.4", "11.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA fec_decode 1.0",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "10000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.0000328"]},
+      {"aM":["Data::Bound::InputRate", "0.830721003134796"]},
+{"aF":["17.4", "72.4", "11.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_decode"
+},
+{
+  "name" : "FPGA fec_encode 0.01",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "100000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000458"]},
+      {"aM":["Data::Bound::InputRate", "1.159950784374039"]},
+{"aF":["12.1", "11.4", "9.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "FPGA fec_encode 0.1",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "1000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000458"]},
+      {"aM":["Data::Bound::InputRate", "1.195876288659794"]},
+{"aF":["12.1", "11.4", "9.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "FPGA fec_encode 0.3",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "3000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000459"]},
+      {"aM":["Data::Bound::InputRate", "1.199312714776632"]},
+{"aF":["12.1", "11.4", "9.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "FPGA fec_encode 0.5",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "5000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000460"]},
+      {"aM":["Data::Bound::InputRate", "1.2"]},
+{"aF":["12.1", "11.4", "9.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "FPGA fec_encode 0.7",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "7000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000475"]},
+      {"aM":["Data::Bound::InputRate", "1.200886262924668"]},
+{"aF":["12.1", "11.4", "9.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "FPGA fec_encode 0.75",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "7500000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000483"]},
+      {"aM":["Data::Bound::InputRate", "1.200553250345781"]},
+{"aF":["12.1", "11.4", "9.6"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "fec_encode"
+},
+{
+  "name" : "FPGA memcached 0.01",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "100000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000432"]},
+      {"aM":["Data::Bound::InputRate", "1"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "memcached"
+},
+{
+  "name" : "FPGA memcached 0.1",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "1000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000474"]},
+      {"aM":["Data::Bound::InputRate", "1"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "memcached"
+},
+{
+  "name" : "FPGA memcached 0.25",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "2500000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000574"]},
+      {"aM":["Data::Bound::InputRate", "1"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "memcached"
+},
+{
+  "name" : "FPGA memcached 0.3",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "3000000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.00000655"]},
+      {"aM":["Data::Bound::InputRate", "1"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "memcached"
+},
+{
+  "name" : "FPGA memcached 0.32",
+  "props" : ["Data::Prop::FPGA"],
+  "bounds" : [
+      {"lt":["Data::Bound::FPGA1_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA1_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA2_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA3_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA4_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_BRAMs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_FFs", "100"]},
+      {"lt":["Data::Bound::FPGA5_Area_LUTs", "100"]},
+      {"lt":["Data::Bound::InputRate", "3200000000"]},
+      {"gt":["Data::Bound::PacketSize", "1050"]}
+    ],
+  "g" : [
+      {"aP":["Data::Bound::Latency", "0.0000159"]},
+      {"aM":["Data::Bound::InputRate", "1"]},
+{"aF":["24.4", "54.4", "15.8"]},
+      {"aO":["Data::Bound::Power", "30"]},
+      {"aO":["Data::Bound::Cost", "2"]}
+    ],
+  "conclusion" : "memcached"
+}
+]
