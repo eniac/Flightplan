@@ -1,5 +1,4 @@
-# Using WeMo so-called "smart plugs" for Scripted Power Measurement.
-(or how to WeMo without having to weep-o)
+# Using WeMo "smart plugs" for Scripted Power Measurement.
 
 Nik Sultana, October 2019. r1
 
