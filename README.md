@@ -1,5 +1,3 @@
-![Outline](https://flightplan.cis.upenn.edu/outline.png)
-
 # Flightplan
 Our [project](https://flightplan.cis.upenn.edu/) develops a tool-chain for the flexible decomposition of P4 programs and their allocation to heterogeneous hardware to improve performance, reliability and utilisation of software-defined networks.
 
