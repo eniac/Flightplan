@@ -13,7 +13,7 @@ There are several things you can get out of this repo:
 - Network boosters: [FEC](https://flightplan.cis.upenn.edu/netcompute2018.pdf), memcached, header compression, running on [CPU](cpuBoosters) or [FPGA](FPGA).
 - Flightplan's [Full](Wharf/Sources/FPRuntime.p4) runtime for running disaggregated programs, the associated [fpctl](https://github.com/eniac/Flightplan/blob/master/Wharf/fpctl.py) control program, and [usage examples](https://github.com/eniac/Flightplan/blob/master/Wharf/splits/ALV_split1/step2.sh).
 - A fairly mature [simulation system and our simulated experiments](Wharf). Among other things, this was used to [simulate](splits2/ALV_Complete_All/) the setup shown in [Fig7](https://flightplan.cis.upenn.edu/flightplan.pdf#figure.caption.13) in the paper.
-- A fat-tree topology and configuration [generator](Wharf/generate_alv_network.py). You can see example output for [k=4](Wharf/bmv2/topologies/alv_k\=4.yml) and its visualisation in [FDP](https://drive.google.com/file/d/149YrRqJxQ6aNmO6FqlRTm5p4N_QvQ-U6/view?usp=sharing).
+- A [fat-tree](Wharf/ALV/README.md) topology and configuration [generator](Wharf/generate_alv_network.py). You can see example output for [k=4](Wharf/bmv2/topologies/alv_k\=4.yml) and its visualisation in [FDP](https://drive.google.com/file/d/149YrRqJxQ6aNmO6FqlRTm5p4N_QvQ-U6/view?usp=sharing).
 - Our testbed experiment methodology, automation, and/or data.
 [1](testing/README.md), [2](testing_docs).
 Contact us if raw data is needed, it's big.
