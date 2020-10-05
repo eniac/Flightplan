@@ -3,6 +3,8 @@ This example adapts the
 [basic_tunnel](https://github.com/p4lang/tutorials/tree/master/exercises/basic_tunnel)
 example from the P4 tutorial to run in the [ALV topology](../../ALV/README.md).
 
+**See also**: a [split](../ALV_bt_1) variant of this program.
+
 ## What you see
 Packets follow a different path in the network when using the tunnel; to emphasise this, we make the path a bit convoluted.
 
