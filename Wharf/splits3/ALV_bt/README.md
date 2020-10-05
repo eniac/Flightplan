@@ -1,3 +1,23 @@
+# Info
+This example adapts the
+[basic_tunnel](https://github.com/p4lang/tutorials/tree/master/exercises/basic_tunnel)
+example from the P4 tutorial to run in the [ALV topology](../../ALV/README.md).
+
+## What you see
+Packets follow a different path in the network when using the tunnel; to emphasise this, we make the path a bit convoluted.
+
+The normal routing follows this path:
+```
+  p0h3 -> p0e1 -> p0a1 -> c3 -> p3a1 -> p3e1 -> p3h2
+```
+but the tunnel (`--dst_id 1`) is preset to follow this path:
+```
+  p0h3 -> p0e1 -> p0a0 -> c0 -> p1a0 -> c1 -> p3a0 -> p3e0 -> p3a1 -> p3e1 -> p3h2
+```
+
+
+# Code
+
 This relies on send.py and myTunnel_header.py which were copied from the basic_tunnel P4 tutorial.
 
 ## Running
@@ -7,12 +27,6 @@ MODE=bt_experiment_encapsulated ./tests.sh
 ```
 
 ## Correctness
-Look at forward paths to check that the tunneled packets are following the path for that tunnel.
-The normal routing follows this path:
-  p0h3 -> p0e1 -> p0a1 -> c3 -> p3a1 -> p3e1 -> p3h2
-but the tunnel (`--dst_id 1`) is preset to follow this path:
-  p0h3 -> p0e1 -> p0a0 -> c0 -> p1a0 -> c1 -> p3a0 -> p3e0 -> p3a1 -> p3e1 -> p3h2
-
 We can confirm that the recipient is receiving the tunneled traffic:
 ```
 ~/Documents/Flightplan/P4Boosters/Wharf/splits3/ALV_bt$ tcpdump -nXXSvr test_output/alv_k\=4/pcap_dump/p3e1_to_p3h2.pcap | head
