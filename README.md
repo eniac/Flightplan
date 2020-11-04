@@ -22,7 +22,7 @@ There are several things you can get out of this repo, <i>including tools and da
     <br /><a href="https://drive.google.com/file/d/149YrRqJxQ6aNmO6FqlRTm5p4N_QvQ-U6/view" target="_blank"><img src="https://www.seas.upenn.edu/~nsultana/fdp.png" alt="FDP video" height="200"/></a>
     - Our **testbed experiment** methodology, automation, and/or data.
     [1](testing/README.md), [2](testing_docs).
-    Contact us if raw data is needed, it's big.
+    <br />Contact us if raw data is needed, it's big.
     - The **power measurement** [method](power_measurements/README.md) and [setup](power_measurements/wemo_instructions.md) used in our testbed experiments.
 
 ## License
