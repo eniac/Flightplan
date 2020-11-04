@@ -5,9 +5,9 @@ Our [project](https://flightplan.cis.upenn.edu/) develops a tool-chain for the f
 Look at the [Flightplan paper](https://flightplan.cis.upenn.edu/flightplan.pdf)
 to better understand what the various things below do.
 
-There are several things you can get out of this repo:
+There are several things you can get out of this repo, <i>including tools and data for reuse</i>:
 - The **Flightplan system**:
-    <center><br /> <img src="https://flightplan.cis.upenn.edu/outline.png" height="150"/></center>
+    <br /> <img src="https://flightplan.cis.upenn.edu/outline.png" height="150"/>
     - [Analyser+transformer](flightplan) for P4 code with segment annotations, from which disaggregated programs are derived.
     - The [Flightplanner](flightplanner) produces execution plans for disaggregated P4 programs.
     - Examples of [segment annotation usage](https://github.com/eniac/Flightplan/blob/master/Wharf/Sources/ALV.p4#L92), [analysis tool invocation](https://github.com/eniac/Flightplan/blob/master/flightplan/analyser_scripts/run_everything.sh#L5) and [output](https://github.com/eniac/Flightplan/blob/master/flightplan/analyser_scripts/flightplan_output/program3.json), which are fed to the planner. The planner about the disaggregated dataplane program to produce (among other things) [allocations](https://github.com/eniac/Flightplan/blob/master/flightplanner/results/greedy/program20/program20_tofino.stdout#L12) of segments to devices on the network.
