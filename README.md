@@ -25,7 +25,9 @@ There are several things you can get out of this repo, <i>including tools and da
     <br />Contact us if raw data is needed, it's big.
     - The **power measurement** [method](power_measurements/README.md) and [setup](power_measurements/wemo_instructions.md) used in our testbed experiments.
 
-To find out more visit our [project site](https://flightplan.cis.upenn.edu/).
+## Need more info?
+- Visit our [project site](https://flightplan.cis.upenn.edu/).
+- Join the [mailing list](https://groups.google.com/a/seas.upenn.edu/g/flightplan).
 
 ## License
 [Apache 2.0](LICENSE)
