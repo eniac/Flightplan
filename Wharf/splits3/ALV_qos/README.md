@@ -1,7 +1,22 @@
+# Info
+This example adapts the
+[qos](https://github.com/p4lang/tutorials/tree/master/exercises/qos)
+example from the P4 tutorial to run in the [ALV topology](../../ALV/README.md).
+
+**See also**: a [split](../ALV_qos_hl3new) variant of this program.
+
+## What you see
+Packets are sent from p0h3 and their `tos` field is initially `0x0`.
+In the network, the `tos` field is changed to `0xb0` because of the types of packets being sent.
+
+
+# Code
+
 ## Running
 ```
 ./tests.sh
 ```
+
 
 ## Correctness
 Initially `tos` is `0x0`:
