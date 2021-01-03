@@ -6,9 +6,9 @@ This example---called [Crosspod in the Flightplan paper](https://flightplan.cis.
 
 ## What you see
 Various experiments are run to test the behaviour of these boosters.
-* **FEC**: we measure the TCP retransmissions that are avoided when the FEC booster is used across a lossy link.
-* **MCD**: we measure the Memcached queries to the server that are avoided when the in-network cache can respond to them.
-* **HC**: we measure the bytes saved on the network link when the compression booster is active.
+* **FEC**: we measure the number of packets that reach the destination after crossing a lossy link. Using FEC we are able to get more data packets across.
+* **MCD**: we measure the Memcached queries to the server that are avoided when the in-network cache can respond to them. Using the in-network cache, fewer GET requests reach the server and thus reduce pressure on it.
+* **HC**: we measure the number of bytes sent across across a network link when the compression booster is active compared to when it isn't.
 
 
 # Code
