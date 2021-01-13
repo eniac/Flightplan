@@ -2,8 +2,8 @@ CC=g++
 VENCORE_CODE=../../RSECode
 
 # To use Vencore's or Hans' implementation of the FEC
-COMPILED_RSE=$(VENCORE_CODE)
-#COMPILED_RSE=../../FPGA/RSEVivadoHLS
+#COMPILED_RSE=$(VENCORE_CODE)
+COMPILED_RSE=../../FPGA/RSEVivadoHLS
 
 FLAGS=-g -Wall -I$(VENCORE_CODE) -I$(OTHER_INCLUDE) -I. -O3 -DWHARF_DEBUGGING -fPIC
 
