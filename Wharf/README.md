@@ -45,11 +45,17 @@ Traceback (most recent call last):
 Exception: Could not execute commands: Runtime API not present
 ```
 
-**WARNINGS** The `BMV2_REPO` variable is hardcoded in several scripts, beware.
+**WARNING** The `BMV2_REPO` variable might still be hardcoded in some scripts, beware.
 
 ## `WHARF_REPO`
 Set the environment variable `WHARF_REPO` to point the directory
 containing the Wharf repository.
+
+
+## FEC
+Some code related to the FEC implementation cannot be released until we receive permission to do so.
+Until the full code becomes available, see [instructions for excluding FEC](instruction_for_crosspod_without_fec.md) from the simulated setup.
+
 
 ## Building P4 programs to run on booster_switch
 
