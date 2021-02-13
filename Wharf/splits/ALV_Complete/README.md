@@ -1,8 +1,9 @@
-# Info
-This example---called [Crosspod in the Flightplan paper](https://flightplan.cis.upenn.edu/flightplan.pdf#section.2)---features a program that invokes 3 types of (in-network) network boosters:
+# About this example
+This example---called [Crosspod in the Flightplan paper](https://flightplan.cis.upenn.edu/flightplan.pdf#section.2)---features a program that invokes 3 types of (in-network) boosters:
 * link-layer Forward Error Correction (**FEC**)
 * Memcached Cache (**MCD**)
 * Header Compression (**HC**)
+These boosters are described further in the Flightplan paper, and the FEC implementation is detailed in our [NetCompute'18 paper](https://www.seas.upenn.edu/~nsultana/files/netcompute.pdf).
 
 ## What you see
 Various experiments are run to test the behaviour of these boosters.
