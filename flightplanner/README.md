@@ -63,7 +63,8 @@ $ examples/program20/server_offload_arista.sh
 
 Those scripts are used to generate the entries of [fig7output.csv](fig7output.csv),
 in the order given above, which is rendered using [fig7output.R](fig7output.R).
-This produces the diagram shown in Fig.7 in section 6.2.2 of the Flightplan paper.
+This produces the diagram shown in Fig.9 in section 7.2.2 of the [Flightplan paper](https://flightplan.cis.upenn.edu/flightplan.pdf#subsubsection.7.2.2).
+(The files references "fig7" because that was the figure's number in the then-current draft of the paper at the time the code was written.)
 
 
 # Results
