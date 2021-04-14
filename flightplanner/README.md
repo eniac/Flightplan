@@ -33,7 +33,7 @@ The contents of each input are described in the Flightplan paper, but the next s
 
 
 # Examples
-The input files, configuration and command-line arguments for several examples are provided in the `examples\` directory.
+The input files, configuration and command-line arguments for several examples are provided in the `examples/` directory.
 All of these examples are emitted by the Flightplan analyser through its tests in `run_everything.sh`, which in turn are based on new and third-party P4 program examples.
 
 Most of these examples can be executed as follows:
